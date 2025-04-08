@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 
 void main() {
@@ -24,9 +23,8 @@ class OcutuneApp extends StatelessWidget {
         brightness: Brightness.dark,
         fontFamily: 'Roboto',
       ),
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
-        '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
       },
     );
