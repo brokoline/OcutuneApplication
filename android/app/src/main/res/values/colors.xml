@@ -3,7 +3,7 @@
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
     
     <!-- <color name="splash_background">#303030</color> -->
-   <color name="splash_background">#A9A9A9</color>
+   <color name="splash_background">#676767</color>
 
 
 </resources>
