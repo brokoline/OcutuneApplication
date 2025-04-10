@@ -15,17 +15,33 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
   final List<Map<String, String>> chronotypes = [
     {
       'title': 'Lark',
-      'description': 'Feel energized and focused in the early morning hours and usually prefer an early bedtime.'
+      'description':
+      'Feel energized and focused in the early morning hours and usually prefer an early bedtime.',
+      'image': 'assets/images/lark.png',
     },
     {
       'title': 'Dove',
-      'description': 'Have a natural sleep-wake cycle that falls somewhere between being an early riser and a night owl.'
+      'description':
+      'Natural sleep-wake cycle that falls somewhere between being an early riser and a night owl.',
+      'image': 'assets/images/dove.png',
     },
     {
       'title': 'Owl',
-      'description': 'Tend to be most alert and lively in the evening and often stay up late'
+      'description':
+      'Tend to be most alert and lively in the evening and often stay up late.',
+      'image': 'assets/images/nightowl.png',
     },
   ];
+
+  void _goToNextScreen() {
+    if (selectedChronotype != null) {
+      Navigator.pushNamed(context, '/learnAboutChronotypes');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select a chronotype first")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,14 +89,14 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                       const SizedBox(height: 24),
                       TextButton(
                         onPressed: () {
-                          // Navigate to info screen
+                          Navigator.pushNamed(context, '/learn');
                         },
                         child: const Text(
                           "What is a chronotype? Learn more",
                           style: TextStyle(
                             color: Colors.white70,
-                            decoration: TextDecoration.underline,
                             fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
                           ),
                         ),
                       ),
@@ -99,7 +115,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                               ),
                             ),
                             onPressed: () {
-                              // Navigate to survey
+                              // TODO: Navigate to survey
                             },
                             child: const Text("Take Survey"),
                           ),
@@ -116,11 +132,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
               right: 24,
               child: OcutuneButton(
                 type: OcutuneButtonType.floatingIcon,
-                onPressed: () {
-                  if (selectedChronotype != null) {
-                    // Go to next screen
-                  }
-                },
+                onPressed: _goToNextScreen,
               ),
             ),
           ],
@@ -149,9 +161,14 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 4.0, right: 12),
-              child: Icon(Icons.brightness_2, color: Colors.white, size: 28),
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0, right: 12),
+              child: Image.asset(
+                type['image']!,
+                width: 28,
+                height: 28,
+                fit: BoxFit.contain,
+              ),
             ),
             Expanded(
               child: Column(
@@ -172,10 +189,10 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                       color: Colors.white70,
                       fontSize: 14,
                     ),
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
