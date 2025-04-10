@@ -37,15 +37,12 @@ class OcutuneButton extends StatelessWidget {
         borderSide = const BorderSide(color: Colors.white, width: 1);
         break;
       case OcutuneButtonType.floatingIcon:
-        return SizedBox(
-          width: 56,
-          height: 56,
-          child: FloatingActionButton(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            onPressed: onPressed,
-            child: const Icon(Icons.arrow_forward),
-          ),
+        return FloatingActionButton(
+          shape: const CircleBorder(),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          onPressed: onPressed,
+          child: const Icon(Icons.arrow_forward),
         );
     }
 
