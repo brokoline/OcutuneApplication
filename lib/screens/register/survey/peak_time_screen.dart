@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
-class WakeUpTimeScreen extends StatefulWidget {
-  const WakeUpTimeScreen({super.key});
+class PeakTimeScreen extends StatefulWidget {
+  const PeakTimeScreen({super.key});
 
   @override
-  State<WakeUpTimeScreen> createState() => _WakeUpTimeScreenState();
+  State<PeakTimeScreen> createState() => _PeakTimeScreenState();
 }
 
-class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
+class _PeakTimeScreenState extends State<PeakTimeScreen> {
   String? selectedOption;
 
   final List<String> options = [
-    "5:00 AM – 6:30 AM",
-    "6:30 AM – 7:45 AM",
-    "7:45 AM – 9:45 AM",
-    "9:45 AM – 11:00 AM",
-    "11:00 AM – 12:00 PM",
-    "I'm sleeping my day away"
+    "10:00 PM – 4:00 AM",
+    "4:00 AM – 7:00 AM",
+    "7:00 AM – 9:00 AM",
+    "9:00 AM – 4:00 PM",
+    "4:00 PM – 10:00 PM",
+    "I never peak"
   ];
 
   void _goToNextScreen() {
     if (selectedOption != null) {
-      Navigator.pushNamed(context, '/tirednessSlider');
+      Navigator.pushNamed(context, '/timeOfTiredness');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an option first")),
@@ -47,7 +47,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
         child: Stack(
           children: [
             Center(
-              child: SingleChildScrollView(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
@@ -55,7 +55,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "Considering your own individual rhythm,\nat what time would you get up if you were\nentirely free to plan your day?",
+                        "At what time of the day do you think that you reach your “feeling best” peak?",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,

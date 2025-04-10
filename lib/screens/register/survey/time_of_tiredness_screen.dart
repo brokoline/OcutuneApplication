@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
-class WakeUpTimeScreen extends StatefulWidget {
-  const WakeUpTimeScreen({super.key});
+class TimeOfTirednessScreen extends StatefulWidget {
+  const TimeOfTirednessScreen({super.key});
 
   @override
-  State<WakeUpTimeScreen> createState() => _WakeUpTimeScreenState();
+  State<TimeOfTirednessScreen> createState() => _TimeOfTirednessScreenState();
 }
 
-class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
+class _TimeOfTirednessScreenState extends State<TimeOfTirednessScreen> {
   String? selectedOption;
 
   final List<String> options = [
-    "5:00 AM – 6:30 AM",
-    "6:30 AM – 7:45 AM",
-    "7:45 AM – 9:45 AM",
-    "9:45 AM – 11:00 AM",
-    "11:00 AM – 12:00 PM",
-    "I'm sleeping my day away"
+    "8:00 PM – 9:00 PM",
+    "9:00 PM – 10:15 PM",
+    "10:15 PM – 12:45 AM",
+    "12:45 AM – 2:00 AM",
+    "2:00 AM – 3:00 AM",
+    "Im fresh all day.."
   ];
 
   void _goToNextScreen() {
     if (selectedOption != null) {
-      Navigator.pushNamed(context, '/tirednessSlider');
+      Navigator.pushNamed(context, '/morningEveningType');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an option first")),
@@ -47,7 +47,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
         child: Stack(
           children: [
             Center(
-              child: SingleChildScrollView(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
@@ -55,7 +55,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        "Considering your own individual rhythm,\nat what time would you get up if you were\nentirely free to plan your day?",
+                        "What time in the evening do you\nfeel tired and in need of sleep?",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,

@@ -2,28 +2,24 @@ import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
-class WakeUpTimeScreen extends StatefulWidget {
-  const WakeUpTimeScreen({super.key});
+class MorningEveningTypeScreen extends StatefulWidget {
+  const MorningEveningTypeScreen({super.key});
 
   @override
-  State<WakeUpTimeScreen> createState() => _WakeUpTimeScreenState();
+  State<MorningEveningTypeScreen> createState() => _MorningEveningTypeScreenState();
 }
 
-class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
+class _MorningEveningTypeScreenState extends State<MorningEveningTypeScreen> {
   String? selectedOption;
 
   final List<String> options = [
-    "5:00 AM – 6:30 AM",
-    "6:30 AM – 7:45 AM",
-    "7:45 AM – 9:45 AM",
-    "9:45 AM – 11:00 AM",
-    "11:00 AM – 12:00 PM",
-    "I'm sleeping my day away"
+    "Morning person",
+    "Evening person",
   ];
 
   void _goToNextScreen() {
     if (selectedOption != null) {
-      Navigator.pushNamed(context, '/tirednessSlider');
+      Navigator.pushNamed(context, '/doneSetup');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an option first")),
@@ -47,28 +43,25 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
         child: Stack(
           children: [
             Center(
-              child: SingleChildScrollView(
+              child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Considering your own individual rhythm,\nat what time would you get up if you were\nentirely free to plan your day?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5,
-                          color: Colors.white,
-                        ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Do you consider yourself a “morning” or an “evening” type?",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        height: 1.5,
+                        color: Colors.white,
                       ),
-                      const SizedBox(height: 32),
-                      ...options.map((option) => _buildOption(option)).toList(),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    ...options.map((option) => _buildOption(option)).toList(),
+                    const SizedBox(height: 100),
+                  ],
                 ),
               ),
             ),
