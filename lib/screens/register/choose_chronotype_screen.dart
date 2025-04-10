@@ -115,7 +115,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                               ),
                             ),
                             onPressed: () {
-                              // TODO: Navigate to survey
+                              Navigator.pushNamed(context, '/wakeUpTime');
                             },
                             child: const Text("Take Survey"),
                           ),
