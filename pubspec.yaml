@@ -24,6 +24,9 @@ flutter:
   assets:
     - assets/logo_ocutune.png
     - assets/icon/icon.png
+    - assets/images/lark.png
+    - assets/images/dove.png
+    - assets/images/nightowl.png
 
 flutter_icons:
   android: true

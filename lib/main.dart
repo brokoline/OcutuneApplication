@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // ← nødvendigt for SystemChrome
 import 'package:ocutune_light_logger/screens/register/choose_chronotype_screen.dart';
+import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/about_dove_screen.dart';
+import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/about_lark_screen.dart';
+import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/about_night_owl_screen.dart';
+import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/register/profile_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/register/register_screen.dart';
-import 'package:ocutune_light_logger/screens/register/terms%20and%20policy/privacypolicy_screen.dart';
-import 'package:ocutune_light_logger/screens/register/terms%20and%20policy/termsconditions_screen.dart';
+import 'package:ocutune_light_logger/screens/register/terms_and_policy/privacypolicy_screen.dart';
+import 'package:ocutune_light_logger/screens/register/terms_and_policy/termsconditions_screen.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'screens/login_screen.dart';
 
@@ -44,6 +48,10 @@ class OcutuneApp extends StatelessWidget {
         '/terms': (context) => const TermsConditionsScreen(),
         '/profile': (context) => const ProfileSetupScreen(),
         '/chooseChronotype': (context) => const ChooseChronotypeScreen(),
+        '/learn': (context) => const LearnAboutChronotypesScreen(),
+        '/learnLark': (context) => const AboutLarkScreen(),
+        '/learnDove': (context) => const AboutDoveScreen(),
+        '/learnNightOwl': (context) => const AboutNightOwlScreen(),
       },
     );
   }
