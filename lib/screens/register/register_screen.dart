@@ -113,7 +113,7 @@ class RegisterScreen extends StatelessWidget {
                 );
                 return;
               }
-              // validate or navigate
+              Navigator.pushNamed(context, '/profile');
             },
           ),
         ),
