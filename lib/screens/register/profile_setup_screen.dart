@@ -143,7 +143,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   print('Birthday year: $selectedYear');
                   print('Gender: $selectedGender');
 
-                  // navigate to next screen here
+                  Navigator.pushNamed(context, '/chooseChronotype');
                 },
               ),
             ),

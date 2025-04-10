@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // ← nødvendigt for SystemChrome
+import 'package:ocutune_light_logger/screens/register/choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/register/profile_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/register/register_screen.dart';
 import 'package:ocutune_light_logger/screens/register/terms%20and%20policy/privacypolicy_screen.dart';
@@ -42,6 +43,7 @@ class OcutuneApp extends StatelessWidget {
         '/privacy': (context) => const PrivacyPolicyScreen(),
         '/terms': (context) => const TermsConditionsScreen(),
         '/profile': (context) => const ProfileSetupScreen(),
+        '/chooseChronotype': (context) => const ChooseChronotypeScreen(),
       },
     );
   }
