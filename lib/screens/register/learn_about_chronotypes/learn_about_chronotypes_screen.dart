@@ -19,7 +19,7 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
@@ -35,8 +35,7 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Icon(
-                      Icons.info_outline, size: 36, color: Colors.white60),
+                  const Icon(Icons.info_outline, size: 36, color: Colors.white60),
                   const SizedBox(height: 16),
                   const Text(
                     "Did you know that your chronotype not only\n"
@@ -50,14 +49,11 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 40),
-
+                  const SizedBox(height: 36),
                   _buildChronoCard(context, title: "Lark", route: "/learnLark"),
                   _buildChronoCard(context, title: "Dove", route: "/learnDove"),
-                  _buildChronoCard(
-                      context, title: "Night Owl", route: "/learnNightOwl"),
-
-                  const SizedBox(height: 40),
+                  _buildChronoCard(context, title: "Night Owl", route: "/learnNightOwl"),
+                  const SizedBox(height: 32),
                   const Text(
                     "Even presidents and famous entrepreneurs\n"
                         "plan their day according to their biological clock!",
@@ -82,7 +78,6 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
     required String title,
     required String route,
   }) {
-    // Map med billed-navne baseret på titlen
     final imageMap = {
       "Lark": "assets/images/lark.png",
       "Dove": "assets/images/dove.png",
@@ -131,5 +126,4 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
       ),
     );
   }
-
 }

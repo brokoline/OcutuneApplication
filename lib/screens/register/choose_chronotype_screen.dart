@@ -15,20 +15,17 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
   final List<Map<String, String>> chronotypes = [
     {
       'title': 'Lark',
-      'description':
-      'Feel energized and focused in the early morning hours and usually prefer an early bedtime.',
+      'description': 'Feel energized and focused in the early morning hours and usually prefer an early bedtime.',
       'image': 'assets/images/lark.png',
     },
     {
       'title': 'Dove',
-      'description':
-      'Natural sleep-wake cycle that falls somewhere between being an early riser and a night owl.',
+      'description': 'Natural sleep-wake cycle that falls somewhere between being an early riser and a night owl.',
       'image': 'assets/images/dove.png',
     },
     {
       'title': 'Owl',
-      'description':
-      'Tend to be most alert and lively in the evening and often stay up late.',
+      'description': 'Tend to be most alert and lively in the evening and often stay up late.',
       'image': 'assets/images/nightowl.png',
     },
   ];
@@ -56,86 +53,80 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
         ),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Already know your Chronotype?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Select your chronotype or continue with survey",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      ...chronotypes.map((type) => _buildChronoCard(type)).toList(),
-                      const SizedBox(height: 24),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/learn');
-                        },
-                        child: const Text(
-                          "What is a chronotype? Learn more",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: SizedBox(
-                          width: 200,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white24,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: const BorderSide(color: Colors.white54),
-                              ),
-                            ),
-                            onPressed: () {
-                              // TODO: Navigate to survey
-                            },
-                            child: const Text("Take Survey"),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 100),
-                    ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                children: [
+                  const Text(
+                    "Already know your Chronotype?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Select your chronotype or continue with survey",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ...chronotypes.map((type) => _buildChronoCard(type)).toList(),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/learn');
+                    },
+                    child: const Text(
+                      "What is a chronotype? Learn more",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white24,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(color: Colors.white54),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/wakeUpTime');
+                      },
+                      child: const Text("Take Survey"),
+                    ),
+                  ),
+                  const Spacer(),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: OcutuneButton(
+                        type: OcutuneButtonType.floatingIcon,
+                        onPressed: _goToNextScreen,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: _goToNextScreen,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -151,7 +142,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
       },
       child: Container(
         width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           border: Border.all(color: isSelected ? Colors.white : Colors.white24),
@@ -159,15 +150,13 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
           color: isSelected ? Colors.white10 : Colors.transparent,
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 4.0, right: 12),
+              padding: const EdgeInsets.only(right: 12),
               child: Image.asset(
                 type['image']!,
                 width: 28,
                 height: 28,
-                fit: BoxFit.contain,
               ),
             ),
             Expanded(

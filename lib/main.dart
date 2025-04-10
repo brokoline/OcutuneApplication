@@ -7,6 +7,12 @@ import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/ab
 import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/register/profile_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/register/register_screen.dart';
+import 'package:ocutune_light_logger/screens/register/survey/done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/register/survey/morning_evening_type_screen.dart';
+import 'package:ocutune_light_logger/screens/register/survey/peak_time_screen.dart';
+import 'package:ocutune_light_logger/screens/register/survey/time_of_tiredness_screen.dart';
+import 'package:ocutune_light_logger/screens/register/survey/tiredness_slider_screen.dart';
+import 'package:ocutune_light_logger/screens/register/survey/wake_up_time_screen.dart';
 import 'package:ocutune_light_logger/screens/register/terms_and_policy/privacypolicy_screen.dart';
 import 'package:ocutune_light_logger/screens/register/terms_and_policy/termsconditions_screen.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
@@ -52,6 +58,12 @@ class OcutuneApp extends StatelessWidget {
         '/learnLark': (context) => const AboutLarkScreen(),
         '/learnDove': (context) => const AboutDoveScreen(),
         '/learnNightOwl': (context) => const AboutNightOwlScreen(),
+        '/wakeUpTime': (context) => const WakeUpTimeScreen(),
+        '/tirednessSlider': (context) => const TirednessSliderScreen(),
+        '/peakTime': (context) => const PeakTimeScreen(),
+        '/timeOfTiredness': (context) => const TimeOfTirednessScreen(),
+        '/morningEveningType': (context) => const MorningEveningTypeScreen(),
+        '/doneSetup': (context) => const DoneSetupScreen(),
       },
     );
   }
