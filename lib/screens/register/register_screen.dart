@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
@@ -52,28 +53,38 @@ class RegisterScreen extends StatelessWidget {
                 onChanged: (value) => agreement.value = value ?? false,
                 activeColor: Colors.white,
               ),
-              const Expanded(
+              Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(top: 4.0),
-                  child: Text.rich(
-                    TextSpan(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: RichText(
+                    text: TextSpan(
                       text: 'I agree with the ',
-                      style: TextStyle(color: Colors.white, fontSize: 13),
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
                       children: [
                         TextSpan(
                           text: 'Terms Conditions',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
+                            color: Colors.white,
                           ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.pushNamed(context, '/terms');
+                            },
                         ),
-                        TextSpan(text: ' & '),
+                        const TextSpan(text: ' & '),
                         TextSpan(
                           text: 'Privacy Policy',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
+                            color: Colors.white,
                           ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.pushNamed(context, '/privacy');
+                            },
                         ),
                       ],
                     ),
@@ -102,7 +113,7 @@ class RegisterScreen extends StatelessWidget {
                 );
                 return;
               }
-              // validate or navigate
+              Navigator.pushNamed(context, '/profile');
             },
           ),
         ),
