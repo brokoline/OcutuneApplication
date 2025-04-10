@@ -4,12 +4,14 @@ class OcutuneTextField extends StatelessWidget {
   final String label;
   final bool isPassword;
   final TextEditingController controller;
+  final TextStyle? labelStyle;
 
   const OcutuneTextField({
     super.key,
     required this.label,
     this.isPassword = false,
-    required this.controller, // ← her er den vigtige del
+    required this.controller,
+    this.labelStyle,
   });
 
   @override
@@ -20,9 +22,12 @@ class OcutuneTextField extends StatelessWidget {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.white),
+        labelStyle: labelStyle ?? const TextStyle(fontSize: 14, color: Colors.white70),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.white24),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white),
         ),
       ),
     );
