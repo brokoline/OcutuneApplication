@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: ocutune-api
+    env: python
+    buildCommand: ""
+    startCommand: python api_server.py
+    plan: free
