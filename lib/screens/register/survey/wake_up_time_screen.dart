@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 import '/theme/colors.dart';
@@ -14,16 +15,16 @@ class WakeUpTimeScreen extends StatefulWidget {
 
 class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
   String? selectedOption;
-  late Future<Map<String, dynamic>> _questionData;
+  late Future<Map<String, dynamic>> _questionFuture;
 
   @override
   void initState() {
     super.initState();
-    _questionData = fetchQuestionData(1);
+    _questionFuture = fetchQuestionWithChoices(1);
   }
 
-  Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'http://192.168.64.6:5000'; // 10.0.2.2 for Android
+  Future<Map<String, dynamic>> fetchQuestionWithChoices(int questionId) async {
+    final baseUrl = dotenv.env['API_URL'] ?? ''; // ← henter fra .env
     final url = Uri.parse('$baseUrl/questions');
 
     final response = await http.get(url);
@@ -44,7 +45,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
         'choices': List<String>.from(question['choices']),
       };
     } else {
-      throw Exception('Failed to load question (status ${response.statusCode})');
+      throw Exception("Failed to load question (status ${response.statusCode})");
     }
   }
 
@@ -81,7 +82,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
                   child: FutureBuilder<Map<String, dynamic>>(
-                    future: _questionData,
+                    future: _questionFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const CircularProgressIndicator();
@@ -92,7 +93,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
                         );
                       } else if (!snapshot.hasData) {
                         return const Text(
-                          "No question found.",
+                          "No data found.",
                           style: TextStyle(color: Colors.white),
                         );
                       } else {

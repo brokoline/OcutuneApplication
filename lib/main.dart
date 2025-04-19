@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ← nødvendigt for SystemChrome
+import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // ← vigtig import
+
 import 'package:ocutune_light_logger/screens/register/choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/about_dove_screen.dart';
 import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/about_lark_screen.dart';
@@ -18,11 +20,14 @@ import 'package:ocutune_light_logger/screens/register/terms_and_policy/termscond
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'screens/login_screen.dart';
 
-void main() {
-  // Sikrer korrekt farve og ikonkontrast i statusbaren (top bar)
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // ← vigtig før async ting
+
+  await dotenv.load(fileName: ".env"); // ← indlæs .env
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Color(0xFF2D2D2D), // matcher din baggrund
-    statusBarIconBrightness: Brightness.light, // hvide ikoner
+    statusBarColor: Color(0xFF2D2D2D),
+    statusBarIconBrightness: Brightness.light,
   ));
 
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -45,7 +50,6 @@ class OcutuneApp extends StatelessWidget {
         brightness: Brightness.dark,
         fontFamily: 'Roboto',
       ),
-
       initialRoute: '/login',
       routes: {
         '/login': (context) => LoginScreen(),
