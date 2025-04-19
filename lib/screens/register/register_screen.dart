@@ -121,19 +121,21 @@ class RegisterScreen extends StatelessWidget {
     );
 
     return isIOS
-        ? CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        backgroundColor: lightGray,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(CupertinoIcons.back, color: Colors.white),
+        ? Material(
+      child: CupertinoPageScaffold(
+        navigationBar: CupertinoNavigationBar(
+          backgroundColor: lightGray,
+          leading: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: const Icon(CupertinoIcons.back, color: Colors.white),
+          ),
+          middle: const Text(''),
         ),
-        middle: const Text(''),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Center(child: contentWithButton),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: Center(child: contentWithButton),
+          ),
         ),
       ),
     )
@@ -154,5 +156,6 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
     );
+
   }
 }

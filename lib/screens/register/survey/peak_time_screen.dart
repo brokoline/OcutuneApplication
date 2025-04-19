@@ -38,49 +38,57 @@ class _PeakTimeScreenState extends State<PeakTimeScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "At what time of the day do you think that you reach your “feeling best” peak?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5,
-                          color: Colors.white,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    child: Stack(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "At what time of the day do you think that you reach your “feeling best” peak?",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                height: 1.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ...options.map((option) => _buildOption(option)).toList(),
+                            const SizedBox(height: 100),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      ...options.map((option) => _buildOption(option)).toList(),
-                      const SizedBox(height: 100),
-                    ],
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: OcutuneButton(
+                            type: OcutuneButtonType.floatingIcon,
+                            onPressed: _goToNextScreen,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: _goToNextScreen,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

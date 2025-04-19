@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
@@ -11,15 +14,39 @@ class WakeUpTimeScreen extends StatefulWidget {
 
 class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
   String? selectedOption;
+  late Future<Map<String, dynamic>> _questionData;
 
-  final List<String> options = [
-    "5:00 AM – 6:30 AM",
-    "6:30 AM – 7:45 AM",
-    "7:45 AM – 9:45 AM",
-    "9:45 AM – 11:00 AM",
-    "11:00 AM – 12:00 PM",
-    "I'm sleeping my day away"
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _questionData = fetchQuestionData(1);
+  }
+
+  Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
+    const baseUrl = 'http://192.168.64.6:5000'; // 10.0.2.2 for Android
+    final url = Uri.parse('$baseUrl/questions');
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      final question = data.firstWhere(
+            (q) => q['id'] == questionId,
+        orElse: () => null,
+      );
+
+      if (question == null) {
+        throw Exception("Question with ID $questionId not found.");
+      }
+
+      return {
+        'text': question['question_text'],
+        'choices': List<String>.from(question['choices']),
+      };
+    } else {
+      throw Exception('Failed to load question (status ${response.statusCode})');
+    }
+  }
 
   void _goToNextScreen() {
     if (selectedOption != null) {
@@ -38,6 +65,8 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -51,23 +80,45 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Considering your own individual rhythm,\nat what time would you get up if you were\nentirely free to plan your day?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      ...options.map((option) => _buildOption(option)).toList(),
-                      const SizedBox(height: 100),
-                    ],
+                  child: FutureBuilder<Map<String, dynamic>>(
+                    future: _questionData,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text(
+                          'Error: ${snapshot.error}',
+                          style: const TextStyle(color: Colors.white),
+                        );
+                      } else if (!snapshot.hasData) {
+                        return const Text(
+                          "No question found.",
+                          style: TextStyle(color: Colors.white),
+                        );
+                      } else {
+                        final questionText = snapshot.data!['text'];
+                        final choices = snapshot.data!['choices'];
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              questionText,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                height: 1.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ...choices.map((option) => _buildOption(option)).toList(),
+                            const SizedBox(height: 100),
+                          ],
+                        );
+                      }
+                    },
                   ),
                 ),
               ),
