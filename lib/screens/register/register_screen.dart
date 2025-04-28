@@ -7,6 +7,8 @@ import '/widgets/ocutune_button.dart';
 import '/widgets/ocutune_textfield.dart';
 import '/widgets/ocutune_card.dart';
 
+import 'dart:io';
+
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
