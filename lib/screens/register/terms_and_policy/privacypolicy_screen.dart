@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '/theme/colors.dart';
-import '/widgets/ocutune_button.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});

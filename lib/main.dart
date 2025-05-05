@@ -7,7 +7,7 @@ import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/ab
 import 'package:ocutune_light_logger/screens/register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/register/profile_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/register/register_screen.dart';
-import 'package:ocutune_light_logger/screens/register/survey/done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/register/done_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/register/survey/morning_evening_type_screen.dart';
 import 'package:ocutune_light_logger/screens/register/survey/peak_time_screen.dart';
 import 'package:ocutune_light_logger/screens/register/survey/time_of_tiredness_screen.dart';
