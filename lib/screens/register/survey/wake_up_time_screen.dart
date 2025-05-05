@@ -25,7 +25,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'http://192.168.64.6:5000'; // 10.0.2.2 for Android
+    const baseUrl = 'https://ocutune.ddns.net'; // 10.0.2.2 for Android
     final url = Uri.parse('$baseUrl/questions');
 
     final response = await http.get(url);

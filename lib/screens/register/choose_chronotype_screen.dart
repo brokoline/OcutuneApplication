@@ -28,7 +28,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
     {
       'title': 'Owl',
       'description':
-      'Tend to be most alert and lively in the evening and often stay up late.',
+      'Har tendens til at være mest vågen og livlig om aftenen og er ofte oppe sent.',
       'image': 'assets/images/nightowl.png',
     },
   ];
