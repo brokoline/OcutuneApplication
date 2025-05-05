@@ -2,19 +2,29 @@ import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
-class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+class GenderAgeScreen extends StatefulWidget {
+  const GenderAgeScreen({super.key});
 
   @override
-  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+  State<GenderAgeScreen> createState() => GenderAgeScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+class GenderAgeScreenState extends State<GenderAgeScreen> {
   String? selectedYear;
   String? selectedGender;
 
-  final List<String> years = List.generate(100, (index) => (DateTime.now().year - index).toString());
-  final List<String> genders = ['Male', 'Female', 'Other'];
+  final List<String> years = List.generate(
+    DateTime.now().year - 1925 + 1,
+        (index) => (1925 + index).toString(),
+  );
+
+  final List<String> genders = ['Mand', 'Kvinde', 'Ikke angivet'];
+
+  @override
+  void initState() {
+    super.initState();
+    selectedYear = '2000'; // 👈 starter scroll her
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +51,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     children: [
                       const SizedBox(height: 32),
                       const Text(
-                        "When is your birthday?",
+                        "Hvornår er du født?",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 22,
@@ -62,10 +72,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             value: selectedYear,
                             dropdownColor: darkGray,
                             isExpanded: true,
-                            hint: const Text("Select year", style: TextStyle(color: Colors.white70)),
+                            hint: const Text("Vælg år", style: TextStyle(color: Colors.white70)),
                             iconEnabledColor: Colors.white,
                             style: const TextStyle(color: Colors.white),
-                            menuMaxHeight: 250,
+                            menuMaxHeight: 180,
                             items: years.map((year) {
                               return DropdownMenuItem(
                                 value: year,
@@ -82,7 +92,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ),
                       const SizedBox(height: 48),
                       const Text(
-                        "What is your gender?",
+                        "Hvad er dit køn?",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 22,
@@ -103,7 +113,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             value: selectedGender,
                             dropdownColor: darkGray,
                             isExpanded: true,
-                            hint: const Text("Select gender", style: TextStyle(color: Colors.white70)),
+                            hint: const Text("Vælg køn", style: TextStyle(color: Colors.white70)),
                             iconEnabledColor: Colors.white,
                             style: const TextStyle(color: Colors.white),
                             menuMaxHeight: 250,
@@ -135,13 +145,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 onPressed: () {
                   if (selectedYear == null || selectedGender == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select both year and gender")),
+                      const SnackBar(content: Text("Vælg både år og køn")),
                     );
                     return;
                   }
 
-                  print('Birthday year: $selectedYear');
-                  print('Gender: $selectedGender');
+                  print('Fødselsår: $selectedYear');
+                  print('Køn: $selectedGender');
 
                   Navigator.pushNamed(context, '/chooseChronotype');
                 },
