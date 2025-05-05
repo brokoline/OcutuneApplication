@@ -7,14 +7,14 @@ import '/widgets/ocutune_button.dart';
 
 
 
-class WakeUpTimeScreen extends StatefulWidget {
-  const WakeUpTimeScreen({super.key});
+class QuestionOneScreen extends StatefulWidget {
+  const QuestionOneScreen({super.key});
 
   @override
-  State<WakeUpTimeScreen> createState() => _WakeUpTimeScreenState();
+  State<QuestionOneScreen> createState() => QuestionOneScreenState();
 }
 
-class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
+class QuestionOneScreenState extends State<QuestionOneScreen> {
   String? selectedOption;
   late Future<Map<String, dynamic>> _questionData;
 
@@ -52,7 +52,7 @@ class _WakeUpTimeScreenState extends State<WakeUpTimeScreen> {
 
   void _goToNextScreen() {
     if (selectedOption != null) {
-      Navigator.pushNamed(context, '/tirednessSlider');
+      Navigator.pushNamed(context, '/Q2');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please select an option first")),

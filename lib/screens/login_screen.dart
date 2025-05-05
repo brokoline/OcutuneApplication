@@ -34,20 +34,20 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   OcutuneTextField(
-                    label: 'Email',
+                    label: 'E-mail',
                     controller: emailController,
                     labelStyle: const TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 16),
                   OcutuneTextField(
-                    label: 'Password',
+                    label: 'Adgangskode',
                     isPassword: true,
                     controller: passwordController,
                     labelStyle: const TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 24),
                   OcutuneButton(
-                    text: 'Sign In',
+                    text: 'Log ind',
                     onPressed: () {
                       // handle sign in
                     },
@@ -57,7 +57,7 @@ class LoginScreen extends StatelessWidget {
                   TextButton(
                     onPressed: () {},
                     child: const Text(
-                      'Forgot password?',
+                      'Glemt adgangskode?',
                       style: TextStyle(color: Colors.white70),
                     ),
                   ),
@@ -66,7 +66,7 @@ class LoginScreen extends StatelessWidget {
                       Navigator.pushNamed(context, '/register');
                     },
                     child: const Text(
-                      'Not registered? Sign up',
+                      'Ikke registreret? Opret bruger',
                       style: TextStyle(color: Colors.white70),
                     ),
                   ),

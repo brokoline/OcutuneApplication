@@ -1,8 +1,43 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
+import 'package:ocutune_light_logger/models/chronotype.dart';
 
-class LearnAboutChronotypesScreen extends StatelessWidget {
+class LearnAboutChronotypesScreen extends StatefulWidget {
   const LearnAboutChronotypesScreen({super.key});
+
+  @override
+  State<LearnAboutChronotypesScreen> createState() => _LearnAboutChronotypesScreenState();
+}
+
+class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScreen> {
+  List<Chronotype> chronotypes = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchChronotypes();
+  }
+
+  Future<void> fetchChronotypes() async {
+    final url = Uri.parse('https://ocutune.ddns.net/chronotypes');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        chronotypes = data.map((json) => Chronotype.fromJson(json)).toList();
+        isLoading = false;
+      });
+    } else {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Kunne ikke hente data.")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,15 +46,15 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
-        child: Center(
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
             child: ConstrainedBox(
@@ -28,7 +63,7 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text(
-                    "Wanna learn more about\n the different chronotypes?",
+                    "Vil du lære mere om de\nforskellige kronotyper?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 22,
@@ -37,12 +72,11 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Icon(Icons.info_outline, size: 36, color: Colors.white60),
+                  const Icon(
+                      Icons.info_outline, size: 36, color: Colors.white60),
                   const SizedBox(height: 16),
                   const Text(
-                    "Did you know that your chronotype not only\n"
-                        "affects your sleep – but also when you\n"
-                        "are most creative and productive?",
+                    "Vidste du, at din kronotype ikke kun\npåvirker din søvn – men også hvornår du\ner mest kreativ og produktiv?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -52,13 +86,11 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 36),
-                  _buildChronoCard(context, title: "Lark", route: "/learnLark"),
-                  _buildChronoCard(context, title: "Dove", route: "/learnDove"),
-                  _buildChronoCard(context, title: "Night Owl", route: "/learnNightOwl"),
+                  ...chronotypes.map((type) => _buildChronoCard(context, type))
+                      .toList(),
                   const SizedBox(height: 32),
                   const Text(
-                    "Even presidents and famous entrepreneurs\n"
-                        "plan their day according to their biological clock!",
+                    "Selv præsidenter og berømte\niværksættere planlægger deres dag efter\nderes biologiske ur!",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
@@ -76,53 +108,58 @@ class LearnAboutChronotypesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChronoCard(BuildContext context, {
-    required String title,
-    required String route,
-  }) {
-    final imageMap = {
-      "Lark": "assets/images/lark.png",
-      "Dove": "assets/images/dove.png",
-      "Night Owl": "assets/images/nightowl.png",
-    };
+  Widget _buildChronoCard(BuildContext context, Chronotype type) {
+    String routeName;
+
+    switch (type.title.toLowerCase()) {
+      case 'lærke':
+      case 'lark':
+        routeName = '/learnLark';
+        break;
+      case 'due':
+      case 'dove':
+        routeName = '/learnDove';
+        break;
+      case 'natugle':
+      case 'night owl':
+        routeName = '/learnNightOwl';
+        break;
+      default:
+        routeName = '/';
+    }
 
     return Center(
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          highlightColor: Colors.white12,
-          splashColor: Colors.transparent,
-          onTap: () => Navigator.pushNamed(context, route),
-          child: Container(
-            width: 250,
-            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.white24),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  imageMap[title]!,
-                  height: 24,
-                  width: 24,
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, routeName),
+        child: Container(
+          width: 250,
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.white24),
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.transparent,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.network(
+                type.imageUrl,
+                width: 28,
+                height: 28,
+                errorBuilder: (_, __, ___) =>
+                    Icon(Icons.broken_image, color: Colors.white70),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Hvad er en ${type.title.toLowerCase()}?",
+                style: const TextStyle(
                   color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

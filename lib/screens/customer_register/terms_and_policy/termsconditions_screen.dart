@@ -24,7 +24,7 @@ class TermsConditionsScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 16),
               const Text(
-                "Terms & Conditions",
+                "Vilkår & Betingelser",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

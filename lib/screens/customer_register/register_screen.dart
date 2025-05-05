@@ -27,7 +27,7 @@ class RegisterScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Account Setup',
+            'Opret konto',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -35,15 +35,15 @@ class RegisterScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          OcutuneTextField(label: 'First name', controller: firstNameController),
+          OcutuneTextField(label: 'Fornavn', controller: firstNameController),
           const SizedBox(height: 16),
-          OcutuneTextField(label: 'Last name', controller: lastNameController),
+          OcutuneTextField(label: 'Efternavn', controller: lastNameController),
           const SizedBox(height: 16),
           OcutuneTextField(label: 'E-mail', controller: emailController),
           const SizedBox(height: 16),
-          OcutuneTextField(label: 'Password', controller: passwordController, isPassword: true),
+          OcutuneTextField(label: 'Adgangskode', controller: passwordController, isPassword: true),
           const SizedBox(height: 16),
-          OcutuneTextField(label: 'Confirm password', controller: confirmPasswordController, isPassword: true),
+          OcutuneTextField(label: 'Bekræft adgangskode', controller: confirmPasswordController, isPassword: true),
           const SizedBox(height: 24),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,11 +58,11 @@ class RegisterScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4.0),
                   child: RichText(
                     text: TextSpan(
-                      text: 'I agree with the ',
+                      text: 'Jeg accepterer ',
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                       children: [
                         TextSpan(
-                          text: 'Terms Conditions',
+                          text: 'Vilkår og betingelser',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
@@ -73,9 +73,9 @@ class RegisterScreen extends StatelessWidget {
                               Navigator.pushNamed(context, '/terms');
                             },
                         ),
-                        const TextSpan(text: ' & '),
+                        const TextSpan(text: ' og '),
                         TextSpan(
-                          text: 'Privacy Policy',
+                          text: 'Privatlivspolitik',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
@@ -109,11 +109,11 @@ class RegisterScreen extends StatelessWidget {
             onPressed: () {
               if (!agreement.value) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("You must accept the terms to continue")),
+                  const SnackBar(content: Text("Du skal acceptere vilkårene for at fortsætte")),
                 );
                 return;
               }
-              Navigator.pushNamed(context, '/profile');
+              Navigator.pushNamed(context, '/genderage');
             },
           ),
         ),
@@ -123,8 +123,8 @@ class RegisterScreen extends StatelessWidget {
     return isIOS
         ? Material(
       child: CupertinoPageScaffold(
+        backgroundColor: lightGray,
         navigationBar: CupertinoNavigationBar(
-          backgroundColor: lightGray,
           leading: GestureDetector(
             onTap: () => Navigator.pop(context),
             child: const Icon(CupertinoIcons.back, color: Colors.white),
@@ -156,6 +156,5 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
     );
-
   }
 }

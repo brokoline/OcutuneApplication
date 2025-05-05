@@ -24,7 +24,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 16),
               const Text(
-                "Privacy Policy",
+                "Privatlivspolitik",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,

@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import 'package:ocutune_light_logger/models/chronotype.dart';
+
 
 class ChooseChronotypeScreen extends StatefulWidget {
   const ChooseChronotypeScreen({super.key});
@@ -11,34 +15,40 @@ class ChooseChronotypeScreen extends StatefulWidget {
 
 class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
   String? selectedChronotype;
+  List<Chronotype> chronotypes = [];
+  bool isLoading = true;
 
-  final List<Map<String, String>> chronotypes = [
-    {
-      'title': 'Lark',
-      'description':
-      'Feel energized and focused in the early morning hours and usually prefer an early bedtime.',
-      'image': 'assets/images/lark.png',
-    },
-    {
-      'title': 'Dove',
-      'description':
-      'Natural sleep-wake cycle that falls somewhere between being an early riser and a night owl.',
-      'image': 'assets/images/dove.png',
-    },
-    {
-      'title': 'Owl',
-      'description':
-      'Har tendens til at være mest vågen og livlig om aftenen og er ofte oppe sent.',
-      'image': 'assets/images/nightowl.png',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchChronotypes();
+  }
+
+  Future<void> fetchChronotypes() async {
+    final url = Uri.parse('https://ocutune.ddns.net/chronotypes'); // eller din endpoint
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        chronotypes = data.map((json) => Chronotype.fromJson(json)).toList();
+        isLoading = false;
+      });
+    } else {
+      // fejlhåndtering
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Kunne ikke hente data.")),
+      );
+    }
+  }
 
   void _goToNextScreen() {
     if (selectedChronotype != null) {
       Navigator.pushNamed(context, '/learnAboutChronotypes');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a chronotype first")),
+        const SnackBar(content: Text("Vælg en kronotype først")),
       );
     }
   }
@@ -50,14 +60,14 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
@@ -71,29 +81,19 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                       children: [
                         const Center(
                           child: Text(
-                            "Already know your Chronotype?",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                            "Kender du din kronotype?",
+                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ),
                         const SizedBox(height: 8),
                         const Center(
                           child: Text(
-                            "Select your chronotype or continue with survey",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
+                            "Vælg din kronotype eller fortsæt med en test",
+                            style: TextStyle(fontSize: 14, color: Colors.white70),
                           ),
                         ),
                         const SizedBox(height: 24),
 
-                        // Chronotype cards
                         ...chronotypes.map((type) => _buildChronoCard(type)).toList(),
 
                         const SizedBox(height: 8),
@@ -101,7 +101,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                           child: TextButton(
                             onPressed: () => Navigator.pushNamed(context, '/learn'),
                             child: const Text(
-                              "What is a chronotype? Learn more",
+                              "Hvad er en kronotype? Lær mere",
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontWeight: FontWeight.bold,
@@ -125,9 +125,9 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                                 ),
                               ),
                               onPressed: () {
-                                Navigator.pushNamed(context, '/wakeUpTime');
+                                Navigator.pushNamed(context, '/Q1');
                               },
-                              child: const Text("Take Survey"),
+                              child: const Text("Tag testen"),
                             ),
                           ),
                         ),
@@ -151,12 +151,12 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
     );
   }
 
-  Widget _buildChronoCard(Map<String, String> type) {
-    final isSelected = selectedChronotype == type['title'];
+  Widget _buildChronoCard(Chronotype type) {
+    final isSelected = selectedChronotype == type.title;
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedChronotype = type['title'];
+          selectedChronotype = type.title;
         });
       },
       child: Container(
@@ -172,10 +172,12 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
-              child: Image.asset(
-                type['image']!,
+              child: Image.network(
+                type.imageUrl,
                 width: 28,
                 height: 28,
+                errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, color: Colors.white),
               ),
             ),
             Expanded(
@@ -183,7 +185,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    type['title']!,
+                    type.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -192,7 +194,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    type['description']!,
+                    type.shortDescription,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
