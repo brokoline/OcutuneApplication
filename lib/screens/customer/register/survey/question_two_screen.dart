@@ -112,7 +112,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                             style: TextStyle(
                               color: colors[index],
                               fontWeight: FontWeight.bold,
-                              fontSize: 50,
+                              fontSize: 25,
                             ),
                             child: Text(choices[index]),
                           ),

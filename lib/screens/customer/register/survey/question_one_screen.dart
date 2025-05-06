@@ -55,7 +55,7 @@ class QuestionOneScreenState extends State<QuestionOneScreen> {
       Navigator.pushNamed(context, '/Q2');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select an option first")),
+        const SnackBar(content: Text("Vælg venligst en mulighed først")),
       );
     }
   }
