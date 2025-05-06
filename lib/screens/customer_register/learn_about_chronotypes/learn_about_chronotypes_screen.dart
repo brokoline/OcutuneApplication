@@ -1,17 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import '/theme/colors.dart';
+import '/widgets/ocutune_button.dart';
 import 'package:ocutune_light_logger/models/chronotype.dart';
 
 class LearnAboutChronotypesScreen extends StatefulWidget {
   const LearnAboutChronotypesScreen({super.key});
 
   @override
-  State<LearnAboutChronotypesScreen> createState() => _LearnAboutChronotypesScreenState();
+  State<LearnAboutChronotypesScreen> createState() =>
+      _LearnAboutChronotypesScreenState();
 }
 
-class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScreen> {
+class _LearnAboutChronotypesScreenState
+    extends State<LearnAboutChronotypesScreen> {
   List<Chronotype> chronotypes = [];
   bool isLoading = true;
 
@@ -24,11 +28,12 @@ class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScree
   Future<void> fetchChronotypes() async {
     final url = Uri.parse('https://ocutune.ddns.net/chronotypes');
     final response = await http.get(url);
-
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
+      final data = json.decode(response.body) as List<dynamic>;
       setState(() {
-        chronotypes = data.map((json) => Chronotype.fromJson(json)).toList();
+        chronotypes = data
+            .map((j) => Chronotype.fromJson(j as Map<String, dynamic>))
+            .toList();
         isLoading = false;
       });
     } else {
@@ -60,8 +65,8 @@ class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScree
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  const SizedBox(height: 32),
                   const Text(
                     "Vil du lære mere om de\nforskellige kronotyper?",
                     textAlign: TextAlign.center,
@@ -72,8 +77,8 @@ class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScree
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Icon(
-                      Icons.info_outline, size: 36, color: Colors.white60),
+                  const Icon(Icons.info_outline,
+                      size: 36, color: Colors.white60),
                   const SizedBox(height: 16),
                   const Text(
                     "Vidste du, at din kronotype ikke kun\npåvirker din søvn – men også hvornår du\ner mest kreativ og produktiv?",
@@ -86,8 +91,59 @@ class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScree
                     ),
                   ),
                   const SizedBox(height: 36),
-                  ...chronotypes.map((type) => _buildChronoCard(context, type))
-                      .toList(),
+                  ...chronotypes.map((type) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Center(
+                        child: Material(
+                          color: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(color: Colors.white24),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              '/aboutChronotype',
+                              arguments: type.typeKey,
+                            ),
+                            splashColor: Colors.white24,
+                            highlightColor: Colors.white10,
+                            child: SizedBox(
+                              width: 250,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 18, horizontal: 16),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Image.network(
+                                      type.imageUrl ?? '',
+                                      width: 28,
+                                      height: 28,
+                                      errorBuilder: (_, __, ___) =>
+                                      const Icon(Icons.broken_image,
+                                          color: Colors.white70),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      "Hvad er en ${type.title.toLowerCase()}?",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                   const SizedBox(height: 32),
                   const Text(
                     "Selv præsidenter og berømte\niværksættere planlægger deres dag efter\nderes biologiske ur!",
@@ -99,67 +155,10 @@ class _LearnAboutChronotypesScreenState extends State<LearnAboutChronotypesScree
                       fontSize: 15,
                     ),
                   ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChronoCard(BuildContext context, Chronotype type) {
-    String routeName;
-
-    switch (type.title.toLowerCase()) {
-      case 'lærke':
-      case 'lark':
-        routeName = '/learnLark';
-        break;
-      case 'due':
-      case 'dove':
-        routeName = '/learnDove';
-        break;
-      case 'natugle':
-      case 'night owl':
-        routeName = '/learnNightOwl';
-        break;
-      default:
-        routeName = '/';
-    }
-
-    return Center(
-      child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, routeName),
-        child: Container(
-          width: 250,
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white24),
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.transparent,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.network(
-                type.imageUrl,
-                width: 28,
-                height: 28,
-                errorBuilder: (_, __, ___) =>
-                    Icon(Icons.broken_image, color: Colors.white70),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                "Hvad er en ${type.title.toLowerCase()}?",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-            ],
           ),
         ),
       ),
