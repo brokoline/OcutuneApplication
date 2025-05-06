@@ -10,21 +10,18 @@ class GenderAgeScreen extends StatefulWidget {
 }
 
 class GenderAgeScreenState extends State<GenderAgeScreen> {
-  String? selectedYear;
+  // Standardår for at rulle midt i listen
+  static const String _defaultYear = '2000';
+  String? selectedYear = _defaultYear;
+  bool _yearChosen = false;
+
   String? selectedGender;
 
   final List<String> years = List.generate(
     DateTime.now().year - 1925 + 1,
         (index) => (1925 + index).toString(),
   );
-
   final List<String> genders = ['Mand', 'Kvinde', 'Ikke angivet'];
-
-  @override
-  void initState() {
-    super.initState();
-    selectedYear = '2000'; // 👈 starter scroll her
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +44,6 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 32),
                       const Text(
@@ -60,7 +56,10 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      // Årstals-dropdown
                       Container(
+                        height: 56,
                         decoration: BoxDecoration(
                           color: Colors.white10,
                           borderRadius: BorderRadius.circular(12),
@@ -69,27 +68,54 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
+                            // Centreret vertikalt + til venstre horisontalt
+                            alignment: AlignmentDirectional.centerStart,
+
+                            // Scroll-menu midt i listen fra starten
                             value: selectedYear,
+                            menuMaxHeight: 240,
+                            itemHeight: 48,
+
                             dropdownColor: darkGray,
                             isExpanded: true,
-                            hint: const Text("Vælg år", style: TextStyle(color: Colors.white70)),
+
+                            // Brug selectedItemBuilder til at vise hint indtil valgt
+                            selectedItemBuilder: (context) {
+                              return years.map((year) {
+                                final isHint = !_yearChosen && year == _defaultYear;
+                                return Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: Text(
+                                    isHint ? 'Vælg fødselsår' : year,
+                                    style: TextStyle(
+                                      color: isHint ? Colors.white70 : Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                );
+                              }).toList();
+                            },
+
                             iconEnabledColor: Colors.white,
                             style: const TextStyle(color: Colors.white),
-                            menuMaxHeight: 180,
+
                             items: years.map((year) {
                               return DropdownMenuItem(
                                 value: year,
-                                child: Text(year),
+                                child: Text(year, style: const TextStyle(fontSize: 16)),
                               );
                             }).toList(),
+
                             onChanged: (value) {
                               setState(() {
                                 selectedYear = value;
+                                _yearChosen = true;
                               });
                             },
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 48),
                       const Text(
                         "Hvad er dit køn?",
@@ -101,7 +127,10 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      // Køns-dropdown
                       Container(
+                        height: 56,
                         decoration: BoxDecoration(
                           color: Colors.white10,
                           borderRadius: BorderRadius.circular(12),
@@ -110,17 +139,22 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
+                            alignment: AlignmentDirectional.centerStart,
                             value: selectedGender,
+                            menuMaxHeight: 240,
+                            itemHeight: 48,
                             dropdownColor: darkGray,
                             isExpanded: true,
-                            hint: const Text("Vælg køn", style: TextStyle(color: Colors.white70)),
+                            hint: const Text(
+                              "Vælg køn",
+                              style: TextStyle(color: Colors.white70, fontSize: 16),
+                            ),
                             iconEnabledColor: Colors.white,
-                            style: const TextStyle(color: Colors.white),
-                            menuMaxHeight: 250,
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
                             items: genders.map((gender) {
                               return DropdownMenuItem(
                                 value: gender,
-                                child: Text(gender),
+                                child: Text(gender, style: const TextStyle(fontSize: 16)),
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -131,28 +165,26 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 100),
                     ],
                   ),
                 ),
               ),
             ),
+
             Positioned(
               bottom: 24,
               right: 24,
               child: OcutuneButton(
                 type: OcutuneButtonType.floatingIcon,
                 onPressed: () {
-                  if (selectedYear == null || selectedGender == null) {
+                  if (!_yearChosen || selectedGender == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Vælg både år og køn")),
                     );
                     return;
                   }
-
-                  print('Fødselsår: $selectedYear');
-                  print('Køn: $selectedGender');
-
                   Navigator.pushNamed(context, '/chooseChronotype');
                 },
               ),

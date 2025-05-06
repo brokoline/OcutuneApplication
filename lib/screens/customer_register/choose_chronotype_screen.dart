@@ -173,7 +173,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: Image.network(
-                type.imageUrl,
+                type.imageUrl ?? '',
                 width: 28,
                 height: 28,
                 errorBuilder: (context, error, stackTrace) =>
