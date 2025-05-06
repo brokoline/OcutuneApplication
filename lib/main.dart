@@ -9,10 +9,10 @@ import 'package:ocutune_light_logger/screens/customer/register/gender_age_screen
 import 'package:ocutune_light_logger/screens/customer/register/choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_one_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_two_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/peak_time_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/time_of_tiredness_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_1_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_2_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_3_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_4_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/morning_evening_type_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/done_setup_screen.dart';
 
@@ -53,8 +53,8 @@ class OcutuneApp extends StatelessWidget {
         },
         '/Q1': (_) => const QuestionOneScreen(),
         '/Q2': (_) => const QuestionTwoScreen(),
-        '/peakTime': (_) => const PeakTimeScreen(),
-        '/timeOfTiredness': (_) => const TimeOfTirednessScreen(),
+        '/Q3': (_) => const QuestionThreeScreen(),
+        '/Q4': (_) => const QuestionFourScreen(),
         '/morningEveningType': (_) => const MorningEveningTypeScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
       },

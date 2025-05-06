@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
-class TimeOfTirednessScreen extends StatefulWidget {
-  const TimeOfTirednessScreen({super.key});
+class QuestionFourScreen extends StatefulWidget {
+  const QuestionFourScreen({super.key});
 
   @override
-  State<TimeOfTirednessScreen> createState() => _TimeOfTirednessScreenState();
+  State<QuestionFourScreen> createState() => QuestionFourScreenState();
 }
 
-class _TimeOfTirednessScreenState extends State<TimeOfTirednessScreen> {
+class QuestionFourScreenState extends State<QuestionFourScreen> {
   String? selectedOption;
 
   final List<String> options = [

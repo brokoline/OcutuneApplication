@@ -57,7 +57,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
   }
 
   void _goToNext() {
-    Navigator.pushNamed(context, '/peakTime');
+    Navigator.pushNamed(context, '/Q3');
   }
 
   @override
