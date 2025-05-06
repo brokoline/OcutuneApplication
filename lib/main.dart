@@ -13,8 +13,8 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/question_1
 import 'package:ocutune_light_logger/screens/customer/register/survey/question_2_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/question_3_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/question_4_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/morning_evening_type_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_5_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -55,7 +55,7 @@ class OcutuneApp extends StatelessWidget {
         '/Q2': (_) => const QuestionTwoScreen(),
         '/Q3': (_) => const QuestionThreeScreen(),
         '/Q4': (_) => const QuestionFourScreen(),
-        '/morningEveningType': (_) => const MorningEveningTypeScreen(),
+        '/Q5': (_) => const QuestionFiveScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
       },
     );

@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
@@ -6,27 +9,56 @@ class QuestionFourScreen extends StatefulWidget {
   const QuestionFourScreen({super.key});
 
   @override
-  State<QuestionFourScreen> createState() => QuestionFourScreenState();
+  State<QuestionFourScreen> createState() => _QuestionFourScreenState();
 }
 
-class QuestionFourScreenState extends State<QuestionFourScreen> {
+class _QuestionFourScreenState extends State<QuestionFourScreen> {
   String? selectedOption;
+  late Future<Map<String, dynamic>> _questionData;
 
-  final List<String> options = [
-    "8:00 PM – 9:00 PM",
-    "9:00 PM – 10:15 PM",
-    "10:15 PM – 12:45 AM",
-    "12:45 AM – 2:00 AM",
-    "2:00 AM – 3:00 AM",
-    "Im fresh all day.."
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _questionData = fetchQuestionData(4);
+  }
+
+  Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
+    const baseUrl = 'https://ocutune.ddns.net';
+    final url = Uri.parse('$baseUrl/questions');
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      final question = data.firstWhere(
+            (q) => q['id'] == questionId,
+        orElse: () => null,
+      );
+
+      if (question == null) {
+        throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
+      }
+
+      final choices = question['choices'];
+      if (choices == null || choices is! List) {
+        throw Exception("Svarmuligheder mangler eller er i forkert format.");
+      }
+
+      return {
+        'text': question['question_text'] ?? 'Ingen spørgsmåls-tekst.',
+        'choices': List<String>.from(choices),
+      };
+    } else {
+      throw Exception('Kunne ikke hente data (statuskode: ${response.statusCode})');
+    }
+  }
 
   void _goToNextScreen() {
     if (selectedOption != null) {
-      Navigator.pushNamed(context, '/morningEveningType');
+      Navigator.pushNamed(context, '/Q5');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select an option first")),
+        const SnackBar(content: Text("Vælg venligst et tidspunkt først")),
       );
     }
   }
@@ -38,49 +70,83 @@ class QuestionFourScreenState extends State<QuestionFourScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "What time in the evening do you\nfeel tired and in need of sleep?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5,
-                          color: Colors.white,
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _questionData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Fejl: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            } else if (!snapshot.hasData) {
+              return const Center(
+                child: Text(
+                  'Ingen data tilgængelig.',
+                  style: TextStyle(color: Colors.white),
+                ),
+              );
+            } else {
+              final questionText = snapshot.data!['text'];
+              final options = snapshot.data!['choices'];
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                          child: Stack(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    questionText,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.5,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  ...options.map((option) => _buildOption(option)).toList(),
+                                  const SizedBox(height: 100),
+                                ],
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: OcutuneButton(
+                                  type: OcutuneButtonType.floatingIcon,
+                                  onPressed: _goToNextScreen,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      ...options.map((option) => _buildOption(option)).toList(),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: _goToNextScreen,
-              ),
-            ),
-          ],
+                    ),
+                  );
+                },
+              );
+            }
+          },
         ),
       ),
     );
