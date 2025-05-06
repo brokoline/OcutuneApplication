@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/register_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/terms_and_policy/privacypolicy_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/terms_and_policy/termsconditions_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/gender_age_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/choose_chronotype_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/learn_about_chronotypes/about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/survey/question_one_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/survey/question_two_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/survey/peak_time_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/survey/time_of_tiredness_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/survey/morning_evening_type_screen.dart';
-import 'package:ocutune_light_logger/screens/customer_register/done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/register_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/privacypolicy_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/termsconditions_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/gender_age_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/choose_chronotype_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_one_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/question_two_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/peak_time_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/time_of_tiredness_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/morning_evening_type_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
