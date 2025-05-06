@@ -1,31 +1,29 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 
-
-
-class QuestionOneScreen extends StatefulWidget {
-  const QuestionOneScreen({super.key});
+class QuestionFiveScreen extends StatefulWidget {
+  const QuestionFiveScreen({super.key});
 
   @override
-  State<QuestionOneScreen> createState() => QuestionOneScreenState();
+  State<QuestionFiveScreen> createState() => _QuestionFiveScreenState();
 }
 
-class QuestionOneScreenState extends State<QuestionOneScreen> {
+class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
   String? selectedOption;
   late Future<Map<String, dynamic>> _questionData;
 
   @override
   void initState() {
     super.initState();
-    _questionData = fetchQuestionData(1);
+    _questionData = fetchQuestionData(5);
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'https://ocutune.ddns.net'; // 10.0.2.2 for Android
+    const baseUrl = 'https://ocutune.ddns.net';
     final url = Uri.parse('$baseUrl/questions');
 
     final response = await http.get(url);
@@ -38,24 +36,29 @@ class QuestionOneScreenState extends State<QuestionOneScreen> {
       );
 
       if (question == null) {
-        throw Exception("Question with ID $questionId not found.");
+        throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
+      }
+
+      final choices = question['choices'];
+      if (choices == null || choices is! List) {
+        throw Exception("Svarmuligheder mangler eller er i forkert format.");
       }
 
       return {
-        'text': question['question_text'],
-        'choices': List<String>.from(question['choices']),
+        'text': question['question_text'] ?? 'Ingen spørgsmåls-tekst.',
+        'choices': List<String>.from(choices),
       };
     } else {
-      throw Exception('Failed to load question (status ${response.statusCode})');
+      throw Exception('Kunne ikke hente data (statuskode: ${response.statusCode})');
     }
   }
 
   void _goToNextScreen() {
     if (selectedOption != null) {
-      Navigator.pushNamed(context, '/Q2');
+      Navigator.pushNamed(context, '/doneSetup');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select an option first")),
+        const SnackBar(content: Text("Vælg venligst en type først")),
       );
     }
   }
@@ -67,8 +70,6 @@ class QuestionOneScreenState extends State<QuestionOneScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -77,31 +78,35 @@ class QuestionOneScreenState extends State<QuestionOneScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: FutureBuilder<Map<String, dynamic>>(
-                    future: _questionData,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        return Text(
-                          'Error: ${snapshot.error}',
-                          style: const TextStyle(color: Colors.white),
-                        );
-                      } else if (!snapshot.hasData) {
-                        return const Text(
-                          "No question found.",
-                          style: TextStyle(color: Colors.white),
-                        );
-                      } else {
-                        final questionText = snapshot.data!['text'];
-                        final choices = snapshot.data!['choices'];
+            FutureBuilder<Map<String, dynamic>>(
+              future: _questionData,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Fejl: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  );
+                } else if (!snapshot.hasData) {
+                  return const Center(
+                    child: Text(
+                      'Ingen data tilgængelig.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  );
+                } else {
+                  final questionText = snapshot.data!['text'];
+                  final options = snapshot.data!['choices'];
 
-                        return Column(
+                  return Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 400),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
@@ -115,15 +120,14 @@ class QuestionOneScreenState extends State<QuestionOneScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            ...choices.map((option) => _buildOption(option)).toList(),
-                            const SizedBox(height: 100),
+                            ...options.map((option) => _buildOption(option)).toList(),
                           ],
-                        );
-                      }
-                    },
-                  ),
-                ),
-              ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
             Positioned(
               bottom: 24,

@@ -57,7 +57,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
   }
 
   void _goToNext() {
-    Navigator.pushNamed(context, '/peakTime');
+    Navigator.pushNamed(context, '/Q3');
   }
 
   @override
@@ -112,7 +112,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                             style: TextStyle(
                               color: colors[index],
                               fontWeight: FontWeight.bold,
-                              fontSize: 50,
+                              fontSize: 25,
                             ),
                             child: Text(choices[index]),
                           ),
