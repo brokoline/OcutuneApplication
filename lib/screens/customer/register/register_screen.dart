@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
@@ -9,6 +11,27 @@ import '/models/user_data_service.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
+
+  Future<bool> emailExists(String email) async {
+    final url = Uri.parse('https://ocutune.ddns.net/check-email');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body);
+        return jsonBody['exists'] == true;
+      } else {
+        return false;
+      }
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +90,7 @@ class RegisterScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Checkbox(
-                value: agreed,
+                value: agreement.value,
                 onChanged: (value) => agreement.value = value ?? false,
                 activeColor: Colors.white,
               ),
@@ -139,7 +162,7 @@ class RegisterScreen extends StatelessWidget {
                     right: 24,
                     child: OcutuneButton(
                       type: OcutuneButtonType.floatingIcon,
-                      onPressed: () {
+                      onPressed: () async {
                         final firstName = firstNameController.text.trim();
                         final lastName = lastNameController.text.trim();
                         final email = emailController.text.trim();
@@ -168,6 +191,12 @@ class RegisterScreen extends StatelessWidget {
 
                         if (!agreement.value) {
                           showError(context, "Du skal acceptere vilkårene for at fortsætte");
+                          return;
+                        }
+
+                        final exists = await emailExists(email);
+                        if (exists) {
+                          showError(context, "Denne e-mail er allerede registreret");
                           return;
                         }
 

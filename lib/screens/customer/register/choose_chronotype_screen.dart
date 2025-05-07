@@ -39,10 +39,23 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
     } else {
       if (!mounted) return;
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Kunne ikke hente data.")),
-      );
+      showError(context, "Kunne ikke hente data.");
     }
+  }
+
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red.shade700,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
   }
 
   void _goToNextScreen() {
@@ -52,17 +65,17 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
           firstName: currentUserResponse!.firstName,
           lastName: currentUserResponse!.lastName,
           email: currentUserResponse!.email,
+          password: currentUserResponse!.password,
           gender: currentUserResponse!.gender,
           birthYear: currentUserResponse!.birthYear,
           answers: [...currentUserResponse!.answers, selectedChronotype!],
           scores: currentUserResponse!.scores,
         );
+
       }
-      Navigator.pushNamed(context, '/learnAboutChronotypes');
+      Navigator.pushNamed(context, '/doneSetup');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vælg en kronotype først")),
-      );
+      showError(context, "Vælg en kronotype eller tag testen først");
     }
   }
 
@@ -95,7 +108,10 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                         const Center(
                           child: Text(
                             "Kender du din kronotype?",
-                            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -106,9 +122,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-
                         ...chronotypes.map((type) => _buildChronoCard(type)).toList(),
-
                         const SizedBox(height: 8),
                         Center(
                           child: TextButton(
@@ -139,7 +153,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  selectedChronotype = null; // Reset hvis man vælger at tage testen
+                                  selectedChronotype = null;
                                 });
                                 Navigator.pushNamed(context, '/Q1');
                               },

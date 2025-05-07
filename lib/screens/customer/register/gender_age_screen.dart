@@ -28,6 +28,21 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
     {'label': 'Ikke angivet', 'value': 'other'},
   ];
 
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red.shade700,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,9 +187,7 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                 type: OcutuneButtonType.floatingIcon,
                 onPressed: () {
                   if (!_yearChosen || selectedGender == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Vælg både år og køn")),
-                    );
+                    showError(context, "Vælg både år og køn");
                     return;
                   }
 
