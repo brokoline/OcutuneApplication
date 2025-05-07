@@ -6,8 +6,7 @@ import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/widgets/ocutune_textfield.dart';
 import '/widgets/ocutune_card.dart';
-import '/models/user_data_service.dart'; // <-- allerede tilføjet
-
+import '/models/user_data_service.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -22,6 +21,11 @@ class RegisterScreen extends StatelessWidget {
     final passwordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
     final agreement = ValueNotifier(false);
+
+    bool isValidEmail(String email) {
+      final emailRegex = RegExp(r"^[^@]+@[^@]+\.[^@]+$");
+      return emailRegex.hasMatch(email);
+    }
 
     final formFields = ValueListenableBuilder<bool>(
       valueListenable: agreement,
@@ -109,6 +113,40 @@ class RegisterScreen extends StatelessWidget {
           child: OcutuneButton(
             type: OcutuneButtonType.floatingIcon,
             onPressed: () {
+              final firstName = firstNameController.text.trim();
+              final lastName = lastNameController.text.trim();
+              final email = emailController.text.trim();
+              final password = passwordController.text;
+              final confirmPassword = confirmPasswordController.text;
+
+              if (firstName.isEmpty || lastName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Udfyld venligst både fornavn og efternavn")),
+                );
+                return;
+              }
+
+              if (!isValidEmail(email)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Indtast en gyldig e-mailadresse")),
+                );
+                return;
+              }
+
+              if (password.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Adgangskoden skal være mindst 6 tegn")),
+                );
+                return;
+              }
+
+              if (password != confirmPassword) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Adgangskoderne matcher ikke")),
+                );
+                return;
+              }
+
               if (!agreement.value) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Du skal acceptere vilkårene for at fortsætte")),
@@ -116,14 +154,16 @@ class RegisterScreen extends StatelessWidget {
                 return;
               }
 
-              // lokal lagring inden det gemmes i backend
+              // Gem oplysninger lokalt
               updateBasicInfo(
-                firstName: firstNameController.text,
-                lastName: lastNameController.text,
-                email: emailController.text,
-                gender: '',      // udfyldes på næste skærm
-                birthYear: '',   // udfyldes på næste skærm
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                gender: '', // sættes senere
+                birthYear: '',
               );
+
+              currentUserResponse?.password = password;
 
               Navigator.pushNamed(context, '/genderage');
             },
