@@ -2,11 +2,12 @@ class UserResponse {
   final String firstName;
   final String lastName;
   final String email;
-  final String gender;
-  final String birthYear;
+  String gender;
+  String birthYear;
   final List<String> answers;
   final List<int> scores;
-  String? chronotypeKey; // ← tilføjet
+  String? chronotypeKey;
+  String? password;
 
   UserResponse({
     required this.firstName,
@@ -16,17 +17,19 @@ class UserResponse {
     required this.birthYear,
     required this.answers,
     required this.scores,
-    this.chronotypeKey, // ← tilføjet
+    this.chronotypeKey,
+    this.password,
   });
 
   Map<String, dynamic> toJson() => {
     'first_name': firstName,
     'last_name': lastName,
     'email': email,
+    'password': password,
     'gender': gender,
     'birth_year': birthYear,
     'answers': answers,
     'scores': scores,
-    'chronotype_key': chronotypeKey, // ← tilføjet
+    'chronotype_key': chronotypeKey,
   };
 }

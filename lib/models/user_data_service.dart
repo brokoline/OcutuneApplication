@@ -58,7 +58,7 @@ void setChronotypeKey(String key) {
 Future<void> submitUserResponse() async {
   if (currentUserResponse == null) return;
 
-  final url = Uri.parse('https://ocutune.ddns.net/users'); // ← tilpas når backend er klar
+  final url = Uri.parse('https://ocutune.ddns.net/customers');
 
   final response = await http.post(
     url,

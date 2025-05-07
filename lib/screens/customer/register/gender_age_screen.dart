@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/models/user_data_service.dart';
-import '/models/user_response.dart';
-
 
 class GenderAgeScreen extends StatefulWidget {
   const GenderAgeScreen({super.key});
@@ -23,7 +21,12 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
     DateTime.now().year - 1925 + 1,
         (index) => (1925 + index).toString(),
   );
-  final List<String> genders = ['Mand', 'Kvinde', 'Ikke angivet'];
+
+  final List<Map<String, String>> genders = [
+    {'label': 'Mand', 'value': 'male'},
+    {'label': 'Kvinde', 'value': 'female'},
+    {'label': 'Ikke angivet', 'value': 'other'},
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +61,6 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
@@ -119,7 +121,6 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
@@ -142,10 +143,10 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                             ),
                             iconEnabledColor: Colors.white,
                             style: const TextStyle(color: Colors.white, fontSize: 16),
-                            items: genders.map((gender) {
-                              return DropdownMenuItem(
-                                value: gender,
-                                child: Text(gender, style: const TextStyle(fontSize: 16)),
+                            items: genders.map((entry) {
+                              return DropdownMenuItem<String>(
+                                value: entry['value'],
+                                child: Text(entry['label']!, style: const TextStyle(fontSize: 16)),
                               );
                             }).toList(),
                             onChanged: (value) {
@@ -177,17 +178,9 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                     return;
                   }
 
-                  // Opdater brugerdata med køn og fødselsår
                   if (currentUserResponse != null) {
-                    currentUserResponse = UserResponse(
-                      firstName: currentUserResponse!.firstName,
-                      lastName: currentUserResponse!.lastName,
-                      email: currentUserResponse!.email,
-                      gender: selectedGender!,
-                      birthYear: selectedYear!,
-                      answers: currentUserResponse!.answers,
-                      scores: currentUserResponse!.scores,
-                    );
+                    currentUserResponse!.gender = selectedGender!;
+                    currentUserResponse!.birthYear = selectedYear!;
                   }
 
                   Navigator.pushNamed(context, '/chooseChronotype');
