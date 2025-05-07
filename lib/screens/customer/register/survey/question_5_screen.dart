@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/models/user_data_service.dart';
 
 class QuestionFiveScreen extends StatefulWidget {
   const QuestionFiveScreen({super.key});
@@ -14,23 +15,31 @@ class QuestionFiveScreen extends StatefulWidget {
 
 class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
   String? selectedOption;
+  Map<String, int> choiceScores = {};
   late Future<Map<String, dynamic>> _questionData;
 
   @override
   void initState() {
     super.initState();
+    currentQuestion = 5;
     _questionData = fetchQuestionData(5);
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
     const baseUrl = 'https://ocutune.ddns.net';
-    final url = Uri.parse('$baseUrl/questions');
+    final questionsUrl = Uri.parse('$baseUrl/questions');
+    final choicesUrl = Uri.parse('$baseUrl/choices');
 
-    final response = await http.get(url);
+    final responses = await Future.wait([
+      http.get(questionsUrl),
+      http.get(choicesUrl),
+    ]);
 
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      final question = data.firstWhere(
+    if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
+      final questions = jsonDecode(responses[0].body) as List;
+      final choices = jsonDecode(responses[1].body) as List;
+
+      final question = questions.firstWhere(
             (q) => q['id'] == questionId,
         orElse: () => null,
       );
@@ -39,22 +48,33 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final choices = question['choices'];
-      if (choices == null || choices is! List) {
-        throw Exception("Svarmuligheder mangler eller er i forkert format.");
+      final filteredChoices = choices
+          .where((c) => c['question_id'] == questionId)
+          .toList();
+
+      if (filteredChoices.isEmpty) {
+        throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
       }
 
+      final scoreMap = {
+        for (var c in filteredChoices)
+          c['choice_text'] as String: c['score'] as int,
+      };
+
       return {
-        'text': question['question_text'] ?? 'Ingen spørgsmåls-tekst.',
-        'choices': List<String>.from(choices),
+        'text': question['question_text'],
+        'choices': scoreMap.keys.toList(),
+        'scores': scoreMap,
       };
     } else {
-      throw Exception('Kunne ikke hente data (statuskode: ${response.statusCode})');
+      throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder.');
     }
   }
 
   void _goToNextScreen() {
     if (selectedOption != null) {
+      final score = choiceScores[selectedOption!] ?? 0;
+      saveAnswer(selectedOption!, score);
       Navigator.pushNamed(context, '/doneSetup');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,69 +96,62 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
         ),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            FutureBuilder<Map<String, dynamic>>(
-              future: _questionData,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      'Fejl: ${snapshot.error}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  );
-                } else if (!snapshot.hasData) {
-                  return const Center(
-                    child: Text(
-                      'Ingen data tilgængelig.',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  );
-                } else {
-                  final questionText = snapshot.data!['text'];
-                  final options = snapshot.data!['choices'];
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _questionData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Fejl: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            } else if (!snapshot.hasData) {
+              return const Center(
+                child: Text(
+                  'Ingen data tilgængelig.',
+                  style: TextStyle(color: Colors.white),
+                ),
+              );
+            } else {
+              final questionText = snapshot.data!['text'];
+              final options = snapshot.data!['choices'] as List<String>;
+              choiceScores = Map<String, int>.from(snapshot.data!['scores']);
 
-                  return Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 400),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              questionText,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                height: 1.5,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            ...options.map((option) => _buildOption(option)).toList(),
-                          ],
+              return Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          questionText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            height: 1.5,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 32),
+                        ...options.map((option) => _buildOption(option)).toList(),
+                      ],
                     ),
-                  );
-                }
-              },
-            ),
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: _goToNextScreen,
-              ),
-            ),
-          ],
+                  ),
+                ),
+              );
+            }
+          },
         ),
+      ),
+      floatingActionButton: OcutuneButton(
+        type: OcutuneButtonType.floatingIcon,
+        onPressed: _goToNextScreen,
       ),
     );
   }

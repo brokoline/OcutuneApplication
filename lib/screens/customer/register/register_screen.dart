@@ -6,6 +6,8 @@ import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/widgets/ocutune_textfield.dart';
 import '/widgets/ocutune_card.dart';
+import '/models/user_data_service.dart'; // <-- allerede tilføjet
+
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -113,6 +115,16 @@ class RegisterScreen extends StatelessWidget {
                 );
                 return;
               }
+
+              // lokal lagring inden det gemmes i backend
+              updateBasicInfo(
+                firstName: firstNameController.text,
+                lastName: lastNameController.text,
+                email: emailController.text,
+                gender: '',      // udfyldes på næste skærm
+                birthYear: '',   // udfyldes på næste skærm
+              );
+
               Navigator.pushNamed(context, '/genderage');
             },
           ),

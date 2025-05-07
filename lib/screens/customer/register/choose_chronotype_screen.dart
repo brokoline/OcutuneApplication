@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/models/user_data_service.dart';
+import '/models/user_response.dart';
 import 'package:ocutune_light_logger/models/chronotype.dart';
-
 
 class ChooseChronotypeScreen extends StatefulWidget {
   const ChooseChronotypeScreen({super.key});
@@ -25,17 +26,18 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
   }
 
   Future<void> fetchChronotypes() async {
-    final url = Uri.parse('https://ocutune.ddns.net/chronotypes'); // eller din endpoint
+    final url = Uri.parse('https://ocutune.ddns.net/chronotypes');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
+      if (!mounted) return;
       setState(() {
         chronotypes = data.map((json) => Chronotype.fromJson(json)).toList();
         isLoading = false;
       });
     } else {
-      // fejlhåndtering
+      if (!mounted) return;
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Kunne ikke hente data.")),
@@ -45,6 +47,17 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
 
   void _goToNextScreen() {
     if (selectedChronotype != null) {
+      if (currentUserResponse != null) {
+        currentUserResponse = UserResponse(
+          firstName: currentUserResponse!.firstName,
+          lastName: currentUserResponse!.lastName,
+          email: currentUserResponse!.email,
+          gender: currentUserResponse!.gender,
+          birthYear: currentUserResponse!.birthYear,
+          answers: [...currentUserResponse!.answers, selectedChronotype!],
+          scores: currentUserResponse!.scores,
+        );
+      }
       Navigator.pushNamed(context, '/learnAboutChronotypes');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -125,6 +138,9 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                                 ),
                               ),
                               onPressed: () {
+                                setState(() {
+                                  selectedChronotype = null; // Reset hvis man vælger at tage testen
+                                });
                                 Navigator.pushNamed(context, '/Q1');
                               },
                               child: const Text("Tag testen"),

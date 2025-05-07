@@ -1,57 +1,80 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
-
-
+import '/models/user_data_service.dart';
 
 class QuestionOneScreen extends StatefulWidget {
   const QuestionOneScreen({super.key});
 
   @override
-  State<QuestionOneScreen> createState() => QuestionOneScreenState();
+  State<QuestionOneScreen> createState() => _QuestionOneScreenState();
 }
 
-class QuestionOneScreenState extends State<QuestionOneScreen> {
+class _QuestionOneScreenState extends State<QuestionOneScreen> {
   String? selectedOption;
+  Map<String, int> choiceScores = {};
   late Future<Map<String, dynamic>> _questionData;
 
   @override
   void initState() {
     super.initState();
+    currentQuestion = 1;
     _questionData = fetchQuestionData(1);
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'https://ocutune.ddns.net'; // 10.0.2.2 for Android
-    final url = Uri.parse('$baseUrl/questions');
+    const baseUrl = 'https://ocutune.ddns.net';
+    final questionsUrl = Uri.parse('$baseUrl/questions');
+    final choicesUrl = Uri.parse('$baseUrl/choices');
 
-    final response = await http.get(url);
+    final responses = await Future.wait([
+      http.get(questionsUrl),
+      http.get(choicesUrl),
+    ]);
 
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      final question = data.firstWhere(
+    if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
+      final questions = jsonDecode(responses[0].body) as List;
+      final choices = jsonDecode(responses[1].body) as List;
+
+      final question = questions.firstWhere(
             (q) => q['id'] == questionId,
         orElse: () => null,
       );
 
       if (question == null) {
-        throw Exception("Question with ID $questionId not found.");
+        throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
+
+      final filteredChoices = choices
+          .where((c) => c['question_id'] == questionId)
+          .toList();
+
+      if (filteredChoices.isEmpty) {
+        throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
+      }
+
+      final scoreMap = {
+        for (var c in filteredChoices)
+          c['choice_text'] as String: c['score'] as int,
+      };
 
       return {
         'text': question['question_text'],
-        'choices': List<String>.from(question['choices']),
+        'choices': scoreMap.keys.toList(),
+        'scores': scoreMap,
       };
     } else {
-      throw Exception('Failed to load question (status ${response.statusCode})');
+      throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder.');
     }
   }
 
   void _goToNextScreen() {
     if (selectedOption != null) {
+      final score = choiceScores[selectedOption!] ?? 0;
+      saveAnswer(selectedOption!, score);
       Navigator.pushNamed(context, '/Q2');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,17 +112,18 @@ class QuestionOneScreenState extends State<QuestionOneScreen> {
                         return const CircularProgressIndicator();
                       } else if (snapshot.hasError) {
                         return Text(
-                          'Error: ${snapshot.error}',
+                          'Fejl: ${snapshot.error}',
                           style: const TextStyle(color: Colors.white),
                         );
                       } else if (!snapshot.hasData) {
                         return const Text(
-                          "No question found.",
+                          "Spørgsmålet kunne ikke indlæses.",
                           style: TextStyle(color: Colors.white),
                         );
                       } else {
                         final questionText = snapshot.data!['text'];
-                        final choices = snapshot.data!['choices'];
+                        final choices = snapshot.data!['choices'] as List<String>;
+                        choiceScores = Map<String, int>.from(snapshot.data!['scores']);
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
