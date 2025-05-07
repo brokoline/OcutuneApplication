@@ -1,6 +1,10 @@
 import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
+import '/models/user_data_service.dart';
+import '/models/user_response.dart';
 
 class DoneSetupScreen extends StatefulWidget {
   const DoneSetupScreen({super.key});
@@ -14,6 +18,10 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   late AnimationController _pulseController;
   late AnimationController _orbitController;
   late Animation<double> _scaleAnim;
+
+  String chronotype = "";
+  String chronotypeText = "";
+  String chronotypeImageUrl = "";
 
   @override
   void initState() {
@@ -32,6 +40,43 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
     _scaleAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    final total = currentUserResponse?.scores.fold(0, (a, b) => a + b) ?? 0;
+    print("🧠 Total score sendt til API: $total"); // DEBUG LOG
+
+    fetchChronotypeFromServer(total);
+    submitUserResponse();
+  }
+
+  Future<void> fetchChronotypeFromServer(int score) async {
+    final url = Uri.parse('https://ocutune.ddns.net/chronotypes/by-score/$score');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          chronotype = data['title'] ?? 'Ukendt kronotype';
+          chronotypeText = data['summary_text'] ?? 'Beskrivelse mangler';
+          chronotypeImageUrl = data['image_url'] ?? '';
+        });
+      } else {
+        print("⚠️ API 404 - ingen matchende kronotype for score $score");
+        setState(() {
+          chronotype = 'Ukendt';
+          chronotypeText = 'Kunne ikke hente din kronotype';
+          chronotypeImageUrl = '';
+        });
+      }
+    } catch (e) {
+      print("❌ Fejl ved API-kald: $e");
+      setState(() {
+        chronotype = 'Fejl';
+        chronotypeText = 'Noget gik galt: $e';
+        chronotypeImageUrl = '';
+      });
+    }
   }
 
   @override
@@ -57,11 +102,8 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
       builder: (_, __) {
         final angleDeg = (_orbitController.value * 360 + angleOffset) % 360;
         final angle = angleDeg * (pi / 180);
-
         final dx = radius * cos(angle);
         final dy = radius * sin(angle);
-
-        // Størrelsen afhænger af vertikal position (illusion af dybde)
         final size = minSize +
             (maxSize - minSize) * (1 - sin(angle).clamp(-1.0, 1.0));
 
@@ -92,14 +134,13 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ✨ Stjerner og effekter
+                // Animation + image
                 SizedBox(
                   height: 200,
                   width: 200,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      // 🌟 Pulserende hovedstjerne
                       AnimatedBuilder(
                         animation: _scaleAnim,
                         builder: (context, child) {
@@ -108,13 +149,17 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                             child: child,
                           );
                         },
-                        child: const Icon(
-                          Icons.star_rounded,
-                          color: Colors.white,
-                          size: 80,
-                        ),
+                        child: chronotypeImageUrl.isNotEmpty
+                            ? Image.network(
+                          chronotypeImageUrl,
+                          width: 100,
+                          height: 100,
+                          errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image,
+                              size: 80, color: Colors.white),
+                        )
+                            : const Icon(Icons.image, size: 80, color: Colors.white),
                       ),
-                      // ✨ Kredsstjerner med rotation og skalering
                       _orbitingStar(
                           angleOffset: 0,
                           radius: 60,
@@ -137,21 +182,31 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  "Du er klar!",
-                  style: TextStyle(
+                Text(
+                  chronotype,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     fontSize: 24,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
+                Text(
+                  chronotypeText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.6,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 32),
                 const Text(
-                  "Velkommen til din rejse mod bedre søvn og rytme.",
+                  "Du er nu klar til at starte din lyslogning!",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    height: 1.6,
                     color: Colors.white70,
                   ),
                 ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/models/user_data_service.dart';
+import '/models/user_response.dart';
+
 
 class GenderAgeScreen extends StatefulWidget {
   const GenderAgeScreen({super.key});
@@ -10,7 +13,6 @@ class GenderAgeScreen extends StatefulWidget {
 }
 
 class GenderAgeScreenState extends State<GenderAgeScreen> {
-  // Standardår for at rulle midt i listen
   static const String _defaultYear = '2000';
   String? selectedYear = _defaultYear;
   bool _yearChosen = false;
@@ -57,7 +59,6 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Årstals-dropdown
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
@@ -68,18 +69,12 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            // Centreret vertikalt + til venstre horisontalt
                             alignment: AlignmentDirectional.centerStart,
-
-                            // Scroll-menu midt i listen fra starten
                             value: selectedYear,
                             menuMaxHeight: 240,
                             itemHeight: 48,
-
                             dropdownColor: darkGray,
                             isExpanded: true,
-
-                            // Brug selectedItemBuilder til at vise hint indtil valgt
                             selectedItemBuilder: (context) {
                               return years.map((year) {
                                 final isHint = !_yearChosen && year == _defaultYear;
@@ -95,17 +90,14 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                                 );
                               }).toList();
                             },
-
                             iconEnabledColor: Colors.white,
                             style: const TextStyle(color: Colors.white),
-
                             items: years.map((year) {
                               return DropdownMenuItem(
                                 value: year,
                                 child: Text(year, style: const TextStyle(fontSize: 16)),
                               );
                             }).toList(),
-
                             onChanged: (value) {
                               setState(() {
                                 selectedYear = value;
@@ -128,7 +120,6 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Køns-dropdown
                       Container(
                         height: 56,
                         decoration: BoxDecoration(
@@ -185,6 +176,20 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                     );
                     return;
                   }
+
+                  // Opdater brugerdata med køn og fødselsår
+                  if (currentUserResponse != null) {
+                    currentUserResponse = UserResponse(
+                      firstName: currentUserResponse!.firstName,
+                      lastName: currentUserResponse!.lastName,
+                      email: currentUserResponse!.email,
+                      gender: selectedGender!,
+                      birthYear: selectedYear!,
+                      answers: currentUserResponse!.answers,
+                      scores: currentUserResponse!.scores,
+                    );
+                  }
+
                   Navigator.pushNamed(context, '/chooseChronotype');
                 },
               ),

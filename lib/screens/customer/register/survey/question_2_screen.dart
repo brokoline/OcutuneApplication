@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/models/user_data_service.dart';
 
 class QuestionTwoScreen extends StatefulWidget {
   const QuestionTwoScreen({super.key});
@@ -21,48 +22,79 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
     Colors.orange,
     Colors.white,
     Colors.lightGreen,
-    Colors.green
+    Colors.green,
   ];
+
+  List<String> choices = [];
 
   @override
   void initState() {
     super.initState();
+    currentQuestion = 2;
     _questionData = fetchQuestionData(2);
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'https://ocutune.ddns.net'; // 10.0.2.2 for Android
-    final url = Uri.parse('$baseUrl/questions');
+    const baseUrl = 'https://ocutune.ddns.net';
+    final questionsUrl = Uri.parse('$baseUrl/questions');
+    final choicesUrl = Uri.parse('$baseUrl/choices');
 
-    final response = await http.get(url);
+    final responses = await Future.wait([
+      http.get(questionsUrl),
+      http.get(choicesUrl),
+    ]);
 
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      final question = data.firstWhere(
+    if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
+      final questions = jsonDecode(responses[0].body) as List;
+      final choicesData = jsonDecode(responses[1].body) as List;
+
+      final question = questions.firstWhere(
             (q) => q['id'] == questionId,
         orElse: () => null,
       );
 
       if (question == null) {
-        throw Exception("Question with ID $questionId not found.");
+        throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
+
+      final filtered = choicesData
+          .where((item) => item['question_id'] == questionId)
+          .toList();
+
+      if (filtered.isEmpty) {
+        throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
+      }
+
+      filtered.sort((a, b) => (a['score'] as int).compareTo(b['score'] as int));
+
+      final choiceList = filtered.map((item) => item['choice_text'] as String).toList();
+      final scoreMap = {
+        for (var item in filtered)
+          item['choice_text'] as String: item['score'] as int,
+      };
 
       return {
         'text': question['question_text'],
-        'choices': List<String>.from(question['choices']),
+        'choices': choiceList,
+        'scores': scoreMap,
       };
     } else {
-      throw Exception('Failed to load question (status ${response.statusCode})');
+      throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder.');
     }
   }
 
-  void _goToNext() {
+  void _goToNext(Map<String, int> scoreMap) {
+    final index = sliderValue.round();
+    final selectedChoice = choices[index];
+    final score = scoreMap[selectedChoice] ?? 0;
+
+    saveAnswer(selectedChoice, score);
     Navigator.pushNamed(context, '/Q3');
   }
 
   @override
   Widget build(BuildContext context) {
-    final int index = sliderValue.round();
+    final index = sliderValue.round();
 
     return Scaffold(
       backgroundColor: lightGray,
@@ -75,25 +107,28 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
         ),
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: FutureBuilder<Map<String, dynamic>>(
-                  future: _questionData,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    } else if (snapshot.hasError) {
-                      return Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white));
-                    } else if (!snapshot.hasData) {
-                      return const Text("No question found.", style: TextStyle(color: Colors.white));
-                    } else {
-                      final questionText = snapshot.data!['text'];
-                      final choices = snapshot.data!['choices'];
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _questionData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text('Fejl: ${snapshot.error}', style: const TextStyle(color: Colors.white)),
+              );
+            } else if (!snapshot.hasData) {
+              return const Center(child: Text("Ingen data tilgængelig.", style: TextStyle(color: Colors.white)));
+            } else {
+              final questionText = snapshot.data!['text'];
+              choices = List<String>.from(snapshot.data!['choices']);
+              final scoreMap = Map<String, int>.from(snapshot.data!['scores']);
 
-                      return Column(
+              return Stack(
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
@@ -110,7 +145,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                           AnimatedDefaultTextStyle(
                             duration: const Duration(milliseconds: 300),
                             style: TextStyle(
-                              color: colors[index],
+                              color: colors[index.clamp(0, colors.length - 1)],
                               fontWeight: FontWeight.bold,
                               fontSize: 25,
                             ),
@@ -121,10 +156,10 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                             data: SliderTheme.of(context).copyWith(
                               trackHeight: 4.5,
                               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                              activeTrackColor: colors[index],
+                              activeTrackColor: colors[index.clamp(0, colors.length - 1)],
                               inactiveTrackColor: Colors.white24,
-                              thumbColor: colors[index],
-                              overlayColor: colors[index].withOpacity(0.2),
+                              thumbColor: colors[index.clamp(0, colors.length - 1)],
+                              overlayColor: colors[index.clamp(0, colors.length - 1)].withAlpha(51),
                             ),
                             child: Slider(
                               value: sliderValue,
@@ -137,21 +172,21 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                             ),
                           ),
                         ],
-                      );
-                    }
-                  },
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: _goToNext,
-              ),
-            ),
-          ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 24,
+                    right: 24,
+                    child: OcutuneButton(
+                      type: OcutuneButtonType.floatingIcon,
+                      onPressed: () => _goToNext(scoreMap),
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
         ),
       ),
     );
