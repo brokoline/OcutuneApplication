@@ -41,11 +41,19 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    final total = currentUserResponse?.scores.fold(0, (a, b) => a + b) ?? 0;
-    print("🧠 Total score sendt til API: $total"); // DEBUG LOG
+    _prepareAndSubmit();
+  }
 
-    fetchChronotypeFromServer(total);
-    submitUserResponse();
+  Future<void> _prepareAndSubmit() async {
+    if ((currentUserResponse?.scores ?? []).isNotEmpty) {
+      final total = currentUserResponse!.scores.fold(0, (a, b) => a + b);
+      await fetchChronotypeFromServer(total);
+    } else if ((currentUserResponse?.answers ?? []).isNotEmpty) {
+      final title = currentUserResponse!.answers.last;
+      await fetchChronotypeByTitle(title);
+    }
+
+    await submitUserResponse();
   }
 
   Future<void> fetchChronotypeFromServer(int score) async {
@@ -56,25 +64,55 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
+        currentUserResponse?.chronotypeKey = data['type_key'];
+
         setState(() {
           chronotype = data['title'] ?? 'Ukendt kronotype';
           chronotypeText = data['summary_text'] ?? 'Beskrivelse mangler';
           chronotypeImageUrl = data['image_url'] ?? '';
         });
       } else {
-        print("⚠️ API 404 - ingen matchende kronotype for score $score");
         setState(() {
           chronotype = 'Ukendt';
-          chronotypeText = 'Kunne ikke hente din kronotype';
-          chronotypeImageUrl = '';
+          chronotypeText = 'Kunne ikke hente kronotype';
         });
       }
     } catch (e) {
-      print("❌ Fejl ved API-kald: $e");
       setState(() {
         chronotype = 'Fejl';
         chronotypeText = 'Noget gik galt: $e';
-        chronotypeImageUrl = '';
+      });
+    }
+  }
+
+  Future<void> fetchChronotypeByTitle(String title) async {
+    final url = Uri.parse('https://ocutune.ddns.net/chronotypes');
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final match = data.firstWhere((c) => c['title'] == title, orElse: () => null);
+
+        if (match != null) {
+          currentUserResponse?.chronotypeKey = match['type_key']; // 🟢 nu korrekt
+          setState(() {
+            chronotype = match['title'] ?? title;
+            chronotypeText = match['summary_text'] ?? 'Beskrivelse mangler';
+            chronotypeImageUrl = match['image_url'] ?? '';
+          });
+        } else {
+          setState(() {
+            chronotype = title;
+            chronotypeText = 'Beskrivelse ikke fundet';
+          });
+        }
+      }
+    } catch (_) {
+      setState(() {
+        chronotype = title;
+        chronotypeText = 'Kunne ikke hente data';
       });
     }
   }
@@ -134,7 +172,6 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Animation + image
                 SizedBox(
                   height: 200,
                   width: 200,
@@ -155,29 +192,13 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                           width: 100,
                           height: 100,
                           errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.broken_image,
-                              size: 80, color: Colors.white),
+                          const Icon(Icons.broken_image, size: 80, color: Colors.white),
                         )
                             : const Icon(Icons.image, size: 80, color: Colors.white),
                       ),
-                      _orbitingStar(
-                          angleOffset: 0,
-                          radius: 60,
-                          minSize: 8,
-                          maxSize: 16,
-                          opacity: 0.8),
-                      _orbitingStar(
-                          angleOffset: 120,
-                          radius: 75,
-                          minSize: 6,
-                          maxSize: 14,
-                          opacity: 0.6),
-                      _orbitingStar(
-                          angleOffset: 240,
-                          radius: 65,
-                          minSize: 6,
-                          maxSize: 12,
-                          opacity: 0.5),
+                      _orbitingStar(angleOffset: 0, radius: 60, minSize: 8, maxSize: 16, opacity: 0.8),
+                      _orbitingStar(angleOffset: 120, radius: 75, minSize: 6, maxSize: 14, opacity: 0.6),
+                      _orbitingStar(angleOffset: 240, radius: 65, minSize: 6, maxSize: 12, opacity: 0.5),
                     ],
                   ),
                 ),

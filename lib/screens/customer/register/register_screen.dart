@@ -1,7 +1,8 @@
-import 'dart:io';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/widgets/ocutune_textfield.dart';
@@ -11,10 +12,29 @@ import '/models/user_data_service.dart';
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
+  Future<bool> emailExists(String email) async {
+    final url = Uri.parse('https://ocutune.ddns.net/check-email');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body);
+        return jsonBody['exists'] == true;
+      } else {
+        return false;
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isIOS = Platform.isIOS;
-
     final firstNameController = TextEditingController();
     final lastNameController = TextEditingController();
     final emailController = TextEditingController();
@@ -25,6 +45,21 @@ class RegisterScreen extends StatelessWidget {
     bool isValidEmail(String email) {
       final emailRegex = RegExp(r"^[^@]+@[^@]+\.[^@]+$");
       return emailRegex.hasMatch(email);
+    }
+
+    void showError(BuildContext context, String message) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade700,
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text(message)),
+            ],
+          ),
+        ),
+      );
     }
 
     final formFields = ValueListenableBuilder<bool>(
@@ -55,7 +90,7 @@ class RegisterScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Checkbox(
-                value: agreed,
+                value: agreement.value,
                 onChanged: (value) => agreement.value = value ?? false,
                 activeColor: Colors.white,
               ),
@@ -104,94 +139,7 @@ class RegisterScreen extends StatelessWidget {
       ),
     );
 
-    final contentWithButton = Stack(
-      children: [
-        OcutuneCard(child: formFields),
-        Positioned(
-          bottom: 24,
-          right: 24,
-          child: OcutuneButton(
-            type: OcutuneButtonType.floatingIcon,
-            onPressed: () {
-              final firstName = firstNameController.text.trim();
-              final lastName = lastNameController.text.trim();
-              final email = emailController.text.trim();
-              final password = passwordController.text;
-              final confirmPassword = confirmPasswordController.text;
-
-              if (firstName.isEmpty || lastName.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Udfyld venligst både fornavn og efternavn")),
-                );
-                return;
-              }
-
-              if (!isValidEmail(email)) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Indtast en gyldig e-mailadresse")),
-                );
-                return;
-              }
-
-              if (password.length < 6) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Adgangskoden skal være mindst 6 tegn")),
-                );
-                return;
-              }
-
-              if (password != confirmPassword) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Adgangskoderne matcher ikke")),
-                );
-                return;
-              }
-
-              if (!agreement.value) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Du skal acceptere vilkårene for at fortsætte")),
-                );
-                return;
-              }
-
-              // Gem oplysninger lokalt
-              updateBasicInfo(
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                gender: '', // sættes senere
-                birthYear: '',
-              );
-
-              currentUserResponse?.password = password;
-
-              Navigator.pushNamed(context, '/genderage');
-            },
-          ),
-        ),
-      ],
-    );
-
-    return isIOS
-        ? Material(
-      child: CupertinoPageScaffold(
-        backgroundColor: lightGray,
-        navigationBar: CupertinoNavigationBar(
-          leading: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: const Icon(CupertinoIcons.back, color: Colors.white),
-          ),
-          middle: const Text(''),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-            child: Center(child: contentWithButton),
-          ),
-        ),
-      ),
-    )
-        : Scaffold(
+    return Scaffold(
       backgroundColor: lightGray,
       appBar: AppBar(
         backgroundColor: lightGray,
@@ -202,9 +150,74 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Center(child: contentWithButton),
+        child: Builder(
+          builder: (BuildContext context) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Stack(
+                children: [
+                  OcutuneCard(child: formFields),
+                  Positioned(
+                    bottom: 24,
+                    right: 24,
+                    child: OcutuneButton(
+                      type: OcutuneButtonType.floatingIcon,
+                      onPressed: () async {
+                        final firstName = firstNameController.text.trim();
+                        final lastName = lastNameController.text.trim();
+                        final email = emailController.text.trim();
+                        final password = passwordController.text;
+                        final confirmPassword = confirmPasswordController.text;
+
+                        if (firstName.isEmpty || lastName.isEmpty) {
+                          showError(context, "Udfyld venligst både fornavn og efternavn");
+                          return;
+                        }
+
+                        if (!isValidEmail(email)) {
+                          showError(context, "Indtast en gyldig e-mailadresse");
+                          return;
+                        }
+
+                        if (password.length < 6) {
+                          showError(context, "Adgangskoden skal være mindst 6 tegn");
+                          return;
+                        }
+
+                        if (password != confirmPassword) {
+                          showError(context, "Adgangskoderne matcher ikke");
+                          return;
+                        }
+
+                        if (!agreement.value) {
+                          showError(context, "Du skal acceptere vilkårene for at fortsætte");
+                          return;
+                        }
+
+                        final exists = await emailExists(email);
+                        if (exists) {
+                          showError(context, "Denne e-mail er allerede registreret");
+                          return;
+                        }
+
+                        updateBasicInfo(
+                          firstName: firstName,
+                          lastName: lastName,
+                          email: email,
+                          gender: '',
+                          birthYear: '',
+                        );
+
+                        currentUserResponse?.password = password;
+
+                        Navigator.pushNamed(context, '/genderage');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
