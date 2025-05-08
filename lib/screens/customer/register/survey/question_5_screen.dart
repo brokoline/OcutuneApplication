@@ -71,15 +71,28 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
     }
   }
 
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red.shade700,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _goToNextScreen() {
     if (selectedOption != null) {
       final score = choiceScores[selectedOption!] ?? 0;
       saveAnswer(selectedOption!, score);
       Navigator.pushNamed(context, '/doneSetup');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vælg venligst en type først")),
-      );
+      showError(context, "Vælg venligst en mulighed først");
     }
   }
 

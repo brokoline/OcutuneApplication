@@ -204,8 +204,8 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
               padding: const EdgeInsets.only(right: 12),
               child: Image.network(
                 type.imageUrl ?? '',
-                width: 28,
-                height: 28,
+                width: 48,
+                height: 48,
                 errorBuilder: (context, error, stackTrace) =>
                 const Icon(Icons.broken_image, color: Colors.white),
               ),

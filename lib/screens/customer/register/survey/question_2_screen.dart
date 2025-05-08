@@ -83,8 +83,33 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
     }
   }
 
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red.shade700,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _goToNext(Map<String, int> scoreMap) {
+    if (choices.isEmpty || sliderValue.isNaN) {
+      showError(context, "Noget gik galt med valget. Prøv igen.");
+      return;
+    }
+
     final index = sliderValue.round();
+    if (index < 0 || index >= choices.length) {
+      showError(context, "Vælg venligst en mulighed først");
+      return;
+    }
+
     final selectedChoice = choices[index];
     final score = scoreMap[selectedChoice] ?? 0;
 
