@@ -23,55 +23,74 @@ class LoginScreen extends StatelessWidget {
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: OcutuneCard(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/logo_ocutune.png',
-                    width: 140,
-                    color: Colors.white,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OcutuneCard(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/logo_ocutune.png',
+                        width: 140,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 32),
+                      OcutuneTextField(
+                        label: 'E-mail',
+                        controller: emailController,
+                        labelStyle: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      OcutuneTextField(
+                        label: 'Adgangskode',
+                        isPassword: true,
+                        controller: passwordController,
+                        labelStyle: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 24),
+                      OcutuneButton(
+                        text: 'Log ind',
+                        onPressed: () {
+                          // handle sign in
+                        },
+                        type: OcutuneButtonType.primary,
+                      ),
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          'Glemt adgangskode?',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/register');
+                        },
+                        child: const Text(
+                          'Ikke registreret? Opret bruger',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                  OcutuneTextField(
-                    label: 'E-mail',
-                    controller: emailController,
-                    labelStyle: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  OcutuneTextField(
-                    label: 'Adgangskode',
-                    isPassword: true,
-                    controller: passwordController,
-                    labelStyle: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  OcutuneButton(
-                    text: 'Log ind',
-                    onPressed: () {
-                      // handle sign in
-                    },
-                    type: OcutuneButtonType.primary,
-                  ),
-                  const SizedBox(height: 20),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Glemt adgangskode?',
-                      style: TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 24),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/chooseAccess');
+                  },
+                  child: const Text(
+                    'Kliniker eller patient? Log ind her',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/register');
-                    },
-                    child: const Text(
-                      'Ikke registreret? Opret bruger',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
