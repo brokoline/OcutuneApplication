@@ -80,7 +80,7 @@ class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
             if (chronotype!.imageUrl != null)
               Image.network(
                 chronotype!.imageUrl!,
-                height: 60,
+                height: 260,
                 errorBuilder: (_, __, ___) =>
                 const Icon(Icons.broken_image,
                     color: Colors.white),
