@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
 import '/models/user_data_service.dart';
-import '/models/user_response.dart';
+
 
 class DoneSetupScreen extends StatefulWidget {
   const DoneSetupScreen({super.key});
@@ -96,7 +96,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
         final match = data.firstWhere((c) => c['title'] == title, orElse: () => null);
 
         if (match != null) {
-          currentUserResponse?.chronotypeKey = match['type_key']; // 🟢 nu korrekt
+          currentUserResponse?.chronotypeKey = match['type_key'];
           setState(() {
             chronotype = match['title'] ?? title;
             chronotypeText = match['summary_text'] ?? 'Beskrivelse mangler';

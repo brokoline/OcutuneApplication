@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
+import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
+
 import 'package:ocutune_light_logger/screens/customer/register/register_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/privacypolicy_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/termsconditions_screen.dart';
@@ -15,6 +17,8 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/question_3
 import 'package:ocutune_light_logger/screens/customer/register/survey/question_4_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/question_5_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/done_setup_screen.dart';
+
+
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -41,6 +45,7 @@ class OcutuneApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (_) => LoginScreen(),
+        '/chooseAccess': (_) => ChooseAccessScreen(),
         '/register': (_) => const RegisterScreen(),
         '/privacy': (_) => const PrivacyPolicyScreen(),
         '/terms': (_) => const TermsConditionsScreen(),
