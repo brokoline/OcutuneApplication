@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/widgets/ocutune_slider.dart';
 import '/models/user_data_service.dart';
 
 class QuestionTwoScreen extends StatefulWidget {
@@ -57,9 +58,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final filtered = choicesData
-          .where((item) => item['question_id'] == questionId)
-          .toList();
+      final filtered = choicesData.where((item) => item['question_id'] == questionId).toList();
 
       if (filtered.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
@@ -99,13 +98,8 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
   }
 
   void _goToNext(Map<String, int> scoreMap) {
-    if (choices.isEmpty || sliderValue.isNaN) {
-      showError(context, "Noget gik galt med valget. Prøv igen.");
-      return;
-    }
-
     final index = sliderValue.round();
-    if (index < 0 || index >= choices.length) {
+    if (choices.isEmpty || index < 0 || index >= choices.length) {
       showError(context, "Vælg venligst en mulighed først");
       return;
     }
@@ -126,6 +120,8 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -139,10 +135,12 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Center(
-                child: Text('Fejl: ${snapshot.error}', style: const TextStyle(color: Colors.white)),
+                child: Text("Fejl: ${snapshot.error}", style: const TextStyle(color: Colors.white)),
               );
             } else if (!snapshot.hasData) {
-              return const Center(child: Text("Ingen data tilgængelig.", style: TextStyle(color: Colors.white)));
+              return const Center(
+                child: Text("Ingen data tilgængelig.", style: TextStyle(color: Colors.white)),
+              );
             } else {
               final questionText = snapshot.data!['text'];
               choices = List<String>.from(snapshot.data!['choices']);
@@ -167,34 +165,13 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                             ),
                           ),
                           const SizedBox(height: 40),
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 300),
-                            style: TextStyle(
-                              color: colors[index.clamp(0, colors.length - 1)],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 25,
-                            ),
-                            child: Text(choices[index]),
-                          ),
-                          const SizedBox(height: 24),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 4.5,
-                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-                              activeTrackColor: colors[index.clamp(0, colors.length - 1)],
-                              inactiveTrackColor: Colors.white24,
-                              thumbColor: colors[index.clamp(0, colors.length - 1)],
-                              overlayColor: colors[index.clamp(0, colors.length - 1)].withAlpha(51),
-                            ),
-                            child: Slider(
-                              value: sliderValue,
-                              min: 0,
-                              max: (choices.length - 1).toDouble(),
-                              divisions: choices.length - 1,
-                              onChanged: (value) {
-                                setState(() => sliderValue = value);
-                              },
-                            ),
+                          OcutuneSlider(
+                            value: sliderValue,
+                            labels: choices,
+                            colors: colors,
+                            onChanged: (val) {
+                              setState(() => sliderValue = val);
+                            },
                           ),
                         ],
                       ),

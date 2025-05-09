@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
-import '/widgets/ocutune_button.dart';
+import '/widgets/ocutune_icon_button.dart';
 import 'package:ocutune_light_logger/models/chronotype.dart';
 
 class LearnAboutChronotypesScreen extends StatefulWidget {
@@ -94,53 +94,16 @@ class _LearnAboutChronotypesScreenState
                   ...chronotypes.map((type) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: Center(
-                        child: Material(
-                          color: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: const BorderSide(color: Colors.white24),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            onTap: () => Navigator.pushNamed(
-                              context,
-                              '/aboutChronotype',
-                              arguments: type.typeKey,
-                            ),
-                            splashColor: Colors.white24,
-                            highlightColor: Colors.white10,
-                            child: SizedBox(
-                              width: 250,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 18, horizontal: 16),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Image.network(
-                                      type.imageUrl ?? '',
-                                      width: 28,
-                                      height: 28,
-                                      errorBuilder: (_, __, ___) =>
-                                      const Icon(Icons.broken_image,
-                                          color: Colors.white70),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      "Hvad er en ${type.title.toLowerCase()}?",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                      child: OcutuneIconButton(
+                        label: "Hvad er en ${type.title.toLowerCase()}?",
+                        imageUrl: type.imageUrl ?? '',
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/aboutChronotype',
+                            arguments: type.typeKey,
+                          );
+                        },
                       ),
                     );
                   }).toList(),
