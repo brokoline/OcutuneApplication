@@ -36,22 +36,22 @@ class ChooseAccessScreen extends StatelessWidget {
                 _accessButton(
                   context,
                   title: 'MitID',
-                  subtitle: 'Log ind som patient',
-                  imageUrl: 'https://ocutune.ddns.net/images/mitid.png',
+                  subtitle: 'Log ind som patient med MitID',
+                  color: Colors.blue,
                   onTap: () {
                     // TODO: Handle patient login
-                    Navigator.pushNamed(context, '/home');
+                    Navigator.pushNamed(context, '/home'); // Simuler login
                   },
                 ),
                 const SizedBox(height: 16),
                 _accessButton(
                   context,
-                  title: 'MitID Erhverv',
-                  subtitle: 'Log ind som kliniker',
-                  imageUrl: 'https://ocutune.ddns.net/images/mitid_erhverv.png',
+                  title: 'NemLog-in',
+                  subtitle: 'Log ind som kliniker med NemLog-in',
+                  color: Colors.indigo,
                   onTap: () {
                     // TODO: Handle clinician login
-                    Navigator.pushNamed(context, '/home');
+                    Navigator.pushNamed(context, '/home'); // Simuler login
                   },
                 ),
               ],
@@ -66,51 +66,35 @@ class ChooseAccessScreen extends StatelessWidget {
       BuildContext context, {
         required String title,
         required String subtitle,
-        required String imageUrl,
+        required Color color,
         required VoidCallback onTap,
       }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
-          color: Colors.white10,
+          color: color.withOpacity(0.9),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white24),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
-              imageUrl,
-              width: 48,
-              height: 48,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, color: Colors.white),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
               ),
             ),
           ],

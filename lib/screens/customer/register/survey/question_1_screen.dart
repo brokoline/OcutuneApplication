@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/widgets/ocutune_selectable_tile.dart';
 import '/models/user_data_service.dart';
 
 class QuestionOneScreen extends StatefulWidget {
@@ -48,9 +49,8 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final filteredChoices = choices
-          .where((c) => c['question_id'] == questionId)
-          .toList();
+      final filteredChoices =
+      choices.where((c) => c['question_id'] == questionId).toList();
 
       if (filteredChoices.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
@@ -152,7 +152,17 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            ...choices.map((option) => _buildOption(option)).toList(),
+                            ...choices.map((option) {
+                              return OcutuneSelectableTile(
+                                text: option,
+                                selected: selectedOption == option,
+                                onTap: () {
+                                  setState(() {
+                                    selectedOption = option;
+                                  });
+                                },
+                              );
+                            }).toList(),
                             const SizedBox(height: 100),
                           ],
                         );
@@ -171,36 +181,6 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOption(String option) {
-    final isSelected = selectedOption == option;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedOption = option;
-        });
-      },
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          border: Border.all(color: isSelected ? Colors.white : Colors.white24),
-          borderRadius: BorderRadius.circular(16),
-          color: isSelected ? Colors.white10 : Colors.transparent,
-        ),
-        child: Text(
-          option,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
         ),
       ),
     );

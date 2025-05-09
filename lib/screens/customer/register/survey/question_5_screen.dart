@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
+import '/widgets/ocutune_selectable_tile.dart';
 import '/models/user_data_service.dart';
 
 class QuestionFiveScreen extends StatefulWidget {
@@ -48,9 +49,8 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final filteredChoices = choices
-          .where((c) => c['question_id'] == questionId)
-          .toList();
+      final filteredChoices =
+      choices.where((c) => c['question_id'] == questionId).toList();
 
       if (filteredChoices.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
@@ -103,6 +103,8 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
       appBar: AppBar(
         backgroundColor: lightGray,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -133,30 +135,51 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
               final options = snapshot.data!['choices'] as List<String>;
               choiceScores = Map<String, int>.from(snapshot.data!['scores']);
 
-              return Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          questionText,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            height: 1.5,
-                            color: Colors.white,
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    questionText,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.5,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  ...options.map((option) {
+                                    return OcutuneSelectableTile(
+                                      text: option,
+                                      selected: selectedOption == option,
+                                      onTap: () {
+                                        setState(() {
+                                          selectedOption = option;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 32),
-                        ...options.map((option) => _buildOption(option)).toList(),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               );
             }
           },
@@ -165,36 +188,6 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
       floatingActionButton: OcutuneButton(
         type: OcutuneButtonType.floatingIcon,
         onPressed: _goToNextScreen,
-      ),
-    );
-  }
-
-  Widget _buildOption(String option) {
-    final isSelected = selectedOption == option;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedOption = option;
-        });
-      },
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          border: Border.all(color: isSelected ? Colors.white : Colors.white24),
-          borderRadius: BorderRadius.circular(16),
-          color: isSelected ? Colors.white10 : Colors.transparent,
-        ),
-        child: Text(
-          option,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
       ),
     );
   }
