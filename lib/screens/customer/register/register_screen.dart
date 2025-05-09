@@ -14,14 +14,12 @@ class RegisterScreen extends StatelessWidget {
 
   Future<bool> emailExists(String email) async {
     final url = Uri.parse('https://ocutune.ddns.net/check-email');
-
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': email}),
       );
-
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);
         return jsonBody['exists'] == true;
@@ -67,15 +65,6 @@ class RegisterScreen extends StatelessWidget {
       builder: (context, agreed, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Opret konto',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 24),
           OcutuneTextField(label: 'Fornavn', controller: firstNameController),
           const SizedBox(height: 16),
           OcutuneTextField(label: 'Efternavn', controller: lastNameController),
@@ -110,9 +99,7 @@ class RegisterScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.pushNamed(context, '/terms');
-                            },
+                            ..onTap = () => Navigator.pushNamed(context, '/terms'),
                         ),
                         const TextSpan(text: ' og '),
                         TextSpan(
@@ -123,18 +110,15 @@ class RegisterScreen extends StatelessWidget {
                             color: Colors.white,
                           ),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.pushNamed(context, '/privacy');
-                            },
+                            ..onTap = () => Navigator.pushNamed(context, '/privacy'),
                         ),
                       ],
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
-          const SizedBox(height: 64),
         ],
       ),
     );
@@ -150,74 +134,92 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Builder(
-          builder: (BuildContext context) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: Stack(
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.topCenter,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  OcutuneCard(child: formFields),
-                  Positioned(
-                    bottom: 24,
-                    right: 24,
-                    child: OcutuneButton(
-                      type: OcutuneButtonType.floatingIcon,
-                      onPressed: () async {
-                        final firstName = firstNameController.text.trim();
-                        final lastName = lastNameController.text.trim();
-                        final email = emailController.text.trim();
-                        final password = passwordController.text;
-                        final confirmPassword = confirmPasswordController.text;
-
-                        if (firstName.isEmpty || lastName.isEmpty) {
-                          showError(context, "Udfyld venligst både fornavn og efternavn");
-                          return;
-                        }
-
-                        if (!isValidEmail(email)) {
-                          showError(context, "Indtast en gyldig e-mailadresse");
-                          return;
-                        }
-
-                        if (password.length < 6) {
-                          showError(context, "Adgangskoden skal være mindst 6 tegn");
-                          return;
-                        }
-
-                        if (password != confirmPassword) {
-                          showError(context, "Adgangskoderne matcher ikke");
-                          return;
-                        }
-
-                        if (!agreement.value) {
-                          showError(context, "Du skal acceptere vilkårene for at fortsætte");
-                          return;
-                        }
-
-                        final exists = await emailExists(email);
-                        if (exists) {
-                          showError(context, "Denne e-mail er allerede registreret");
-                          return;
-                        }
-
-                        updateBasicInfo(
-                          firstName: firstName,
-                          lastName: lastName,
-                          email: email,
-                          gender: '',
-                          birthYear: '',
-                        );
-
-                        currentUserResponse?.password = password;
-
-                        Navigator.pushNamed(context, '/genderage');
-                      },
+                  const SizedBox(height: 48),
+                  const Text(
+                    'Opret konto',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: OcutuneCard(child: formFields),
+                      ),
                     ),
                   ),
                 ],
               ),
-            );
-          },
+            ),
+            Positioned(
+              bottom: 24,
+              right: 24,
+              child: OcutuneButton(
+                type: OcutuneButtonType.floatingIcon,
+                onPressed: () async {
+                  final firstName = firstNameController.text.trim();
+                  final lastName = lastNameController.text.trim();
+                  final email = emailController.text.trim();
+                  final password = passwordController.text;
+                  final confirmPassword = confirmPasswordController.text;
+
+                  if (firstName.isEmpty || lastName.isEmpty) {
+                    showError(context, "Udfyld venligst både fornavn og efternavn");
+                    return;
+                  }
+
+                  if (!isValidEmail(email)) {
+                    showError(context, "Indtast en gyldig e-mailadresse");
+                    return;
+                  }
+
+                  if (password.length < 6) {
+                    showError(context, "Adgangskoden skal være mindst 6 tegn");
+                    return;
+                  }
+
+                  if (password != confirmPassword) {
+                    showError(context, "Adgangskoderne matcher ikke");
+                    return;
+                  }
+
+                  if (!agreement.value) {
+                    showError(context, "Du skal acceptere vilkårene for at fortsætte");
+                    return;
+                  }
+
+                  final exists = await emailExists(email);
+                  if (exists) {
+                    showError(context, "Denne e-mail er allerede registreret");
+                    return;
+                  }
+
+                  updateBasicInfo(
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    gender: '',
+                    birthYear: '',
+                  );
+
+                  currentUserResponse?.password = password;
+                  Navigator.pushNamed(context, '/genderage');
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
