@@ -39,8 +39,7 @@ class ChooseAccessScreen extends StatelessWidget {
                   subtitle: 'Log ind som patient med MitID',
                   color: Colors.blue,
                   onTap: () {
-                    // TODO: Handle patient login
-                    Navigator.pushNamed(context, '/home'); // Simuler login
+                    Navigator.pushNamed(context, '/patient/login');
                   },
                 ),
                 const SizedBox(height: 16),
@@ -50,8 +49,7 @@ class ChooseAccessScreen extends StatelessWidget {
                   subtitle: 'Log ind som kliniker med NemLog-in',
                   color: Colors.indigo,
                   onTap: () {
-                    // TODO: Handle clinician login
-                    Navigator.pushNamed(context, '/home'); // Simuler login
+                    Navigator.pushNamed(context, '/clinician/login');
                   },
                 ),
               ],
