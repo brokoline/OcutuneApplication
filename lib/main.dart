@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
+import 'package:ocutune_light_logger/screens/clinician_simulated_login_screen.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
 
-import 'package:ocutune_light_logger/screens/customer/register/register_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/privacypolicy_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/termsconditions_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/gender_age_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/choose_chronotype_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/learn_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_1_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_2_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_3_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_4_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/question_5_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/customer_register_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/customer_gender_age_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_1_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_2_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_3_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
+import 'package:ocutune_light_logger/screens/patient_simulated_login_screen.dart';
 
 
 
@@ -46,6 +50,8 @@ class OcutuneApp extends StatelessWidget {
       routes: {
         '/login': (_) => LoginScreen(),
         '/chooseAccess': (_) => ChooseAccessScreen(),
+
+        // den almene kunde registrerings-skærme
         '/register': (_) => const RegisterScreen(),
         '/privacy': (_) => const PrivacyPolicyScreen(),
         '/terms': (_) => const TermsConditionsScreen(),
@@ -56,12 +62,18 @@ class OcutuneApp extends StatelessWidget {
           final typeKey = ModalRoute.of(context)!.settings.arguments as String;
           return AboutChronotypeScreen(chronotypeId: typeKey);
         },
-        '/Q1': (_) => const QuestionOneScreen(),
+        '/Q1': (_) => const QuestionOneScreen(), // question 1
         '/Q2': (_) => const QuestionTwoScreen(),
         '/Q3': (_) => const QuestionThreeScreen(),
         '/Q4': (_) => const QuestionFourScreen(),
         '/Q5': (_) => const QuestionFiveScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
+
+        // Patient og kliniker login
+        '/patient/login': (context) => const PatientSimulatedLoginScreen(),
+        '/clinician/login': (context) => const ClinicianSimulatedLoginScreen(),
+        '/patient/dashboard': (context) => const PatientDashboardScreen(),
+        '/clinician/dashboard': (context) => const ClinicianDashboardScreen(),
       },
     );
   }
