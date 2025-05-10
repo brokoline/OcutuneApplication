@@ -1,45 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
 
-class ClinicianSimulatedLoginScreen extends StatefulWidget {
+class ClinicianSimulatedLoginScreen extends StatelessWidget {
   const ClinicianSimulatedLoginScreen({super.key});
 
   @override
-  State<ClinicianSimulatedLoginScreen> createState() => _ClinicianSimulatedLoginScreenState();
-}
-
-class _ClinicianSimulatedLoginScreenState extends State<ClinicianSimulatedLoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  void _handleLogin() {
-    // TODO: Send til API /sim-login
-    Navigator.pushReplacementNamed(context, '/clinician/dashboard');
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final emailController = TextEditingController();
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Kliniker Login')),
+      backgroundColor: darkGray,
+      appBar: AppBar(
+        backgroundColor: darkGray,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('MitID Erhverv Login', style: TextStyle(color: Colors.white)),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Adgangskode'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _handleLogin,
-              child: const Text('Log ind'),
-            ),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: SimulatedMitIDBox(
+          title: 'Log på hos MitID Erhverv',
+          controller: emailController,
+          onContinue: () {
+            // TODO: API-kald til /sim-login
+            Navigator.pushReplacementNamed(context, '/clinician/dashboard');
+          },
         ),
       ),
     );

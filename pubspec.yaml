@@ -26,6 +26,7 @@ flutter:
   assets:
     - assets/logo_ocutune.png
     - assets/icon/icon.png
+    - assets/icon/mitid_logo.png
     - assets/images/lark.png
     - assets/images/dove.png
     - assets/images/nightowl.png
