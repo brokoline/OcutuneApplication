@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 
 class SimulatedMitIDBox extends StatefulWidget {
   final String title;
-  final String inputLabel;
   final VoidCallback? onContinue;
   final TextEditingController controller;
 
   const SimulatedMitIDBox({
     super.key,
     required this.title,
-    required this.inputLabel,
     required this.controller,
     this.onContinue,
   });
@@ -20,6 +18,8 @@ class SimulatedMitIDBox extends StatefulWidget {
 
 class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
   bool rememberMe = false;
+  bool isStepTwo = false;
+  final passwordController = TextEditingController();
 
   void _showDialogBox({
     required String title,
@@ -32,13 +32,11 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: const Color(0xFF2B2B2B),
         title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: Text(content,
-            style: const TextStyle(color: Colors.white70, height: 1.4)),
+        content: Text(content, style: const TextStyle(color: Colors.white70, height: 1.4)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(buttonText,
-                style: const TextStyle(color: Color(0xFF7F7FBF))),
+            child: Text(buttonText, style: const TextStyle(color: Color(0xFF7F7FBF))),
           ),
         ],
       ),
@@ -78,6 +76,18 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
 
   void _handleCancel() {
     Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
+  void _handlePrimaryAction() {
+    if (!isStepTwo) {
+      setState(() {
+        isStepTwo = true;
+      });
+    } else {
+      if (widget.onContinue != null) {
+        widget.onContinue!();
+      }
+    }
   }
 
   @override
@@ -129,7 +139,7 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                   const Divider(height: 32, color: Colors.grey),
                   const SizedBox(height: 8),
                   Text(
-                    widget.inputLabel,
+                    isStepTwo ? 'Adgangskode' : 'BRUGER-ID',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
@@ -138,9 +148,17 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: widget.controller,
+                    controller: isStepTwo ? passwordController : widget.controller,
+                    obscureText: isStepTwo,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
                     decoration: InputDecoration(
-                      suffixIcon: const Icon(Icons.vpn_key, size: 20),
+                      suffixIcon: Icon(
+                        isStepTwo ? Icons.lock : Icons.vpn_key,
+                        size: 20,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -150,11 +168,12 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                       isDense: true,
                     ),
                   ),
+
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: widget.onContinue,
+                      onPressed: _handlePrimaryAction,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade400,
                         foregroundColor: Colors.white,
@@ -164,25 +183,36 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('FORTSÆT'),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_forward),
+                          Text(isStepTwo ? 'LOG IND' : 'FORTSÆT'),
+                          const SizedBox(width: 8),
+                          Icon(isStepTwo ? Icons.login : Icons.arrow_forward),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: _showForgotDialog,
-                    child: const Text(
-                      'Glemt bruger-ID?',
-                      style: TextStyle(color: Color(0xFF0051A4), fontSize: 14),
+
+                  // Gør pladsen for glemt bruger-id konstant
+                  SizedBox(
+                    height: 32,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Opacity(
+                        opacity: isStepTwo ? 0 : 1,
+                        child: GestureDetector(
+                          onTap: isStepTwo ? null : _showForgotDialog,
+                          child: const Text(
+                            'Glemt bruger-ID?',
+                            style: TextStyle(color: Color(0xFF0051A4), fontSize: 14),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+
                   InkWell(
                     onTap: () {
                       setState(() => rememberMe = !rememberMe);

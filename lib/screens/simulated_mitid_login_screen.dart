@@ -29,7 +29,6 @@ class SimulatedLoginScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: SimulatedMitIDBox(
           title: 'Log på Ocutune Applikation',
-          inputLabel: inputLabel,
           controller: controller,
           onContinue: onContinue,
         ),
