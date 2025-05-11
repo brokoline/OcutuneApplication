@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+const generalBackground = Color(0xFF676767);
+const generalBox = Color(0xFF4C4C4C);
+
 const lightGray = Color(0xFF676767);
 const darkGray = Color(0xFF4C4C4C);
 const white = Colors.white;

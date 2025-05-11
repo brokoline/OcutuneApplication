@@ -7,9 +7,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),

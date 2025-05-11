@@ -116,9 +116,9 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
     final index = sliderValue.round();
 
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,

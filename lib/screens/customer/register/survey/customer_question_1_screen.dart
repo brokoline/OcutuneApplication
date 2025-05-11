@@ -99,9 +99,9 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -162,7 +162,7 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
                                   });
                                 },
                               );
-                            }).toList(),
+                            }),
                             const SizedBox(height: 100),
                           ],
                         );
