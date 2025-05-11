@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 class SimulatedMitIDBox extends StatefulWidget {
   final String title;
+  final String inputLabel;
   final VoidCallback? onContinue;
   final TextEditingController controller;
 
   const SimulatedMitIDBox({
     super.key,
     required this.title,
+    required this.inputLabel,
     required this.controller,
     this.onContinue,
   });
@@ -126,9 +128,9 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                   ),
                   const Divider(height: 32, color: Colors.grey),
                   const SizedBox(height: 8),
-                  const Text(
-                    'BRUGER-ID',
-                    style: TextStyle(
+                  Text(
+                    widget.inputLabel,
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                       color: Colors.black87,
