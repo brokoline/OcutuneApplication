@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/theme/colors.dart';
+import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 
 class ChooseAccessScreen extends StatelessWidget {
   const ChooseAccessScreen({super.key});
@@ -39,17 +40,41 @@ class ChooseAccessScreen extends StatelessWidget {
                   subtitle: 'Log ind som patient med MitID',
                   color: Colors.blue,
                   onTap: () {
-                    Navigator.pushNamed(context, '/patient/login');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SimulatedLoginScreen(
+                          title: 'MitID Privat Login',
+                          inputLabel: 'BRUGER-ID',
+                          controller: TextEditingController(),
+                          onContinue: () {
+                            Navigator.pushReplacementNamed(context, '/patient/dashboard');
+                          },
+                        ),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: 16),
                 _accessButton(
                   context,
-                  title: 'NemLog-in',
-                  subtitle: 'Log ind som kliniker med NemLog-in',
+                  title: 'MitID Erhverv',
+                  subtitle: 'Log ind som kliniker med MitID Erhverv',
                   color: Colors.indigo,
                   onTap: () {
-                    Navigator.pushNamed(context, '/clinician/login');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SimulatedLoginScreen(
+                          title: 'MitID Erhverv Login',
+                          inputLabel: 'BRUGER-ID',
+                          controller: TextEditingController(),
+                          onContinue: () {
+                            Navigator.pushReplacementNamed(context, '/clinician/dashboard');
+                          },
+                        ),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -73,7 +98,7 @@ class ChooseAccessScreen extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.9),
+          color: color.withAlpha((255 * 0.9).round()),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(

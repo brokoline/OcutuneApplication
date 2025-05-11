@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
-import 'package:ocutune_light_logger/screens/clinician_simulated_login_screen.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
@@ -19,10 +17,9 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
+
+import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
-import 'package:ocutune_light_logger/screens/patient_simulated_login_screen.dart';
-
-
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -70,8 +67,6 @@ class OcutuneApp extends StatelessWidget {
         '/doneSetup': (_) => const DoneSetupScreen(),
 
         // Patient og kliniker login
-        '/patient/login': (context) => const PatientSimulatedLoginScreen(),
-        '/clinician/login': (context) => const ClinicianSimulatedLoginScreen(),
         '/patient/dashboard': (context) => const PatientDashboardScreen(),
         '/clinician/dashboard': (context) => const ClinicianDashboardScreen(),
       },
