@@ -8,9 +8,9 @@ class ChooseAccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
@@ -43,13 +43,8 @@ class ChooseAccessScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SimulatedLoginScreen(
+                        builder: (_) => const SimulatedLoginScreen(
                           title: 'MitID Privat Login',
-                          inputLabel: 'BRUGER-ID',
-                          controller: TextEditingController(),
-                          onContinue: () {
-                            Navigator.pushReplacementNamed(context, '/patient/dashboard');
-                          },
                         ),
                       ),
                     );
@@ -65,13 +60,8 @@ class ChooseAccessScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SimulatedLoginScreen(
+                        builder: (_) => const SimulatedLoginScreen(
                           title: 'MitID Erhverv Login',
-                          inputLabel: 'BRUGER-ID',
-                          controller: TextEditingController(),
-                          onContinue: () {
-                            Navigator.pushReplacementNamed(context, '/clinician/dashboard');
-                          },
                         ),
                       ),
                     );

@@ -19,7 +19,7 @@ class LoginScreen extends StatelessWidget {
         statusBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),

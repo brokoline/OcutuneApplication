@@ -122,7 +122,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        ...chronotypes.map((type) => _buildChronoCard(type)).toList(),
+                        ...chronotypes.map((type) => _buildChronoCard(type)),
                         const SizedBox(height: 8),
                         Center(
                           child: TextButton(

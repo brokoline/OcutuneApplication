@@ -159,9 +159,9 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         elevation: 0,
         automaticallyImplyLeading: false,
       ),

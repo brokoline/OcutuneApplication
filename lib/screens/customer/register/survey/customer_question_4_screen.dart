@@ -100,9 +100,9 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightGray,
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: lightGray,
+        backgroundColor: generalBackground,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -170,7 +170,7 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
                                         });
                                       },
                                     );
-                                  }).toList(),
+                                  }),
                                   const SizedBox(height: 100),
                                 ],
                               ),
