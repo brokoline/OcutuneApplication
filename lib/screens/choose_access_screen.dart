@@ -12,64 +12,70 @@ class ChooseAccessScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: generalBackground,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+        toolbarHeight: 64,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Hvordan vil du logge ind?',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Hvordan vil du logge ind?',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                _accessButton(
-                  context,
-                  title: 'MitID',
-                  subtitle: 'Log ind som patient med MitID',
-                  color: Colors.blue,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SimulatedLoginScreen(
-                          title: 'MitID Privat Login',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                _accessButton(
-                  context,
-                  title: 'MitID Erhverv',
-                  subtitle: 'Log ind som kliniker med MitID Erhverv',
-                  color: Colors.indigo,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SimulatedLoginScreen(
-                          title: 'MitID Erhverv Login',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+        child: Column(
+          children: [
+            const SizedBox(height: 40),
+            Center(
+              child: Image.asset(
+                'assets/logo/logo_ocutune.png',
+                height: 110,
+                color: Colors.white,
+              ),
             ),
-          ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  _accessButton(
+                    context,
+                    title: 'MitID',
+                    subtitle: 'Log ind som patient med MitID',
+                    color: Colors.blue,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SimulatedLoginScreen(
+                            title: 'MitID Privat Login',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _accessButton(
+                    context,
+                    title: 'MitID Erhverv',
+                    subtitle: 'Log ind som kliniker med MitID Erhverv',
+                    color: Colors.indigo,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SimulatedLoginScreen(
+                            title: 'MitID Erhverv Login',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

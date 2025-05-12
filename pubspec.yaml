@@ -24,9 +24,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/logo/logo_ocutune.png
     - assets/logo_ocutune.png
-    - assets/icon/icon.png
     - assets/icon/mitid_logo.png
+    - assets/icon/BLE-sensor-ikon.png
     - assets/images/lark.png
     - assets/images/dove.png
     - assets/images/nightowl.png
@@ -34,13 +35,13 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/icon/icon.png"
+  image_path: "assets/logo/logo_ocutune"
   adaptive_icon_background: "#676767"
-  adaptive_icon_foreground: "assets/icon/icon.png"
+  adaptive_icon_foreground: "assets/logo/logo_ocutune.png"
 
 flutter_native_splash:
   color: "#676767"
-  image: "assets/icon/icon.png"
+  image: "assets/logo/logo_ocutune.png"
   android: true
   ios: true
 
