@@ -36,7 +36,7 @@ class ChooseAccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.fromLTRB(24, 40, 24, 0), // ← top padding tilføjet
               child: Column(
                 children: [
                   _accessButton(
