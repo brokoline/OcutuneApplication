@@ -80,7 +80,7 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
   }
 
   void _handleCancel() {
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    Navigator.popUntil(context, ModalRoute.withName('/chooseAccess'));
   }
 
   void _showDialogBox({

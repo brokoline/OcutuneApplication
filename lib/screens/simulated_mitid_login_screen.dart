@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
 
 class SimulatedLoginScreen extends StatefulWidget {
@@ -69,9 +70,9 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4C4C4C),
+      backgroundColor: generalBackground,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF4C4C4C),
+        backgroundColor: generalBackground,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(widget.title, style: const TextStyle(color: Colors.white)),
