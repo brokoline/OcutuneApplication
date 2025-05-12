@@ -75,25 +75,45 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         backgroundColor: generalBackground,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(widget.title, style: const TextStyle(color: Colors.white)),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Stack(
-          children: [
-            SimulatedMitIDBox(
-              title: 'Log på Ocutune Applikation',
-              controller: userIdController,
-              errorMessage: loginError,
-              onContinue: _attemptLogin,
-            ),
-            if (isLoading)
-              Container(
-                color: const Color.fromRGBO(0, 0, 0, 0.3),
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-          ],
+        title: const Text(
+          'MitID Privat Login',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+      ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              const SizedBox(height: 40),
+              Center(
+                child: Image.asset(
+                  'assets/logo/logo_ocutune.png',
+                  height: 110,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: SimulatedMitIDBox(
+                  title: 'Log på Ocutune Applikation',
+                  controller: userIdController,
+                  errorMessage: loginError,
+                  onContinue: _attemptLogin,
+                ),
+              ),
+            ],
+          ),
+          if (isLoading)
+            Container(
+              color: const Color.fromRGBO(0, 0, 0, 0.3),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
