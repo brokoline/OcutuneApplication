@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Chronotype {
   final int id;
   final String typeKey;
@@ -8,6 +10,7 @@ class Chronotype {
   final String? imageUrl;
   final String? iconUrl;
   final String? language;
+  final Color? accent; // ✅ NYT
 
   Chronotype({
     required this.id,
@@ -19,6 +22,7 @@ class Chronotype {
     this.imageUrl,
     this.iconUrl,
     this.language,
+    this.accent, // ✅ NYT
   });
 
   factory Chronotype.fromJson(Map<String, dynamic> json) => Chronotype(
@@ -31,6 +35,7 @@ class Chronotype {
     imageUrl: json["image_url"],
     iconUrl: json["icon_url"],
     language: json["language"],
+    accent: _assignAccent(json["title"]), // ✅ farve tildeles her
   );
 
   Map<String, dynamic> toJson() => {
@@ -44,4 +49,17 @@ class Chronotype {
     "icon_url": iconUrl,
     "language": language,
   };
+
+  static Color? _assignAccent(String title) {
+    switch (title.toLowerCase()) {
+      case 'lærke':
+        return Colors.amberAccent;
+      case 'due':
+        return Colors.lightGreenAccent;
+      case 'natugle':
+        return Colors.lightBlueAccent;
+      default:
+        return Colors.white24;
+    }
+  }
 }

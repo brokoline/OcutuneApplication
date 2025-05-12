@@ -11,14 +11,14 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  http: ^0.13.6
+  http: ^1.4.0
   flutter_dotenv: ^5.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
 
 flutter:
@@ -28,6 +28,7 @@ flutter:
     - assets/logo_ocutune.png
     - assets/icon/mitid_logo.png
     - assets/icon/BLE-sensor-ikon.png
+    - assets/icon/activity-log-icon.png
     - assets/images/lark.png
     - assets/images/dove.png
     - assets/images/nightowl.png
