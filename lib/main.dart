@@ -19,6 +19,7 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
+import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_new_message_screen.dart';
 
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_sensor_settings_screen.dart';
@@ -78,6 +79,7 @@ class OcutuneApp extends StatelessWidget {
         '/patient_sensor_settings': (context) => const PatientSensorSettingsScreen(),
         '/patient/inbox': (context) => const PatientInboxScreen(),
         '/patient/message_detail': (context) => const PatientMessageDetailScreen(),
+        '/patient/new_message': (context) => const PatientNewMessageScreen(),
 
       },
     );

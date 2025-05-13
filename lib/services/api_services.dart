@@ -55,27 +55,40 @@ class ApiService {
   }
 
   /// Send besked fra patient til tilknyttet behandler
+  /// Send besked fra patient til kliniker
   static Future<void> sendPatientMessage({
     required int patientId,
     required String message,
     String subject = '',
-    int? replyTo, // 🔁 nyt: optional reply
+    int? replyTo,
+    int? clinicianId,
   }) async {
+    final Map<String, dynamic> payload = {
+      'patient_id': patientId,
+      'message': message,
+      'subject': subject,
+    };
+
+    if (replyTo != null) {
+      payload['reply_to'] = replyTo;
+    }
+
+    if (clinicianId != null) {
+      payload['clinician_id'] = clinicianId;
+    }
+
     final response = await http.post(
       Uri.parse('$baseUrl/patient-contact'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'patient_id': patientId,
-        'message': message,
-        'subject': subject,
-        if (replyTo != null) 'reply_to': replyTo, // 🔁 tilføj kun hvis sat
-      }),
+      body: jsonEncode(payload),
     );
 
     if (response.statusCode != 200) {
+      print('❌ Backend-fejl: ${response.statusCode} ${response.body}');
       throw Exception('❌ Fejl ved afsendelse af besked');
     }
   }
+
 
   // beskedhistorik
   static Future<List<Map<String, dynamic>>> getPatientMessages(int patientId) async {
@@ -119,4 +132,16 @@ class ApiService {
       throw Exception('Kunne ikke hente samtale');
     }
   }
+
+  // patient kliniker forhold
+  static Future<List<Map<String, dynamic>>> getPatientClinicians(int patientId) async {
+    final response = await http.get(Uri.parse('$baseUrl/patient/$patientId/clinicians'));
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Kunne ikke hente behandlere');
+    }
+  }
+
 }

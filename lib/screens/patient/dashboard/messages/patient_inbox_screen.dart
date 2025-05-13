@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/api_services.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
 
 class PatientInboxScreen extends StatefulWidget {
   const PatientInboxScreen({super.key});
@@ -69,47 +70,15 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                 : ListView.builder(
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                final msg = _messages[index];
-                final isUnread = msg['read'] == false;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: generalBox,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white24),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      leading: isUnread
-                          ? const Icon(Icons.mark_email_unread, color: Colors.white)
-                          : const Icon(Icons.mark_email_read_outlined, color: Colors.white38),
-                      title: Text(
-                        msg['subject']?.isNotEmpty == true ? msg['subject'] : '(Uden emne)',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Fra: ${msg['sender']}',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      trailing: Text(
-                        _formatDate(msg['sent_at']),
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(color: Colors.white54, fontSize: 12),
-                      ),
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/patient/message_detail',
-                          arguments: msg['id'],
-                        ).then((_) => _loadMessages()); // genindlæs efter åbning
-                      },
-                    ),
-                  ),
+                return InboxListTile(
+                  msg: _messages[index],
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/patient/message_detail',
+                      arguments: _messages[index]['id'],
+                    ).then((_) => _loadMessages());
+                  },
                 );
               },
             ),
@@ -135,13 +104,5 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
         ],
       ),
     );
-  }
-
-  String _formatDate(String isoDateTime) {
-    final dt = DateTime.tryParse(isoDateTime);
-    if (dt == null) return '';
-    final date = 'D. ${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
-    final time = 'Kl. ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    return '$date\n$time';
   }
 }

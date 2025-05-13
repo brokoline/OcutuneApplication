@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/api_services.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/widgets/messages/message_thread.dart';
+import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
 
 class PatientMessageDetailScreen extends StatefulWidget {
   const PatientMessageDetailScreen({super.key});
@@ -31,9 +33,6 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
     try {
       final msg = await ApiService.getMessageDetail(threadId!);
       final msgs = await ApiService.getMessageThreadById(threadId!);
-
-      print('✅ Hentet tråd med ${msgs.length} beskeder');
-
       setState(() {
         original = msg;
         thread = msgs;
@@ -56,7 +55,7 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
       );
 
       _replyController.clear();
-      await _loadData(); // hent opdateret tråd
+      await _loadData(); // genindlæs tråd
     } catch (e) {
       print('❌ Kunne ikke sende svar: $e');
     }
@@ -90,97 +89,18 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: thread.length,
-              itemBuilder: (context, index) {
-                final msg = thread[index];
-                final isMe = msg['sender_type'] == 'patient';
-
-                return Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
-                    constraints: const BoxConstraints(maxWidth: 260),
-                    decoration: BoxDecoration(
-                      color: isMe ? Colors.white : generalBox,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      msg['message'],
-                      style: TextStyle(color: isMe ? Colors.black : Colors.white),
-                    ),
-                  ),
-                );
-              },
-            ),
+            child: MessageThread(messages: thread),
           ),
-
           Container(
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
             decoration: const BoxDecoration(color: generalBackground),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Svar',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: generalBox,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: TextField(
-                    controller: _replyController,
-                    maxLines: 3,
-                    minLines: 2,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Tilføj et svar til din besked...',
-                      hintStyle: TextStyle(color: Colors.white54),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ElevatedButton.icon(
-                    onPressed: _sendReply,
-                    icon: const Icon(Icons.reply, size: 18),
-                    label: const Text('Send'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w500),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            child: ReplyInput(
+              controller: _replyController,
+              onSend: _sendReply,
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _formatDateTime(String? isoDateTime) {
-    try {
-      if (isoDateTime == null || isoDateTime.isEmpty) return 'ukendt tidspunkt';
-      final dt = DateTime.parse(isoDateTime);
-      return 'd. ${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')} '
-          'kl. ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return 'ukendt tidspunkt';
-    }
   }
 }
