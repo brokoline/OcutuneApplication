@@ -19,7 +19,10 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
+
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/dashboard/patient_sensor_settings_screen.dart';
+
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -59,7 +62,7 @@ class OcutuneApp extends StatelessWidget {
           final typeKey = ModalRoute.of(context)!.settings.arguments as String;
           return AboutChronotypeScreen(chronotypeId: typeKey);
         },
-        '/Q1': (_) => const QuestionOneScreen(), // question 1
+        '/Q1': (_) => const QuestionOneScreen(),
         '/Q2': (_) => const QuestionTwoScreen(),
         '/Q3': (_) => const QuestionThreeScreen(),
         '/Q4': (_) => const QuestionFourScreen(),
@@ -69,6 +72,9 @@ class OcutuneApp extends StatelessWidget {
         // Patient og kliniker login
         '/patient/dashboard': (context) => const PatientDashboardScreen(),
         '/clinician/dashboard': (context) => const ClinicianDashboardScreen(),
+
+        // Patient sider
+        '/patient_sensor_settings': (context) => const PatientSensorSettingsScreen(),
       },
     );
   }
