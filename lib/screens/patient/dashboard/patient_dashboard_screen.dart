@@ -89,7 +89,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               label: 'Kontakt din behandler',
                               icon: Icons.mail_outline,
                               onPressed: () {
-                                Navigator.pushNamed(context, '/patient_contact_clinician');
+                                Navigator.pushNamed(context, '/patient/inbox');
                               },
                             ),
 

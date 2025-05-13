@@ -58,31 +58,23 @@ class ApiService {
   static Future<void> sendPatientMessage({
     required int patientId,
     required String message,
+    String subject = '',
   }) async {
-    final url = '$baseUrl/patient-contact';
-    print('📡 POST til $url');
+    final response = await http.post(
+      Uri.parse('$baseUrl/patient-contact'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'patient_id': patientId,
+        'message': message,
+        'subject': subject,
+      }),
+    );
 
-    try {
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'patient_id': patientId,
-          'message': message,
-        }),
-      );
-
-      print('🔁 Statuskode: ${response.statusCode}');
-      print('📦 Body: ${response.body}');
-
-      if (response.statusCode != 200) {
-        throw Exception('❌ Fejl ved afsendelse af besked: ${response.body}');
-      }
-    } catch (e) {
-      print('💥 Exception i sendPatientMessage: $e');
-      rethrow;
+    if (response.statusCode != 200) {
+      throw Exception('❌ Fejl ved afsendelse af besked');
     }
   }
+
 
   // beskedhistorik
   static Future<List<Map<String, dynamic>>> getPatientMessages(int patientId) async {
@@ -96,5 +88,25 @@ class ApiService {
       throw Exception('Kunne ikke hente beskeder');
     }
   }
+
+  // Indbakke
+  static Future<List<Map<String, dynamic>>> getInboxMessages(int patientId) async {
+    final response = await http.get(Uri.parse('$baseUrl/messages/inbox/$patientId'));
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Kunne ikke hente beskeder');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMessageDetail(int messageId) async {
+    final response = await http.get(Uri.parse('$baseUrl/messages/detail/$messageId'));
+    if (response.statusCode == 200) {
+      return Map<String, dynamic>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Besked ikke fundet');
+    }
+  }
+
 
 }
