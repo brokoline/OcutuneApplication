@@ -25,7 +25,7 @@ class ApiService {
     }
   }
 
-  // Henter seneste patients fornavn (og efternavn)
+  // Henter seneste patients fornavn (og efternavn til kliniker-dashboardet)
   static Future<Map<String, String>> fetchLatestPatientName() async {
     final url = '$baseUrl/latest-patient';
     print('📡 Fetching latest patient from $url');
@@ -53,4 +53,48 @@ class ApiService {
       };
     }
   }
+
+  /// Send besked fra patient til tilknyttet behandler
+  static Future<void> sendPatientMessage({
+    required int patientId,
+    required String message,
+  }) async {
+    final url = '$baseUrl/patient-contact';
+    print('📡 POST til $url');
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'patient_id': patientId,
+          'message': message,
+        }),
+      );
+
+      print('🔁 Statuskode: ${response.statusCode}');
+      print('📦 Body: ${response.body}');
+
+      if (response.statusCode != 200) {
+        throw Exception('❌ Fejl ved afsendelse af besked: ${response.body}');
+      }
+    } catch (e) {
+      print('💥 Exception i sendPatientMessage: $e');
+      rethrow;
+    }
+  }
+
+  // beskedhistorik
+  static Future<List<Map<String, dynamic>>> getPatientMessages(int patientId) async {
+    final url = '$baseUrl/messages/$patientId';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Kunne ikke hente beskeder');
+    }
+  }
+
 }

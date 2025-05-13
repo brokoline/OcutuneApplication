@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/services/api_services.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 
 class PatientContactClinicianScreen extends StatefulWidget {
   const PatientContactClinicianScreen({super.key});
@@ -11,25 +13,63 @@ class PatientContactClinicianScreen extends StatefulWidget {
 class _PatientContactClinicianScreenState extends State<PatientContactClinicianScreen> {
   final TextEditingController _messageController = TextEditingController();
   bool _sending = false;
+  bool _loadingMessages = true;
+  int? patientId;
+  List<Map<String, dynamic>> _messages = [];
 
-  void _sendMessage() async {
+  @override
+  void initState() {
+    super.initState();
+    _loadPatientAndMessages();
+  }
+
+  Future<void> _loadPatientAndMessages() async {
+    final id = await AuthStorage.getUserId();
+    if (id == null) return;
+
+    try {
+      final messages = await ApiService.getPatientMessages(id);
+      setState(() {
+        patientId = id;
+        _messages = messages;
+        _loadingMessages = false;
+      });
+    } catch (e) {
+      print('💥 Fejl ved hentning af beskeder: $e');
+      setState(() => _loadingMessages = false);
+    }
+  }
+
+  Future<void> _sendMessage() async {
     final message = _messageController.text.trim();
-
-    if (message.isEmpty) return;
+    if (message.isEmpty || patientId == null) return;
 
     setState(() => _sending = true);
 
-    // Simulerer send
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      await ApiService.sendPatientMessage(
+        patientId: patientId!,
+        message: message,
+      );
 
-    setState(() {
-      _sending = false;
       _messageController.clear();
-    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ Besked sendt til din behandler')),
-    );
+      // Hent opdateret beskedliste
+      final messages = await ApiService.getPatientMessages(patientId!);
+      setState(() {
+        _messages = messages;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Besked sendt')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Fejl ved afsendelse')),
+      );
+    }
+
+    setState(() => _sending = false);
   }
 
   @override
@@ -53,10 +93,9 @@ class _PatientContactClinicianScreenState extends State<PatientContactClinicianS
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Skriv en besked',
+              'Samtalehistorik',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
@@ -64,6 +103,47 @@ class _PatientContactClinicianScreenState extends State<PatientContactClinicianS
               ),
             ),
             const SizedBox(height: 12),
+
+            Expanded(
+              child: _loadingMessages
+                  ? const Center(child: CircularProgressIndicator())
+                  : _messages.isEmpty
+                  ? const Center(
+                child: Text(
+                  'Ingen beskeder endnu...',
+                  style: TextStyle(color: Colors.white54),
+                ),
+              )
+                  : ListView.builder(
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final msg = _messages[index];
+                  final isMe = msg['sender_type'] == 'patient';
+
+                  return Align(
+                    alignment:
+                    isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.all(12),
+                      constraints: const BoxConstraints(maxWidth: 260),
+                      decoration: BoxDecoration(
+                        color: isMe ? Colors.white : generalBox,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        msg['message'],
+                        style: TextStyle(
+                          color: isMe ? Colors.black : Colors.white,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
 
             // Inputfelt
             Container(
@@ -75,8 +155,8 @@ class _PatientContactClinicianScreenState extends State<PatientContactClinicianS
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
                 controller: _messageController,
-                maxLines: 5,
-                minLines: 3,
+                maxLines: 4,
+                minLines: 2,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   border: InputBorder.none,
@@ -86,16 +166,18 @@ class _PatientContactClinicianScreenState extends State<PatientContactClinicianS
               ),
             ),
 
-            const Spacer(),
+            const SizedBox(height: 12),
 
-            // Send-knap
             ElevatedButton.icon(
               onPressed: _sending ? null : _sendMessage,
               icon: _sending
                   ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.black,
+                ),
               )
                   : const Icon(Icons.send),
               label: Text(_sending ? 'Sender...' : 'Send besked'),
