@@ -81,12 +81,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               label: 'Opret en aktivitet',
                               iconAsset: 'assets/icon/activity-log-icon.png',
                               onPressed: () {
-                                // Tilføj senere: Navigator.pushNamed(context, '/patient_create_activity');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('➡️ Går til: Opret aktivitet (ikke implementeret endnu)'),
-                                  ),
-                                );
+                                Navigator.pushNamed(context, '/patient_create_activity');
                               },
                             ),
                             const SizedBox(height: 16),
@@ -94,12 +89,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               label: 'Kontakt din behandler',
                               icon: Icons.mail_outline,
                               onPressed: () {
-                                // Tilføj senere: Navigator.pushNamed(context, '/patient_contact_clinician');
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('➡️ Går til: Kontakt din behandler (ikke implementeret endnu)'),
-                                  ),
-                                );
+                                Navigator.pushNamed(context, '/patient_contact_clinician');
                               },
                             ),
 

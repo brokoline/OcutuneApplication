@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/auth_storage.dart';
 import '/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
 
@@ -46,7 +47,20 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final role = data['role'];
+
+        final role = data['role']?.toString() ?? '';
+        final id = int.tryParse(data['id'].toString()) ?? 0;
+        final firstName = data['first_name']?.toString() ?? '';
+        final lastName = data['last_name']?.toString() ?? '';
+        final simUserId = data['sim_userid']?.toString() ?? '';
+        final fullName = '$firstName $lastName'.trim();
+
+        await AuthStorage.saveLoggedInUser(
+          id: id,
+          role: role,
+          name: fullName,
+          simUserId: simUserId,
+        );
 
         if (role == 'patient') {
           Navigator.pushReplacementNamed(context, '/patient/dashboard');
@@ -60,7 +74,9 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       } else {
         setState(() => loginError = 'Login fejlede. Prøv igen.');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Login-fejl: $e');
+      print('📍 Stacktrace: $stackTrace');
       setState(() => loginError = 'Netværksfejl under login');
     } finally {
       setState(() => isLoading = false);
