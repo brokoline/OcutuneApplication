@@ -59,6 +59,7 @@ class ApiService {
     required int patientId,
     required String message,
     String subject = '',
+    int? replyTo, // 🔁 nyt: optional reply
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/patient-contact'),
@@ -67,6 +68,7 @@ class ApiService {
         'patient_id': patientId,
         'message': message,
         'subject': subject,
+        if (replyTo != null) 'reply_to': replyTo, // 🔁 tilføj kun hvis sat
       }),
     );
 
@@ -74,7 +76,6 @@ class ApiService {
       throw Exception('❌ Fejl ved afsendelse af besked');
     }
   }
-
 
   // beskedhistorik
   static Future<List<Map<String, dynamic>>> getPatientMessages(int patientId) async {
@@ -99,6 +100,7 @@ class ApiService {
     }
   }
 
+  // Hent én besked (detail)
   static Future<Map<String, dynamic>> getMessageDetail(int messageId) async {
     final response = await http.get(Uri.parse('$baseUrl/messages/detail/$messageId'));
     if (response.statusCode == 200) {
@@ -108,5 +110,13 @@ class ApiService {
     }
   }
 
-
+  // hent tråd baseret på besked-ID (fx første besked eller svar)
+  static Future<List<Map<String, dynamic>>> getMessageThreadById(int threadId) async {
+    final response = await http.get(Uri.parse('$baseUrl/messages/thread-by-id/$threadId'));
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Kunne ikke hente samtale');
+    }
+  }
 }
