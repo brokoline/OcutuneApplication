@@ -54,90 +54,85 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(context, '/patient/new_message');
-        },
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add),
-        label: const Text('Ny besked'),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _messages.isEmpty
-          ? Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
         children: [
-          const Text(
-            'Ingen beskeder endnu.',
-            style: TextStyle(color: Colors.white54),
-          ),
-          const SizedBox(height: 16),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, '/patient/new_message');
-            },
-            icon: const Icon(Icons.edit, color: Colors.white),
-            label: const Text(
-              'Skriv ny besked',
-              style: TextStyle(color: Colors.white),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _messages.isEmpty
+                ? const Center(
+              child: Text(
+                'Ingen beskeder endnu.',
+                style: TextStyle(color: Colors.white54),
+              ),
+            )
+                : ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                final isUnread = msg['read'] == false;
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: generalBox,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      leading: isUnread
+                          ? const Icon(Icons.mark_email_unread, color: Colors.white)
+                          : const Icon(Icons.mark_email_read_outlined, color: Colors.white38),
+                      title: Text(
+                        msg['subject']?.isNotEmpty == true ? msg['subject'] : '(Uden emne)',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Fra: ${msg['sender']}',
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      trailing: Text(
+                        _formatDate(msg['sent_at']),
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/patient/message_detail',
+                          arguments: msg['id'],
+                        ).then((_) => _loadMessages()); // genindlæs efter åbning
+                      },
+                    ),
+                  ),
+                );
+              },
             ),
-            style: TextButton.styleFrom(
-              side: const BorderSide(color: Colors.white24),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 32),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/patient/new_message');
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Ny besked'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),
         ],
-      )
-          : ListView.builder(
-        itemCount: _messages.length,
-        itemBuilder: (context, index) {
-          final msg = _messages[index];
-          final isUnread = msg['read'] == false;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: generalBox,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white24),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                leading: isUnread
-                    ? const Icon(Icons.mark_email_unread, color: Colors.white)
-                    : const Icon(Icons.mark_email_read_outlined, color: Colors.white38),
-                title: Text(
-                  msg['subject']?.isNotEmpty == true ? msg['subject'] : '(Uden emne)',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
-                  ),
-                ),
-                subtitle: Text(
-                  'Fra: ${msg['sender']}',
-                  style: const TextStyle(color: Colors.white70),
-                ),
-                trailing: Text(
-                  _formatDate(msg['sent_at']),
-                  style: const TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/patient/message_detail',
-                    arguments: msg['id'],
-                  ).then((_) => _loadMessages()); // genindlæs efter svar
-                },
-              ),
-            ),
-          );
-        },
       ),
     );
   }
