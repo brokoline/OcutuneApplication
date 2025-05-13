@@ -17,6 +17,7 @@ class OcutunePatientDashboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ikonhåndtering
     Widget leadingIcon;
     if (iconAsset != null) {
       leadingIcon = Image.asset(
@@ -36,32 +37,45 @@ class OcutunePatientDashboardTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
-      child: Material(
-        color: generalBox, // baggrundsfarve flyttes her
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onPressed,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Material(
+          color: generalBox,
           borderRadius: BorderRadius.circular(16),
-          splashColor: Colors.white.withOpacity(0.2),
-          highlightColor: Colors.white.withOpacity(0.05),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            child: Row(
-              children: [
-                leadingIcon,
-                const SizedBox(width: 16),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          elevation: 0,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(16),
+            splashColor: Colors.white.withOpacity(0.15),
+            highlightColor: Colors.white.withOpacity(0.05),
+            hoverColor: Colors.white.withOpacity(0.03), // ← Hover-effekt til web
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 100),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.25), // ← Outliner
+                  width: 1.2,
                 ),
-              ],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  leadingIcon,
+                  const SizedBox(width: 16),
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

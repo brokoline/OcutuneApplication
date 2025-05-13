@@ -20,17 +20,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     _nameFuture = ApiService.fetchLatestPatientName();
   }
 
-  void _simulateNavigation(String label) async {
-    // Simulerer animation og evt. fremtidig navigation
-    await Future.delayed(const Duration(milliseconds: 150));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('➡️ Går til: $label (ikke implementeret endnu)'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +42,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 48), // Mere luft i toppen
+                            const SizedBox(height: 48),
 
                             // Logo + navn
                             Center(
@@ -79,32 +68,48 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 
                             const SizedBox(height: 48),
 
-                            // Dashboard tiles med animation
+                            // Knapper
                             OcutunePatientDashboardTile(
-                              label: 'Forbind med sensor',
+                              label: 'Sensorindstillinger',
                               iconAsset: 'assets/icon/BLE-sensor-ikon.png',
-                              onPressed: () => _simulateNavigation('Sensorindstillinger'),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/patient_sensor_settings');
+                              },
                             ),
                             const SizedBox(height: 16),
                             OcutunePatientDashboardTile(
                               label: 'Opret en aktivitet',
                               iconAsset: 'assets/icon/activity-log-icon.png',
-                              onPressed: () => _simulateNavigation('Opret aktivitet'),
+                              onPressed: () {
+                                // Tilføj senere: Navigator.pushNamed(context, '/patient_create_activity');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('➡️ Går til: Opret aktivitet (ikke implementeret endnu)'),
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 16),
                             OcutunePatientDashboardTile(
                               label: 'Kontakt din behandler',
                               icon: Icons.mail_outline,
-                              onPressed: () => _simulateNavigation('Kontakt behandler'),
+                              onPressed: () {
+                                // Tilføj senere: Navigator.pushNamed(context, '/patient_contact_clinician');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('➡️ Går til: Kontakt din behandler (ikke implementeret endnu)'),
+                                  ),
+                                );
+                              },
                             ),
 
                             const Spacer(),
 
-                            // Log ud-knap — mindre og med ikon
+                            // Log ud-knap
                             Center(
                               child: TextButton.icon(
                                 onPressed: () {
-                                  // TODO: Log ud funktion
+                                  // TODO: Log ud funktionalitet
                                 },
                                 icon: const Icon(Icons.logout, color: Colors.white),
                                 label: const Text(
