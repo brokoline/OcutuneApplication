@@ -22,7 +22,7 @@ import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashb
 
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_sensor_settings_screen.dart';
-
+import 'package:ocutune_light_logger/screens/patient/dashboard/patient_contact_clinician_screen.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -75,6 +75,8 @@ class OcutuneApp extends StatelessWidget {
 
         // Patient sider
         '/patient_sensor_settings': (context) => const PatientSensorSettingsScreen(),
+        '/patient_contact_clinician': (context) => const PatientContactClinicianScreen(),
+
       },
     );
   }
