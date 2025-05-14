@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/api_services.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/widgets/ocutune_textfield.dart';
 
 class PatientNewMessageScreen extends StatefulWidget {
   const PatientNewMessageScreen({super.key});
@@ -13,8 +14,8 @@ class PatientNewMessageScreen extends StatefulWidget {
 class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
-
   bool _sending = false;
+
   int? _selectedClinicianId;
   String? _selectedClinicianName;
   List<Map<String, dynamic>> _clinicians = [];
@@ -48,9 +49,26 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
     final body = _messageController.text.trim();
     final patientId = await AuthStorage.getUserId();
 
-    if (patientId == null || body.isEmpty || _selectedClinicianId == null) {
+    if (patientId == null) return;
+
+    // Valider input
+    if (_selectedClinicianId == null || subject.isEmpty || body.isEmpty) {
+      String msg;
+      if (_selectedClinicianId == null && subject.isEmpty && body.isEmpty) {
+        msg = 'Vælg venligst en behandler, angiv et emne og skriv en besked';
+      } else if (_selectedClinicianId == null) {
+        msg = 'Vælg venligst en behandler';
+      } else if (subject.isEmpty) {
+        msg = 'Angiv venligst et emne';
+      } else {
+        msg = 'Skriv venligst en besked';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Udfyld emne, besked og vælg behandler')),
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.red.shade400,
+        ),
       );
       return;
     }
@@ -89,48 +107,62 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Ny besked',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Vælg behandler
-            DropdownButtonFormField<int>(
-              value: _selectedClinicianId,
-              dropdownColor: generalBox,
-              iconEnabledColor: Colors.white,
-              decoration: const InputDecoration(
-                labelText: 'Vælg behandler',
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24),
-                ),
-              ),
-              items: _clinicians
-                  .map((c) => DropdownMenuItem<int>(
-                value: c['id'],
-                child: Text(c['name'], style: const TextStyle(color: Colors.white)),
-              ))
-                  .toList(),
-              onChanged: (val) {
-                final selected = _clinicians.firstWhere((c) => c['id'] == val);
-                setState(() {
-                  _selectedClinicianId = val;
-                  _selectedClinicianName = selected['name'];
-                });
-              },
-            ),
-            const SizedBox(height: 8),
+            const Center(child: Icon(Icons.mail_outline, color: Colors.white, size: 48)),
+            const SizedBox(height: 40),
 
-            if (_selectedClinicianName != null)
+            if (_clinicians.length > 1)
+              DropdownButtonFormField<int>(
+                value: _selectedClinicianId,
+                dropdownColor: generalBox,
+                iconEnabledColor: Colors.white,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: generalBox,
+                  labelText: 'Vælg behandler',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white24),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white24),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                items: [
+                  const DropdownMenuItem<int>(
+                    value: null,
+                    child: Text('Vælg din behandler', style: TextStyle(color: Colors.white54)),
+                  ),
+                  ..._clinicians.map((c) => DropdownMenuItem<int>(
+                    value: c['id'],
+                    child: Text(c['name'], style: const TextStyle(color: Colors.white)),
+                  )),
+                ],
+                onChanged: (val) {
+                  final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});
+                  setState(() {
+                    _selectedClinicianId = val;
+                    _selectedClinicianName = selected['name'];
+                  });
+                },
+              )
+            else if (_selectedClinicianName != null)
               Padding(
-                padding: const EdgeInsets.only(top: 4.0),
+                padding: const EdgeInsets.only(bottom: 12.0),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -140,56 +172,65 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                 ),
               ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 22),
 
-            // Emnefelt
-            TextField(
+            OcutuneTextField(
+              label: 'Emne',
               controller: _subjectController,
+            ),
+            const SizedBox(height: 22),
+
+            TextField(
+              controller: _messageController,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Emne',
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white24),
+              minLines: 8,
+              maxLines: 10,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: generalBox,
+                hintText: 'Skriv din besked...',
+                hintStyle: const TextStyle(color: Colors.white54),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24),
                 ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white),
+                ),
+                contentPadding: const EdgeInsets.all(16),
               ),
             ),
-            const SizedBox(height: 16),
 
-            // Beskedfelt
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: null,
-                expands: true,
-                decoration: const InputDecoration(
-                  hintText: 'Skriv din besked...',
-                  hintStyle: TextStyle(color: Colors.white54),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 34),
 
-            // Send-knap
-            ElevatedButton.icon(
-              onPressed: _sending ? null : _send,
-              icon: _sending
-                  ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.black,
+            Align(
+              alignment: Alignment.centerRight,
+              child: SizedBox(
+                width: 140,
+                height: 42,
+                child: ElevatedButton.icon(
+                  onPressed: _sending ? null : _send,
+                  icon: _sending
+                      ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                  )
+                      : const Icon(Icons.send, size: 18),
+                  label: Text(_sending ? 'Sender...' : 'Send'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
-              )
-                  : const Icon(Icons.send),
-              label: Text(_sending ? 'Sender...' : 'Send besked'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                minimumSize: const Size.fromHeight(48),
               ),
             ),
           ],
