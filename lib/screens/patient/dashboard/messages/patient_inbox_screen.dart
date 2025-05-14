@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
@@ -23,7 +25,24 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
   Future<void> _loadMessages() async {
     try {
       final msgs = await api.ApiService.getInboxMessages();
-      final rootMessages = msgs.where((msg) => msg['id'] == msg['thread_id']).toList();
+
+      final httpDateFormat = DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", 'en_US');
+      final Map<int, Map<String, dynamic>> threadMap = {};
+
+      for (var msg in msgs) {
+        final threadId = msg['thread_id'];
+        final sentAt = httpDateFormat.parse(msg['sent_at']);
+
+        if (!threadMap.containsKey(threadId) ||
+            sentAt.isAfter(httpDateFormat.parse(threadMap[threadId]!['sent_at']))) {
+          threadMap[threadId] = msg;
+        }
+      }
+
+      final rootMessages = threadMap.values.toList()
+        ..sort((a, b) => httpDateFormat
+            .parse(b['sent_at'])
+            .compareTo(httpDateFormat.parse(a['sent_at'])));
 
       setState(() {
         _messages = rootMessages;
@@ -37,70 +56,81 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Indbakke',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _messages.isEmpty
-                ? const Center(
-              child: Text(
-                'Ingen beskeder endnu.',
-                style: TextStyle(color: Colors.white54),
-              ),
-            )
-                : ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return InboxListTile(
-                  msg: _messages[index],
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/patient/message_detail',
-                      arguments: _messages[index]['id'],
-                    ).then((_) => _loadMessages());
-                  },
-                );
-              },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: generalBackground,
+        appBar: AppBar(
+          backgroundColor: generalBackground,
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text(
+            'Indbakke',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 32),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pushNamed(context, '/patient/new_message')
-                    .then((_) => _loadMessages());
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Ny besked'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _messages.isEmpty
+                  ? const Center(
+                child: Text(
+                  'Ingen beskeder endnu.',
+                  style: TextStyle(color: Colors.white54),
+                ),
+              )
+                  : ListView.builder(
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  return InboxListTile(
+                    msg: _messages[index],
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/patient/message_detail',
+                        arguments: _messages[index]['id'],
+                      ).then((_) => _loadMessages());
+                    },
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 32),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/patient/new_message')
+                      .then((_) => _loadMessages());
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Ny besked'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -22,7 +22,7 @@ import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashb
 import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_new_message_screen.dart';
 
 import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/dashboard/patient_sensor_settings_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/dashboard/sensor_settings/patient_sensor_settings_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_inbox_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_message_detail_screen.dart';
 

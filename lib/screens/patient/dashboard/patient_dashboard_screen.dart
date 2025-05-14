@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
-import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
   const PatientDashboardScreen({super.key});
@@ -89,22 +88,38 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             const SizedBox(height: 16),
                             OcutunePatientDashboardTile(
                               label: 'Kontakt din behandler',
-                              icon: Icons.mail_outline,
+                              iconAsset: 'assets/icon/mail-outline.png',
                               onPressed: () {
                                 Navigator.pushNamed(context, '/patient/inbox');
                               },
                             ),
 
                             const Spacer(),
-                            OcutuneButton(
-                              text: 'Log ud',
-                              type: OcutuneButtonType.secondary,
-                              onPressed: () async {
-                                await AuthStorage.logout();
-                                if (!context.mounted) return;
-                                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
-                              },
+
+                            // Ny log ud knap
+                            Center(
+                              child: SizedBox(
+                                width: 100,
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    await AuthStorage.logout();
+                                    if (!context.mounted) return;
+                                    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+                                  },
+                                  icon: const Icon(Icons.logout),
+                                  label: const Text('Log ud'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
+
                             const SizedBox(height: 32),
                           ],
                         ),
