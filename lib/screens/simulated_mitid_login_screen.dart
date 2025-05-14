@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../services/auth_storage.dart';
-import '/theme/colors.dart';
+import 'package:ocutune_light_logger/services/api_services.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
 
 class SimulatedLoginScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://ocutune.ddns.net/sim-login'),
+        Uri.parse('${ApiService.baseUrl}/sim-login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'sim_userid': userId,
@@ -47,22 +48,20 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
-        final role = data['role']?.toString() ?? '';
-        final id = int.tryParse(data['id'].toString()) ?? 0;
-        final firstName = data['first_name']?.toString() ?? '';
-        final lastName = data['last_name']?.toString() ?? '';
-        final simUserId = data['sim_userid']?.toString() ?? '';
-        final fullName = '$firstName $lastName'.trim();
+        final role = data['role'];
 
         await AuthStorage.saveLoggedInUser(
-          id: id,
+          id: data['id'],
           role: role,
-          name: fullName,
-          simUserId: simUserId,
+          simUserId: data['sim_userid'],
         );
 
         if (role == 'patient') {
+          await AuthStorage.savePatientProfile(
+            id: data['id'],
+            firstName: data['first_name'],
+            lastName: data['last_name'],
+          );
           Navigator.pushReplacementNamed(context, '/patient/dashboard');
         } else if (role == 'clinician') {
           Navigator.pushReplacementNamed(context, '/clinician/dashboard');
@@ -74,9 +73,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       } else {
         setState(() => loginError = 'Login fejlede. Prøv igen.');
       }
-    } catch (e, stackTrace) {
-      print('❌ Login-fejl: $e');
-      print('📍 Stacktrace: $stackTrace');
+    } catch (e) {
       setState(() => loginError = 'Netværksfejl under login');
     } finally {
       setState(() => isLoading = false);
@@ -119,7 +116,10 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
                   title: 'Log på Ocutune Applikation',
                   controller: userIdController,
                   errorMessage: loginError,
-                  onContinue: _attemptLogin,
+                  onContinue: (user, password) => _attemptLogin(
+                    user.trim(),
+                    password.trim(),
+                  ),
                 ),
               ),
             ],
