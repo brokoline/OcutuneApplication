@@ -33,7 +33,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
     try {
       final list = await ApiService.getPatientClinicians(patientId);
 
-      // Fjern dubletter baseret på id
+      // Fjern dubletter
       final unique = {
         for (var c in list) c['id']: c
       }.values.toList();
@@ -156,7 +156,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                 ),
                 items: _clinicians.map((c) => DropdownMenuItem<int>(
                   value: c['id'],
-                  child: Text(c['name'], style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    '${c['name']} (${c['role'] ?? ''})',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 )).toList(),
                 onChanged: (val) {
                   final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});

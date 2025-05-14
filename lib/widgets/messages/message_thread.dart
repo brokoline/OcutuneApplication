@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_bubble.dart';
 
 class MessageThread extends StatelessWidget {
@@ -14,12 +15,36 @@ class MessageThread extends StatelessWidget {
       itemBuilder: (context, index) {
         final msg = messages[index];
         final isMe = msg['sender_type'] == 'patient';
+        final time = _formatDateTime(msg['sent_at']);
 
-        return MessageBubble(
-          message: msg['message'],
-          isMe: isMe,
+        return Column(
+          crossAxisAlignment:
+          isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            MessageBubble(
+              message: msg['message'],
+              isMe: isMe,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              time,
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
+            const SizedBox(height: 12),
+          ],
         );
       },
     );
+  }
+
+  String _formatDateTime(String rawDate) {
+    try {
+      final dt = DateFormat('EEE, dd MMM yyyy HH:mm:ss', 'en_US')
+          .parseUtc(rawDate)
+          .toLocal();
+      return DateFormat('dd.MM.yyyy • HH:mm').format(dt);
+    } catch (_) {
+      return '';
+    }
   }
 }
