@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
-import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/choose_access_screen.dart';
 
 import 'package:ocutune_light_logger/screens/customer/register/customer_register_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
