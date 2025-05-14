@@ -38,8 +38,8 @@ class InboxListTile extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            'Fra: ${msg['sender']}',
-            style: const TextStyle(color: Colors.white70),
+              'Fra: ${msg['sender_name'] ?? 'Ukendt'}',
+              style: const TextStyle(color: Colors.white70),
           ),
           trailing: Text(
             _formatDate(msg['sent_at']),

@@ -117,13 +117,20 @@ class ApiService {
 
   // Indbakke
   static Future<List<Map<String, dynamic>>> getInboxMessages(int patientId) async {
-    final response = await http.get(Uri.parse('$baseUrl/messages/inbox/$patientId'));
+    final url = '$baseUrl/messages/inbox/$patientId';
+    print('📡 GET $url');
+    final response = await http.get(Uri.parse(url));
+
+    print('🔁 Status: ${response.statusCode}');
+    print('📦 Body: ${response.body}');
+
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(jsonDecode(response.body));
     } else {
-      throw Exception('Kunne ikke hente beskeder');
+      throw Exception('Kunne ikke hente beskeder (${response.statusCode}): ${response.body}');
     }
   }
+
 
   // Hent én besked (detail)
   static Future<Map<String, dynamic>> getMessageDetail(int messageId) async {
