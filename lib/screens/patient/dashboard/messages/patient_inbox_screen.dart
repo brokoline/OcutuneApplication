@@ -27,8 +27,10 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
 
     try {
       final msgs = await ApiService.getInboxMessages(id);
+      final rootMessages = msgs.where((msg) => msg['reply_to'] == null).toList();
+
       setState(() {
-        _messages = msgs;
+        _messages = rootMessages;
         _loading = false;
       });
     } catch (e) {

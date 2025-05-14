@@ -32,11 +32,20 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
 
     try {
       final list = await ApiService.getPatientClinicians(patientId);
+
+      // Fjern dubletter baseret på id
+      final unique = {
+        for (var c in list) c['id']: c
+      }.values.toList();
+
       setState(() {
-        _clinicians = list;
-        if (list.length == 1) {
-          _selectedClinicianId = list.first['id'];
-          _selectedClinicianName = list.first['name'];
+        _clinicians = unique;
+        if (unique.length == 1) {
+          _selectedClinicianId = unique.first['id'];
+          _selectedClinicianName = unique.first['name'];
+        } else {
+          _selectedClinicianId = null;
+          _selectedClinicianName = null;
         }
       });
     } catch (e) {
@@ -51,7 +60,6 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
 
     if (patientId == null) return;
 
-    // Valider input
     if (_selectedClinicianId == null || subject.isEmpty || body.isEmpty) {
       String msg;
       if (_selectedClinicianId == null && subject.isEmpty && body.isEmpty) {
@@ -98,6 +106,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final multiple = _clinicians.length > 1;
+    final validValue = _selectedClinicianId != null &&
+        _clinicians.any((c) => c['id'] == _selectedClinicianId);
+
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
@@ -118,9 +130,9 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
             const Center(child: Icon(Icons.mail_outline, color: Colors.white, size: 48)),
             const SizedBox(height: 40),
 
-            if (_clinicians.length > 1)
+            if (multiple)
               DropdownButtonFormField<int>(
-                value: _selectedClinicianId,
+                value: validValue ? _selectedClinicianId : null,
                 dropdownColor: generalBox,
                 iconEnabledColor: Colors.white,
                 decoration: InputDecoration(
@@ -142,16 +154,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                items: [
-                  const DropdownMenuItem<int>(
-                    value: null,
-                    child: Text('Vælg din behandler', style: TextStyle(color: Colors.white54)),
-                  ),
-                  ..._clinicians.map((c) => DropdownMenuItem<int>(
-                    value: c['id'],
-                    child: Text(c['name'], style: const TextStyle(color: Colors.white)),
-                  )),
-                ],
+                items: _clinicians.map((c) => DropdownMenuItem<int>(
+                  value: c['id'],
+                  child: Text(c['name'], style: const TextStyle(color: Colors.white)),
+                )).toList(),
                 onChanged: (val) {
                   final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});
                   setState(() {

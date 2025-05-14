@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
-import 'package:ocutune_light_logger/services/api_services.dart';
-
-import '../../../services/auth_storage.dart';
+import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
   const PatientDashboardScreen({super.key});
@@ -14,33 +12,26 @@ class PatientDashboardScreen extends StatefulWidget {
 }
 
 class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
-  late Future<Map<String, String>> _nameFuture;
+  late Future<String> _nameFuture;
 
   @override
   void initState() {
     super.initState();
-    _nameFuture = _loadUserName();
+    _nameFuture = AuthStorage.getName().then((name) {
+      if (name.trim().isEmpty) return 'Bruger';
+      return name.split(' ').first; // Kun fornavn
+    });
   }
-
-  Future<Map<String, String>> _loadUserName() async {
-    final name = await AuthStorage.getName();
-    return {
-      'first_name': name,
-      'last_name': '',
-    };
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
       body: SafeArea(
-        child: FutureBuilder<Map<String, String>>(
+        child: FutureBuilder<String>(
           future: _nameFuture,
           builder: (context, snapshot) {
-            final firstName = snapshot.data?['first_name'] ?? 'Bruger';
-            final greeting = 'Hej $firstName';
+            final greeting = 'Hej ${snapshot.data ?? 'Bruger'}';
 
             return LayoutBuilder(
               builder: (context, constraints) {
@@ -105,31 +96,15 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             ),
 
                             const Spacer(),
-
-                            // Log ud-knap
-                            Center(
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  // TODO: Log ud funktionalitet
-                                },
-                                icon: const Icon(Icons.logout, color: Colors.white),
-                                label: const Text(
-                                  'Log ud',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  backgroundColor: Colors.red.shade600,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
+                            OcutuneButton(
+                              text: 'Log ud',
+                              type: OcutuneButtonType.secondary,
+                              onPressed: () async {
+                                await AuthStorage.logout();
+                                if (!context.mounted) return;
+                                Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+                              },
                             ),
-
                             const SizedBox(height: 32),
                           ],
                         ),
