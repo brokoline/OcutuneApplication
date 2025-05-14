@@ -4,6 +4,8 @@ import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
 import 'package:ocutune_light_logger/services/api_services.dart';
 
+import '../../../services/auth_storage.dart';
+
 class PatientDashboardScreen extends StatefulWidget {
   const PatientDashboardScreen({super.key});
 
@@ -17,8 +19,17 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _nameFuture = ApiService.fetchLatestPatientName();
+    _nameFuture = _loadUserName();
   }
+
+  Future<Map<String, String>> _loadUserName() async {
+    final name = await AuthStorage.getName();
+    return {
+      'first_name': name,
+      'last_name': '',
+    };
+  }
+
 
   @override
   Widget build(BuildContext context) {

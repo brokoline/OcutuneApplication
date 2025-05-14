@@ -25,6 +25,18 @@ class ApiService {
     }
   }
 
+
+  // henter patient til login
+  static Future<Map<String, dynamic>> getPatientInfo(String simUserId) async {
+    final response = await http.get(Uri.parse('$baseUrl/patient-info/$simUserId'));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Kunne ikke hente patientinfo');
+    }
+  }
+
   // Henter seneste patients fornavn (og efternavn til kliniker-dashboardet)
   static Future<Map<String, String>> fetchLatestPatientName() async {
     final url = '$baseUrl/latest-patient';
