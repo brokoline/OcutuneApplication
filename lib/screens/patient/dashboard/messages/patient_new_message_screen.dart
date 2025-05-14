@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
-import 'package:ocutune_light_logger/services/api_services.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_textfield.dart';
 
@@ -28,14 +27,12 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
   }
 
   Future<void> _loadClinicians() async {
-    final patientId = await AuthStorage.getUserId();
-    if (patientId == null) return;
-
     try {
-      final list = await ApiService.getPatientClinicians(patientId);
+      final list = await api.ApiService.getPatientClinicians();
       final unique = {
         for (var c in list) c['id']: c
       }.values.toList();
+      print('🧪 Klinikere hentet: $list');
 
       setState(() {
         _clinicians = unique;
@@ -55,9 +52,6 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
   Future<void> _send() async {
     final subject = _subjectController.text.trim();
     final body = _messageController.text.trim();
-    final patientId = await AuthStorage.getUserId();
-
-    if (patientId == null) return;
 
     if (_selectedClinicianId == null || subject.isEmpty || body.isEmpty) {
       String msg;
@@ -80,8 +74,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
     setState(() => _sending = true);
 
     try {
-      await ApiService.sendPatientMessage(
-        patientId: patientId,
+      await api.ApiService.sendPatientMessage(
         message: body,
         subject: subject,
         clinicianId: _selectedClinicianId,
