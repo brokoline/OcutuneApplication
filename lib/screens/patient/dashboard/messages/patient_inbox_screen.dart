@@ -89,7 +89,8 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
             padding: const EdgeInsets.only(bottom: 32),
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/patient/new_message');
+                Navigator.pushNamed(context, '/patient/new_message')
+                    .then((_) => _loadMessages());
               },
               icon: const Icon(Icons.add),
               label: const Text('Ny besked'),

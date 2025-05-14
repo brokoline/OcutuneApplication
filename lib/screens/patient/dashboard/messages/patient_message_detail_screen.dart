@@ -9,10 +9,12 @@ class PatientMessageDetailScreen extends StatefulWidget {
   const PatientMessageDetailScreen({super.key});
 
   @override
-  State<PatientMessageDetailScreen> createState() => _PatientMessageDetailScreenState();
+  State<PatientMessageDetailScreen> createState() =>
+      _PatientMessageDetailScreenState();
 }
 
-class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen> {
+class _PatientMessageDetailScreenState
+    extends State<PatientMessageDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
   List<Map<String, dynamic>> thread = [];
   Map<String, dynamic>? original;
@@ -78,7 +80,9 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
-          original!['subject']?.isNotEmpty == true ? original!['subject'] : 'Uden emne',
+          original!['subject']?.isNotEmpty == true
+              ? original!['subject']
+              : 'Uden emne',
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -88,6 +92,23 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Fra: ${original!['sender_name'] ?? 'Ukendt'}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Til: ${original!['receiver_name'] ?? 'Ukendt'}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: MessageThread(messages: thread),
           ),

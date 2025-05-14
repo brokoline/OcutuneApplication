@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
 class InboxListTile extends StatelessWidget {
@@ -13,8 +14,13 @@ class InboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUnread = msg['read'] == false;
+    final isUnread = msg['read'] == 0;
     final subject = msg['subject']?.isNotEmpty == true ? msg['subject'] : '(Uden emne)';
+    final isFromMe = msg['sender_type'] == 'patient';
+
+    final label = isFromMe
+        ? 'Til: ${msg['receiver_name'] ?? 'Ukendt'}'
+        : 'Fra: ${msg['sender_name'] ?? 'Ukendt'}';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -38,13 +44,21 @@ class InboxListTile extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-              'Fra: ${msg['sender_name'] ?? 'Ukendt'}',
-              style: const TextStyle(color: Colors.white70),
+            label,
+            style: const TextStyle(color: Colors.white70),
           ),
-          trailing: Text(
-            _formatDate(msg['sent_at']),
-            textAlign: TextAlign.right,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _formatDate(msg['sent_at']),
+                style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
           onTap: onTap,
         ),
@@ -52,11 +66,29 @@ class InboxListTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(String isoDateTime) {
-    final dt = DateTime.tryParse(isoDateTime);
-    if (dt == null) return '';
-    final date = 'D. ${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}';
-    final time = 'Kl. ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    return '$date\n$time';
+  String _formatDate(String rawDate) {
+    try {
+      final dt = DateFormat('EEE, dd MMM yyyy HH:mm:ss', 'en_US')
+          .parseUtc(rawDate)
+          .toLocal();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final messageDay = DateTime(dt.year, dt.month, dt.day);
+
+      String dayPart;
+      if (messageDay == today) {
+        dayPart = 'I dag';
+      } else if (messageDay == today.subtract(const Duration(days: 1))) {
+        dayPart = 'I går';
+      } else {
+        dayPart = DateFormat('dd.MM').format(dt);
+      }
+
+      final timePart = DateFormat('HH:mm').format(dt);
+      return '$dayPart • $timePart';
+    } catch (_) {
+      return '';
+    }
   }
 }
