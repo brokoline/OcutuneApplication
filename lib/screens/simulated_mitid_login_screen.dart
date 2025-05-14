@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ocutune_light_logger/services/api_services.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart' as auth;
+
 
 class SimulatedLoginScreen extends StatefulWidget {
   final String title;
@@ -50,15 +51,15 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         final data = jsonDecode(response.body);
         final role = data['role'];
 
-        await AuthStorage.saveLoggedInUser(
+        await auth.AuthStorage.saveLogin(
           id: data['id'],
-          role: role,
+          role: data['role'],
+          token: data['token'],
           simUserId: data['sim_userid'],
         );
 
         if (role == 'patient') {
-          await AuthStorage.savePatientProfile(
-            id: data['id'],
+          await auth.AuthStorage.savePatientProfile(
             firstName: data['first_name'],
             lastName: data['last_name'],
           );

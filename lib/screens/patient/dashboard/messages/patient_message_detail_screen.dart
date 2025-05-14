@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/services/api_services.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread.dart';
 import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
@@ -18,7 +17,6 @@ class _PatientMessageDetailScreenState
   final TextEditingController _replyController = TextEditingController();
   List<Map<String, dynamic>> thread = [];
   Map<String, dynamic>? original;
-  int? patientId;
   int? threadId;
 
   @override
@@ -29,12 +27,11 @@ class _PatientMessageDetailScreenState
   }
 
   Future<void> _loadData() async {
-    patientId = await AuthStorage.getUserId();
-    if (patientId == null || threadId == null) return;
+    if (threadId == null) return;
 
     try {
-      final msg = await ApiService.getMessageDetail(threadId!);
-      final msgs = await ApiService.getMessageThreadById(threadId!);
+      final msg = await api.ApiService.getMessageDetail(threadId!);
+      final msgs = await api.ApiService.getMessageThreadById(threadId!);
       setState(() {
         original = msg;
         thread = msgs;
@@ -46,11 +43,10 @@ class _PatientMessageDetailScreenState
 
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
-    if (text.isEmpty || patientId == null || threadId == null) return;
+    if (text.isEmpty || threadId == null) return;
 
     try {
-      await ApiService.sendPatientMessage(
-        patientId: patientId!,
+      await api.ApiService.sendPatientMessage(
         message: text,
         subject: 'Re: ${original!['subject'] ?? ''}',
         replyTo: threadId,

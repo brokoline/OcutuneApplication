@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/services/api_services.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_textfield.dart';
 
@@ -27,16 +27,12 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
   }
 
   Future<void> _loadClinicians() async {
-    final patientId = await AuthStorage.getUserId();
-    if (patientId == null) return;
-
     try {
-      final list = await ApiService.getPatientClinicians(patientId);
-
-      // Fjern dubletter
+      final list = await api.ApiService.getPatientClinicians();
       final unique = {
         for (var c in list) c['id']: c
       }.values.toList();
+      print('🧪 Klinikere hentet: $list');
 
       setState(() {
         _clinicians = unique;
@@ -56,9 +52,6 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
   Future<void> _send() async {
     final subject = _subjectController.text.trim();
     final body = _messageController.text.trim();
-    final patientId = await AuthStorage.getUserId();
-
-    if (patientId == null) return;
 
     if (_selectedClinicianId == null || subject.isEmpty || body.isEmpty) {
       String msg;
@@ -73,10 +66,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: Colors.red.shade400,
-        ),
+        SnackBar(content: Text(msg), backgroundColor: Colors.red.shade400),
       );
       return;
     }
@@ -84,8 +74,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
     setState(() => _sending = true);
 
     try {
-      await ApiService.sendPatientMessage(
-        patientId: patientId,
+      await api.ApiService.sendPatientMessage(
         message: body,
         subject: subject,
         clinicianId: _selectedClinicianId,
@@ -131,15 +120,15 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
             const SizedBox(height: 40),
 
             if (multiple)
-              DropdownButtonFormField<int>(
+              DropdownButtonFormField2<int>(
+                isExpanded: true,
                 value: validValue ? _selectedClinicianId : null,
-                dropdownColor: generalBox,
-                iconEnabledColor: Colors.white,
+                iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
                 decoration: InputDecoration(
-                  filled: true,
-                  fillColor: generalBox,
                   labelText: 'Vælg behandler',
                   labelStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: generalBox,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.white24),
@@ -152,15 +141,24 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(color: Colors.white),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
-                items: _clinicians.map((c) => DropdownMenuItem<int>(
-                  value: c['id'],
-                  child: Text(
-                    '${c['name']} (${c['role'] ?? ''})',
-                    style: const TextStyle(color: Colors.white),
+                dropdownStyleData: DropdownStyleData(
+                  decoration: BoxDecoration(
+                    color: generalBoxHover,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                )).toList(),
+                ),
+                items: _clinicians.map((c) {
+                  return DropdownMenuItem<int>(
+                    value: c['id'],
+                    child: Text(
+                      '${c['name']} (${c['role'] ?? ''})',
+                      style: const TextStyle(color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
                 onChanged: (val) {
                   final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});
                   setState(() {
@@ -192,7 +190,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
             TextField(
               controller: _messageController,
               style: const TextStyle(color: Colors.white),
-              minLines: 8,
+              minLines: 10,
               maxLines: 10,
               decoration: InputDecoration(
                 filled: true,
