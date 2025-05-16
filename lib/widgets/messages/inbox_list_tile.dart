@@ -34,12 +34,12 @@ class InboxListTile extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           leading: Icon(
             isUnread ? Icons.mark_email_unread : Icons.mark_email_read_outlined,
-            color: isUnread ? Colors.white : Colors.white38,
+            color: isUnread ? Colors.white70 : Colors.white38,
           ),
           title: Text(
             subject,
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.white70,
               fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
             ),
           ),

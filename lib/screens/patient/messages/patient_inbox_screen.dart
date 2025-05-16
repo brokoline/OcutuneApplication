@@ -117,7 +117,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                 icon: const Icon(Icons.add),
                 label: const Text('Ny besked'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.white70,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,

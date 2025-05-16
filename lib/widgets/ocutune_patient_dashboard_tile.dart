@@ -26,11 +26,11 @@ class OcutunePatientDashboardTile extends StatelessWidget {
         height: 48,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.broken_image, size: 40, color: Colors.white);
+          return const Icon(Icons.broken_image, size: 40, color: Colors.white70);
         },
       );
     } else if (icon != null) {
-      leadingIcon = Icon(icon, size: 48, color: Colors.white);
+      leadingIcon = Icon(icon, size: 48, color: Colors.white70);
     } else {
       leadingIcon = const SizedBox(width: 48, height: 48);
     }
@@ -48,13 +48,13 @@ class OcutunePatientDashboardTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             splashColor: Colors.white.withOpacity(0.15),
             highlightColor: Colors.white.withOpacity(0.05),
-            hoverColor: Colors.white.withOpacity(0.03), // ← Hover-effekt til web
+            hoverColor: Colors.white.withOpacity(0.03),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 100),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.25), // ← Outliner
+                  color: Colors.white.withOpacity(0.25),
                   width: 1.2,
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -67,7 +67,7 @@ class OcutunePatientDashboardTile extends StatelessWidget {
                     child: Text(
                       label,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Colors.white70,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),

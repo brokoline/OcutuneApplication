@@ -52,13 +52,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   Image.asset(
                                     'assets/logo/logo_ocutune.png',
                                     height: 100,
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     greeting,
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.white70,
                                       fontSize: 22,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -79,10 +79,10 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             ),
                             const SizedBox(height: 16),
                             OcutunePatientDashboardTile(
-                              label: 'Opret en aktivitet',
+                              label: 'Registrér en aktivitet',
                               iconAsset: 'assets/icon/activity-log-icon.png',
                               onPressed: () {
-                                Navigator.pushNamed(context, '/patient_create_activity');
+                                Navigator.pushNamed(context, '/patient/activities');
                               },
                             ),
                             const SizedBox(height: 16),
@@ -104,13 +104,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   onPressed: () async {
                                     await AuthStorage.logout();
                                     if (!context.mounted) return;
-                                    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+                                    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
                                   },
                                   icon: const Icon(Icons.logout),
                                   label: const Text('Log ud'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.redAccent,
-                                    foregroundColor: Colors.white,
+                                    foregroundColor: Colors.white70,
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
