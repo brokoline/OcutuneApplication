@@ -27,19 +27,19 @@ class OcutuneButton extends StatelessWidget {
 
     switch (type) {
       case OcutuneButtonType.primary:
-        backgroundColor = Colors.white;
+        backgroundColor = Colors.white70;
         textColor = Colors.black;
         borderSide = null;
         break;
       case OcutuneButtonType.secondary:
         backgroundColor = darkGray;
-        textColor = Colors.white;
-        borderSide = const BorderSide(color: Colors.white, width: 1);
+        textColor = Colors.white70;
+        borderSide = const BorderSide(color: Colors.white70, width: 1);
         break;
       case OcutuneButtonType.floatingIcon:
         return FloatingActionButton(
           shape: const CircleBorder(),
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.white70,
           foregroundColor: Colors.black,
           onPressed: onPressed,
           child: const Icon(Icons.arrow_forward),

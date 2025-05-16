@@ -19,12 +19,13 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
-import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_new_message_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 
-import 'package:ocutune_light_logger/screens/patient/dashboard/patient_dashboard_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/dashboard/patient_sensor_settings_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_inbox_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/dashboard/messages/patient_message_detail_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/messages/patient_inbox_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/messages/patient_message_detail_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -80,7 +81,7 @@ class OcutuneApp extends StatelessWidget {
         '/patient/inbox': (context) => const PatientInboxScreen(),
         '/patient/message_detail': (context) => const PatientMessageDetailScreen(),
         '/patient/new_message': (context) => const PatientNewMessageScreen(),
-
+        '/patient/activities': (context) =>  PatientActivityScreen(),
       },
     );
   }

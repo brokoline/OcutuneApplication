@@ -105,10 +105,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         backgroundColor: generalBackground,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
           'Ny besked',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 18),
+          style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 18),
         ),
       ),
       body: SingleChildScrollView(
@@ -116,7 +116,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Center(child: Icon(Icons.mail_outline, color: Colors.white, size: 48)),
+            const Center(child: Icon(Icons.mail_outline, color: Colors.white70, size: 48)),
             const SizedBox(height: 40),
 
             if (multiple)
@@ -231,7 +231,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                       : const Icon(Icons.send, size: 18),
                   label: Text(_sending ? 'Sender...' : 'Send'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.white70,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

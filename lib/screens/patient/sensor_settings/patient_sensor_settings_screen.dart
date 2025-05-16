@@ -76,7 +76,7 @@ class PatientSensorSettingsScreen extends StatelessWidget {
               icon: const Icon(Icons.bluetooth_searching),
               label: const Text('Søg efter sensor'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: Colors.white70,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
