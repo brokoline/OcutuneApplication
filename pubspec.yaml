@@ -16,6 +16,11 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: ^0.20.2
   dropdown_button2: ^2.3.9
+  flutter_reactive_ble: ^5.0.2
+  flutter_screenutil: ^5.5.4
+  flutter_secure_storage: ^9.0.0
+
+
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +28,9 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.3
   flutter_native_splash: ^2.4.6
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.1
+  permission_handler: ^11.0.1
 
 flutter:
   uses-material-design: true
@@ -31,10 +39,12 @@ flutter:
     - assets/logo_ocutune.png
     - assets/icon/mitid_logo.png
     - assets/icon/BLE-sensor-ikon.png
+    - assets/icon/activity-log-icon.png
     - assets/icon/mail-outline.png
     - assets/images/lark.png
     - assets/images/dove.png
     - assets/images/nightowl.png
+
 
 flutter_icons:
   android: true

@@ -140,4 +140,30 @@ class ApiService {
   }
 
 
+// Simuleret MitID-login
+  static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
+    final url = Uri.parse('$baseUrl/sim-login');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'sim_userid': userId,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Login fejlede');
+    }
+  }
+
+
+
+
+// BLE Forbindelse
+
+
 }

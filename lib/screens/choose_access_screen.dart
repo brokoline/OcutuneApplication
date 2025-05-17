@@ -13,11 +13,11 @@ class ChooseAccessScreen extends StatelessWidget {
         backgroundColor: generalBackground,
         elevation: 0,
         toolbarHeight: 64,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
           'Hvordan vil du logge ind?',
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.white70,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -31,7 +31,7 @@ class ChooseAccessScreen extends StatelessWidget {
               child: Image.asset(
                 'assets/logo/logo_ocutune.png',
                 height: 110,
-                color: Colors.white,
+                color: Colors.white70,
               ),
             ),
             const SizedBox(height: 24),
@@ -103,7 +103,7 @@ class ChooseAccessScreen extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.white70,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),

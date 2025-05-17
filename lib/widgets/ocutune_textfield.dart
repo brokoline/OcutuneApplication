@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class OcutuneTextField extends StatelessWidget {
   final String label;
@@ -19,10 +20,10 @@ class OcutuneTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: isPassword,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: Colors.white, fontSize: 14.sp),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: labelStyle ?? const TextStyle(fontSize: 14, color: Colors.white70),
+        labelStyle: labelStyle ?? TextStyle(fontSize: 14.sp, color: Colors.white70),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.white24),
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_textfield.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
@@ -20,35 +21,37 @@ class LoginScreen extends StatelessWidget {
       ),
       child: Scaffold(
         backgroundColor: generalBackground,
-        body: Center(
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                SizedBox(height: 50.h),
                 OcutuneCard(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
                         'assets/logo_ocutune.png',
-                        width: 140,
-                        color: Colors.white,
+                        width: 100.w,
+                        color: Colors.white70,
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32.h),
                       OcutuneTextField(
                         label: 'E-mail',
                         controller: emailController,
-                        labelStyle: const TextStyle(fontSize: 16),
+                        labelStyle: TextStyle(fontSize: 16.sp),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16.h),
                       OcutuneTextField(
                         label: 'Adgangskode',
                         isPassword: true,
                         controller: passwordController,
-                        labelStyle: const TextStyle(fontSize: 16),
+                        labelStyle: TextStyle(fontSize: 16.sp),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24.h),
                       OcutuneButton(
                         text: 'Log ind',
                         onPressed: () {
@@ -56,40 +59,42 @@ class LoginScreen extends StatelessWidget {
                         },
                         type: OcutuneButtonType.primary,
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 1.h),
                       TextButton(
                         onPressed: () {},
-                        child: const Text(
+                        child: Text(
                           'Glemt adgangskode?',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                         ),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/register');
                         },
-                        child: const Text(
+                        child: Text(
                           'Ikke registreret? Opret bruger',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 10.h),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/chooseAccess');
                   },
-                  child: const Text(
+                  child: Text(
                     'Kliniker eller patient? Log ind her',
                     style: TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
+                      fontSize: 14.sp,
                     ),
                   ),
                 ),
+                SizedBox(height: 1.h),
               ],
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
@@ -30,15 +31,26 @@ import 'package:ocutune_light_logger/screens/patient/activities/patient_activity
 import 'package:ocutune_light_logger/theme/colors.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized(); // vigtig for screenutil!
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF2D2D2D),
     statusBarIconBrightness: Brightness.light,
   ));
-  runApp(const OcutuneApp());
+
+  runApp(
+    ScreenUtilInit(
+      designSize: Size(360, 690), // dit baseline UI design
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) => const OcutuneApp(),
+    ),
+  );
 }
 
 class OcutuneApp extends StatelessWidget {
   const OcutuneApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -54,7 +66,7 @@ class OcutuneApp extends StatelessWidget {
         '/login': (_) => LoginScreen(),
         '/chooseAccess': (_) => ChooseAccessScreen(),
 
-        // den almene kunde registrerings-skærme
+        // Kunde-registrering
         '/register': (_) => const RegisterScreen(),
         '/privacy': (_) => const PrivacyPolicyScreen(),
         '/terms': (_) => const TermsConditionsScreen(),
@@ -72,16 +84,16 @@ class OcutuneApp extends StatelessWidget {
         '/Q5': (_) => const QuestionFiveScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
 
-        // Patient og kliniker login
-        '/patient/dashboard': (context) => const PatientDashboardScreen(),
-        '/clinician/dashboard': (context) => const ClinicianDashboardScreen(),
+        // Dashboards
+        '/patient/dashboard': (_) => const PatientDashboardScreen(),
+        '/clinician/dashboard': (_) => const ClinicianDashboardScreen(),
 
-        // Patient sider
-        '/patient_sensor_settings': (context) => const PatientSensorSettingsScreen(),
-        '/patient/inbox': (context) => const PatientInboxScreen(),
-        '/patient/message_detail': (context) => const PatientMessageDetailScreen(),
-        '/patient/new_message': (context) => const PatientNewMessageScreen(),
-        '/patient/activities': (context) =>  PatientActivityScreen(),
+        // Patient-funktioner
+        '/patient_sensor_settings': (_) => const PatientSensorSettingsScreen(),
+        '/patient/inbox': (_) => const PatientInboxScreen(),
+        '/patient/message_detail': (_) => const PatientMessageDetailScreen(),
+        '/patient/new_message': (_) => const PatientNewMessageScreen(),
+        '/patient/activities': (_) => PatientActivityScreen(),
       },
     );
   }

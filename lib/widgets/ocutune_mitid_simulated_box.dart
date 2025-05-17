@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -91,14 +92,14 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         backgroundColor: const Color(0xFF2B2B2B),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        content: Text(content, style: const TextStyle(color: Colors.white70, height: 1.4)),
+        title: Text(title, style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+        content: Text(content, style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(buttonText, style: const TextStyle(color: Color(0xFF7F7FBF))),
+            child: Text(buttonText, style: TextStyle(color: const Color(0xFF7F7FBF), fontSize: 14.sp)),
           ),
         ],
       ),
@@ -141,17 +142,17 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
       builder: (_, __) {
         return Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
+            constraints: BoxConstraints(maxWidth: 360.w),
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                boxShadow: const [
+                borderRadius: BorderRadius.circular(6.r),
+                boxShadow: [
                   BoxShadow(
-                    color: Color.fromRGBO(0, 0, 0, 0.2),
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
+                    color: const Color.fromRGBO(0, 0, 0, 0.2),
+                    blurRadius: 12.r,
+                    offset: Offset(0, 6.h),
                   ),
                 ],
               ),
@@ -165,37 +166,37 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                     children: [
                       Expanded(
                         child: Text(widget.title,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.black87)),
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp, color: Colors.black87)),
                       ),
-                      const SizedBox(width: 12),
-                      Image.asset('assets/icon/mitid_logo.png', height: 28),
+                      SizedBox(width: 12.w),
+                      Image.asset('assets/icon/mitid_logo.png', height: 28.h),
                     ],
                   ),
-                  const Divider(height: 32),
-                  const SizedBox(height: 8),
+                  Divider(height: 32.h),
+                  SizedBox(height: 8.h),
                   Text(isStepTwo ? 'Adgangskode' : 'BRUGER-ID',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
-                  const SizedBox(height: 8),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black87)),
+                  SizedBox(height: 8.h),
                   TextField(
                     controller: isStepTwo ? passwordController : widget.controller,
                     obscureText: isStepTwo,
                     enabled: !isLoading,
-                    style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    style: TextStyle(fontSize: 16.sp, color: Colors.black87),
                     decoration: InputDecoration(
-                      suffixIcon: Icon(isStepTwo ? Icons.lock : Icons.vpn_key, size: 20),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF0051A4), width: 2),
+                      suffixIcon: Icon(isStepTwo ? Icons.lock : Icons.vpn_key, size: 20.sp),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(4.r)),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: const Color(0xFF0051A4), width: 2.w),
                       ),
                       isDense: true,
                     ),
                   ),
                   if (combinedError != null)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(combinedError, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Text(combinedError, style: TextStyle(color: Colors.red, fontSize: 13.sp)),
                     ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 20.h),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -204,32 +205,32 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                         backgroundColor: Colors.grey.shade400,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
                       ),
                       child: isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? SizedBox(height: 20.h, width: 20.w, child: const CircularProgressIndicator(strokeWidth: 2))
                           : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(isStepTwo ? 'LOG IND' : 'FORTSÆT'),
-                          const SizedBox(width: 8),
-                          Icon(isStepTwo ? Icons.login : Icons.arrow_forward),
+                          Text(isStepTwo ? 'LOG IND' : 'FORTSÆT', style: TextStyle(fontSize: 14.sp)),
+                          SizedBox(width: 8.w),
+                          Icon(isStepTwo ? Icons.login : Icons.arrow_forward, size: 18.sp),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16.h),
                   SizedBox(
-                    height: 32,
+                    height: 32.h,
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Opacity(
                         opacity: isStepTwo ? 0 : 1,
                         child: GestureDetector(
                           onTap: isStepTwo ? null : _showForgotDialog,
-                          child: const Text('Glemt bruger-ID?',
-                              style: TextStyle(color: Color(0xFF0051A4), fontSize: 14)),
+                          child: Text('Glemt bruger-ID?',
+                              style: TextStyle(color: const Color(0xFF0051A4), fontSize: 14.sp)),
                         ),
                       ),
                     ),
@@ -247,24 +248,24 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                           activeColor: const Color(0xFF0051A4),
                           visualDensity: VisualDensity.compact,
                         ),
-                        const Expanded(
+                        Expanded(
                           child: Text('Husk mig på denne enhed',
-                              style: TextStyle(fontSize: 13, color: Colors.black87)),
+                              style: TextStyle(fontSize: 13.sp, color: Colors.black87)),
                         ),
                       ],
                     ),
                   ),
-                  const Divider(height: 24),
+                  Divider(height: 24.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton(
                         onPressed: _handleCancel,
-                        child: const Text('Afbryd', style: TextStyle(color: Colors.black87)),
+                        child: Text('Afbryd', style: TextStyle(color: Colors.black87, fontSize: 14.sp)),
                       ),
                       TextButton(
                         onPressed: _showHelpDialog,
-                        child: const Text('Hjælp', style: TextStyle(color: Colors.black87)),
+                        child: Text('Hjælp', style: TextStyle(color: Colors.black87, fontSize: 14.sp)),
                       ),
                     ],
                   ),

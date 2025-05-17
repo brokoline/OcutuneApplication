@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class OcutuneIconButton extends StatelessWidget {
   final String label;
@@ -16,12 +17,12 @@ class OcutuneIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: 260,
+        width: 260.w,
         child: Material(
           color: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Colors.white24),
+            borderRadius: BorderRadius.circular(20.r),
+            side: BorderSide(color: Colors.white24, width: 1.w),
           ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
@@ -29,25 +30,25 @@ class OcutuneIconButton extends StatelessWidget {
             splashColor: Colors.white10,
             highlightColor: Colors.white10,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.network(
                     imageUrl,
-                    width: 40,
-                    height: 40,
+                    width: 40.w,
+                    height: 40.h,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.broken_image, color: Colors.white70),
+                        Icon(Icons.broken_image, color: Colors.white70, size: 24.sp),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12.w),
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 16,
+                      fontSize: 16.sp,
                     ),
                   ),
                 ],

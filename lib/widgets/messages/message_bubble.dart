@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -16,16 +17,19 @@ class MessageBubble extends StatelessWidget {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.all(12),
-        constraints: const BoxConstraints(maxWidth: 260),
+        margin: EdgeInsets.symmetric(vertical: 6.h),
+        padding: EdgeInsets.all(12.w),
+        constraints: BoxConstraints(maxWidth: 260.w),
         decoration: BoxDecoration(
           color: isMe ? Colors.white : generalBox,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
         ),
         child: Text(
           message,
-          style: TextStyle(color: isMe ? Colors.black : Colors.white),
+          style: TextStyle(
+            color: isMe ? Colors.black : Colors.white,
+            fontSize: 14.sp,
+          ),
         ),
       ),
     );

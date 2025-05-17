@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NewMessageForm extends StatelessWidget {
   final TextEditingController subjectController;
@@ -23,43 +23,56 @@ class NewMessageForm extends StatelessWidget {
       children: [
         TextField(
           controller: subjectController,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
+          style: TextStyle(color: Colors.white, fontSize: 14.sp),
+          decoration: InputDecoration(
             labelText: 'Emne',
-            labelStyle: TextStyle(color: Colors.white70),
-            enabledBorder: UnderlineInputBorder(
+            labelStyle: TextStyle(color: Colors.white70, fontSize: 14.sp),
+            enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Colors.white24),
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         Expanded(
           child: TextField(
             controller: messageController,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.white, fontSize: 14.sp),
             maxLines: null,
             expands: true,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Skriv din besked...',
-              hintStyle: TextStyle(color: Colors.white54),
-              border: OutlineInputBorder(),
+              hintStyle: TextStyle(color: Colors.white54, fontSize: 14.sp),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.r),
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        ElevatedButton.icon(
-          onPressed: sending ? null : onSend,
-          icon: sending
-              ? const CircularProgressIndicator(
-            color: Colors.black,
-            strokeWidth: 2,
-          )
-              : const Icon(Icons.send),
-          label: Text(sending ? 'Sender...' : sendButtonLabel),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-            minimumSize: const Size.fromHeight(48),
+        SizedBox(height: 16.h),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: sending ? null : onSend,
+            icon: sending
+                ? SizedBox(
+              height: 20.h,
+              width: 20.w,
+              child: const CircularProgressIndicator(
+                color: Colors.black,
+                strokeWidth: 2,
+              ),
+            )
+                : Icon(Icons.send, size: 20.sp),
+            label: Text(
+              sending ? 'Sender...' : sendButtonLabel,
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              minimumSize: Size.fromHeight(48.h),
+              textStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 14.sp),
+            ),
           ),
         ),
       ],
