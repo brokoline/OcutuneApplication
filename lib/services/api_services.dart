@@ -139,5 +139,7 @@ class ApiService {
     }
   }
 
+  // BLE Forbindelse
+
 
 }

@@ -16,6 +16,7 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: ^0.20.2
   dropdown_button2: ^2.3.9
+  flutter_reactive_ble: ^5.0.2
 
 dev_dependencies:
   flutter_test:
