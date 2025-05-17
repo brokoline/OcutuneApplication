@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
+import 'package:ocutune_light_logger/services/network_listener_service.dart';
+
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
 
@@ -20,27 +25,41 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
-import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_inbox_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_message_detail_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 
-import 'package:ocutune_light_logger/theme/colors.dart';
-
-void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // vigtig for screenutil!
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF2D2D2D),
     statusBarIconBrightness: Brightness.light,
   ));
 
+  try {
+    print('🔧 Initialiserer lokal SQLite...');
+    await OfflineStorageService.init();
+    print('✅ Lokal storage klar');
+
+    print('🔁 Synkroniserer usendte data...');
+    await OfflineSyncManager.syncAll();
+    print('✅ Synk-forsøg færdig');
+
+    print('📶 Starter netværksovervågning...');
+    NetworkListenerService.start();
+    print('✅ Klar til at starte appen!');
+  } catch (e) {
+    print('❌ FEJL under opstart: $e');
+  }
+
   runApp(
     ScreenUtilInit(
-      designSize: Size(360, 690), // dit baseline UI design
+      designSize: const Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => const OcutuneApp(),

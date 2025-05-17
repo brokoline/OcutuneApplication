@@ -11,20 +11,19 @@ class PatientSensorSettingsScreen extends StatefulWidget {
   const PatientSensorSettingsScreen({super.key});
 
   @override
-  State<PatientSensorSettingsScreen> createState() =>
-      _PatientSensorSettingsScreenState();
+  State<PatientSensorSettingsScreen> createState() => _PatientSensorSettingsScreenState();
 }
 
 class _PatientSensorSettingsScreenState extends State<PatientSensorSettingsScreen> {
-  final _bleController = BleController(); // singleton
+  final _bleController = BleController();
   final List<DiscoveredDevice> _devices = [];
   Timer? _batterySyncTimer;
 
   @override
   void initState() {
     super.initState();
-
     _bleController.onDeviceDiscovered = (device) {
+      print('📡 Fundet enhed: ${device.name} (${device.id})');
       if (!_devices.any((d) => d.id == device.id)) {
         setState(() {
           _devices.add(device);
@@ -41,6 +40,7 @@ class _PatientSensorSettingsScreenState extends State<PatientSensorSettingsScree
   }
 
   void _startScanning() {
+    print('🔍 Starter scanning...');
     setState(() {
       _devices.clear();
     });
@@ -48,13 +48,16 @@ class _PatientSensorSettingsScreenState extends State<PatientSensorSettingsScree
   }
 
   Future<void> _requestPermissionsAndScan() async {
+    print('🔐 Anmoder om tilladelser...');
     final locationStatus = await Permission.location.request();
     final bluetoothScanStatus = await Permission.bluetoothScan.request();
     final bluetoothConnectStatus = await Permission.bluetoothConnect.request();
 
     if (locationStatus.isGranted && bluetoothScanStatus.isGranted && bluetoothConnectStatus.isGranted) {
+      print('✅ Tilladelser givet, starter scanning');
       _startScanning();
     } else {
+      print('❌ Tilladelser nægtet');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Du skal give tilladelser for at kunne scanne efter sensorer.')),
       );
@@ -62,6 +65,7 @@ class _PatientSensorSettingsScreenState extends State<PatientSensorSettingsScree
   }
 
   Future<void> _connectToDevice(DiscoveredDevice device) async {
+    print('🔗 Forbinder til ${device.name} (${device.id})...');
     await _bleController.connectToDevice(device);
     await _bleController.readBatteryLevel();
 
@@ -91,7 +95,7 @@ class _PatientSensorSettingsScreenState extends State<PatientSensorSettingsScree
           melanopicEdi: 24.3,
           der: 0.76,
           illuminance: 180.2,
-          spectrum: [0.1, 0.2, 0.3], // placeholder
+          spectrum: [0.1, 0.2, 0.3],
           lightType: 'LED',
           exposureScore: 88.5,
           actionRequired: false,

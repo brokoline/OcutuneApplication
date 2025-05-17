@@ -82,7 +82,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             ),
                             SizedBox(height: 48.h),
 
-                            // SENSORKNAP MED BATTERI
+                            // 🔋 Sensorindstillinger med live batteriindikator
                             ValueListenableBuilder<int>(
                               valueListenable: BleController.batteryNotifier,
                               builder: (context, battery, _) {
@@ -118,6 +118,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               },
                             ),
 
+                            // Aktivitetsknap
                             OcutunePatientDashboardTile(
                               label: 'Registrér en aktivitet',
                               iconAsset: 'assets/icon/activity-log-icon.png',
@@ -126,6 +127,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               },
                             ),
 
+                            // Kontaktknap
                             OcutunePatientDashboardTile(
                               label: 'Kontakt din behandler',
                               iconAsset: 'assets/icon/mail-outline.png',
@@ -136,6 +138,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 
                             const Spacer(),
 
+                            // Log ud knap
                             Center(
                               child: SizedBox(
                                 width: 100.w,
