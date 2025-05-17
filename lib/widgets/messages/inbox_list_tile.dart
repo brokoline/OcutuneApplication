@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
@@ -23,29 +24,31 @@ class InboxListTile extends StatelessWidget {
         : 'Fra: ${msg['sender_name'] ?? 'Ukendt'}';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Container(
         decoration: BoxDecoration(
           color: generalBox,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white24),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: Colors.white24, width: 1.w),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           leading: Icon(
             isUnread ? Icons.mark_email_unread : Icons.mark_email_read_outlined,
             color: isUnread ? Colors.white70 : Colors.white38,
+            size: 24.sp,
           ),
           title: Text(
             subject,
             style: TextStyle(
               color: Colors.white70,
               fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
+              fontSize: 14.sp,
             ),
           ),
           subtitle: Text(
             label,
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.white70, fontSize: 12.sp),
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -53,9 +56,9 @@ class InboxListTile extends StatelessWidget {
             children: [
               Text(
                 _formatDate(msg['sent_at']),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white54,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                 ),
               ),
             ],

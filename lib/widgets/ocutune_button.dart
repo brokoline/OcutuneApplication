@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../theme/colors.dart';
 
 enum OcutuneButtonType {
@@ -34,7 +35,7 @@ class OcutuneButton extends StatelessWidget {
       case OcutuneButtonType.secondary:
         backgroundColor = darkGray;
         textColor = Colors.white70;
-        borderSide = const BorderSide(color: Colors.white70, width: 1);
+        borderSide = BorderSide(color: Colors.white70, width: 1.w);
         break;
       case OcutuneButtonType.floatingIcon:
         return FloatingActionButton(
@@ -42,26 +43,30 @@ class OcutuneButton extends StatelessWidget {
           backgroundColor: Colors.white70,
           foregroundColor: Colors.black,
           onPressed: onPressed,
-          child: const Icon(Icons.arrow_forward),
+          child: Icon(Icons.arrow_forward, size: 24.sp),
         );
     }
 
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 52.h,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(20.r),
             side: borderSide ?? BorderSide.none,
           ),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         ),
         child: Text(
           text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

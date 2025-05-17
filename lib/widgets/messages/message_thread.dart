@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_bubble.dart';
 
@@ -10,7 +11,7 @@ class MessageThread extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final msg = messages[index];
@@ -25,12 +26,12 @@ class MessageThread extends StatelessWidget {
               message: msg['message'],
               isMe: isMe,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4.h),
             Text(
               time,
-              style: const TextStyle(color: Colors.white54, fontSize: 11),
+              style: TextStyle(color: Colors.white54, fontSize: 11.sp),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
         );
       },

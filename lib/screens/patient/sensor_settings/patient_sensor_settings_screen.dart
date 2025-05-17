@@ -1,8 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/services/ble_controller.dart';
 
-class PatientSensorSettingsScreen extends StatelessWidget {
+class PatientSensorSettingsScreen extends StatefulWidget {
   const PatientSensorSettingsScreen({super.key});
+
+  @override
+  State<PatientSensorSettingsScreen> createState() =>
+      _PatientSensorSettingsScreenState();
+}
+
+class _PatientSensorSettingsScreenState
+    extends State<PatientSensorSettingsScreen> {
+  final BleController _bleController = BleController();
+  final List<DiscoveredDevice> _devices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _bleController.onDeviceDiscovered = (device) {
+      if (!_devices.any((d) => d.id == device.id)) {
+        setState(() {
+          _devices.add(device);
+        });
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    _bleController.stopScan();
+    super.dispose();
+  }
+
+  void _startScanning() {
+    setState(() {
+      _devices.clear();
+    });
+    _bleController.startScan();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +66,6 @@ class PatientSensorSettingsScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
 
-            // BLE-ikon
-            //Center(
-            //  child: Image.asset(
-            //    'assets/icon/BLE-sensor-ikon.png',
-            //    height: 148,
-            //    fit: BoxFit.contain,
-            //    color: Colors.white.withOpacity(0.85),
-            //  ),
-            //),
-
             const SizedBox(height: 24),
 
             const Text(
@@ -58,9 +85,9 @@ class PatientSensorSettingsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white24),
               ),
-              child: const Text(
-                'Bluetooth er slået til.\nIngen sensor forbundet.',
-                style: TextStyle(
+              child: Text(
+                'Bluetooth er slået til.\n${_devices.isEmpty ? 'Ingen sensor forbundet.' : '${_devices.length} enhed(er) fundet.'}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
                 ),
@@ -70,9 +97,7 @@ class PatientSensorSettingsScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Scan efter sensorer
-              },
+              onPressed: _startScanning,
               icon: const Icon(Icons.bluetooth_searching),
               label: const Text('Søg efter sensor'),
               style: ElevatedButton.styleFrom(
@@ -104,11 +129,39 @@ class PatientSensorSettingsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white24),
                 ),
-                child: const Center(
+                child: _devices.isEmpty
+                    ? const Center(
                   child: Text(
                     'Ingen enheder fundet',
                     style: TextStyle(color: Colors.white54),
                   ),
+                )
+                    : ListView.builder(
+                  itemCount: _devices.length,
+                  itemBuilder: (context, index) {
+                    final device = _devices[index];
+                    return ListTile(
+                      title: Text(
+                        device.name.isNotEmpty
+                            ? device.name
+                            : 'Ukendt enhed',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        device.id,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      onTap: () {
+                        // TODO: Tilføj connect-logik her
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Trykket på: ${device.name} (${device.id})'),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ),

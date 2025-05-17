@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class OcutuneSlider extends StatelessWidget {
   final double value;
@@ -27,19 +28,19 @@ class OcutuneSlider extends StatelessWidget {
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.bold,
-            fontSize: 25,
+            fontSize: 25.sp,
           ),
           child: Text(labels[index]),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            trackHeight: 4.5,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            trackHeight: 4.5.h,
+            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10.r),
             activeTrackColor: color,
             inactiveTrackColor: Colors.white24,
             thumbColor: color,
-            overlayColor: color.withAlpha(51),
+            overlayColor: Color.fromRGBO(color.red, color.green, color.blue, 0.2),
           ),
           child: Slider(
             value: value,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
 class OcutunePatientDashboardTile extends StatelessWidget {
@@ -22,54 +23,54 @@ class OcutunePatientDashboardTile extends StatelessWidget {
     if (iconAsset != null) {
       leadingIcon = Image.asset(
         iconAsset!,
-        width: 48,
-        height: 48,
+        width: 48.w,
+        height: 48.h,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.broken_image, size: 40, color: Colors.white70);
+          return Icon(Icons.broken_image, size: 40.sp, color: Colors.white70);
         },
       );
     } else if (icon != null) {
-      leadingIcon = Icon(icon, size: 48, color: Colors.white70);
+      leadingIcon = Icon(icon, size: 48.sp, color: Colors.white70);
     } else {
-      leadingIcon = const SizedBox(width: 48, height: 48);
+      leadingIcon = SizedBox(width: 48.w, height: 48.h);
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: EdgeInsets.only(bottom: 20.h),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: Material(
           color: generalBox,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           elevation: 0,
           child: InkWell(
             onTap: onPressed,
-            borderRadius: BorderRadius.circular(16),
-            splashColor: Colors.white.withOpacity(0.15),
-            highlightColor: Colors.white.withOpacity(0.05),
-            hoverColor: Colors.white.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(16.r),
+            splashColor: const Color.fromRGBO(255, 255, 255, 0.15),
+            highlightColor: const Color.fromRGBO(255, 255, 255, 0.05),
+            hoverColor: const Color.fromRGBO(255, 255, 255, 0.03),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 100),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.25),
-                  width: 1.2,
+                  color: const Color.fromRGBO(255, 255, 255, 0.25),
+                  width: 1.2.w,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               child: Row(
                 children: [
                   leadingIcon,
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16.w),
                   Flexible(
                     child: Text(
                       label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white70,
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 16.sp,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
