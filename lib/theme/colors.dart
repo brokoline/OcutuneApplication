@@ -5,6 +5,7 @@ const generalBox = Color(0xFF4C4C4C);
 const generalBoxHover = Color(0xFF8C8B8B);
 
 
+
 const lightGray = Color(0xFF676767);
 const darkGray = Color(0xFF4C4C4C);
 const white = Colors.white;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:ocutune_light_logger/services/ble_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
 
@@ -18,8 +20,22 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
     super.initState();
     _nameFuture = AuthStorage.getName().then((name) {
       if (name.trim().isEmpty) return 'Bruger';
-      return name.split(' ').first; // Kun fornavn
+      return name.split(' ').first;
     });
+  }
+
+  Color _batteryColor(int level) {
+    if (level >= 25) return Colors.green;
+    if (level >= 10) return Colors.orange;
+    return Colors.red;
+  }
+
+  IconData _batteryIcon(int level) {
+    if (level > 90) return Icons.battery_full;
+    if (level > 60) return Icons.battery_6_bar;
+    if (level > 40) return Icons.battery_4_bar;
+    if (level > 20) return Icons.battery_2_bar;
+    return Icons.battery_alert;
   }
 
   @override
@@ -36,48 +52,72 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
               builder: (context, constraints) {
                 return SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(minHeight: constraints.maxHeight),
                       child: IntrinsicHeight(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 48),
-
-                            // Logo + navn
+                            SizedBox(height: 48.h),
                             Center(
                               child: Column(
                                 children: [
                                   Image.asset(
                                     'assets/logo/logo_ocutune.png',
-                                    height: 100,
+                                    height: 100.h,
                                     color: Colors.white70,
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: 16.h),
                                   Text(
                                     greeting,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: Colors.white70,
-                                      fontSize: 22,
+                                      fontSize: 22.sp,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            SizedBox(height: 48.h),
 
-                            const SizedBox(height: 48),
+                            // SENSORKNAP MED BATTERI
+                            ValueListenableBuilder<int>(
+                              valueListenable: BleController.batteryNotifier,
+                              builder: (context, battery, _) {
+                                final connected = battery > 0;
 
-                            // Knapper
-                            OcutunePatientDashboardTile(
-                              label: 'Sensorindstillinger',
-                              iconAsset: 'assets/icon/BLE-sensor-ikon.png',
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/patient_sensor_settings');
+                                return OcutunePatientDashboardTile(
+                                  label: 'Sensorindstillinger',
+                                  iconAsset: 'assets/icon/BLE-sensor-ikon.png',
+                                  onPressed: () {
+                                    Navigator.pushNamed(context, '/patient_sensor_settings');
+                                  },
+                                  trailingWidget: connected
+                                      ? Row(
+                                    children: [
+                                      Icon(
+                                        _batteryIcon(battery),
+                                        color: _batteryColor(battery),
+                                        size: 20.sp,
+                                      ),
+                                      SizedBox(width: 6.w),
+                                      Text(
+                                        '$battery%',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: _batteryColor(battery),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                      : null,
+                                );
                               },
                             ),
-                            const SizedBox(height: 16),
+
                             OcutunePatientDashboardTile(
                               label: 'Registrér en aktivitet',
                               iconAsset: 'assets/icon/activity-log-icon.png',
@@ -85,7 +125,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                 Navigator.pushNamed(context, '/patient/activities');
                               },
                             ),
-                            const SizedBox(height: 16),
+
                             OcutunePatientDashboardTile(
                               label: 'Kontakt din behandler',
                               iconAsset: 'assets/icon/mail-outline.png',
@@ -96,10 +136,9 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 
                             const Spacer(),
 
-                            // Ny log ud knap
                             Center(
                               child: SizedBox(
-                                width: 100,
+                                width: 100.w,
                                 child: ElevatedButton.icon(
                                   onPressed: () async {
                                     await AuthStorage.logout();
@@ -111,16 +150,16 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.redAccent,
                                     foregroundColor: Colors.white70,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    padding: EdgeInsets.symmetric(vertical: 12.h),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(12.r),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
 
-                            const SizedBox(height: 32),
+                            SizedBox(height: 32.h),
                           ],
                         ),
                       ),
