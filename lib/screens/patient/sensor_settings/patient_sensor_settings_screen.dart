@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/ble_controller.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PatientSensorSettingsScreen extends StatefulWidget {
   const PatientSensorSettingsScreen({super.key});
@@ -15,6 +16,7 @@ class _PatientSensorSettingsScreenState
     extends State<PatientSensorSettingsScreen> {
   final BleController _bleController = BleController();
   final List<DiscoveredDevice> _devices = [];
+  DiscoveredDevice? _connectedDevice;
 
   @override
   void initState() {
@@ -39,6 +41,39 @@ class _PatientSensorSettingsScreenState
       _devices.clear();
     });
     _bleController.startScan();
+  }
+
+  Future<void> _requestPermissionsAndScan() async {
+    final locationStatus = await Permission.location.request();
+    final bluetoothScanStatus = await Permission.bluetoothScan.request();
+    final bluetoothConnectStatus = await Permission.bluetoothConnect.request();
+
+    if (locationStatus.isGranted &&
+        bluetoothScanStatus.isGranted &&
+        bluetoothConnectStatus.isGranted) {
+      _startScanning();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+          Text('Du skal give tilladelser for at kunne scanne efter sensorer.'),
+        ),
+      );
+    }
+  }
+
+  void _connectToDevice(DiscoveredDevice device) {
+    setState(() {
+      _connectedDevice = device;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Forbundet til: ${device.name} (${device.id})'),
+      ),
+    );
+
+    // TODO: Her kan du kalde en rigtig BLE connect metode, fx via flutter_reactive_ble.connectToDevice(...)
   }
 
   @override
@@ -66,8 +101,6 @@ class _PatientSensorSettingsScreenState
           children: [
             const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
-
             const Text(
               'Status',
               style: TextStyle(
@@ -86,7 +119,11 @@ class _PatientSensorSettingsScreenState
                 border: Border.all(color: Colors.white24),
               ),
               child: Text(
-                'Bluetooth er slået til.\n${_devices.isEmpty ? 'Ingen sensor forbundet.' : '${_devices.length} enhed(er) fundet.'}',
+                _connectedDevice != null
+                    ? 'Forbundet til: ${_connectedDevice!.name}'
+                    : _devices.isEmpty
+                    ? 'Bluetooth er slået til.\nIngen sensor forbundet.'
+                    : 'Bluetooth er slået til.\n${_devices.length} enhed(er) fundet.',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
@@ -97,9 +134,15 @@ class _PatientSensorSettingsScreenState
             const SizedBox(height: 24),
 
             ElevatedButton.icon(
-              onPressed: _startScanning,
+              onPressed: _connectedDevice == null
+                  ? _requestPermissionsAndScan
+                  : null, // Disable knap hvis allerede forbundet
               icon: const Icon(Icons.bluetooth_searching),
-              label: const Text('Søg efter sensor'),
+              label: Text(
+                _connectedDevice != null
+                    ? 'Forbundet til: ${_connectedDevice!.name}'
+                    : 'Søg efter sensor',
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white70,
                 foregroundColor: Colors.black,
@@ -151,15 +194,7 @@ class _PatientSensorSettingsScreenState
                         device.id,
                         style: const TextStyle(color: Colors.white70),
                       ),
-                      onTap: () {
-                        // TODO: Tilføj connect-logik her
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Trykket på: ${device.name} (${device.id})'),
-                          ),
-                        );
-                      },
+                      onTap: () => _connectToDevice(device),
                     );
                   },
                 ),

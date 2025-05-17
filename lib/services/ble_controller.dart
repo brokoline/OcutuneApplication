@@ -8,13 +8,17 @@ class BleController {
   Function(DiscoveredDevice device)? onDeviceDiscovered;
 
   void startScan() {
-    _scanStream?.cancel(); // stop tidligere scanning hvis aktiv
+    _scanStream?.cancel();
+
+    print("🔍 Starter BLE scanning...");
     _scanStream = _ble.scanForDevices(withServices: []).listen((device) {
-      if (device.name.isNotEmpty) {
-        onDeviceDiscovered?.call(device);
-      }
+      print("📡 Fundet enhed: ${device.name} (${device.id})");
+      onDeviceDiscovered?.call(device);
+    }, onError: (e) {
+      print("🚨 Fejl ved scanning: $e");
     });
   }
+
 
   void stopScan() {
     _scanStream?.cancel();

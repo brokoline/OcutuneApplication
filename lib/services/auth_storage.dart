@@ -1,6 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthStorage {
+
+
   // Gem token og rolle ved login
   static Future<void> saveLogin({
     required int id,

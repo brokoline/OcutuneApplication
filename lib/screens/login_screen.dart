@@ -36,7 +36,7 @@ class LoginScreen extends StatelessWidget {
                       Image.asset(
                         'assets/logo_ocutune.png',
                         width: 100.w,
-                        color: Colors.white,
+                        color: Colors.white70,
                       ),
                       SizedBox(height: 32.h),
                       OcutuneTextField(
