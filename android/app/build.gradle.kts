@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.ocutune_light_logger"
-    compileSdk = 35 // 👈 BLE kræver mindst 31 – brug gerne 33 eller højere
+    compileSdk = 35 // BLE kræver mindst 31 
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -20,8 +20,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.ocutune_light_logger"
-        minSdk = 21
-        targetSdk = 35 // 👈 VIGTIGT for BLE på Android 12+
+        minSdk = 23
+        targetSdk = 35 // VIGTIGT for BLE på Android 12+
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

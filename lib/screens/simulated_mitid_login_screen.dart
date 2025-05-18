@@ -64,7 +64,12 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
             firstName: data['first_name'],
             lastName: data['last_name'],
           );
-          Navigator.pushReplacementNamed(context, '/patient/dashboard');
+
+          Navigator.pushReplacementNamed(
+            context,
+            '/patient/dashboard',
+            arguments: data['id'], // 👈 patientId sendes her
+          );
         } else if (role == 'clinician') {
           Navigator.pushReplacementNamed(context, '/clinician/dashboard');
         } else {
@@ -81,6 +86,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       setState(() => isLoading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

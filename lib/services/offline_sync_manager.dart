@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:ocutune_light_logger/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/light_data_service.dart';
+import 'package:ocutune_light_logger/services/patient_light_data_service.dart';
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 
 
@@ -22,7 +22,7 @@ class OfflineSyncManager {
             batteryLevel: json['battery_level'],
           );
         } else if (type == 'light') {
-          await LightDataService.sendToBackend(
+          await PatientLightDataService.sendToBackend(
             patientId: json['patient_id'],
             sensorId: json['sensor_id'],
             luxLevel: json['lux_level'],

@@ -5,7 +5,7 @@ import 'package:path/path.dart';
 class OfflineStorageService {
   static Database? _db;
 
-  // 🔄 Init database (kald i main() el. første gang)
+  // Init database (kald i main() el. første gang)
   static Future<void> init() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ocutune_offline.db');
@@ -26,7 +26,7 @@ class OfflineStorageService {
     );
   }
 
-  // 💾 Gem en række
+  // Gem en række
   static Future<void> saveLocally({
     required String type,
     required Map<String, dynamic> data,
@@ -41,12 +41,12 @@ class OfflineStorageService {
     );
   }
 
-  // 🔄 Hent alt
+  // Hent alt
   static Future<List<Map<String, dynamic>>> getUnsyncedData() async {
     return await _db!.query('unsynced_data', orderBy: 'created_at ASC');
   }
 
-  // 🗑 Slet én
+  // Slet én
   static Future<void> deleteById(int id) async {
     await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
   }

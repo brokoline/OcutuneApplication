@@ -6,7 +6,9 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
-  const PatientDashboardScreen({super.key});
+  final int patientId;
+
+  const PatientDashboardScreen({super.key, required this.patientId});
 
   @override
   State<PatientDashboardScreen> createState() => _PatientDashboardScreenState();
@@ -92,7 +94,11 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   label: 'Sensorindstillinger',
                                   iconAsset: 'assets/icon/BLE-sensor-ikon.png',
                                   onPressed: () {
-                                    Navigator.pushNamed(context, '/patient_sensor_settings');
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/patient_sensor_settings',
+                                      arguments: widget.patientId,
+                                    );
                                   },
                                   trailingWidget: connected
                                       ? Row(
@@ -146,7 +152,8 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   onPressed: () async {
                                     await AuthStorage.logout();
                                     if (!context.mounted) return;
-                                    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                                    Navigator.pushNamedAndRemoveUntil(
+                                        context, '/login', (_) => false);
                                   },
                                   icon: const Icon(Icons.logout),
                                   label: const Text('Log ud'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/offline_storage_service.dart';
@@ -84,6 +85,7 @@ class OcutuneApp extends StatelessWidget {
       routes: {
         '/login': (_) => LoginScreen(),
         '/chooseAccess': (_) => ChooseAccessScreen(),
+        '/simulated_login': (_) => const SimulatedLoginScreen(title: 'Simuleret login'),
 
         // Kunde-registrering
         '/register': (_) => const RegisterScreen(),
@@ -103,12 +105,21 @@ class OcutuneApp extends StatelessWidget {
         '/Q5': (_) => const QuestionFiveScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
 
-        // Dashboards
-        '/patient/dashboard': (_) => const PatientDashboardScreen(),
+        // Kliniker Dashboards
+
         '/clinician/dashboard': (_) => const ClinicianDashboardScreen(),
 
+        // Patient side
+        '/patient/dashboard': (context) {
+          final patientId = ModalRoute.of(context)!.settings.arguments as int;
+          return PatientDashboardScreen(patientId: patientId);
+        },
+
         // Patient-funktioner
-        '/patient_sensor_settings': (_) => const PatientSensorSettingsScreen(),
+        '/patient_sensor_settings': (context) {
+          final patientId = ModalRoute.of(context)!.settings.arguments as int;
+          return PatientSensorSettingsScreen(patientId: patientId);
+        },
         '/patient/inbox': (_) => const PatientInboxScreen(),
         '/patient/message_detail': (_) => const PatientMessageDetailScreen(),
         '/patient/new_message': (_) => const PatientNewMessageScreen(),
