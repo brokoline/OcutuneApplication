@@ -161,9 +161,71 @@ class ApiService {
   }
 
 
+  // Patient aktiviteter
+  static Future<List<Map<String, dynamic>>> fetchActivities(int patientId) async {
+    final url = Uri.parse('$baseUrl/activities?patient_id=$patientId');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to load activities');
+    }
+  }
+
+
+  static Future<void> addActivity(String eventType, String note) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/activities'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'event_type': eventType, 'note': note}),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add activity');
+    }
+  }
+
+  static Future<void> addActivityWithTimes({
+    required int patientId,
+    required String eventType,
+    required String note,
+    required String startTime,
+    required String endTime,
+    required int durationMinutes,
+  }) async {
+    final url = Uri.parse('$baseUrl/activities');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'patient_id': patientId,
+        'event_type': eventType,
+        'note': note,
+        'start_time': startTime,
+        'end_time': endTime,
+        'duration_minutes': durationMinutes,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add activity');
+    }
+  }
+
+
+  static Future<void> deleteActivity(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/activities/$id'));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete activity');
+    }
+  }
+}
+
+
+
 
 
 // BLE Forbindelse
 
 
-}

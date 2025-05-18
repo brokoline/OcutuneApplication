@@ -58,6 +58,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           token: data['token'],
           simUserId: data['sim_userid'],
         );
+        await auth.AuthStorage.setPatientId(data['id']);
 
         if (role == 'patient') {
           await auth.AuthStorage.savePatientProfile(
@@ -119,14 +120,9 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (!keyboardVisible) // kun vis logo hvis tastatur ikke er åbent
+              if (!keyboardVisible)
                 Column(
                   children: [
-                    Image.asset(
-                      'assets/logo/logo_ocutune.png',
-                      height: 110.h,
-                      color: Colors.white,
-                    ),
                     SizedBox(height: 24.h),
                   ],
                 ),

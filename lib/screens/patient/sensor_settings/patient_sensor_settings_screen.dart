@@ -177,11 +177,11 @@ class _PatientSensorSettingsScreenState
         backgroundColor: generalBackground,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
           'Sensorindstillinger',
           style: TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+              color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
       body: Padding(
@@ -307,7 +307,7 @@ class _PatientSensorSettingsScreenState
                         device.name.isNotEmpty
                             ? device.name
                             : 'Ukendt enhed',
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white70),
                       ),
                       subtitle: Text(device.id,
                           style:

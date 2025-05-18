@@ -17,6 +17,19 @@ class AuthStorage {
     await prefs.setString('jwt_token', token);
   }
 
+
+  static Future<int?> getPatientId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('patientId');
+  }
+
+  static Future<void> setPatientId(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('patientId', id);
+  }
+
+
+
   static Future<void> savePatientProfile({
     required String firstName,
     required String lastName,
