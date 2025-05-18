@@ -33,7 +33,10 @@ class PatientLightDataService {
     };
 
     try {
-      print("📤 Sender lysdata til backend: $data");
+      // 🔍 Debug-log for at bekræfte kald og payload
+      print("📤 Sender lysdata til backend:");
+      print(jsonEncode(data));
+      print("➡️ POST til: $uri");
 
       final response = await http.post(
         uri,
@@ -41,11 +44,12 @@ class PatientLightDataService {
         body: jsonEncode(data),
       );
 
+      // 📥 Backend-respons log
       print("📥 Responskode: ${response.statusCode}");
       print("📥 Responsbody: ${response.body}");
 
       if (response.statusCode != 201) {
-        throw Exception("Fejl i serverresponse: ${response.statusCode}");
+        throw Exception("Fejl i serverresponse: ${response.statusCode} - ${response.body}");
       }
     } catch (e) {
       print("❌ Fejl ved upload af lysdata: $e");
