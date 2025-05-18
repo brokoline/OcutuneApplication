@@ -49,12 +49,7 @@ class BleLightDataListener {
           final now = DateTime.now().toIso8601String();
 
           print("📊 Decode → Lux: $lux, EDI: $melanopicEdi, DER: $der, Illu: $illuminance");
-          BleController.latestLightData.value = {
-            "lux": lux,
-            "edi": melanopicEdi,
-            "der": der,
-            "illu": illuminance,
-          };
+
 
 
           await PatientLightDataService.sendToBackend(

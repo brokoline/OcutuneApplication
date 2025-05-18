@@ -244,38 +244,40 @@ class _PatientSensorSettingsScreenState
               ),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed:
-              connectedDevice == null ? _requestPermissionsAndScan : null,
-              icon: const Icon(Icons.bluetooth_searching),
-              label: Text(connectedDevice != null
-                  ? 'Forbundet til: ${connectedDevice.name}'
-                  : 'Søg efter sensor'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white70,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-            if (connectedDevice != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _disconnectFromDevice,
-                icon: const Icon(Icons.link_off),
-                label: const Text('Afbryd forbindelse'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            ValueListenableBuilder<DiscoveredDevice?>(
+              valueListenable: BleController.connectedDeviceNotifier,
+              builder: (context, device, _) {
+                if (device == null) {
+                  return ElevatedButton.icon(
+                    onPressed: _requestPermissionsAndScan,
+                    icon: const Icon(Icons.bluetooth_searching),
+                    label: const Text('Søg efter sensor'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white70,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  );
+                }
+
+                return ElevatedButton.icon(
+                  onPressed: _disconnectFromDevice,
+                  icon: const Icon(Icons.link_off),
+                  label: const Text('Afbryd forbindelse'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
+                );
+              },
+            ),
             const SizedBox(height: 24),
             const Text(
               'Tilgængelige enheder',
