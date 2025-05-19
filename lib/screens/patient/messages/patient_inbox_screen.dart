@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
+
 
 class PatientInboxScreen extends StatefulWidget {
   const PatientInboxScreen({super.key});
@@ -15,6 +17,7 @@ class PatientInboxScreen extends StatefulWidget {
 class _PatientInboxScreenState extends State<PatientInboxScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _loading = true;
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -24,6 +27,10 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
 
   Future<void> _loadMessages() async {
     try {
+      final jwt = await AuthStorage.getTokenPayload();
+      final currentUserId = jwt['id'];
+      _currentUserId = currentUserId;
+
       final msgs = await api.ApiService.getInboxMessages();
 
       final httpDateFormat = DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", 'en_US');
@@ -35,7 +42,12 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
 
         if (!threadMap.containsKey(threadId) ||
             sentAt.isAfter(httpDateFormat.parse(threadMap[threadId]!['sent_at']))) {
-          threadMap[threadId] = msg;
+          threadMap[threadId] = {
+            ...msg,
+            'display_name': msg['sender_id'] == currentUserId
+                ? msg['receiver_name']
+                : msg['sender_name'],
+          };
         }
       }
 
@@ -94,14 +106,15 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                   : ListView.builder(
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
+                  final msg = _messages[index];
                   return InboxListTile(
-                    msg: _messages[index],
+                    msg: msg,
                     onTap: () {
                       Navigator.pushNamed(
                         context,
                         '/patient/message_detail',
-                        arguments: _messages[index]['id'],
-                      ).then((_) => _loadMessages());
+                        arguments: msg['thread_id'],
+                      );
                     },
                   );
                 },
