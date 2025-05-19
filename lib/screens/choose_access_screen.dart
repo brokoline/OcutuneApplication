@@ -14,7 +14,7 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
   @override
   void initState() {
     super.initState();
-    //_checkLoginStatus();
+    _checkLoginStatus();
   }
 
   Future<void> _checkLoginStatus() async {
