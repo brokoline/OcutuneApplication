@@ -5,8 +5,14 @@ import 'package:ocutune_light_logger/widgets/messages/message_bubble.dart';
 
 class MessageThread extends StatelessWidget {
   final List<Map<String, dynamic>> messages;
+  final ScrollController? scrollController;
 
-  const MessageThread({super.key, required this.messages});
+  const MessageThread({
+    super.key,
+    required this.messages,
+    this.scrollController,
+  });
+
 
   @override
   Widget build(BuildContext context) {

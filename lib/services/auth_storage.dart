@@ -1,7 +1,22 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthStorage {
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
+  }
 
+  static Future<Map<String, dynamic>> getTokenPayload() async {
+    final token = await getToken();
+    if (token == null) throw Exception('JWT token mangler');
+
+    final payloadBase64 = token.split('.')[1];
+    final normalized = base64.normalize(payloadBase64);
+    final payload = utf8.decode(base64.decode(normalized));
+
+    return json.decode(payload);
+  }
 
   // Gem token og rolle ved login
   static Future<void> saveLogin({
@@ -44,10 +59,6 @@ class AuthStorage {
     return prefs.getInt('user_id');
   }
 
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('jwt_token');
-  }
 
   static Future<String?> getUserRole() async {
     final prefs = await SharedPreferences.getInstance();
@@ -69,6 +80,11 @@ class AuthStorage {
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.remove('jwt_token');
+    await prefs.remove('user_id');
+    await prefs.remove('user_role');
+    await prefs.remove('sim_userid');
+    await prefs.remove('patient_first_name');
+    await prefs.remove('patient_last_name');
   }
 }

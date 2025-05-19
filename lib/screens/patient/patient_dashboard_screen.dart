@@ -84,7 +84,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                             ),
                             SizedBox(height: 48.h),
 
-                            // 🔋 Sensorindstillinger med live batteriindikator
+                            // Sensorindstillinger med live batteriindikator
                             ValueListenableBuilder<int>(
                               valueListenable: BleController.batteryNotifier,
                               builder: (context, battery, _) {

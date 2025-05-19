@@ -20,7 +20,7 @@ class InboxListTile extends StatelessWidget {
     final isFromMe = msg['sender_type'] == 'patient';
 
     final label = isFromMe
-        ? 'Til: ${msg['receiver_name'] ?? 'Ukendt'}'
+        ? 'Til: ${msg['display_name'] ?? 'Ukendt'}'
         : 'Fra: ${msg['sender_name'] ?? 'Ukendt'}';
 
     return Padding(

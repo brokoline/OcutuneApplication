@@ -2,9 +2,19 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'auth_storage.dart';
+
 class ApiService {
   static const String baseUrl = 'https://ocutune.ddns.net';
 
+  static Future<Map<String, String>> _authHeaders() async {
+    final token = await AuthStorage.getToken();
+    if (token == null) throw Exception('Mangler token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
 
 
   // Hent spørgsmål
@@ -214,6 +224,36 @@ class ApiService {
       throw Exception('Failed to add activity');
     }
   }
+
+  static Future<void> addActivityLabel(String label) async {
+    final headers = await _authHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/patient/activity-labels'),
+      headers: headers,
+      body: jsonEncode({'label': label}),
+    );
+    if (response.statusCode != 201) {
+      throw Exception('Kunne ikke tilføje aktivitetstype');
+    }
+  }
+
+  static Future<List<String>> fetchActivityLabels() async {
+    final headers = await _authHeaders();
+    final url = Uri.parse('$baseUrl/patient/activity-labels');
+    final response = await http.get(url, headers: headers);
+
+    print('📡 GET $url');
+    print('📥 Status: ${response.statusCode}');
+    print('📦 Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return List<String>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Kunne ikke hente aktivitetstyper');
+    }
+  }
+
+
 
 
   static Future<void> deleteActivity(int activityId, {required String userId}) async {

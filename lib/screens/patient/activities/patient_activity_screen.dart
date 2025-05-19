@@ -15,18 +15,30 @@ class PatientActivityScreen extends StatefulWidget {
 
 class _PatientActivityScreenState extends State<PatientActivityScreen> {
   List<Map<String, dynamic>> recent = [];
-  final List<String> activities = ['Gåtur', 'Strand', 'Indendørs', 'Andet'];
+  List<String> activities = [];
   String? selected;
 
   @override
   void initState() {
     super.initState();
     loadActivities();
+    loadActivityLabels();
+  }
+
+  Future<void> loadActivityLabels() async {
+    try {
+      final labels = await ApiService.fetchActivityLabels();
+      setState(() {
+        activities = labels;
+      });
+    } catch (e) {
+      print('❌ Kunne ikke hente labels: $e');
+    }
   }
 
   Future<void> loadActivities() async {
     try {
-      final patientId = await AuthStorage.getPatientId();
+      final patientId = await AuthStorage.getUserId();
       if (patientId == null) {
         print('⚠️ patientId er null — kan ikke hente aktiviteter');
         return;
@@ -68,7 +80,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
     final duration = endTime.difference(startTime).inMinutes;
 
     try {
-      final int? patientId = await AuthStorage.getPatientId();
+      final int? patientId = await AuthStorage.getUserId();
       if (patientId == null) {
         print('⚠️ patientId er null');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -87,10 +99,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       );
 
       await loadActivities();
+      await loadActivityLabels();
+
       setState(() {
         selected = null;
-        activities.remove(label);
-        activities.insert(0, label);
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,14 +183,18 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                 alignment: Alignment.centerRight,
                 child: OcutuneButton(
                   text: 'Tilføj',
-                  onPressed: () {
+                  onPressed: () async {
                     if (newLabel.trim().isEmpty) return;
-                    setState(() {
-                      if (!activities.contains(newLabel.trim())) {
-                        activities.add(newLabel.trim());
-                      }
-                    });
-                    Navigator.pop(context);
+                    try {
+                      await ApiService.addActivityLabel(newLabel.trim());
+                      await loadActivityLabels();
+                      Navigator.pop(context);
+                    } catch (e) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kunne ikke tilføje aktivitetstype')),
+                      );
+                    }
                   },
                 ),
               ),
