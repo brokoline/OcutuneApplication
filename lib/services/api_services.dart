@@ -17,6 +17,29 @@ class ApiService {
   }
 
 
+
+// Simuleret MitID-login
+  static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
+    final url = Uri.parse('$baseUrl/sim-login');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'sim_userid': userId,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Login fejlede');
+    }
+  }
+
+
+
   // Hent spørgsmål
   static Future<List<dynamic>> fetchQuestions() async {
     print('📡 Trying to fetch questions from $baseUrl/questions');
@@ -149,26 +172,21 @@ class ApiService {
     }
   }
 
-
-// Simuleret MitID-login
-  static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
-    final url = Uri.parse('$baseUrl/sim-login');
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'sim_userid': userId,
-        'password': password,
-      }),
+  static Future<void> deleteThread(int threadId) async {
+    final token = await AuthStorage.getToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/threads/$threadId'),
+      headers: {'Authorization': 'Bearer $token'},
     );
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Login fejlede');
+    print('🧪 Statuskode fra server: ${response.statusCode}');
+
+    if (response.statusCode != 204) {
+      throw Exception('Kunne ikke slette tråd');
     }
   }
+
+
 
 
 
