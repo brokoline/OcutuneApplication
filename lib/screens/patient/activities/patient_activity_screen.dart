@@ -68,7 +68,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
     final duration = endTime.difference(startTime).inMinutes;
 
     try {
-      final int? patientId = await AuthStorage.getPatientId();
+      final int? patientId = await AuthStorage.getUserId();
       if (patientId == null) {
         print('⚠️ patientId er null');
         ScaffoldMessenger.of(context).showSnackBar(
