@@ -153,19 +153,7 @@ class _PatientSensorSettingsScreenState
     );
   }
 
-  Color _batteryColor(int level) {
-    if (level >= 25) return Colors.green;
-    if (level >= 10) return Colors.orange;
-    return Colors.red;
-  }
 
-  IconData _batteryIcon(int level) {
-    if (level > 90) return Icons.battery_full;
-    if (level > 60) return Icons.battery_6_bar;
-    if (level > 40) return Icons.battery_4_bar;
-    if (level > 20) return Icons.battery_2_bar;
-    return Icons.battery_alert;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +202,7 @@ class _PatientSensorSettingsScreenState
                     builder: (context, isOn, _) {
                       if (!isOn) {
                         return const Text(
-                          '❌ Bluetooth er slået fra.',
+                          'Bluetooth er slået fra.',
                           style: TextStyle(color: Colors.white, fontSize: 15),
                         );
                       }

@@ -214,12 +214,18 @@ class ApiService {
   }
 
 
-  static Future<void> deleteActivity(int id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/activities/$id'));
+  static Future<void> deleteActivity(int activityId, {required String userId}) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/activities/$activityId?user_id=$userId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
     if (response.statusCode != 200) {
-      throw Exception('Failed to delete activity');
+      throw Exception('Fejl ved sletning: ${response.body}');
     }
   }
+
+
 }
 
 

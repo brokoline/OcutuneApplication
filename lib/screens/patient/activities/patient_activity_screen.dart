@@ -4,6 +4,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
 import '../../../services/api_services.dart';
 import '../../../services/auth_storage.dart';
+import '../../../widgets/confirm_dialog.dart';
 
 class PatientActivityScreen extends StatefulWidget {
   const PatientActivityScreen({super.key});
@@ -43,6 +44,8 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
             'label': a['event_type'],
             'start': start,
             'end': end,
+            'source': a['note']?.contains('Manuelt') == true ? 'manual' : 'auto',
+            'deletable': a['note']?.toLowerCase().contains('manuelt') ?? false,
           };
         }).toList();
       });
@@ -50,8 +53,6 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       print('❌ Error loading activities: $e');
     }
   }
-
-
 
   String formatDateTime(DateTime dt) => DateFormat('dd.MM • HH:mm').format(dt);
 
@@ -105,10 +106,26 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> deleteActivity(int id) async {
     try {
-      await ApiService.deleteActivity(id);
+      final userId = await AuthStorage.getUserId();
+      if (userId == null) {
+        print('⚠️ userId er null');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bruger-ID mangler')),
+        );
+        return;
+      }
+
+      await ApiService.deleteActivity(id, userId: userId.toString());
       await loadActivities();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aktivitet slettet')),
+      );
     } catch (e) {
-      print('Error deleting activity: $e');
+      print('❌ Fejl ved sletning: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kunne ikke slette aktivitet')),
+      );
     }
   }
 
@@ -224,6 +241,8 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
     final end = item['end'] as DateTime;
     final duration = end.difference(start);
 
+    final bool showDelete = item['deletable'] == true;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
@@ -238,11 +257,23 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(item['label'], style: const TextStyle(color: Colors.white70, fontSize: 16)),
-              if (item['id'] != null)
+              if (item['id'] != null && showDelete)
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.white54),
-                  onPressed: () => deleteActivity(item['id']),
-                ),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => ConfirmDialog(
+                        title: 'Bekræft sletning',
+                        message: 'Er du sikker på, at du vil slette denne aktivitet?',
+                        onConfirm: () {},
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await deleteActivity(item['id']);
+                    }
+                  },
+                )
             ],
           ),
           const SizedBox(height: 6),
