@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
+
+import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
+import 'package:ocutune_light_logger/services/network_listener_service.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
@@ -20,27 +26,41 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 
 import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
-import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_inbox_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_message_detail_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 
-import 'package:ocutune_light_logger/theme/colors.dart';
-
-void main() {
-  WidgetsFlutterBinding.ensureInitialized(); // vigtig for screenutil!
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF2D2D2D),
     statusBarIconBrightness: Brightness.light,
   ));
 
+  try {
+    print('🔧 Initialiserer lokal SQLite...');
+    await OfflineStorageService.init();
+    print('✅ Lokal storage klar');
+
+    print('🔁 Synkroniserer usendte data...');
+    await OfflineSyncManager.syncAll();
+    print('✅ Synk-forsøg færdig');
+
+    print('📶 Starter netværksovervågning...');
+    NetworkListenerService.start();
+    print('✅ Klar til at starte appen!');
+  } catch (e) {
+    print('❌ FEJL under opstart: $e');
+  }
+
   runApp(
     ScreenUtilInit(
-      designSize: Size(360, 690), // dit baseline UI design
+      designSize: const Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => const OcutuneApp(),
@@ -65,6 +85,7 @@ class OcutuneApp extends StatelessWidget {
       routes: {
         '/login': (_) => LoginScreen(),
         '/chooseAccess': (_) => ChooseAccessScreen(),
+        '/simulated_login': (_) => const SimulatedLoginScreen(title: 'Simuleret login'),
 
         // Kunde-registrering
         '/register': (_) => const RegisterScreen(),
@@ -84,12 +105,23 @@ class OcutuneApp extends StatelessWidget {
         '/Q5': (_) => const QuestionFiveScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
 
-        // Dashboards
-        '/patient/dashboard': (_) => const PatientDashboardScreen(),
+        // Kliniker Dashboards
+
         '/clinician/dashboard': (_) => const ClinicianDashboardScreen(),
 
+
+
+        // Patient side
+        '/patient/dashboard': (context) {
+          final patientId = ModalRoute.of(context)!.settings.arguments as int;
+          return PatientDashboardScreen(patientId: patientId);
+        },
+
         // Patient-funktioner
-        '/patient_sensor_settings': (_) => const PatientSensorSettingsScreen(),
+        '/patient_sensor_settings': (context) {
+          final patientId = ModalRoute.of(context)!.settings.arguments as int;
+          return PatientSensorSettingsScreen(patientId: patientId);
+        },
         '/patient/inbox': (_) => const PatientInboxScreen(),
         '/patient/message_detail': (_) => const PatientMessageDetailScreen(),
         '/patient/new_message': (_) => const PatientNewMessageScreen(),

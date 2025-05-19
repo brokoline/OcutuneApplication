@@ -8,12 +8,16 @@ class OcutunePatientDashboardTile extends StatelessWidget {
   final IconData? icon;
   final VoidCallback onPressed;
 
+  // trailing-widget til batteri
+  final Widget? trailingWidget;
+
   const OcutunePatientDashboardTile({
     super.key,
     required this.label,
     this.iconAsset,
     this.icon,
     required this.onPressed,
+    this.trailingWidget,
   });
 
   @override
@@ -64,7 +68,8 @@ class OcutunePatientDashboardTile extends StatelessWidget {
                 children: [
                   leadingIcon,
                   SizedBox(width: 16.w),
-                  Flexible(
+
+                  Expanded(
                     child: Text(
                       label,
                       style: TextStyle(
@@ -75,6 +80,12 @@ class OcutunePatientDashboardTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+
+                  // Hvis trailing-widget findes, vis den
+                  if (trailingWidget != null) ...[
+                    SizedBox(width: 16.w),
+                    trailingWidget!,
+                  ],
                 ],
               ),
             ),

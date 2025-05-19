@@ -31,20 +31,27 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
   String? _validatedUserId;
 
   Future<bool> _validateUserId(String userId) async {
+    print('🔍 Tjekker bruger-ID: $userId');
     try {
       final response = await http.post(
         Uri.parse('https://ocutune.ddns.net/sim-check-userid'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'sim_userid': userId}),
       );
+
+      print('📥 Statuskode: ${response.statusCode}');
+      print('📦 Body: ${response.body}');
       return response.statusCode == 200;
-    } catch (_) {
+    } catch (e) {
+      print('💥 Fejl i validering: $e');
       setState(() => errorMessage = 'Netværksfejl ved validering');
       return false;
     }
   }
 
+
   void _handlePrimaryAction() async {
+    print('🟢 [_handlePrimaryAction] kaldt. isStepTwo = $isStepTwo');
     if (!isStepTwo) {
       final userId = widget.controller.text.trim();
       if (userId.isEmpty) {
@@ -75,7 +82,7 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
         setState(() => errorMessage = 'Udfyld både bruger-ID og adgangskode');
         return;
       }
-
+      print('🟢 onContinue kaldt med: $_validatedUserId / $password');
       widget.onContinue?.call(_validatedUserId!, password);
     }
   }

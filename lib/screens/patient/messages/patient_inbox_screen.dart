@@ -69,11 +69,11 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
           backgroundColor: generalBackground,
           elevation: 0,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: const IconThemeData(color: Colors.white70),
           title: const Text(
             'Indbakke',
             style: TextStyle(
-              color: Colors.white,
+              color: Colors.white70,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),

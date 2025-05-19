@@ -29,9 +29,13 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
   Future<void> _attemptLogin(String userId, String password) async {
     if (userId.isEmpty || password.isEmpty) {
+      print('📛 Manglende input');
       setState(() => loginError = 'Udfyld både bruger-ID og adgangskode');
       return;
     }
+
+    print('🔁 Sender POST til: ${ApiService.baseUrl}/sim-login');
+    print('📨 Payload: $userId / $password');
 
     setState(() {
       isLoading = true;
@@ -48,39 +52,38 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         }),
       );
 
+      print('📥 Statuskode: ${response.statusCode}');
+      print('📦 Svar body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final role = data['role'];
 
+        // Gem logininfo
         await auth.AuthStorage.saveLogin(
           id: data['id'],
-          role: role,
+          role: data['role'],
           token: data['token'],
           simUserId: data['sim_userid'],
         );
 
-        if (role == 'patient') {
-          await auth.AuthStorage.savePatientProfile(
-            firstName: data['first_name'],
-            lastName: data['last_name'],
-          );
-          Navigator.pushReplacementNamed(context, '/patient/dashboard');
-        } else if (role == 'clinician') {
-          Navigator.pushReplacementNamed(context, '/clinician/dashboard');
-        } else {
-          setState(() => loginError = 'Ukendt rolle: $role');
-        }
-      } else if (response.statusCode == 403) {
-        setState(() => loginError = 'Forkert adgangskode.');
-      } else {
-        setState(() => loginError = 'Login fejlede. Prøv igen.');
+        // Gem navn til visning senere
+        await auth.AuthStorage.savePatientProfile(
+          firstName: data['first_name'],
+          lastName: data['last_name'],
+        );
+
+        // Navigér videre
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/chooseAccess');
       }
     } catch (e) {
-      setState(() => loginError = 'Netværksfejl under login');
+      print('💥 Undtagelse fanget: $e');
+      setState(() => loginError = 'Netværksfejl eller server utilgængelig');
     } finally {
       setState(() => isLoading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -113,14 +116,9 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (!keyboardVisible) // kun vis logo hvis tastatur ikke er åbent
+              if (!keyboardVisible)
                 Column(
                   children: [
-                    Image.asset(
-                      'assets/logo/logo_ocutune.png',
-                      height: 110.h,
-                      color: Colors.white,
-                    ),
                     SizedBox(height: 24.h),
                   ],
                 ),

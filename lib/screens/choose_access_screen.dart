@@ -1,9 +1,38 @@
 import 'package:flutter/material.dart';
+import '../services/auth_storage.dart';
 import '/theme/colors.dart';
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 
-class ChooseAccessScreen extends StatelessWidget {
+class ChooseAccessScreen extends StatefulWidget {
   const ChooseAccessScreen({super.key});
+
+  @override
+  State<ChooseAccessScreen> createState() => _ChooseAccessScreenState();
+}
+
+class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    //_checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final role = await AuthStorage.getUserRole();
+    final id = await AuthStorage.getUserId();
+
+    print('🧠 Rolle fundet: $role');
+    print('🆔 ID fundet: $id');
+
+    if (role == 'patient' && id != null) {
+      Navigator.pushReplacementNamed(context, '/patient/dashboard', arguments: id);
+    } else if (role == 'clinician' && id != null) {
+      Navigator.pushReplacementNamed(context, '/clinician/dashboard');
+    } else {
+      print('🟡 Ingen gemt login – vis adgangsvalg');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +65,7 @@ class ChooseAccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 40, 24, 0), // ← top padding tilføjet
+              padding: const EdgeInsets.fromLTRB(24, 40, 24, 0),
               child: Column(
                 children: [
                   _accessButton(
