@@ -161,6 +161,8 @@ class ApiService {
   }
 
 
+
+
   // Patient aktiviteter
   static Future<List<Map<String, dynamic>>> fetchActivities(int patientId) async {
     final url = Uri.parse('$baseUrl/activities?patient_id=$patientId');

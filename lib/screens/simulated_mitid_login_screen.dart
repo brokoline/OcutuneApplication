@@ -29,9 +29,12 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
   Future<void> _attemptLogin(String userId, String password) async {
     if (userId.isEmpty || password.isEmpty) {
+      print('🔁 Sending POST to: ${ApiService.baseUrl}/sim-login');
+      print('🧾 Payload: $userId / $password');
       setState(() => loginError = 'Udfyld både bruger-ID og adgangskode');
       return;
     }
+
 
     setState(() {
       isLoading = true;
