@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/services/api_services.dart' as api;
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
-
+import 'dart:io'; // for HttpDate
 
 class PatientInboxScreen extends StatefulWidget {
   const PatientInboxScreen({super.key});
@@ -18,7 +17,6 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _loading = true;
 
-
   @override
   void initState() {
     super.initState();
@@ -30,34 +28,42 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-
       final msgs = await api.ApiService.getInboxMessages();
+      final Map<int, List<Map<String, dynamic>>> grouped = {};
 
-      final httpDateFormat = DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", 'en_US');
-      final Map<int, Map<String, dynamic>> threadMap = {};
-
+      // Gruppér beskeder pr. thread_id
       for (var msg in msgs) {
         final threadId = msg['thread_id'];
-        final sentAt = httpDateFormat.parse(msg['sent_at']);
-
-        if (!threadMap.containsKey(threadId) ||
-            sentAt.isAfter(httpDateFormat.parse(threadMap[threadId]!['sent_at']))) {
-          threadMap[threadId] = {
-            ...msg,
-            'display_name': msg['sender_id'] == currentUserId
-                ? msg['receiver_name']
-                : msg['sender_name'],
-          };
-        }
+        grouped.putIfAbsent(threadId, () => []).add(msg);
       }
 
-      final rootMessages = threadMap.values.toList()
-        ..sort((a, b) => httpDateFormat
-            .parse(b['sent_at'])
-            .compareTo(httpDateFormat.parse(a['sent_at'])));
+      final List<Map<String, dynamic>> threads = [];
+
+      for (var threadMsgs in grouped.values) {
+        // Sortér: nyeste først
+        threadMsgs.sort((a, b) =>
+            HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
+
+        final newest = threadMsgs.first;
+        final oldest = threadMsgs.last;
+
+        // Vis navn på kliniker (baseret på første besked i tråden)
+        final displayName = oldest['sender_id'] == currentUserId
+            ? oldest['receiver_name']
+            : oldest['sender_name'];
+
+        threads.add({
+          ...newest,
+          'display_name': displayName,
+        });
+      }
+
+      // Sortér tråde efter seneste besked
+      threads.sort((a, b) =>
+          HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
       setState(() {
-        _messages = rootMessages;
+        _messages = threads;
         _loading = false;
       });
     } catch (e) {
@@ -117,7 +123,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                       );
 
                       if (changed == true) {
-                        _loadMessages(); // opdater inbox automatisk
+                        _loadMessages(); // ← opdater indbakken
                       }
                     },
                   );
@@ -129,7 +135,9 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
               child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pushNamed(context, '/patient/new_message')
-                      .then((_) => _loadMessages());
+                      .then((value) {
+                    if (value == true) _loadMessages();
+                  });
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Ny besked'),

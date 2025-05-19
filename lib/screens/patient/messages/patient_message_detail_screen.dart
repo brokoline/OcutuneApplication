@@ -3,6 +3,8 @@ import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread.dart';
 import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
+import 'package:flutter/widgets.dart' show PopScope, PopScopePagePopResult, PopDisposition;
+
 
 class PatientMessageDetailScreen extends StatefulWidget {
   const PatientMessageDetailScreen({super.key});
@@ -34,12 +36,14 @@ class _PatientMessageDetailScreenState
     try {
       final msg = await api.ApiService.getMessageDetail(threadId!);
       final msgs = await api.ApiService.getMessageThreadById(threadId!);
+
+      if (!mounted) return; // ← beskytter mod crash
       setState(() {
         original = msg;
         thread = msgs;
       });
 
-      // Scroll til bunden efter ny data er sat
+      // Scroll til bunden bagefter
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollController.hasClients) {
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -49,6 +53,7 @@ class _PatientMessageDetailScreenState
       print('❌ Fejl ved hentning af tråd: $e');
     }
   }
+
 
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
