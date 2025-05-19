@@ -3,7 +3,6 @@ import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread.dart';
 import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
-import 'package:flutter/widgets.dart' show PopScope, PopScopePagePopResult, PopDisposition;
 
 
 class PatientMessageDetailScreen extends StatefulWidget {
