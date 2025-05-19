@@ -99,6 +99,8 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       );
 
       await loadActivities();
+      await loadActivityLabels();
+
       setState(() {
         selected = null;
       });
