@@ -90,9 +90,10 @@ class _PatientMessageDetailScreenState
 
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pop(context, hasSentMessage); // opdater inbox hvis nødvendigt
-        return false;
+        Navigator.pop(context, hasSentMessage);
+        return false; // vi håndterer pop selv
       },
+      // TODO  : Skal opgraderes da WillPopScope er deprecated, og jeg kan ikke finde en løsning
       child: Scaffold(
         backgroundColor: generalBackground,
         appBar: AppBar(
