@@ -17,7 +17,7 @@ class PatientInboxScreen extends StatefulWidget {
 class _PatientInboxScreenState extends State<PatientInboxScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _loading = true;
-  int? _currentUserId;
+
 
   @override
   void initState() {
@@ -29,7 +29,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
     try {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
-      _currentUserId = currentUserId;
+
 
       final msgs = await api.ApiService.getInboxMessages();
 
@@ -109,12 +109,16 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                   final msg = _messages[index];
                   return InboxListTile(
                     msg: msg,
-                    onTap: () {
-                      Navigator.pushNamed(
+                    onTap: () async {
+                      final changed = await Navigator.pushNamed(
                         context,
                         '/patient/message_detail',
                         arguments: msg['thread_id'],
                       );
+
+                      if (changed == true) {
+                        _loadMessages(); // opdater inbox automatisk
+                      }
                     },
                   );
                 },

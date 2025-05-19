@@ -15,9 +15,11 @@ class PatientMessageDetailScreen extends StatefulWidget {
 class _PatientMessageDetailScreenState
     extends State<PatientMessageDetailScreen> {
   final TextEditingController _replyController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> thread = [];
   Map<String, dynamic>? original;
   int? threadId;
+  bool hasSentMessage = false;
 
   @override
   void didChangeDependencies() {
@@ -36,6 +38,13 @@ class _PatientMessageDetailScreenState
         original = msg;
         thread = msgs;
       });
+
+      // Scroll til bunden efter ny data er sat
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        }
+      });
     } catch (e) {
       print('❌ Fejl ved hentning af tråd: $e');
     }
@@ -45,6 +54,9 @@ class _PatientMessageDetailScreenState
     final text = _replyController.text.trim();
     if (text.isEmpty || threadId == null) return;
 
+    // Luk tastaturet
+    FocusScope.of(context).unfocus();
+
     try {
       await api.ApiService.sendPatientMessage(
         message: text,
@@ -53,10 +65,18 @@ class _PatientMessageDetailScreenState
       );
 
       _replyController.clear();
-      await _loadData(); // genindlæs tråd
+      hasSentMessage = true; // brugt til at opdatere inbox bagefter
+      await _loadData();
     } catch (e) {
       print('❌ Kunne ikke sende svar: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _replyController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -68,55 +88,64 @@ class _PatientMessageDetailScreenState
       );
     }
 
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: AppBar(
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, hasSentMessage); // opdater inbox hvis nødvendigt
+        return false;
+      },
+      child: Scaffold(
         backgroundColor: generalBackground,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          original!['subject']?.isNotEmpty == true
-              ? original!['subject']
-              : 'Uden emne',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+        appBar: AppBar(
+          backgroundColor: generalBackground,
+          elevation: 0,
+          centerTitle: true,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            original!['subject']?.isNotEmpty == true
+                ? original!['subject']
+                : 'Uden emne',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Fra: ${original!['sender_name'] ?? 'Ukendt'}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Til: ${original!['receiver_name'] ?? 'Ukendt'}',
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-              ],
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fra: ${original!['sender_name'] ?? 'Ukendt'}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Til: ${original!['receiver_name'] ?? 'Ukendt'}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Expanded(
-            child: MessageThread(messages: thread),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-            decoration: const BoxDecoration(color: generalBackground),
-            child: ReplyInput(
-              controller: _replyController,
-              onSend: _sendReply,
+            Expanded(
+              child: MessageThread(
+                messages: thread,
+                scrollController: _scrollController,
+              ),
             ),
-          ),
-        ],
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              decoration: const BoxDecoration(color: generalBackground),
+              child: ReplyInput(
+                controller: _replyController,
+                onSend: _sendReply,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
