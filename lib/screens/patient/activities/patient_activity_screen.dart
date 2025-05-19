@@ -26,7 +26,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> loadActivities() async {
     try {
-      final patientId = await AuthStorage.getPatientId();
+      final patientId = await AuthStorage.getUserId();
       if (patientId == null) {
         print('⚠️ patientId er null — kan ikke hente aktiviteter');
         return;

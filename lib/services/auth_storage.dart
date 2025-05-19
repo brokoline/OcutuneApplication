@@ -69,6 +69,11 @@ class AuthStorage {
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await prefs.remove('jwt_token');
+    await prefs.remove('user_id');
+    await prefs.remove('user_role');
+    await prefs.remove('sim_userid');
+    await prefs.remove('patient_first_name');
+    await prefs.remove('patient_last_name');
   }
 }
