@@ -15,9 +15,11 @@ class InboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUnread = msg['read'] == 0;
-    final subject = msg['subject']?.isNotEmpty == true ? msg['subject'] : '(Uden emne)';
     final isFromMe = msg['sender_type'] == 'patient';
+    final isUnread = msg['read'] == 0;
+    final subject = msg['subject']?.toString().trim().isNotEmpty == true
+        ? msg['subject']
+        : '(Uden emne)';
 
     final label = isFromMe
         ? 'Til: ${msg['display_name'] ?? 'Ukendt'}'
@@ -33,22 +35,18 @@ class InboxListTile extends StatelessWidget {
         ),
         child: ListTile(
           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-          leading: Icon(
-            isUnread ? Icons.mark_email_unread : Icons.mark_email_read_outlined,
-            color: isUnread ? Colors.white70 : Colors.white38,
-            size: 24.sp,
-          ),
+          leading: _buildStatusIcon(isFromMe, isUnread),
           title: Text(
             subject,
             style: TextStyle(
               color: Colors.white70,
-              fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
+              fontWeight: (isUnread && !isFromMe) ? FontWeight.bold : FontWeight.w500,
               fontSize: 14.sp,
             ),
           ),
           subtitle: Text(
             label,
-            style: TextStyle(color: Colors.white70, fontSize: 12.sp),
+            style: TextStyle(color: Colors.white60, fontSize: 12.sp),
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -67,6 +65,34 @@ class InboxListTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildStatusIcon(bool isFromMe, bool isUnread) {
+    if (!isUnread) {
+      return const Icon(Icons.mark_email_read_outlined, color: Colors.grey);
+    }
+
+    if (!isFromMe) {
+      // Modtaget besked fra kliniker, ulæst
+      return const Icon(Icons.mark_email_unread, color: Colors.blueGrey);
+    } else {
+      // Sendt af patient, ikke læst af kliniker
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          const Icon(Icons.email_outlined, color: Colors.grey),
+          const Positioned(
+            bottom: -2,
+            right: -2,
+            child: Icon(
+              Icons.access_time,
+              size: 16,
+              color: Colors.white70,
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   String _formatDate(String rawDate) {

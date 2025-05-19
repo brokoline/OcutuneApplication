@@ -129,6 +129,18 @@ class ApiService {
     }
   }
 
+  static Future<void> markThreadAsRead(int threadId) async {
+    final token = await AuthStorage.getToken();
+    final response = await http.patch(
+      Uri.parse('$baseUrl/threads/$threadId/read'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode != 204) {
+      throw Exception('Kunne ikke markere som læst');
+    }
+  }
+
+
   static Future<void> sendPatientMessage({
     required String message,
     String subject = '',

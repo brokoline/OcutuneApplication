@@ -42,10 +42,13 @@ class _PatientMessageDetailScreenState
         return;
       }
 
+      // 💥 NYT: markér som læst
+      await api.ApiService.markThreadAsRead(threadId!);
+
       if (!mounted) return;
       setState(() {
         thread = msgs;
-        original = msgs.first; // Brug første besked i tråden
+        original = msgs.first;
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,6 +61,7 @@ class _PatientMessageDetailScreenState
       if (mounted) Navigator.pop(context);
     }
   }
+
 
 
   Future<void> _sendReply() async {
@@ -133,13 +137,13 @@ class _PatientMessageDetailScreenState
           backgroundColor: generalBackground,
           elevation: 0,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: const IconThemeData(color: Colors.white70),
           title: Text(
             original!['subject']?.isNotEmpty == true
                 ? original!['subject']
                 : 'Uden emne',
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.white70,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
