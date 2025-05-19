@@ -29,12 +29,13 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
   Future<void> _attemptLogin(String userId, String password) async {
     if (userId.isEmpty || password.isEmpty) {
-      print('🔁 Sending POST to: ${ApiService.baseUrl}/sim-login');
-      print('🧾 Payload: $userId / $password');
+      print('📛 Manglende input');
       setState(() => loginError = 'Udfyld både bruger-ID og adgangskode');
       return;
     }
 
+    print('🔁 Sender POST til: ${ApiService.baseUrl}/sim-login');
+    print('📨 Payload: $userId / $password');
 
     setState(() {
       isLoading = true;
@@ -51,41 +52,33 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         }),
       );
 
+      print('📥 Statuskode: ${response.statusCode}');
+      print('📦 Svar body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final role = data['role'];
 
+        // Gem logininfo
         await auth.AuthStorage.saveLogin(
           id: data['id'],
-          role: role,
+          role: data['role'],
           token: data['token'],
           simUserId: data['sim_userid'],
         );
-        await auth.AuthStorage.setPatientId(data['id']);
 
-        if (role == 'patient') {
-          await auth.AuthStorage.savePatientProfile(
-            firstName: data['first_name'],
-            lastName: data['last_name'],
-          );
+        // Gem navn til visning senere
+        await auth.AuthStorage.savePatientProfile(
+          firstName: data['first_name'],
+          lastName: data['last_name'],
+        );
 
-          Navigator.pushReplacementNamed(
-            context,
-            '/patient/dashboard',
-            arguments: data['id'], // 👈 patientId sendes her
-          );
-        } else if (role == 'clinician') {
-          Navigator.pushReplacementNamed(context, '/clinician/dashboard');
-        } else {
-          setState(() => loginError = 'Ukendt rolle: $role');
-        }
-      } else if (response.statusCode == 403) {
-        setState(() => loginError = 'Forkert adgangskode.');
-      } else {
-        setState(() => loginError = 'Login fejlede. Prøv igen.');
+        // Navigér videre
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/chooseAccess');
       }
     } catch (e) {
-      setState(() => loginError = 'Netværksfejl under login');
+      print('💥 Undtagelse fanget: $e');
+      setState(() => loginError = 'Netværksfejl eller server utilgængelig');
     } finally {
       setState(() => isLoading = false);
     }

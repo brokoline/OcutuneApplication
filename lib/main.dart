@@ -109,6 +109,8 @@ class OcutuneApp extends StatelessWidget {
 
         '/clinician/dashboard': (_) => const ClinicianDashboardScreen(),
 
+
+
         // Patient side
         '/patient/dashboard': (context) {
           final patientId = ModalRoute.of(context)!.settings.arguments as int;
