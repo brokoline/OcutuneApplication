@@ -157,7 +157,7 @@ class _PatientSensorSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final connectedDevice = BleController.connectedDevice;
+     final connectedDevice = BleController.connectedDevice;
 
     return Scaffold(
       backgroundColor: generalBackground,
