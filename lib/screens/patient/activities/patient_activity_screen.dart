@@ -311,6 +311,8 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       backgroundColor: generalBackground,
       appBar: AppBar(
         backgroundColor: generalBackground,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
         title: const Text(

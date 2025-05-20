@@ -40,6 +40,7 @@ class _ClinicianDashboardScreenState extends State<ClinicianDashboardScreen> {
       create: (_) => _controller,
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: const Text('ocutune'),
           centerTitle: true,
         ),

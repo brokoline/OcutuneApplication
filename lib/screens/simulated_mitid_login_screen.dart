@@ -72,9 +72,18 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           lastName: data['last_name'],
         );
 
-        // Navigér videre
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/chooseAccess');
+
+        // Navigér baseret på rolle
+        if (data['role'] == 'patient') {
+          Navigator.pushReplacementNamed(context, '/patient/dashboard', arguments: data['id']);
+        } else if (data['role'] == 'clinician') {
+          Navigator.pushReplacementNamed(context, '/clinician');
+        } else {
+          setState(() => loginError = 'Ukendt rolle: ${data['role']}');
+        }
+      } else {
+        setState(() => loginError = 'Forkert brugernavn eller adgangskode');
       }
     } catch (e) {
       print('💥 Undtagelse fanget: $e');
@@ -84,7 +93,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
@@ -93,13 +101,16 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       backgroundColor: generalBackground,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        automaticallyImplyLeading: true,
         backgroundColor: generalBackground,
+        foregroundColor: Colors.white70,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'MitID Privat Login',
-          style: TextStyle(
-            color: Colors.white,
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+            color: Colors.white70,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -116,12 +127,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (!keyboardVisible)
-                Column(
-                  children: [
-                    SizedBox(height: 24.h),
-                  ],
-                ),
+              if (!keyboardVisible) SizedBox(height: 24.h),
               SimulatedMitIDBox(
                 title: widget.title,
                 controller: userIdController,

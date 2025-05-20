@@ -103,6 +103,8 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
       backgroundColor: generalBackground,
       appBar: AppBar(
         backgroundColor: generalBackground,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white70),
@@ -116,8 +118,6 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Center(child: Icon(Icons.mail_outline, color: Colors.white70, size: 48)),
-            const SizedBox(height: 40),
 
             if (multiple)
               DropdownButtonFormField2<int>(
