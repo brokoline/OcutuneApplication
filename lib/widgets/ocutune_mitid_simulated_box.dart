@@ -135,9 +135,9 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
   void _showRememberMeDialog() {
     _showDialogBox(
       title: 'Husk mig? 🤖',
-      content: 'Hvis du virkelig vil gemmes, må du selv kode det.\n\n'
-          'Vi husker intet her – det er trods alt bare en wannabe-simulering',
-      buttonText: 'Faiiiiiiir nok',
+      content: 'Bare log ind korrekt, så slipper \n'
+          'du for besværet næste gang',
+      buttonText: 'Got it!',
     );
   }
 

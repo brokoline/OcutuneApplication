@@ -208,6 +208,7 @@ class ApiService {
     }
   }
 
+// Kliniker inbakke beskeder
   static Future<List<Map<String, dynamic>>> getClinicianInboxMessages() async {
     final token = await getToken();
 
@@ -237,15 +238,34 @@ class ApiService {
   }
 
   static Future<List<Map<String, dynamic>>> getClinicianMessageThreadById(int threadId) async {
-    final token = await getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/messages/clinician-thread-by-id/$threadId'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Could not fetch conversation');
+    try {
+      final token = await AuthStorage.getToken();
+      if (token == null) throw Exception('Mangler token');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/messages/clinician-thread-by-id/$threadId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 GET /messages/clinician-thread-by-id/$threadId');
+      print('🔁 Status: ${response.statusCode}');
+      print('📦 Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+      } else if (response.statusCode == 403) {
+        throw Exception('Ingen adgang til denne beskedtråd');
+      } else if (response.statusCode == 404) {
+        throw Exception('Beskedtråd ikke fundet');
+      } else {
+        throw Exception('Serverfejl: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Fejl i getClinicianMessageThreadById: $e');
+      rethrow;
     }
   }
 

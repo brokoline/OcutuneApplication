@@ -95,7 +95,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       backgroundColor: generalBackground,
@@ -118,16 +117,14 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: 24.w,
-            right: 24.w,
-            top: keyboardVisible ? 24.h : 80.h,
-            bottom: keyboardVisible ? 24.h : 40.h,
+          padding: EdgeInsets.symmetric(
+            horizontal: 24.w,
+            vertical: 24.h,
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (!keyboardVisible) SizedBox(height: 24.h),
               SimulatedMitIDBox(
                 title: widget.title,
                 controller: userIdController,
