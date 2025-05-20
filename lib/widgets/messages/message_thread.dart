@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_bubble.dart';
 
-class MessageThread extends StatelessWidget {
+class MessageThread extends StatefulWidget {
   final List<Map<String, dynamic>> messages;
   final ScrollController? scrollController;
 
@@ -13,14 +13,45 @@ class MessageThread extends StatelessWidget {
     this.scrollController,
   });
 
+  @override
+  State<MessageThread> createState() => _MessageThreadState();
+}
+
+class _MessageThreadState extends State<MessageThread> {
+  late final ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.scrollController ?? ScrollController();
+  }
+
+  @override
+  void didUpdateWidget(covariant MessageThread oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.messages.length != oldWidget.messages.length) {
+      // ny besked tilføjet – scroll til bund
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_controller.hasClients) {
+          _controller.animateTo(
+            _controller.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      controller: _controller,
       padding: EdgeInsets.all(16.w),
-      itemCount: messages.length,
+      itemCount: widget.messages.length,
       itemBuilder: (context, index) {
-        final msg = messages[index];
+        final msg = widget.messages[index];
         final isMe = msg['sender_type'] == 'patient';
         final time = _formatDateTime(msg['sent_at']);
 
@@ -53,5 +84,13 @@ class MessageThread extends StatelessWidget {
     } catch (_) {
       return '';
     }
+  }
+
+  @override
+  void dispose() {
+    if (widget.scrollController == null) {
+      _controller.dispose();
+    }
+    super.dispose();
   }
 }

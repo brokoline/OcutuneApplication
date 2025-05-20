@@ -3,7 +3,7 @@ import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread.dart';
 import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
-import 'package:ocutune_light_logger/widgets/confirm_dialog.dart'; // ← din dialog
+import 'package:ocutune_light_logger/widgets/confirm_dialog.dart';
 
 class PatientMessageDetailScreen extends StatefulWidget {
   const PatientMessageDetailScreen({super.key});
@@ -22,6 +22,7 @@ class _PatientMessageDetailScreenState
   int? threadId;
   bool hasSentMessage = false;
   bool hasDeletedThread = false;
+  bool hasMarkedAsRead = false;
 
   @override
   void didChangeDependencies() {
@@ -30,7 +31,7 @@ class _PatientMessageDetailScreenState
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool scrollToBottom = true}) async {
     if (threadId == null) return;
 
     try {
@@ -42,8 +43,8 @@ class _PatientMessageDetailScreenState
         return;
       }
 
-      // 💥 NYT: markér som læst
       await api.ApiService.markThreadAsRead(threadId!);
+      hasMarkedAsRead = true;
 
       if (!mounted) return;
       setState(() {
@@ -51,18 +52,29 @@ class _PatientMessageDetailScreenState
         original = msgs.first;
       });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-        }
-      });
+      if (scrollToBottom) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_scrollController.hasClients) {
+              try {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                );
+              } catch (_) {
+                _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+              }
+            }
+          });
+        });
+      }
+
     } catch (e) {
       print('❌ Fejl ved hentning af tråd: $e');
       if (mounted) Navigator.pop(context);
     }
   }
-
-
 
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
@@ -79,7 +91,7 @@ class _PatientMessageDetailScreenState
 
       _replyController.clear();
       hasSentMessage = true;
-      await _loadData();
+      await _loadData(scrollToBottom: true); // scroll ned efter svar
     } catch (e) {
       print('❌ Kunne ikke sende svar: $e');
     }
@@ -93,7 +105,7 @@ class _PatientMessageDetailScreenState
       builder: (_) => ConfirmDialog(
         title: 'Slet samtale?',
         message: 'Er du sikker på, at du vil slette hele tråden?',
-        onConfirm: () {}, // stadig påkrævet, men vi håndterer slet udenfor
+        onConfirm: () {},
       ),
     );
 
@@ -108,7 +120,6 @@ class _PatientMessageDetailScreenState
       print('❌ Kunne ikke slette tråd: $e');
     }
   }
-
 
   @override
   void dispose() {
@@ -128,7 +139,10 @@ class _PatientMessageDetailScreenState
 
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pop(context, hasSentMessage || hasDeletedThread);
+        Navigator.pop(
+          context,
+          hasSentMessage || hasDeletedThread || hasMarkedAsRead,
+        );
         return false;
       },
       child: Scaffold(
