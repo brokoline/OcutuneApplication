@@ -4,48 +4,48 @@ import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_textfield.dart';
 
-class PatientNewMessageScreen extends StatefulWidget {
-  const PatientNewMessageScreen({super.key});
+class ClinicianNewMessageScreen extends StatefulWidget {
+  const ClinicianNewMessageScreen({super.key});
 
   @override
-  State<PatientNewMessageScreen> createState() => _PatientNewMessageScreenState();
+  State<ClinicianNewMessageScreen> createState() => _ClinicianNewMessageScreenState();
 }
 
-class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
+class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
   bool _sending = false;
 
-  int? _selectedClinicianId;
-  String? _selectedClinicianName;
-  List<Map<String, dynamic>> _clinicians = [];
+  int? _selectedPatientId;
+  String? _selectedPatientName;
+  List<Map<String, dynamic>> _patients = [];
 
   @override
   void initState() {
     super.initState();
-    _loadClinicians();
+    _loadPatients();
   }
 
-  Future<void> _loadClinicians() async {
+  Future<void> _loadPatients() async {
     try {
-      final list = await api.ApiService.getPatientClinicians();
+      final list = await api.ApiService.getClinicianPatients();
       final unique = {
-        for (var c in list) c['id']: c
+        for (var p in list) p['id']: p
       }.values.toList();
-      print('🧪 Klinikere hentet: $list');
+      print('Patienter hentet: $list');
 
       setState(() {
-        _clinicians = unique;
+        _patients = unique;
         if (unique.length == 1) {
-          _selectedClinicianId = unique.first['id'];
-          _selectedClinicianName = unique.first['name'];
+          _selectedPatientId = unique.first['id'];
+          _selectedPatientName = unique.first['name'];
         } else {
-          _selectedClinicianId = null;
-          _selectedClinicianName = null;
+          _selectedPatientId = null;
+          _selectedPatientName = null;
         }
       });
     } catch (e) {
-      print('❌ Fejl ved hentning af klinikere: $e');
+      print('❌ Fejl ved hentning af patienter: $e');
     }
   }
 
@@ -53,16 +53,16 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
     final subject = _subjectController.text.trim();
     final body = _messageController.text.trim();
 
-    if (_selectedClinicianId == null || subject.isEmpty || body.isEmpty) {
+    if (_selectedPatientId == null || subject.isEmpty || body.isEmpty) {
       String msg;
-      if (_selectedClinicianId == null && subject.isEmpty && body.isEmpty) {
-        msg = 'Vælg venligst en behandler, angiv et emne og skriv en besked';
-      } else if (_selectedClinicianId == null) {
-        msg = 'Vælg venligst en behandler';
+      if (_selectedPatientId == null && subject.isEmpty && body.isEmpty) {
+        msg = 'Vælg en patient, skriv et emne og indhold.';
+      } else if (_selectedPatientId == null) {
+        msg = 'Vælg en patient';
       } else if (subject.isEmpty) {
-        msg = 'Angiv venligst et emne';
+        msg = 'Skriv et emne';
       } else {
-        msg = 'Skriv venligst en besked';
+        msg = 'Skriv en besked';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,10 +74,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
     setState(() => _sending = true);
 
     try {
-      await api.ApiService.sendPatientMessage(
+      await api.ApiService.sendClinicianMessage(
         message: body,
         subject: subject,
-        clinicianId: _selectedClinicianId,
+        patientId: _selectedPatientId,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,6 +85,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
       );
       Navigator.pop(context, true);
     } catch (e) {
+      print('❌ Fejl under afsendelse: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Kunne ikke sende besked')),
       );
@@ -95,16 +96,14 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final multiple = _clinicians.length > 1;
-    final validValue = _selectedClinicianId != null &&
-        _clinicians.any((c) => c['id'] == _selectedClinicianId);
+    final multiple = _patients.length > 1;
+    final validValue = _selectedPatientId != null &&
+        _patients.any((p) => p['id'] == _selectedPatientId);
 
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
         backgroundColor: generalBackground,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white70),
@@ -118,14 +117,16 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Center(child: Icon(Icons.mail_outline, color: Colors.white70, size: 48)),
+            const SizedBox(height: 40),
 
             if (multiple)
               DropdownButtonFormField2<int>(
                 isExpanded: true,
-                value: validValue ? _selectedClinicianId : null,
+                value: validValue ? _selectedPatientId : null,
                 iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
                 decoration: InputDecoration(
-                  labelText: 'Vælg behandler',
+                  labelText: 'Vælg patient',
                   labelStyle: const TextStyle(color: Colors.white70),
                   filled: true,
                   fillColor: generalBox,
@@ -149,31 +150,31 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                items: _clinicians.map((c) {
+                items: _patients.map((p) {
                   return DropdownMenuItem<int>(
-                    value: c['id'],
+                    value: p['id'],
                     child: Text(
-                      '${c['name']} (${c['role'] ?? ''})',
+                      '${p['first_name']} ${p['last_name']}',
                       style: const TextStyle(color: Colors.white),
                       overflow: TextOverflow.ellipsis,
                     ),
                   );
                 }).toList(),
                 onChanged: (val) {
-                  final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});
+                  final selected = _patients.firstWhere((p) => p['id'] == val, orElse: () => {});
                   setState(() {
-                    _selectedClinicianId = val;
-                    _selectedClinicianName = selected['name'];
+                    _selectedPatientId = val;
+                    _selectedPatientName = selected['name'];
                   });
                 },
               )
-            else if (_selectedClinicianName != null)
+            else if (_selectedPatientName != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Skriv til: $_selectedClinicianName',
+                    'Skriv til: $_selectedPatientName',
                     style: const TextStyle(color: Colors.white54, fontSize: 14),
                   ),
                 ),

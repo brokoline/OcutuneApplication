@@ -6,14 +6,14 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
 import 'dart:io'; // for HttpDate
 
-class PatientInboxScreen extends StatefulWidget {
-  const PatientInboxScreen({super.key});
+class ClinicianInboxScreen extends StatefulWidget {
+  const ClinicianInboxScreen({super.key});
 
   @override
-  State<PatientInboxScreen> createState() => _PatientInboxScreenState();
+  State<ClinicianInboxScreen> createState() => _ClinicianInboxScreenState();
 }
 
-class _PatientInboxScreenState extends State<PatientInboxScreen> {
+class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _loading = true;
 
@@ -28,10 +28,9 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-      final msgs = await api.ApiService.getInboxMessages();
+      final msgs = await api.ApiService.getClinicianInboxMessages();
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
-      // Gruppér beskeder pr. thread_id
       for (var msg in msgs) {
         final threadId = msg['thread_id'];
         grouped.putIfAbsent(threadId, () => []).add(msg);
@@ -40,14 +39,12 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
       final List<Map<String, dynamic>> threads = [];
 
       for (var threadMsgs in grouped.values) {
-        // Sortér: nyeste først
         threadMsgs.sort((a, b) =>
             HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
         final newest = threadMsgs.first;
         final oldest = threadMsgs.last;
 
-        // Vis navn på kliniker (baseret på første besked i tråden)
         final displayName = oldest['sender_id'] == currentUserId
             ? oldest['receiver_name']
             : oldest['sender_name'];
@@ -58,7 +55,6 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
         });
       }
 
-      // Sortér tråde efter seneste besked
       threads.sort((a, b) =>
           HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
@@ -67,7 +63,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
         _loading = false;
       });
     } catch (e) {
-      print('❌ Fejl ved hentning af indbakke: $e');
+      print('❌ Fejl ved indlæsning af indbakke: $e');
       setState(() => _loading = false);
     }
   }
@@ -85,8 +81,6 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
         backgroundColor: generalBackground,
         appBar: AppBar(
           backgroundColor: generalBackground,
-          surfaceTintColor: Colors.transparent,
-          scrolledUnderElevation: 0,
           elevation: 0,
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white70),
@@ -107,7 +101,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                   : _messages.isEmpty
                   ? const Center(
                 child: Text(
-                  'Ingen beskeder endnu.',
+                  'Indbakken er tom.',
                   style: TextStyle(color: Colors.white54),
                 ),
               )
@@ -120,7 +114,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                     onTap: () async {
                       final changed = await Navigator.pushNamed(
                         context,
-                        '/patient/message_detail',
+                        '/clinician/message_detail',
                         arguments: msg['thread_id'],
                       );
 
@@ -135,11 +129,15 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 32),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/patient/new_message')
-                      .then((value) {
-                    if (value == true) _loadMessages();
-                  });
+                onPressed: () async {
+                  final changed = await Navigator.pushNamed(
+                    context,
+                    '/clinician/new_message',
+                  );
+
+                  if (changed == true) {
+                    _loadMessages();
+                  }
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Ny besked'),

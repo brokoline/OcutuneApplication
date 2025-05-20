@@ -18,6 +18,12 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
+    final token = await AuthStorage.getToken();
+    if (token == null) {
+      print('🟡 Ingen gemt login – vis adgangsvalg');
+      return;
+    }
+
     final role = await AuthStorage.getUserRole();
     final id = await AuthStorage.getUserId();
 
@@ -27,9 +33,9 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
     if (role == 'patient' && id != null) {
       Navigator.pushReplacementNamed(context, '/patient/dashboard', arguments: id);
     } else if (role == 'clinician' && id != null) {
-      Navigator.pushReplacementNamed(context, '/clinician/dashboard');
+      Navigator.pushReplacementNamed(context, '/clinician');
     } else {
-      print('🟡 Ingen gemt login – vis adgangsvalg');
+      print('🟡 Ingen komplet brugerdata – vis adgangsvalg');
     }
   }
 
