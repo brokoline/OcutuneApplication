@@ -153,12 +153,8 @@ class _PatientSensorSettingsScreenState
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
@@ -292,17 +288,79 @@ class _PatientSensorSettingsScreenState
                   itemCount: _devices.length,
                   itemBuilder: (context, index) {
                     final device = _devices[index];
-                    return ListTile(
-                      title: Text(
-                        device.name.isNotEmpty
-                            ? device.name
-                            : 'Ukendt enhed',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      subtitle: Text(device.id,
-                          style:
-                          const TextStyle(color: Colors.white70)),
-                      onTap: () => _connectToDevice(device),
+                    return Column(
+                      children: [
+                        if (index > 0)
+                          Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              final connectedDevice = BleController.connectedDevice;
+                              if (connectedDevice == null || connectedDevice.id != device.id) {
+                                _connectToDevice(device);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            hoverColor: Colors.white.withOpacity(0.1),
+                            splashColor: Colors.white.withOpacity(0.2),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.bluetooth,
+                                      color: Colors.white70, size: 20),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          device.name.isNotEmpty
+                                              ? device.name
+                                              : 'Ukendt enhed',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          device.id,
+                                          style: TextStyle(
+                                            color:
+                                            Colors.white.withOpacity(0.6),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  ValueListenableBuilder<DiscoveredDevice?>(
+                                    valueListenable:
+                                    BleController.connectedDeviceNotifier,
+                                    builder: (context, connectedDevice, _) {
+                                      if (connectedDevice?.id == device.id) {
+                                        return const Icon(
+                                          Icons.link,
+                                          color: Colors.white70,
+                                          size: 20,
+                                        );
+                                      }
+                                      return const SizedBox();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
