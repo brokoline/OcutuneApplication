@@ -229,7 +229,7 @@ class _PatientSensorSettingsScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             ValueListenableBuilder<DiscoveredDevice?>(
               valueListenable: BleController.connectedDeviceNotifier,
               builder: (context, device, _) {
@@ -254,9 +254,9 @@ class _PatientSensorSettingsScreenState
                   icon: const Icon(Icons.link_off),
                   label: const Text('Afbryd forbindelse'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -282,8 +282,11 @@ class _PatientSensorSettingsScreenState
                 ),
                 child: _devices.isEmpty
                     ? const Center(
-                    child: Text('Ingen enheder fundet',
-                        style: TextStyle(color: Colors.white54)))
+                  child: Text(
+                    'Ingen enheder fundet',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                )
                     : ListView.builder(
                   itemCount: _devices.length,
                   itemBuilder: (context, index) {
@@ -291,10 +294,10 @@ class _PatientSensorSettingsScreenState
                     return Column(
                       children: [
                         if (index > 0)
-                          Divider(
+                          const Divider(
                             height: 1,
                             thickness: 0.5,
-                            color: Colors.white.withOpacity(0.1),
+                            color: Color.fromRGBO(255, 255, 255, 0.1),
                           ),
                         Material(
                           color: Colors.transparent,
@@ -306,14 +309,14 @@ class _PatientSensorSettingsScreenState
                               }
                             },
                             borderRadius: BorderRadius.circular(8),
-                            hoverColor: Colors.white.withOpacity(0.1),
-                            splashColor: Colors.white.withOpacity(0.2),
+                            hoverColor: const Color.fromRGBO(255, 255, 255, 0.1),
+                            splashColor: const Color.fromRGBO(255, 255, 255, 0.2),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
                               child: Row(
                                 children: [
-                                  Icon(Icons.bluetooth,
+                                  const Icon(Icons.bluetooth,
                                       color: Colors.white70, size: 20),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -332,9 +335,9 @@ class _PatientSensorSettingsScreenState
                                         ),
                                         Text(
                                           device.id,
-                                          style: TextStyle(
-                                            color:
-                                            Colors.white.withOpacity(0.6),
+                                          style: const TextStyle(
+                                            color: Color.fromRGBO(
+                                                255, 255, 255, 0.6),
                                             fontSize: 12,
                                           ),
                                         ),

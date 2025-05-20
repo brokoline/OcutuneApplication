@@ -26,42 +26,58 @@ class InboxListTile extends StatelessWidget {
         : 'Fra: ${msg['sender_name'] ?? 'Ukendt'}';
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      child: Container(
-        decoration: BoxDecoration(
-          color: generalBox,
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+      child: Material(
+        color: generalBox,
+        borderRadius: BorderRadius.circular(12.r),
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.white24, width: 1.w),
-        ),
-        child: ListTile(
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-          leading: _buildStatusIcon(isFromMe, isUnread),
-          title: Text(
-            subject,
-            style: TextStyle(
-              color: Colors.white70,
-              fontWeight: (isUnread && !isFromMe) ? FontWeight.bold : FontWeight.w500,
-              fontSize: 14.sp,
+          splashColor: Colors.white24,
+          highlightColor: Colors.white10,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatusIcon(isFromMe, isUnread),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subject,
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontWeight: (isUnread && !isFromMe)
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  _formatDate(msg['sent_at']),
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ],
             ),
           ),
-          subtitle: Text(
-            label,
-            style: TextStyle(color: Colors.white60, fontSize: 12.sp),
-          ),
-          trailing: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _formatDate(msg['sent_at']),
-                style: TextStyle(
-                  color: Colors.white54,
-                  fontSize: 12.sp,
-                ),
-              ),
-            ],
-          ),
-          onTap: onTap,
         ),
       ),
     );
@@ -73,10 +89,8 @@ class InboxListTile extends StatelessWidget {
     }
 
     if (!isFromMe) {
-      // Modtaget besked fra kliniker, ulæst
       return const Icon(Icons.mark_email_unread, color: Colors.blueGrey);
     } else {
-      // Sendt af patient, ikke læst af kliniker
       return Stack(
         alignment: Alignment.center,
         children: [

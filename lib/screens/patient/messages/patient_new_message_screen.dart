@@ -32,7 +32,13 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
       final unique = {
         for (var c in list) c['id']: c
       }.values.toList();
-      print('🧪 Klinikere hentet: $list');
+
+      assert(() {
+        debugPrint('🧪 Klinikere hentet: $list');
+        return true;
+      }());
+
+      if (!mounted) return;
 
       setState(() {
         _clinicians = unique;
@@ -45,7 +51,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         }
       });
     } catch (e) {
-      print('❌ Fejl ved hentning af klinikere: $e');
+      assert(() {
+        debugPrint('❌ Fejl ved hentning af klinikere: $e');
+        return true;
+      }());
     }
   }
 
@@ -65,6 +74,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         msg = 'Skriv venligst en besked';
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: Colors.red.shade400),
       );
@@ -80,16 +90,19 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         clinicianId: _selectedClinicianId,
       );
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Besked sendt')),
       );
       Navigator.pop(context, true);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Kunne ikke sende besked')),
       );
     }
 
+    if (!mounted) return;
     setState(() => _sending = false);
   }
 
@@ -118,54 +131,80 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-
             if (multiple)
-              DropdownButtonFormField2<int>(
-                isExpanded: true,
-                value: validValue ? _selectedClinicianId : null,
-                iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Vælg behandler',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: generalBox,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-                dropdownStyleData: DropdownStyleData(
-                  decoration: BoxDecoration(
-                    color: generalBoxHover,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: _clinicians.map((c) {
-                  return DropdownMenuItem<int>(
-                    value: c['id'],
-                    child: Text(
-                      '${c['name']} (${c['role'] ?? ''})',
-                      style: const TextStyle(color: Colors.white),
-                      overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: DropdownButtonFormField2<int>(
+                  isExpanded: true,
+                  value: validValue ? _selectedClinicianId : null,
+                  iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Vælg behandler',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: generalBox,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white24),
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});
-                  setState(() {
-                    _selectedClinicianId = val;
-                    _selectedClinicianName = selected['name'];
-                  });
-                },
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  ),
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 200,
+                    decoration: BoxDecoration(
+                      color: generalBoxHover,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: _clinicians.map((c) {
+                    final isSelected = c['id'] == _selectedClinicianId;
+
+                    return DropdownMenuItem<int>(
+                      value: c['id'],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${c['name']} (${c['role'] ?? ''})',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check, size: 16, color: Colors.white54),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            height: 1,
+                            color: const Color.fromRGBO(255, 255, 255, 0.1),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    final selected = _clinicians.firstWhere((c) => c['id'] == val, orElse: () => {});
+                    setState(() {
+                      _selectedClinicianId = val;
+                      _selectedClinicianName = selected['name'];
+                    });
+                  },
+                ),
               )
             else if (_selectedClinicianName != null)
               Padding(
@@ -179,19 +218,19 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                 ),
               ),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 16),
 
             OcutuneTextField(
               label: 'Emne',
               controller: _subjectController,
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 16),
 
             TextField(
               controller: _messageController,
               style: const TextStyle(color: Colors.white),
-              minLines: 10,
-              maxLines: 10,
+              minLines: 11,
+              maxLines: 11,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: generalBox,
@@ -213,7 +252,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
               ),
             ),
 
-            const SizedBox(height: 34),
+            const SizedBox(height: 24),
 
             Align(
               alignment: Alignment.centerRight,
@@ -226,7 +265,10 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                       ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.black,
+                    ),
                   )
                       : const Icon(Icons.send, size: 18),
                   label: Text(_sending ? 'Sender...' : 'Send'),
