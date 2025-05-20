@@ -27,7 +27,7 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
     if (role == 'patient' && id != null) {
       Navigator.pushReplacementNamed(context, '/patient/dashboard', arguments: id);
     } else if (role == 'clinician' && id != null) {
-      Navigator.pushReplacementNamed(context, '/clinician/dashboard');
+      Navigator.pushReplacementNamed(context, '/clinician');
     } else {
       print('🟡 Ingen gemt login – vis adgangsvalg');
     }

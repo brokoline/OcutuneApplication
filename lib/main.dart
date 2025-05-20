@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
@@ -25,9 +26,13 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 
-import 'package:ocutune_light_logger/screens/clinician/dashboard/clinician_dashboard_screen.dart.dart';
 
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
+import 'package:ocutune_light_logger/screens/clinician/messages/clinician_inbox_screen.dart';
+import 'package:ocutune_light_logger/screens/clinician/messages/clinician_message_detail_screen.dart';
+import 'package:ocutune_light_logger/screens/clinician/messages/clinician_new_message_screen.dart';
+import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
+
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_inbox_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_message_detail_screen.dart';
@@ -105,9 +110,13 @@ class OcutuneApp extends StatelessWidget {
         '/Q5': (_) => const QuestionFiveScreen(),
         '/doneSetup': (_) => const DoneSetupScreen(),
 
+
         // Kliniker Dashboards
 
-        '/clinician/dashboard': (_) => const ClinicianDashboardScreen(),
+        '/clinician': (context) => const ClinicianRootScreen(),
+        '/clinician/inbox': (context) => const ClinicianInboxScreen(),
+        '/clinician/message_detail': (context) => const ClinicianMessageDetailScreen(),
+        '/clinician/new_message': (context) => const ClinicianNewMessageScreen(),
 
 
 

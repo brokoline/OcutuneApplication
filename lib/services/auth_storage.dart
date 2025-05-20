@@ -43,7 +43,22 @@ class AuthStorage {
     await prefs.setInt('patientId', id);
   }
 
+  static Future<void> saveClinicianProfile({
+    required String firstName,
+    required String lastName,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('clinician_first_name', firstName);
+    await prefs.setString('clinician_last_name', lastName);
+  }
 
+  static Future<String> getClinicianName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final first = prefs.getString('clinician_first_name') ?? '';
+    final last = prefs.getString('clinician_last_name') ?? '';
+    final name = '$first $last'.trim();
+    return name.isNotEmpty ? name : 'Ukendt kliniker';
+  }
 
   static Future<void> savePatientProfile({
     required String firstName,
@@ -64,6 +79,7 @@ class AuthStorage {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_role');
   }
+
 
   static Future<String?> getSimUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -88,3 +104,4 @@ class AuthStorage {
     await prefs.remove('patient_last_name');
   }
 }
+

@@ -140,7 +140,6 @@ class ApiService {
     }
   }
 
-
   static Future<void> sendPatientMessage({
     required String message,
     String subject = '',
@@ -198,7 +197,89 @@ class ApiService {
     }
   }
 
+  static Future<List<Map<String, dynamic>>> getClinicianInboxMessages() async {
+    final token = await getToken();
 
+    if (token == null || token.isEmpty) {
+      throw Exception('Missing token - cannot fetch inbox');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/messages/clinician-inbox'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      try {
+        final errorBody = jsonDecode(response.body);
+        final errorMsg = errorBody['error'] ?? 'Unknown error';
+        throw Exception('❌ Error fetching inbox: $errorMsg');
+      } catch (e) {
+        throw Exception('❌ Error fetching inbox - response not in JSON format.');
+      }
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getClinicianMessageThreadById(int threadId) async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/messages/clinician-thread-by-id/$threadId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Could not fetch conversation');
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getClinicianPatients() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/clinician/patients'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Could not fetch patients');
+    }
+  }
+
+  static Future<void> sendClinicianMessage({
+    required String message,
+    String subject = '',
+    int? replyTo,
+    int? patientId,
+  }) async {
+    final token = await getToken();
+
+    final Map<String, dynamic> payload = {
+      'message': message,
+      'subject': subject,
+    };
+
+    if (replyTo != null) payload['reply_to'] = replyTo;
+    if (patientId != null) payload['patient_id'] = patientId;
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/clinician-contact'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('❌ Error sending message');
+    }
+  }
 
 
 
