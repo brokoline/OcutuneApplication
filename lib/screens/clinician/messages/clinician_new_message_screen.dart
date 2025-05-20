@@ -32,20 +32,20 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
       final unique = {
         for (var p in list) p['id']: p
       }.values.toList();
-      print('🧪 Patients loaded: $list');
+      print('Patienter hentet: $list');
 
       setState(() {
         _patients = unique;
         if (unique.length == 1) {
           _selectedPatientId = unique.first['id'];
-          _selectedPatientName = '${unique.first['first_name']} ${unique.first['last_name']}';
+          _selectedPatientName = unique.first['name'];
         } else {
           _selectedPatientId = null;
           _selectedPatientName = null;
         }
       });
     } catch (e) {
-      print('❌ Error loading patients: $e');
+      print('❌ Fejl ved hentning af patienter: $e');
     }
   }
 
@@ -56,13 +56,13 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
     if (_selectedPatientId == null || subject.isEmpty || body.isEmpty) {
       String msg;
       if (_selectedPatientId == null && subject.isEmpty && body.isEmpty) {
-        msg = 'Please select a patient, enter a subject and write a message';
+        msg = 'Vælg en patient, skriv et emne og indhold.';
       } else if (_selectedPatientId == null) {
-        msg = 'Please select a patient';
+        msg = 'Vælg en patient';
       } else if (subject.isEmpty) {
-        msg = 'Please enter a subject';
+        msg = 'Skriv et emne';
       } else {
-        msg = 'Please write a message';
+        msg = 'Skriv en besked';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,12 +81,13 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Message sent')),
+        const SnackBar(content: Text('✅ Besked sendt')),
       );
       Navigator.pop(context, true);
     } catch (e) {
+      print('❌ Fejl under afsendelse: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Could not send message')),
+        const SnackBar(content: Text('❌ Kunne ikke sende besked')),
       );
     }
 
@@ -107,7 +108,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
-          'New Message',
+          'Ny besked',
           style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 18),
         ),
       ),
@@ -125,7 +126,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
                 value: validValue ? _selectedPatientId : null,
                 iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
                 decoration: InputDecoration(
-                  labelText: 'Select patient',
+                  labelText: 'Vælg patient',
                   labelStyle: const TextStyle(color: Colors.white70),
                   filled: true,
                   fillColor: generalBox,
@@ -163,7 +164,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
                   final selected = _patients.firstWhere((p) => p['id'] == val, orElse: () => {});
                   setState(() {
                     _selectedPatientId = val;
-                    _selectedPatientName = '${selected['first_name']} ${selected['last_name']}';
+                    _selectedPatientName = selected['name'];
                   });
                 },
               )
@@ -173,7 +174,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Write to: $_selectedPatientName',
+                    'Skriv til: $_selectedPatientName',
                     style: const TextStyle(color: Colors.white54, fontSize: 14),
                   ),
                 ),
@@ -182,7 +183,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
             const SizedBox(height: 22),
 
             OcutuneTextField(
-              label: 'Subject',
+              label: 'Emne',
               controller: _subjectController,
             ),
             const SizedBox(height: 22),
@@ -195,7 +196,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: generalBox,
-                hintText: 'Write your message...',
+                hintText: 'Skriv din besked...',
                 hintStyle: const TextStyle(color: Colors.white54),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -229,7 +230,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
                   )
                       : const Icon(Icons.send, size: 18),
-                  label: Text(_sending ? 'Sending...' : 'Send'),
+                  label: Text(_sending ? 'Sender...' : 'Send'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white70,
                     foregroundColor: Colors.black,

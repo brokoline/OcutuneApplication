@@ -89,7 +89,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white70),
           title: const Text(
-            'Inbox',
+            'Indbakke',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 18,
@@ -105,7 +105,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
                   : _messages.isEmpty
                   ? const Center(
                 child: Text(
-                  'No messages yet.',
+                  'Indbakken er tom.',
                   style: TextStyle(color: Colors.white54),
                 ),
               )
@@ -140,7 +140,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
                   });
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('New Message'),
+                label: const Text('Ny besked'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white70,
                   foregroundColor: Colors.black,
