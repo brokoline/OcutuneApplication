@@ -123,7 +123,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                       );
 
                       if (changed == true) {
-                        _loadMessages(); // ← opdater indbakken
+                        _loadMessages();
                       }
                     },
                   );

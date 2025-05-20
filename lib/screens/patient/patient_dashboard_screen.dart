@@ -91,7 +91,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                 final connected = battery > 0;
 
                                 return OcutunePatientDashboardTile(
-                                  label: 'Sensorindstillinger',
+                                  label: 'Sensorforbindelse',
                                   iconAsset: 'assets/icon/BLE-sensor-ikon.png',
                                   onPressed: () {
                                     Navigator.pushNamed(

@@ -331,7 +331,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   child: Text(
                     'Her kan du registrere aktiviteter, hvor du har været udsat for dagslys, '
                         'men ikke har haft din lyslogger med dig – f.eks. hvis du har været på stranden, '
-                        'ude og gå eller haft den glemt derhjemme.',
+                        'ude og motionere eller blot haft den glemt derhjemme.',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ),

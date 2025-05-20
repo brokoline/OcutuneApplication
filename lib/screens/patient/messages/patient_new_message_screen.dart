@@ -83,7 +83,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Besked sendt')),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Kunne ikke sende besked')),

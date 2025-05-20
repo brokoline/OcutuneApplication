@@ -157,7 +157,7 @@ class _PatientSensorSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final connectedDevice = BleController.connectedDevice;
+
 
     return Scaffold(
       backgroundColor: generalBackground,
@@ -167,7 +167,7 @@ class _PatientSensorSettingsScreenState
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white70),
         title: const Text(
-          'Sensorindstillinger',
+          'Sensorforbindelse',
           style: TextStyle(
               color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w600),
         ),

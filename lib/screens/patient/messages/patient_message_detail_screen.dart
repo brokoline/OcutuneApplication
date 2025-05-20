@@ -3,7 +3,7 @@ import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread.dart';
 import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
-
+import 'package:ocutune_light_logger/widgets/confirm_dialog.dart';
 
 class PatientMessageDetailScreen extends StatefulWidget {
   const PatientMessageDetailScreen({super.key});
@@ -21,6 +21,8 @@ class _PatientMessageDetailScreenState
   Map<String, dynamic>? original;
   int? threadId;
   bool hasSentMessage = false;
+  bool hasDeletedThread = false;
+  bool hasMarkedAsRead = false;
 
   @override
   void didChangeDependencies() {
@@ -29,36 +31,55 @@ class _PatientMessageDetailScreenState
     _loadData();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _loadData({bool scrollToBottom = true}) async {
     if (threadId == null) return;
 
     try {
-      final msg = await api.ApiService.getMessageDetail(threadId!);
       final msgs = await api.ApiService.getMessageThreadById(threadId!);
 
-      if (!mounted) return; // ← beskytter mod crash
+      if (msgs.isEmpty) {
+        print('❌ Tråden er tom – muligvis slettet');
+        if (mounted) Navigator.pop(context, true);
+        return;
+      }
+
+      await api.ApiService.markThreadAsRead(threadId!);
+      hasMarkedAsRead = true;
+
+      if (!mounted) return;
       setState(() {
-        original = msg;
         thread = msgs;
+        original = msgs.first;
       });
 
-      // Scroll til bunden bagefter
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-        }
-      });
+      if (scrollToBottom) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_scrollController.hasClients) {
+              try {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOut,
+                );
+              } catch (_) {
+                _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+              }
+            }
+          });
+        });
+      }
+
     } catch (e) {
       print('❌ Fejl ved hentning af tråd: $e');
+      if (mounted) Navigator.pop(context);
     }
   }
-
 
   Future<void> _sendReply() async {
     final text = _replyController.text.trim();
     if (text.isEmpty || threadId == null) return;
 
-    // Luk tastaturet
     FocusScope.of(context).unfocus();
 
     try {
@@ -69,10 +90,34 @@ class _PatientMessageDetailScreenState
       );
 
       _replyController.clear();
-      hasSentMessage = true; // brugt til at opdatere inbox bagefter
-      await _loadData();
+      hasSentMessage = true;
+      await _loadData(scrollToBottom: true); // scroll ned efter svar
     } catch (e) {
       print('❌ Kunne ikke sende svar: $e');
+    }
+  }
+
+  Future<void> _deleteThread() async {
+    if (threadId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => ConfirmDialog(
+        title: 'Slet samtale?',
+        message: 'Er du sikker på, at du vil slette hele tråden?',
+        onConfirm: () {},
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      print('🔁 Sletter tråd med ID: $threadId');
+      await api.ApiService.deleteThread(threadId!);
+      hasDeletedThread = true;
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      print('❌ Kunne ikke slette tråd: $e');
     }
   }
 
@@ -94,27 +139,36 @@ class _PatientMessageDetailScreenState
 
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pop(context, hasSentMessage);
-        return false; // vi håndterer pop selv
+        Navigator.pop(
+          context,
+          hasSentMessage || hasDeletedThread || hasMarkedAsRead,
+        );
+        return false;
       },
-      // TODO  : Skal opgraderes da WillPopScope er deprecated, og jeg kan ikke finde en løsning
       child: Scaffold(
         backgroundColor: generalBackground,
         appBar: AppBar(
           backgroundColor: generalBackground,
           elevation: 0,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white),
+          iconTheme: const IconThemeData(color: Colors.white70),
           title: Text(
             original!['subject']?.isNotEmpty == true
                 ? original!['subject']
                 : 'Uden emne',
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.white70,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _deleteThread,
+              tooltip: 'Slet tråd',
+            ),
+          ],
         ),
         body: Column(
           children: [
