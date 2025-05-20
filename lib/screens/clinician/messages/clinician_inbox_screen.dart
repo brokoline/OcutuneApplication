@@ -31,7 +31,6 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       final msgs = await api.ApiService.getClinicianInboxMessages();
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
-      // Group messages by thread_id
       for (var msg in msgs) {
         final threadId = msg['thread_id'];
         grouped.putIfAbsent(threadId, () => []).add(msg);
@@ -40,14 +39,12 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       final List<Map<String, dynamic>> threads = [];
 
       for (var threadMsgs in grouped.values) {
-        // Sort: newest first
         threadMsgs.sort((a, b) =>
             HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
         final newest = threadMsgs.first;
         final oldest = threadMsgs.last;
 
-        // Display patient name (based on first message in thread)
         final displayName = oldest['sender_id'] == currentUserId
             ? oldest['receiver_name']
             : oldest['sender_name'];
@@ -58,7 +55,6 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
         });
       }
 
-      // Sort threads by most recent message
       threads.sort((a, b) =>
           HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
@@ -67,7 +63,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
         _loading = false;
       });
     } catch (e) {
-      print('❌ Error loading inbox: $e');
+      print('❌ Fejl ved indlæsning af indbakke: $e');
       setState(() => _loading = false);
     }
   }
@@ -133,11 +129,15 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 32),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/clinician/new_message')
-                      .then((value) {
-                    if (value == true) _loadMessages();
-                  });
+                onPressed: () async {
+                  final changed = await Navigator.pushNamed(
+                    context,
+                    '/clinician/new_message',
+                  );
+
+                  if (changed == true) {
+                    _loadMessages();
+                  }
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Ny besked'),

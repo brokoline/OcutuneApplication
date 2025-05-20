@@ -61,7 +61,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            SizedBox(height: 48.h),
+                            SizedBox(height: 18.h),
                             Center(
                               child: Column(
                                 children: [
@@ -70,7 +70,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                     height: 100.h,
                                     color: Colors.white70,
                                   ),
-                                  SizedBox(height: 16.h),
+                                  SizedBox(height: 20.h),
                                   Text(
                                     greeting,
                                     style: TextStyle(
@@ -82,7 +82,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 48.h),
+                            SizedBox(height: 18.h),
 
                             // Sensorindstillinger med live batteriindikator
                             ValueListenableBuilder<int>(

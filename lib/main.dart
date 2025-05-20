@@ -113,7 +113,7 @@ class OcutuneApp extends StatelessWidget {
 
         // Kliniker Dashboards
 
-        '/clinician': (context) => const ClinicianRootScreen(),
+        '/clinician': (context) =>  ClinicianRootScreen(),
         '/clinician/inbox': (context) => const ClinicianInboxScreen(),
         '/clinician/message_detail': (context) => const ClinicianMessageDetailScreen(),
         '/clinician/new_message': (context) => const ClinicianNewMessageScreen(),

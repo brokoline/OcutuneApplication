@@ -32,11 +32,22 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      final token = data['token'];
+
+      // Venter eksplicit på at token er gemt
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', token);
+
+      print('✅ Token gemt i SharedPreferences: $token');
+      return data;
     } else {
+      print('❌ Login fejlede med status: ${response.statusCode}');
       throw Exception('Login fejlede');
     }
   }
+
+
 
 
 
