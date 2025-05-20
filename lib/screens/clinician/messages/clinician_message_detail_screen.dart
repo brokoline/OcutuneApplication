@@ -6,7 +6,9 @@ import 'package:ocutune_light_logger/widgets/messages/reply_input.dart';
 import 'package:ocutune_light_logger/widgets/confirm_dialog.dart';
 
 class ClinicianMessageDetailScreen extends StatefulWidget {
-  const ClinicianMessageDetailScreen({super.key});
+  const ClinicianMessageDetailScreen({super.key, this.onThreadDeleted});
+
+  final Function(int)? onThreadDeleted;
 
   @override
   State<ClinicianMessageDetailScreen> createState() =>
@@ -23,6 +25,7 @@ class _ClinicianMessageDetailScreenState
   bool hasSentMessage = false;
   bool hasDeletedThread = false;
   bool hasMarkedAsRead = false;
+  bool _isDeleting = false;
 
   @override
   void didChangeDependencies() {
@@ -38,8 +41,13 @@ class _ClinicianMessageDetailScreenState
       final msgs = await api.ApiService.getClinicianMessageThreadById(threadId!);
 
       if (msgs.isEmpty) {
-        print('❌ Thread is empty - possibly deleted');
-        if (mounted) Navigator.pop(context, true);
+        debugPrint('❌ Tråden er tom - muligvis slettet');
+        if (mounted) {
+          Navigator.pop(context, true);
+          if (widget.onThreadDeleted != null) {
+            widget.onThreadDeleted!(threadId!);
+          }
+        }
         return;
       }
 
@@ -54,24 +62,21 @@ class _ClinicianMessageDetailScreenState
 
       if (scrollToBottom) {
         Future.delayed(const Duration(milliseconds: 100), () {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_scrollController.hasClients) {
-              try {
-                _scrollController.animateTo(
-                  _scrollController.position.maxScrollExtent,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOut,
-                );
-              } catch (_) {
-                _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-              }
+          if (_scrollController.hasClients) {
+            try {
+              _scrollController.animateTo(
+                _scrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeOut,
+              );
+            } catch (_) {
+              _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
             }
-          });
+          }
         });
       }
-
     } catch (e) {
-      print('❌ Error loading thread: $e');
+      debugPrint('❌ Fejl ved hentning af tråd: $e');
       if (mounted) Navigator.pop(context);
     }
   }
@@ -90,10 +95,15 @@ class _ClinicianMessageDetailScreenState
       );
 
       _replyController.clear();
-      hasSentMessage = true;
+      setState(() => hasSentMessage = true);
       await _loadData(scrollToBottom: true);
     } catch (e) {
-      print('❌ Could not send reply: $e');
+      debugPrint('❌ Kunne ikke sende svar: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kunne ikke sende svar: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -103,8 +113,8 @@ class _ClinicianMessageDetailScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmDialog(
-        title: 'Delete conversation?',
-        message: 'Are you sure you want to delete this entire thread?',
+        title: 'Slet samtale?',
+        message: 'Er du sikker på, at du vil slette hele tråden?',
         onConfirm: () {},
       ),
     );
@@ -112,12 +122,32 @@ class _ClinicianMessageDetailScreenState
     if (confirmed != true) return;
 
     try {
-      print('🔁 Deleting thread with ID: $threadId');
+      debugPrint('🔁 Sletter tråd med ID: $threadId');
+      setState(() => _isDeleting = true);
+
       await api.ApiService.deleteThread(threadId!);
-      hasDeletedThread = true;
-      if (mounted) Navigator.pop(context, true);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tråd slettet')),
+        );
+
+        Navigator.pop(context, true);
+        if (widget.onThreadDeleted != null) {
+          widget.onThreadDeleted!(threadId!);
+        }
+      }
     } catch (e) {
-      print('❌ Could not delete thread: $e');
+      debugPrint('❌ Kunne ikke slette tråd: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kunne ikke slette tråd: ${e.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
     }
   }
 
@@ -137,25 +167,29 @@ class _ClinicianMessageDetailScreenState
       );
     }
 
-    return WillPopScope(
-      onWillPop: () async {
-        Navigator.pop(
-          context,
-          hasSentMessage || hasDeletedThread || hasMarkedAsRead,
-        );
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          Navigator.pop(
+            context,
+            hasSentMessage || hasDeletedThread || hasMarkedAsRead,
+          );
+        }
       },
       child: Scaffold(
         backgroundColor: generalBackground,
         appBar: AppBar(
           backgroundColor: generalBackground,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
           elevation: 0,
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white70),
           title: Text(
             original!['subject']?.isNotEmpty == true
                 ? original!['subject']
-                : 'No subject',
+                : 'Uden emne',
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 18,
@@ -164,9 +198,15 @@ class _ClinicianMessageDetailScreenState
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _deleteThread,
-              tooltip: 'Delete thread',
+              icon: _isDeleting
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+                  : const Icon(Icons.delete_outline),
+              onPressed: _isDeleting ? null : _deleteThread,
+              tooltip: 'Slet tråd',
             ),
           ],
         ),
@@ -178,12 +218,12 @@ class _ClinicianMessageDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'From: ${original!['sender_name'] ?? 'Unknown'}',
+                    'Fra: ${original!['sender_name'] ?? 'Ukendt'}',
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'To: ${original!['receiver_name'] ?? 'Unknown'}',
+                    'Til: ${original!['receiver_name'] ?? 'Ukendt'}',
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],

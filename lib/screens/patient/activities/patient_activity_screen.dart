@@ -28,6 +28,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
   Future<void> loadActivityLabels() async {
     try {
       final labels = await ApiService.fetchActivityLabels();
+      if (!mounted) return;
       setState(() {
         activities = labels;
       });
@@ -42,6 +43,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       if (patientId == null) return;
 
       final activitiesFromDb = await ApiService.fetchActivities(patientId);
+      if (!mounted) return;
 
       setState(() {
         recent = activitiesFromDb.map((a) {
@@ -92,18 +94,16 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       await loadActivities();
       await loadActivityLabels();
 
-      if (mounted) {
-        setState(() => selected = null);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Aktivitet "$label" registreret')),
-        );
-      }
+      if (!mounted) return;
+      setState(() => selected = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Aktivitet "$label" registreret')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kunne ikke gemme aktivitet')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kunne ikke gemme aktivitet')),
+      );
     }
   }
 
@@ -115,17 +115,15 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       await ApiService.deleteActivity(id, userId: userId.toString());
       await loadActivities();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Aktivitet slettet')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aktivitet slettet')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kunne ikke slette aktivitet')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kunne ikke slette aktivitet')),
+      );
     }
   }
 
@@ -176,14 +174,14 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                     try {
                       await ApiService.addActivityLabel(newLabel.trim());
                       await loadActivityLabels();
-                      if (mounted) Navigator.pop(context);
+                      if (!mounted) return;
+                      Navigator.pop(context);
                     } catch (e) {
-                      if (mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Kunne ikke tilføje aktivitetstype')),
-                        );
-                      }
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kunne ikke tilføje aktivitetstype')),
+                      );
                     }
                   },
                 ),
@@ -361,10 +359,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                     return DropdownMenuItem<String>(
                       value: label,
                       child: Container(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Color.fromRGBO(255, 255, 255, 0.1),
                               width: 0.5,
                             ),
                           ),
@@ -409,7 +407,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                     child: Text('Seneste registreringer', style: TextStyle(color: Colors.white70)),
                   ),
                   const SizedBox(height: 12),
-                  ...recent.take(5).map(buildRecentCard).toList(),
+                  ...recent.take(5).map(buildRecentCard),
                 ],
               ],
             ),

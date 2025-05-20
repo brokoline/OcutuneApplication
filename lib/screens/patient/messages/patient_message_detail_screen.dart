@@ -40,7 +40,7 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
       final msgs = await api.ApiService.getMessageThreadById(threadId!);
 
       if (msgs.isEmpty) {
-        debugPrint('❌ Thread is empty - possibly deleted');
+        debugPrint('❌ Tråden er tom - muligvis slettet');
         if (mounted) {
           Navigator.pop(context, true);
           if (widget.onThreadDeleted != null) {
@@ -75,7 +75,7 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
         });
       }
     } catch (e) {
-      debugPrint('❌ Error loading thread: $e');
+      debugPrint('❌ Fejl ved hentning af tråd: $e');
       if (mounted) Navigator.pop(context);
     }
   }
@@ -97,10 +97,10 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
       setState(() => hasSentMessage = true);
       await _loadData(scrollToBottom: true);
     } catch (e) {
-      debugPrint('❌ Could not send reply: $e');
+      debugPrint('❌ Kunne ikke sende svar: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not send reply: ${e.toString()}')),
+          SnackBar(content: Text('Kunne ikke sende svar: ${e.toString()}')),
         );
       }
     }
@@ -112,8 +112,8 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => ConfirmDialog(
-        title: 'Delete conversation?',
-        message: 'Are you sure you want to delete the entire thread?',
+        title: 'Slet samtale?',
+        message: 'Er du sikker på, at du vil slette hele tråden?',
         onConfirm: () {},
       ),
     );
@@ -121,14 +121,14 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
     if (confirmed != true) return;
 
     try {
-      debugPrint('🔁 Deleting thread with ID: $threadId');
+      debugPrint('🔁 Sletter tråd med ID: $threadId');
       setState(() => _isDeleting = true);
 
       await api.ApiService.deleteThread(threadId!);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thread deleted')),
+          const SnackBar(content: Text('Tråd slettet')),
         );
 
         Navigator.pop(context, true);
@@ -137,10 +137,10 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
         }
       }
     } catch (e) {
-      debugPrint('❌ Could not delete thread: $e');
+      debugPrint('❌ Kunne ikke slette tråd: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not delete thread: ${e.toString()}')),
+          SnackBar(content: Text('Kunne ikke slette tråd: ${e.toString()}')),
         );
       }
     } finally {
@@ -188,7 +188,7 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
           title: Text(
             original!['subject']?.isNotEmpty == true
                 ? original!['subject']
-                : 'No subject',
+                : 'Uden emne',
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 18,
@@ -205,7 +205,7 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
               )
                   : const Icon(Icons.delete_outline),
               onPressed: _isDeleting ? null : _deleteThread,
-              tooltip: 'Delete thread',
+              tooltip: 'Slet tråd',
             ),
           ],
         ),
@@ -217,12 +217,12 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'From: ${original!['sender_name'] ?? 'Unknown'}',
+                    'Fra: ${original!['sender_name'] ?? 'Ukendt'}',
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'To: ${original!['receiver_name'] ?? 'Unknown'}',
+                    'Til: ${original!['receiver_name'] ?? 'Ukendt'}',
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],

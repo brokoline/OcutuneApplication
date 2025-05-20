@@ -137,7 +137,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                 child: DropdownButtonFormField2<int>(
                   isExpanded: true,
                   value: validValue ? _selectedClinicianId : null,
-                  iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
+                  iconStyleData: const IconStyleData(iconEnabledColor: Colors.white70),
                   decoration: InputDecoration(
                     labelText: 'Vælg behandler',
                     labelStyle: const TextStyle(color: Colors.white70),
@@ -178,7 +178,7 @@ class _PatientNewMessageScreenState extends State<PatientNewMessageScreen> {
                                 child: Text(
                                   '${c['name']} (${c['role'] ?? ''})',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: Colors.white70,
                                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                   ),
                                   overflow: TextOverflow.ellipsis,

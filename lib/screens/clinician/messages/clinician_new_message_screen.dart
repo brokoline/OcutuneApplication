@@ -32,7 +32,13 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
       final unique = {
         for (var p in list) p['id']: p
       }.values.toList();
-      print('Patienter hentet: $list');
+
+      assert(() {
+        debugPrint('🧪 Patienter hentet: $list');
+        return true;
+      }());
+
+      if (!mounted) return;
 
       setState(() {
         _patients = unique;
@@ -45,7 +51,10 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
         }
       });
     } catch (e) {
-      print('❌ Fejl ved hentning af patienter: $e');
+      assert(() {
+        debugPrint('❌ Fejl ved hentning af patienter: $e');
+        return true;
+      }());
     }
   }
 
@@ -56,15 +65,16 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
     if (_selectedPatientId == null || subject.isEmpty || body.isEmpty) {
       String msg;
       if (_selectedPatientId == null && subject.isEmpty && body.isEmpty) {
-        msg = 'Vælg en patient, skriv et emne og indhold.';
+        msg = 'Vælg venligst en patient, angiv et emne og skriv en besked';
       } else if (_selectedPatientId == null) {
-        msg = 'Vælg en patient';
+        msg = 'Vælg venligst en patient';
       } else if (subject.isEmpty) {
-        msg = 'Skriv et emne';
+        msg = 'Angiv venligst et emne';
       } else {
-        msg = 'Skriv en besked';
+        msg = 'Skriv venligst en besked';
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(msg), backgroundColor: Colors.red.shade400),
       );
@@ -80,17 +90,19 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
         patientId: _selectedPatientId,
       );
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Besked sendt')),
       );
       Navigator.pop(context, true);
     } catch (e) {
-      print('❌ Fejl under afsendelse: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Kunne ikke sende besked')),
       );
     }
 
+    if (!mounted) return;
     setState(() => _sending = false);
   }
 
@@ -104,6 +116,8 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
       backgroundColor: generalBackground,
       appBar: AppBar(
         backgroundColor: generalBackground,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white70),
@@ -117,56 +131,83 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Center(child: Icon(Icons.mail_outline, color: Colors.white70, size: 48)),
-            const SizedBox(height: 40),
-
             if (multiple)
-              DropdownButtonFormField2<int>(
-                isExpanded: true,
-                value: validValue ? _selectedPatientId : null,
-                iconStyleData: const IconStyleData(iconEnabledColor: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Vælg patient',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: generalBox,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-                dropdownStyleData: DropdownStyleData(
-                  decoration: BoxDecoration(
-                    color: generalBoxHover,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: _patients.map((p) {
-                  return DropdownMenuItem<int>(
-                    value: p['id'],
-                    child: Text(
-                      '${p['first_name']} ${p['last_name']}',
-                      style: const TextStyle(color: Colors.white),
-                      overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: DropdownButtonFormField2<int>(
+                  isExpanded: true,
+                  value: validValue ? _selectedPatientId : null,
+                  iconStyleData: const IconStyleData(iconEnabledColor: Colors.white70),
+                  decoration: InputDecoration(
+                    labelText: 'Vælg patient',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: generalBox,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white24),
                     ),
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  final selected = _patients.firstWhere((p) => p['id'] == val, orElse: () => {});
-                  setState(() {
-                    _selectedPatientId = val;
-                    _selectedPatientName = selected['name'];
-                  });
-                },
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white24),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.white),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                  ),
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 200,
+                    decoration: BoxDecoration(
+                      color: generalBoxHover,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: _patients.map((p) {
+                    final isSelected = p['id'] == _selectedPatientId;
+
+                    return DropdownMenuItem<int>(
+                      value: p['id'],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${p['first_name']} ${p['last_name']}',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check, size: 16, color: Colors.white54),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            height: 1,
+                            color: const Color.fromRGBO(255, 255, 255, 0.1),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    final selected = _patients.firstWhere((p) => p['id'] == val, orElse: () => {});
+                    setState(() {
+                      _selectedPatientId = val;
+                      _selectedPatientName = selected['name'];
+                    });
+                  },
+                ),
               )
             else if (_selectedPatientName != null)
               Padding(
@@ -180,19 +221,19 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
                 ),
               ),
 
-            const SizedBox(height: 22),
+            const SizedBox(height: 16),
 
             OcutuneTextField(
               label: 'Emne',
               controller: _subjectController,
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 16),
 
             TextField(
               controller: _messageController,
               style: const TextStyle(color: Colors.white),
-              minLines: 10,
-              maxLines: 10,
+              minLines: 11,
+              maxLines: 11,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: generalBox,
@@ -214,7 +255,7 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
               ),
             ),
 
-            const SizedBox(height: 34),
+            const SizedBox(height: 24),
 
             Align(
               alignment: Alignment.centerRight,
@@ -227,7 +268,10 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
                       ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.black,
+                    ),
                   )
                       : const Icon(Icons.send, size: 18),
                   label: Text(_sending ? 'Sender...' : 'Send'),
