@@ -66,11 +66,18 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           simUserId: data['sim_userid'],
         );
 
-        // Gem navn til visning senere
-        await auth.AuthStorage.savePatientProfile(
-          firstName: data['first_name'],
-          lastName: data['last_name'],
-        );
+        // TILFØJET: Gem klinikerens navn baseret på rolle
+        if (data['role'] == 'clinician') {
+          await auth.AuthStorage.saveClinicianProfile(
+            firstName: data['first_name'],
+            lastName: data['last_name'],
+          );
+        } else {
+          await auth.AuthStorage.savePatientProfile(
+            firstName: data['first_name'],
+            lastName: data['last_name'],
+          );
+        }
 
         if (!mounted) return;
 

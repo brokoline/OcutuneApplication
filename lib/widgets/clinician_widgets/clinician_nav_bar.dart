@@ -23,7 +23,7 @@ class ClinicianNavBar extends StatelessWidget {
         onTap: onTap,
         backgroundColor: navBar,
         selectedItemColor: white,
-        unselectedItemColor: white.withOpacity(0.6),
+        unselectedItemColor: white.withAlpha(153),
         showSelectedLabels: true,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,

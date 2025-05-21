@@ -257,7 +257,8 @@ class ApiService {
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(jsonDecode(response.body));
       } else if (response.statusCode == 403) {
-        throw Exception('Ingen adgang til denne beskedtråd');
+        // Return an empty list instead of throwing an exception
+        return [];
       } else if (response.statusCode == 404) {
         throw Exception('Beskedtråd ikke fundet');
       } else {

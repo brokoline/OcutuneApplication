@@ -88,12 +88,6 @@ class _ClinicianDashboardContent extends StatelessWidget {
             FutureBuilder<String>(
               future: AuthStorage.getClinicianName(),
               builder: (context, snapshot) {
-                debugPrint('🔍 FutureBuilder snapshot state: ${snapshot.connectionState}');
-                if (snapshot.hasError) {
-                  debugPrint('❌ Error fetching clinician name: ${snapshot.error}');
-                }
-                debugPrint('📛 Clinician name data: ${snapshot.data}');
-
                 return Text(
                   snapshot.hasData ? 'Hej ${snapshot.data!}' : 'Kliniker Dashboard',
                   style: TextStyle(
@@ -124,7 +118,7 @@ class _ClinicianDashboardContent extends StatelessWidget {
                       child: Text(
                         'Ingen nye notifikationer',
                         style: TextStyle(
-                          color: white.withOpacity(0.6),
+                          color: Colors.white70,
                           fontSize: 16.sp,
                         ),
                       ),
@@ -157,7 +151,7 @@ class _ClinicianDashboardContent extends StatelessWidget {
                             trailing: Icon(
                               Icons.arrow_forward_ios,
                               size: 16.sp,
-                              color: white.withOpacity(0.6),
+                              color: Colors.white70,
                             ),
                             onTap: () => controller.handleNotificationTap(index),
                           ),

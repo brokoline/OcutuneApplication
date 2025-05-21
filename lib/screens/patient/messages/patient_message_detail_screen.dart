@@ -37,10 +37,10 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
     if (threadId == null) return;
 
     try {
-      final msgs = await api.ApiService.getMessageThreadById(threadId!);
+      final msgs = await api.ApiService.getClinicianMessageThreadById(threadId!);
 
       if (msgs.isEmpty) {
-        debugPrint('❌ Tråden er tom - muligvis slettet');
+        debugPrint('❌ Ingen adgang til denne tråd eller tråden er tom');
         if (mounted) {
           Navigator.pop(context, true);
           if (widget.onThreadDeleted != null) {
@@ -76,7 +76,12 @@ class _PatientMessageDetailScreenState extends State<PatientMessageDetailScreen>
       }
     } catch (e) {
       debugPrint('❌ Fejl ved hentning af tråd: $e');
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fejl: ${e.toString()}')),
+        );
+        Navigator.pop(context);
+      }
     }
   }
 

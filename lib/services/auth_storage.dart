@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthStorage {
@@ -49,26 +49,12 @@ class AuthStorage {
     required String lastName,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('clinician_first_name', firstName);
-    await prefs.setString('clinician_last_name', lastName);
+    await prefs.setString('clinician_name', '$firstName $lastName');
   }
 
   static Future<String> getClinicianName() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final name = prefs.getString('clinician_name');
-
-      if (name != null && name.isNotEmpty) {
-        return name;
-      }
-
-      // Fallback til JWT hvis navn ikke er gemt
-      final jwt = await getTokenPayload();
-      return '${jwt['first_name'] ?? ''} ${jwt['last_name'] ?? ''}'.trim();
-    } catch (e) {
-      debugPrint('Error getting clinician name: $e');
-      return 'Kliniker Dashboard';
-    }
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('clinician_name') ?? 'Kliniker Dashboard';
   }
 
   static Future<void> savePatientProfile({

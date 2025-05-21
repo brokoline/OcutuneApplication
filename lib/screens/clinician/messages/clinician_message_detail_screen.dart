@@ -129,7 +129,7 @@ class _ClinicianMessageDetailScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tråd slettet')),
+          const SnackBar(content: Text('Beskeden er slettet')),
         );
 
         Navigator.pop(context, true);
@@ -138,10 +138,10 @@ class _ClinicianMessageDetailScreenState
         }
       }
     } catch (e) {
-      debugPrint('❌ Kunne ikke slette tråd: $e');
+      debugPrint('❌ Kunne ikke slette beskeden: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Kunne ikke slette tråd: ${e.toString()}')),
+          SnackBar(content: Text('Kunne ikke slette beskeden: ${e.toString()}')),
         );
       }
     } finally {
