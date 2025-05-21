@@ -19,6 +19,8 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: generalBackground,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
       elevation: 0,
       centerTitle: true,
       title: title != null

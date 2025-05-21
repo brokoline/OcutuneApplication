@@ -254,7 +254,7 @@ class _PatientSensorSettingsScreenState
                   icon: const Icon(Icons.link_off),
                   label: const Text('Afbryd forbindelse'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: defaultBoxRed,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
