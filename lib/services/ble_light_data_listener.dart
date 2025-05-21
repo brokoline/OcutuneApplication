@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:ocutune_light_logger/services/patient_light_data_service.dart';
-import 'package:ocutune_light_logger/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/local_log_service.dart';
+import 'package:ocutune_light_logger/services/services/patient_light_data_service.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/services/local_log_service.dart';
 
 class BleLightDataListener {
   final QualifiedCharacteristic lightCharacteristic;

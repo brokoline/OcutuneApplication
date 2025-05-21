@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ocutune_light_logger/services/api_services.dart' as api;
+import 'package:ocutune_light_logger/services/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
@@ -33,7 +33,6 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       final msgs = await api.ApiService.getClinicianInboxMessages();
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
-      // Gruppér beskeder pr. thread_id
       for (var msg in msgs) {
         final threadId = msg['thread_id'];
         grouped.putIfAbsent(threadId, () => []).add(msg);
@@ -42,25 +41,24 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       final List<Map<String, dynamic>> threads = [];
 
       for (var threadMsgs in grouped.values) {
-        // Sortér: nyeste først
         threadMsgs.sort((a, b) =>
             HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
         final newest = threadMsgs.first;
         final oldest = threadMsgs.last;
 
-        // Vis navn på modtager (baseret på første besked i tråden)
-        final displayName = oldest['sender_id'] == currentUserId
-            ? oldest['receiver_name']
-            : oldest['sender_name'];
+        final isSentByMe = oldest['sender_id'] == currentUserId;
+        final labelPrefix = isSentByMe ? 'Til: ' : 'Fra: ';
+        final name = isSentByMe
+            ? (oldest['receiver_name'] ?? 'Ukendt')
+            : (oldest['sender_name'] ?? 'Ukendt');
 
         threads.add({
           ...newest,
-          'display_name': displayName,
+          'display_name': '$labelPrefix$name',
         });
       }
 
-      // Sortér tråde efter seneste besked
       threads.sort((a, b) =>
           HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
 
@@ -73,6 +71,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       setState(() => _loading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ocutune_light_logger/services/services/message_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/services/controller/clinician_dashboard_controller.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
-import 'package:ocutune_light_logger/services/network_listener_service.dart';
+import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
 
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
@@ -29,16 +30,13 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_d
 
 
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
-import 'package:ocutune_light_logger/screens/clinician/messages/clinician_inbox_screen.dart';
-import 'package:ocutune_light_logger/screens/clinician/messages/clinician_message_detail_screen.dart';
-import 'package:ocutune_light_logger/screens/clinician/messages/clinician_new_message_screen.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
 
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/messages/patient_inbox_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/messages/patient_message_detail_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
+import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
+import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
+import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -117,13 +115,27 @@ class OcutuneApp extends StatelessWidget {
     '/Q5': (_) => const QuestionFiveScreen(),
     '/doneSetup': (_) => const DoneSetupScreen(),
 
-        // Kliniker Dashboards
+
+
+      // Besked funktioner – fælles logik
+      '/patient/inbox': (context) => const InboxScreen(role: UserRole.patient),
+      '/patient/message_detail': (context) {
+        final threadId = ModalRoute.of(context)!.settings.arguments as int;
+        return MessageThreadScreen(threadId: threadId, role: UserRole.patient);
+      },
+      '/patient/new_message': (_) => const NewMessageScreen(senderRole: UserRole.patient),
+
+
+      '/clinician/inbox': (context) => const InboxScreen(role: UserRole.clinician),
+      '/clinician/message_detail': (context) {
+        final threadId = ModalRoute.of(context)!.settings.arguments as int;
+        return MessageThreadScreen(threadId: threadId, role: UserRole.clinician);
+      },
+      '/clinician/new_message': (_) => const NewMessageScreen(senderRole: UserRole.clinician),
+
+      // Kliniker Dashboards
 
         '/clinician': (context) =>  ClinicianRootScreen(),
-        '/clinician/inbox': (context) => const ClinicianInboxScreen(),
-        '/clinician/message_detail': (context) => const ClinicianMessageDetailScreen(),
-        '/clinician/new_message': (context) => const ClinicianNewMessageScreen(),
-
 
 
         // Patient side
@@ -137,9 +149,7 @@ class OcutuneApp extends StatelessWidget {
           final patientId = ModalRoute.of(context)!.settings.arguments as int;
           return PatientSensorSettingsScreen(patientId: patientId);
         },
-        '/patient/inbox': (_) => const PatientInboxScreen(),
-        '/patient/message_detail': (_) => const PatientMessageDetailScreen(),
-        '/patient/new_message': (_) => const PatientNewMessageScreen(),
+
         '/patient/activities': (_) => PatientActivityScreen(),
       },
      )

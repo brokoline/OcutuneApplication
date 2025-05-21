@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:ocutune_light_logger/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/patient_light_data_service.dart';
+import 'package:ocutune_light_logger/services/services/patient_light_data_service.dart';
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 
 

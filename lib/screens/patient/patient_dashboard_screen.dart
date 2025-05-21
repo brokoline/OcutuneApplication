@@ -154,12 +154,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                   ),
 
                   OcutunePatientDashboardTile(
-                    label: 'Kontakt din behandler',
+                    label: 'Indbakke',
                     iconAsset: 'assets/icon/mail-outline.png',
                     onPressed: () {
                       Navigator.pushNamed(context, '/patient/inbox');
                     },
                   ),
+
 
                   SizedBox(height: 10.h),
                 ],

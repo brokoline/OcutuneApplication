@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/auth_storage.dart';
 import '../../../services/controller/clinician_dashboard_controller.dart';
@@ -60,7 +61,7 @@ class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: ClinicianAppBar(
-        showLogout: _currentIndex == 0, // Kun vis logud på hovedsiden
+        showLogout: _currentIndex == 0,
         onLogout: _logout,
       ),
       body: _screens[_currentIndex],
@@ -91,7 +92,7 @@ class _ClinicianDashboardContent extends StatelessWidget {
                 return Text(
                   snapshot.hasData ? 'Hej ${snapshot.data!}' : 'Kliniker Dashboard',
                   style: TextStyle(
-                    color: white,
+                    color: Colors.white,
                     fontSize: 22.sp,
                     fontWeight: FontWeight.w600,
                   ),
@@ -100,10 +101,11 @@ class _ClinicianDashboardContent extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
 
+
             Text(
               'Notifikationer',
               style: TextStyle(
-                color: white,
+                color: Colors.white,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w600,
               ),
@@ -144,7 +146,7 @@ class _ClinicianDashboardContent extends StatelessWidget {
                             title: Text(
                               controller.notifications[index],
                               style: TextStyle(
-                                color: white,
+                                color: Colors.white,
                                 fontSize: 14.sp,
                               ),
                             ),

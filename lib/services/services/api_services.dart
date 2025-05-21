@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'auth_storage.dart';
+import '../auth_storage.dart';
 
 class ApiService {
   static const String baseUrl = 'https://ocutune.ddns.net';
