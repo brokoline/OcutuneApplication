@@ -24,8 +24,8 @@ class ClinicianNavBar extends StatelessWidget {
         backgroundColor: navBar,
         selectedItemColor: white,
         unselectedItemColor: white.withAlpha(153),
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(

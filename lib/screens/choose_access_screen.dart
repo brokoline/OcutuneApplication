@@ -31,7 +31,11 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
     print('🆔 ID fundet: $id');
 
     if (role == 'patient' && id != null) {
-      Navigator.pushReplacementNamed(context, '/patient/dashboard', arguments: id);
+      Navigator.pushReplacementNamed(
+        context,
+        '/patient/dashboard',
+        arguments: id,
+      );
     } else if (role == 'clinician' && id != null) {
       Navigator.pushReplacementNamed(context, '/clinician');
     } else {

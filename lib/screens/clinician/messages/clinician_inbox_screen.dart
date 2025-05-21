@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ocutune_light_logger/services/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
 import 'dart:io';
 
+import '../../../services/services/message_service.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart'; // for HttpDate
 
 class ClinicianInboxScreen extends StatefulWidget {
@@ -30,7 +30,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-      final msgs = await api.ApiService.getClinicianInboxMessages();
+      final msgs = await MessageService.fetchInbox();
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
       for (var msg in msgs) {

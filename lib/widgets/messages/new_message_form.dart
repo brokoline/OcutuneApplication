@@ -4,10 +4,10 @@ import '../../services/services/message_service.dart';
 import '../../theme/colors.dart';
 import '../ocutune_textfield.dart';
 
-class NewMessageForm extends StatefulWidget {
-  final UserRole senderRole;
 
-  const NewMessageForm({super.key, required this.senderRole});
+class NewMessageForm extends StatefulWidget {
+  const NewMessageForm({super.key});
+
 
   @override
   State<NewMessageForm> createState() => _NewMessageFormState();
@@ -30,7 +30,8 @@ class _NewMessageFormState extends State<NewMessageForm> {
 
   Future<void> _loadRecipients() async {
     try {
-      final list = await MessageService.getRecipients(widget.senderRole);
+      final list = await MessageService.getRecipients();
+
 
       final unique = {
         for (var c in list) c['id']: c
@@ -75,11 +76,11 @@ class _NewMessageFormState extends State<NewMessageForm> {
 
     try {
       await MessageService.send(
-        senderRole: widget.senderRole,
         receiverId: _selectedReceiverId!,
         subject: subject,
         message: body,
       );
+
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,7 +144,8 @@ class _NewMessageFormState extends State<NewMessageForm> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
                 dropdownStyleData: DropdownStyleData(
-                  maxHeight: 200,
+                  useSafeArea: true,
+                  maxHeight: 300,
                   decoration: BoxDecoration(
                     color: generalBoxHover,
                     borderRadius: BorderRadius.circular(12),

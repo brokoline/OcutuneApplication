@@ -2,13 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../auth_storage.dart';
-
 class ApiService {
   static const String baseUrl = 'https://ocutune.ddns.net';
 
+  // 🔐 TOKEN
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');
+  }
+
   static Future<Map<String, String>> _authHeaders() async {
-    final token = await AuthStorage.getToken();
+    final token = await getToken();
     if (token == null) throw Exception('Mangler token');
     return {
       'Content-Type': 'application/json',
@@ -16,407 +20,161 @@ class ApiService {
     };
   }
 
+  // 🌐 GENERELLE HTTP METODER
+  static Future<http.Response> get(String endpoint) async {
+    final headers = await _authHeaders();
+    return http.get(Uri.parse('$baseUrl$endpoint'), headers: headers);
+  }
 
+  static Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
+    final headers = await _authHeaders();
+    return http.post(Uri.parse('$baseUrl$endpoint'), headers: headers, body: jsonEncode(body));
+  }
 
-// Simuleret MitID-login
+  static Future<http.Response> delete(String endpoint) async {
+    final headers = await _authHeaders();
+    return http.delete(Uri.parse('$baseUrl$endpoint'), headers: headers);
+  }
+
+  static Future<http.Response> patch(String endpoint, Map<String, dynamic> body) async {
+    final headers = await _authHeaders();
+    return http.patch(Uri.parse('$baseUrl$endpoint'), headers: headers, body: jsonEncode(body));
+  }
+
+  // 👤 LOGIN
   static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
     final url = Uri.parse('$baseUrl/sim-login');
-
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'sim_userid': userId,
-        'password': password,
-      }),
+      body: jsonEncode({'sim_userid': userId, 'password': password}),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final token = data['token'];
-
-      // Venter eksplicit på at token er gemt
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('jwt_token', token);
-
-      print('✅ Token gemt i SharedPreferences: $token');
+      await prefs.setString('jwt_token', data['token']);
       return data;
     } else {
-      print('❌ Login fejlede med status: ${response.statusCode}');
       throw Exception('Login fejlede');
     }
   }
 
-
-
-
-
-  // Hent spørgsmål
-  static Future<List<dynamic>> fetchQuestions() async {
-    print('📡 Trying to fetch questions from $baseUrl/questions');
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/questions'));
-
-      print('🔁 Response status code: ${response.statusCode}');
-      print('📦 Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception(
-            '❌ Failed to load questions. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('💥 Exception caught while fetching questions: $e');
-      rethrow;
-    }
+  // ✉️ MESSAGES
+  static Future<List<Map<String, dynamic>>> fetchInbox() async {
+    final res = await get('/messages/inbox');
+    return List<Map<String, dynamic>>.from(jsonDecode(res.body)['messages']);
   }
 
-
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-    print('🪪 Token i Flutter: $token');
-    return token;
+  static Future<List<Map<String, dynamic>>> fetchThread(int threadId) async {
+    final res = await get('/messages/thread/$threadId');
+    return List<Map<String, dynamic>>.from(jsonDecode(res.body));
   }
 
-  static Future<List<Map<String, dynamic>>> getInboxMessages() async {
-    final token = await getToken();
-
-    print('🔐 JWT token: $token');
-    if (token == null || token.isEmpty) {
-      throw Exception('Token mangler – kan ikke hente indbakke');
-    }
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/messages/inbox'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    print('📡 GET /messages/inbox');
-    print('🔁 Status: ${response.statusCode}');
-    print('📦 Body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    } else {
-      try {
-        final errorBody = jsonDecode(response.body);
-        final errorMsg = errorBody['error'] ?? 'Ukendt fejl';
-        throw Exception('❌ Fejl ved hentning af indbakke: $errorMsg');
-      } catch (e) {
-        throw Exception('❌ Fejl ved hentning af indbakke – svar ikke i JSON-format.');
-      }
-    }
-  }
-
-
-  static Future<Map<String, dynamic>> getMessageDetail(int messageId) async {
-    final token = await getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/messages/detail/$messageId'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      return Map<String, dynamic>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Besked ikke fundet');
-    }
-  }
-
-  static Future<List<Map<String, dynamic>>> getMessageThreadById(int threadId) async {
-    final token = await getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/messages/thread-by-id/$threadId'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Kunne ikke hente samtale');
+  static Future<void> sendMessage({
+    required int receiverId,
+    required String message,
+    String subject = '',
+    int? replyTo,
+  }) async {
+    final payload = {
+      'receiver_id': receiverId,
+      'message': message,
+      'subject': subject,
+      if (replyTo != null) 'reply_to': replyTo,
+    };
+    final res = await post('/messages/send', payload);
+    if (res.statusCode != 200) {
+      throw Exception('Kunne ikke sende besked');
     }
   }
 
   static Future<void> markThreadAsRead(int threadId) async {
-    final token = await AuthStorage.getToken();
-    final response = await http.patch(
-      Uri.parse('$baseUrl/threads/$threadId/read'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode != 204) {
-      throw Exception('Kunne ikke markere som læst');
-    }
-  }
-
-  static Future<void> sendPatientMessage({
-    required String message,
-    String subject = '',
-    int? replyTo,
-    int? clinicianId,
-  }) async {
-    final token = await getToken();
-
-    final Map<String, dynamic> payload = {
-      'message': message,
-      'subject': subject,
-    };
-
-    if (replyTo != null) payload['reply_to'] = replyTo;
-    if (clinicianId != null) payload['clinician_id'] = clinicianId;
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/patient-contact'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(payload),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('❌ Fejl ved afsendelse af besked');
-    }
-  }
-
-  static Future<List<Map<String, dynamic>>> getPatientClinicians() async {
-    final token = await getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/patient/clinicians'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Kunne ikke hente behandlere');
+    final res = await patch('/messages/thread/$threadId/read', {});
+    if (res.statusCode != 204) {
+      throw Exception('Kunne ikke markere tråd som læst');
     }
   }
 
   static Future<void> deleteThread(int threadId) async {
-    final token = await AuthStorage.getToken();
-    final response = await http.delete(
-      Uri.parse('$baseUrl/threads/$threadId'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-
-    print('🧪 Statuskode fra server: ${response.statusCode}');
-
-    if (response.statusCode != 204) {
+    final res = await delete('/messages/thread/$threadId');
+    if (res.statusCode != 204) {
       throw Exception('Kunne ikke slette tråd');
     }
   }
 
-// Kliniker inbakke beskeder
-  static Future<List<Map<String, dynamic>>> getClinicianInboxMessages() async {
-    final token = await getToken();
+  static Future<List<Map<String, dynamic>>> fetchRecipients() async {
+    final res = await get('/messages/recipients');
+    return List<Map<String, dynamic>>.from(jsonDecode(res.body));
+  }
 
-    if (token == null || token.isEmpty) {
-      throw Exception('Missing token - cannot fetch inbox');
-    }
+  static Future<List<Map<String, dynamic>>> fetchClinicianPatients() async {
+    final res = await get('/clinician/patients');
+    return List<Map<String, dynamic>>.from(jsonDecode(res.body));
+  }
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/messages/clinician-inbox'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+  // 🧠 SPØRGSMÅL
+  static Future<List<dynamic>> fetchQuestions() async {
+    final res = await http.get(Uri.parse('$baseUrl/questions'));
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
     } else {
-      try {
-        final errorBody = jsonDecode(response.body);
-        final errorMsg = errorBody['error'] ?? 'Unknown error';
-        throw Exception('❌ Error fetching inbox: $errorMsg');
-      } catch (e) {
-        throw Exception('❌ Error fetching inbox - response not in JSON format.');
-      }
+      throw Exception('Kunne ikke hente spørgsmål');
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getClinicianMessageThreadById(int threadId) async {
-    try {
-      final token = await AuthStorage.getToken();
-      if (token == null) throw Exception('Mangler token');
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/messages/clinician-thread-by-id/$threadId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-
-      print('📡 GET /messages/clinician-thread-by-id/$threadId');
-      print('🔁 Status: ${response.statusCode}');
-      print('📦 Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-      } else if (response.statusCode == 403) {
-        // Return an empty list instead of throwing an exception
-        return [];
-      } else if (response.statusCode == 404) {
-        throw Exception('Beskedtråd ikke fundet');
-      } else {
-        throw Exception('Serverfejl: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('❌ Fejl i getClinicianMessageThreadById: $e');
-      rethrow;
-    }
-  }
-
-  static Future<List<Map<String, dynamic>>> getClinicianPatients() async {
-    final token = await getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/clinician/patients'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Could not fetch patients');
-    }
-  }
-
-  static Future<void> sendClinicianMessage({
-    required String message,
-    String subject = '',
-    int? replyTo,
-    int? patientId,
-  }) async {
-    final token = await getToken();
-
-    final Map<String, dynamic> payload = {
-      'message': message,
-      'subject': subject,
-    };
-
-    if (replyTo != null) payload['reply_to'] = replyTo;
-    if (patientId != null) payload['patient_id'] = patientId;
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/clinician-contact'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(payload),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('❌ Error sending message');
-    }
-  }
-
-
-
-
-  // Patient aktiviteter
+  // 📅 AKTIVITETER
   static Future<List<Map<String, dynamic>>> fetchActivities(int patientId) async {
-    final url = Uri.parse('$baseUrl/activities?patient_id=$patientId');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.cast<Map<String, dynamic>>();
+    final res = await http.get(Uri.parse('$baseUrl/activities?patient_id=$patientId'));
+    if (res.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(res.body));
     } else {
-      throw Exception('Failed to load activities');
+      throw Exception('Kunne ikke hente aktiviteter');
     }
   }
 
-
-  static Future<void> addActivity(String eventType, String note) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/activities'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({'event_type': eventType, 'note': note}),
-    );
-    if (response.statusCode != 201) {
-      throw Exception('Failed to add activity');
-    }
-  }
-
-  static Future<void> addActivityWithTimes({
-    required int patientId,
+  static Future<void> addActivity({
     required String eventType,
     required String note,
-    required String startTime,
-    required String endTime,
-    required int durationMinutes,
+    String? startTime,
+    String? endTime,
+    int? durationMinutes,
+    int? patientId,
   }) async {
-    final url = Uri.parse('$baseUrl/activities');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'patient_id': patientId,
-        'event_type': eventType,
-        'note': note,
-        'start_time': startTime,
-        'end_time': endTime,
-        'duration_minutes': durationMinutes,
-      }),
-    );
+    final payload = {
+      'event_type': eventType,
+      'note': note,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (patientId != null) 'patient_id': patientId,
+    };
 
-    if (response.statusCode != 201) {
-      throw Exception('Failed to add activity');
+    final res = await post('/activities', payload);
+    if (res.statusCode != 201) {
+      throw Exception('Kunne ikke oprette aktivitet');
+    }
+  }
+
+  static Future<void> deleteActivity(int activityId, {required String userId}) async {
+    final res = await http.delete(
+      Uri.parse('$baseUrl/activities/$activityId?user_id=$userId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (res.statusCode != 200) {
+      throw Exception('Fejl ved sletning af aktivitet');
     }
   }
 
   static Future<void> addActivityLabel(String label) async {
-    final headers = await _authHeaders();
-    final response = await http.post(
-      Uri.parse('$baseUrl/patient/activity-labels'),
-      headers: headers,
-      body: jsonEncode({'label': label}),
-    );
-    if (response.statusCode != 201) {
-      throw Exception('Kunne ikke tilføje aktivitetstype');
+    final res = await post('/patient/activity-labels', {'label': label});
+    if (res.statusCode != 201) {
+      throw Exception('Kunne ikke tilføje label');
     }
   }
 
   static Future<List<String>> fetchActivityLabels() async {
-    final headers = await _authHeaders();
-    final url = Uri.parse('$baseUrl/patient/activity-labels');
-    final response = await http.get(url, headers: headers);
-
-    print('📡 GET $url');
-    print('📥 Status: ${response.statusCode}');
-    print('📦 Body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      return List<String>.from(jsonDecode(response.body));
-    } else {
-      throw Exception('Kunne ikke hente aktivitetstyper');
-    }
+    final res = await get('/patient/activity-labels');
+    return List<String>.from(jsonDecode(res.body));
   }
-
-
-
-
-  static Future<void> deleteActivity(int activityId, {required String userId}) async {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/activities/$activityId?user_id=$userId'),
-      headers: {'Content-Type': 'application/json'},
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Fejl ved sletning: ${response.body}');
-    }
-  }
-
-
 }
-
-
-
-
-
-// BLE Forbindelse
-
-

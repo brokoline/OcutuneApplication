@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ocutune_light_logger/services/services/message_service.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'dart:io';
-
 
 class InboxScreen extends StatefulWidget {
-  final UserRole role;
-
-  const InboxScreen({super.key, required this.role});
+  const InboxScreen({super.key});
 
   @override
   State<InboxScreen> createState() => _InboxScreenState();
@@ -18,16 +15,25 @@ class InboxScreen extends StatefulWidget {
 class _InboxScreenState extends State<InboxScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _loading = true;
+  String _role = 'patient'; // fallback
 
   @override
   void initState() {
     super.initState();
+    _loadUserRole();
     _loadMessages();
+  }
+
+  Future<void> _loadUserRole() async {
+    final payload = await AuthStorage.getTokenPayload();
+    setState(() {
+      _role = payload['role'] ?? 'patient';
+    });
   }
 
   Future<void> _loadMessages() async {
     try {
-      final msgs = await MessageService.fetchInbox(widget.role);
+      final msgs = await MessageService.fetchInbox();
       setState(() {
         _messages = msgs;
         _loading = false;
@@ -40,6 +46,11 @@ class _InboxScreenState extends State<InboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final detailRoute =
+    _role == 'clinician' ? '/clinician/message_detail' : '/patient/message_detail';
+    final newMessageRoute =
+    _role == 'clinician' ? '/clinician/new_message' : '/patient/new_message';
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -57,7 +68,7 @@ class _InboxScreenState extends State<InboxScreen> {
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white70),
           title: Text(
-            widget.role == UserRole.patient ? 'Indbakke' : 'Kliniker-indbakke',
+            _role == 'clinician' ? 'Kliniker-indbakke' : 'Indbakke',
             style: const TextStyle(
               color: Colors.white70,
               fontSize: 18,
@@ -86,15 +97,10 @@ class _InboxScreenState extends State<InboxScreen> {
                     onTap: () async {
                       final changed = await Navigator.pushNamed(
                         context,
-                        widget.role == UserRole.patient
-                            ? '/patient/message_detail'
-                            : '/clinician/message_detail',
+                        detailRoute,
                         arguments: msg['thread_id'],
                       );
-
-                      if (changed == true) {
-                        _loadMessages();
-                      }
+                      if (changed == true) _loadMessages();
                     },
                   );
                 },
@@ -104,12 +110,8 @@ class _InboxScreenState extends State<InboxScreen> {
               padding: const EdgeInsets.only(bottom: 32),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    widget.role == UserRole.patient
-                        ? '/patient/new_message'
-                        : '/clinician/new_message',
-                  ).then((value) {
+                  Navigator.pushNamed(context, newMessageRoute)
+                      .then((value) {
                     if (value == true) _loadMessages();
                   });
                 },

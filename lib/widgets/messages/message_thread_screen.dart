@@ -10,12 +10,10 @@ import '../confirm_dialog.dart';
 
 class MessageThreadScreen extends StatefulWidget {
   final int threadId;
-  final UserRole role;
 
   const MessageThreadScreen({
     super.key,
     required this.threadId,
-    required this.role,
   });
 
   @override
@@ -42,16 +40,13 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     final jwt = await AuthStorage.getTokenPayload();
     _currentUserId = jwt['id'];
 
-    final data = await MessageService.fetchThread(
-      widget.role,
-      widget.threadId,
-      _currentUserId!,
-    );
+    final raw = await MessageService.fetchThread(widget.threadId);
+    final parsed = raw.map((m) => Message.fromJson(m, _currentUserId!)).toList();
 
     if (!mounted) return;
     setState(() {
-      _messages = data;
-      _original = data.isNotEmpty ? data.first : null;
+      _messages = parsed;
+      _original = parsed.isNotEmpty ? parsed.first : null;
     });
 
     if (scrollToBottom) {
@@ -68,9 +63,14 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   }
 
   void _sendReply(String text) async {
+    if (_original == null) return;
+
+    final receiverId = _original!.senderId == _currentUserId
+        ? _original!.receiverId
+        : _original!.senderId;
+
     await MessageService.send(
-      senderRole: widget.role,
-      receiverId: 0,
+      receiverId: receiverId,
       message: text,
       subject: '',
       replyTo: widget.threadId,
@@ -83,11 +83,11 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   Future<void> _deleteThread() async {
     final confirmed = await showDialog<bool>(
       context: context,
-        builder: (_) => ConfirmDialog(
-          title: 'Slet samtale?',
-          message: 'Er du sikker på, at du vil slette hele tråden?',
-          onConfirm: () {},
-    )
+      builder: (_) => ConfirmDialog(
+        title: 'Slet samtale?',
+        message: 'Er du sikker på, at du vil slette hele tråden?',
+        onConfirm: () {},
+      ),
     );
 
     if (confirmed != true) return;

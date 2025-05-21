@@ -4,7 +4,9 @@ import 'package:ocutune_light_logger/services/services/api_services.dart' as api
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'dart:io'; // for HttpDate
+import 'dart:io';
+
+import '../../../services/services/message_service.dart'; // for HttpDate
 
 class PatientInboxScreen extends StatefulWidget {
   const PatientInboxScreen({super.key});
@@ -28,7 +30,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-      final msgs = await api.ApiService.getInboxMessages();
+      final msgs = await MessageService.fetchInbox();
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
       // Gruppér beskeder pr. thread_id

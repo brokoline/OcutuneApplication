@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
@@ -156,9 +157,15 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                   OcutunePatientDashboardTile(
                     label: 'Indbakke',
                     iconAsset: 'assets/icon/mail-outline.png',
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/patient/inbox');
-                    },
+                      onPressed: () async {
+                        final jwt = await AuthStorage.getTokenPayload();
+                        final patientId = jwt['id'];
+
+                        Navigator.pushNamed(
+                          context,
+                          '/patient/inbox',
+                        );
+                      }
                   ),
 
 

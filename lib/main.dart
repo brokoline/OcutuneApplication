@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ocutune_light_logger/services/services/message_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
@@ -37,7 +36,9 @@ import 'package:ocutune_light_logger/screens/patient/activities/patient_activity
 import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
+import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 import 'package:provider/provider.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,7 +82,6 @@ class OcutuneApp extends StatelessWidget {
     return MultiProvider(
         providers: [
         ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
-    // Tilføj andre providers her hvis nødvendigt
     ],
     child: MaterialApp(
     title: 'Ocutune',
@@ -118,25 +118,28 @@ class OcutuneApp extends StatelessWidget {
 
 
       // Besked funktioner – fælles logik
-      '/patient/inbox': (context) => const InboxScreen(role: UserRole.patient),
+      '/patient/dashboard': (context) {
+        final patientId = ModalRoute.of(context)!.settings.arguments as int;
+        return PatientDashboardScreen(patientId: patientId);
+      },
+      '/patient/inbox': (_) => const InboxScreen(),
       '/patient/message_detail': (context) {
         final threadId = ModalRoute.of(context)!.settings.arguments as int;
-        return MessageThreadScreen(threadId: threadId, role: UserRole.patient);
+        return MessageThreadScreen(threadId: threadId);
       },
-      '/patient/new_message': (_) => const NewMessageScreen(senderRole: UserRole.patient),
+      '/patient/new_message': (_) => const NewMessageScreen(),
 
-
-      '/clinician/inbox': (context) => const InboxScreen(role: UserRole.clinician),
+      '/clinician/inbox': (_) => const InboxScreen(),
       '/clinician/message_detail': (context) {
         final threadId = ModalRoute.of(context)!.settings.arguments as int;
-        return MessageThreadScreen(threadId: threadId, role: UserRole.clinician);
+        return MessageThreadScreen(threadId: threadId);
       },
-      '/clinician/new_message': (_) => const NewMessageScreen(senderRole: UserRole.clinician),
+      '/clinician/new_message': (_) => const NewMessageScreen(),
+
 
       // Kliniker Dashboards
 
         '/clinician': (context) =>  ClinicianRootScreen(),
-
 
         // Patient side
         '/patient/dashboard': (context) {
