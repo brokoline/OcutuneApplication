@@ -43,9 +43,10 @@ class _ClinicianNewMessageScreenState extends State<ClinicianNewMessageScreen> {
       setState(() {
         _patients = unique;
         if (unique.length == 1) {
-          _selectedPatientId = unique.first['id'];
-          _selectedPatientName = unique.first['name'];
-        } else {
+          final only = unique.first;
+          _selectedPatientId = only['id'];
+          _selectedPatientName = '${only['first_name']} ${only['last_name']}';
+      } else {
           _selectedPatientId = null;
           _selectedPatientName = null;
         }

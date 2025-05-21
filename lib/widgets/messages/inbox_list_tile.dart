@@ -15,14 +15,14 @@ class InboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFromMe = msg['sender_type'] == 'patient';
+    final isSentByClinician = msg['sender_type'] == 'clinician';
     final isUnread = msg['read'] == 0;
     final subject = msg['subject']?.toString().trim().isNotEmpty == true
         ? msg['subject']
         : '(Uden emne)';
 
-    final label = isFromMe
-        ? 'Til: ${msg['display_name'] ?? 'Ukendt'}'
+    final label = isSentByClinician
+        ? 'Til: ${msg['receiver_name'] ?? 'Ukendt'}'
         : 'Fra: ${msg['sender_name'] ?? 'Ukendt'}';
 
     return Padding(
@@ -40,7 +40,7 @@ class InboxListTile extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStatusIcon(isFromMe, isUnread),
+                _buildStatusIcon(isSentByClinician, isUnread),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
@@ -50,7 +50,7 @@ class InboxListTile extends StatelessWidget {
                         subject,
                         style: TextStyle(
                           color: Colors.white70,
-                          fontWeight: (isUnread && !isFromMe)
+                          fontWeight: (isUnread && !isSentByClinician)
                               ? FontWeight.bold
                               : FontWeight.w500,
                           fontSize: 14.sp,
@@ -83,12 +83,12 @@ class InboxListTile extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusIcon(bool isFromMe, bool isUnread) {
+  Widget _buildStatusIcon(bool isSentByClinician, bool isUnread) {
     if (!isUnread) {
       return const Icon(Icons.mark_email_read_outlined, color: Colors.grey);
     }
 
-    if (!isFromMe) {
+    if (!isSentByClinician) {
       return const Icon(Icons.mark_email_unread, color: Colors.blueGrey);
     } else {
       return Stack(
