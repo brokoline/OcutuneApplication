@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/clinician_dashboard_controller.dart';
+import '../../services/controller/clinician_dashboard_controller.dart';
 
 class ClinicianNotificationsWidget extends StatelessWidget {
   const ClinicianNotificationsWidget({Key? key}) : super(key: key);

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
+import 'package:ocutune_light_logger/services/controller/clinician_dashboard_controller.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/offline_storage_service.dart';
@@ -38,6 +39,7 @@ import 'package:ocutune_light_logger/screens/patient/messages/patient_inbox_scre
 import 'package:ocutune_light_logger/screens/patient/messages/patient_message_detail_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/messages/patient_new_message_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,38 +80,42 @@ class OcutuneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ocutune',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: darkGray,
-        brightness: Brightness.dark,
-        fontFamily: 'Roboto',
-      ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (_) => LoginScreen(),
-        '/chooseAccess': (_) => ChooseAccessScreen(),
-        '/simulated_login': (_) => const SimulatedLoginScreen(title: 'Simuleret login'),
+    return MultiProvider(
+        providers: [
+        ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
+    // Tilføj andre providers her hvis nødvendigt
+    ],
+    child: MaterialApp(
+    title: 'Ocutune',
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(
+    scaffoldBackgroundColor: darkGray,
+    brightness: Brightness.dark,
+    fontFamily: 'Roboto',
+    ),
+    initialRoute: '/login',
+    routes: {
+    '/login': (_) => LoginScreen(),
+    '/chooseAccess': (_) => ChooseAccessScreen(),
+    '/simulated_login': (_) => const SimulatedLoginScreen(title: 'Simuleret login'),
 
-        // Kunde-registrering
-        '/register': (_) => const RegisterScreen(),
-        '/privacy': (_) => const PrivacyPolicyScreen(),
-        '/terms': (_) => const TermsConditionsScreen(),
-        '/genderage': (_) => const GenderAgeScreen(),
-        '/chooseChronotype': (_) => const ChooseChronotypeScreen(),
-        '/learn': (_) => const LearnAboutChronotypesScreen(),
-        '/aboutChronotype': (context) {
-          final typeKey = ModalRoute.of(context)!.settings.arguments as String;
-          return AboutChronotypeScreen(chronotypeId: typeKey);
-        },
-        '/Q1': (_) => const QuestionOneScreen(),
-        '/Q2': (_) => const QuestionTwoScreen(),
-        '/Q3': (_) => const QuestionThreeScreen(),
-        '/Q4': (_) => const QuestionFourScreen(),
-        '/Q5': (_) => const QuestionFiveScreen(),
-        '/doneSetup': (_) => const DoneSetupScreen(),
-
+    // Kunde-registrering
+    '/register': (_) => const RegisterScreen(),
+    '/privacy': (_) => const PrivacyPolicyScreen(),
+    '/terms': (_) => const TermsConditionsScreen(),
+    '/genderage': (_) => const GenderAgeScreen(),
+    '/chooseChronotype': (_) => const ChooseChronotypeScreen(),
+    '/learn': (_) => const LearnAboutChronotypesScreen(),
+    '/aboutChronotype': (context) {
+    final typeKey = ModalRoute.of(context)!.settings.arguments as String;
+    return AboutChronotypeScreen(chronotypeId: typeKey);
+    },
+    '/Q1': (_) => const QuestionOneScreen(),
+    '/Q2': (_) => const QuestionTwoScreen(),
+    '/Q3': (_) => const QuestionThreeScreen(),
+    '/Q4': (_) => const QuestionFourScreen(),
+    '/Q5': (_) => const QuestionFiveScreen(),
+    '/doneSetup': (_) => const DoneSetupScreen(),
 
         // Kliniker Dashboards
 
@@ -136,6 +142,7 @@ class OcutuneApp extends StatelessWidget {
         '/patient/new_message': (_) => const PatientNewMessageScreen(),
         '/patient/activities': (_) => PatientActivityScreen(),
       },
+     )
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/clinician_dashboard_controller.dart';
+import '../../../services/controller/clinician_dashboard_controller.dart';
 import '../../../widgets/ocutune_card.dart';
 import '../../../widgets/ocutune_textfield.dart';
 import '../../../widgets/ocutune_button.dart';
@@ -50,17 +50,15 @@ class _ClinicianDashboardScreenState extends State<ClinicianDashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// Brugernavn + rolle
                 Text(
                   '$clinicianRole: $clinicianName',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 20),
 
-                /// Søgefelt
                 OcutuneTextField(
                   label: 'Søg efter patient...',
-                  controller: TextEditingController(), // midlertidigt, da din søgning bruger onChanged
+                  controller: TextEditingController(),
                 ),
 
                 const SizedBox(height: 16),

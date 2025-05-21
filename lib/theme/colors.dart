@@ -4,6 +4,7 @@ const generalBackground = Color(0xFF676767);
 const generalBox = Color(0xFF4C4C4C);
 const generalBoxHover = Color(0xFF8C8B8B);
 
+const navBar = Color(0xFF3A3A3A);
 
 
 const lightGray = Color(0xFF676767);

@@ -4,7 +4,9 @@ import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'dart:io'; // for HttpDate
+import 'dart:io';
+
+import '../../../widgets/clinician_widgets/clinician_app_bar.dart'; // for HttpDate
 
 class ClinicianInboxScreen extends StatefulWidget {
   const ClinicianInboxScreen({super.key});
@@ -83,21 +85,9 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         backgroundColor: generalBackground,
-        appBar: AppBar(
-          backgroundColor: generalBackground,
-          surfaceTintColor: Colors.transparent,
-          scrolledUnderElevation: 0,
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white70),
-          title: const Text(
-            'Indbakke',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+        appBar: ClinicianAppBar(
+          showLogout: false,
+          title: 'Indbakke',
         ),
         body: Column(
           children: [

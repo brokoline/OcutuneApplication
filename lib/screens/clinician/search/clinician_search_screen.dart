@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../widgets/ocutune_textfield.dart';
 import '../../../widgets/ocutune_card.dart';
-import '../../../services/clinician_dashboard_controller.dart';
+import '../../../services/controller/clinician_dashboard_controller.dart';
 
 class ClinicianSearchScreen extends StatelessWidget {
   const ClinicianSearchScreen({Key? key}) : super(key: key);

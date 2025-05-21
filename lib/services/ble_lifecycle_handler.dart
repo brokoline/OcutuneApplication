@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:ocutune_light_logger/services/ble_controller.dart';
+import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
 
 class BleLifecycleHandler extends WidgetsBindingObserver {
   final BleController bleController;
