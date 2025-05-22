@@ -36,7 +36,6 @@ import 'package:ocutune_light_logger/screens/patient/activities/patient_activity
 import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
-import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 import 'package:provider/provider.dart';
 
 

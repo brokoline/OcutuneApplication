@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
