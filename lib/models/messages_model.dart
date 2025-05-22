@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class Message {
   final int id;
   final int threadId;
@@ -8,7 +10,6 @@ class Message {
   final String senderName;
   final String receiverName;
 
-  // 👇 tilføj disse:
   final int senderId;
   final int receiverId;
 
@@ -31,12 +32,11 @@ class Message {
       threadId: json['thread_id'],
       subject: json['subject'] ?? '',
       message: json['message'] ?? '',
-      sentAt: DateTime.parse(json['sent_at']),
+      sentAt: HttpDate.parse(json['sent_at']),
       isMe: json['sender_id'] == currentUserId,
       senderName: json['sender_name'] ?? '',
       receiverName: json['receiver_name'] ?? '',
 
-      // 👇 disse er nye
       senderId: json['sender_id'],
       receiverId: json['receiver_id'],
     );

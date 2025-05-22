@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static const String baseUrl = 'https://ocutune.ddns.net';
 
-  // 🔐 TOKEN
+  // 🔐 TOKEN MANAGEMENT
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
@@ -20,32 +20,39 @@ class ApiService {
     };
   }
 
-  // 🌐 GENERELLE HTTP METODER
-  static Future<http.Response> get(String endpoint) async {
+  // 🌐 GENERIC HTTP METHODS
+  static Future<http.Response> _get(String endpoint) async {
     final headers = await _authHeaders();
     return http.get(Uri.parse('$baseUrl$endpoint'), headers: headers);
   }
 
-  static Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
+  static Future<http.Response> _post(String endpoint, Map<String, dynamic> body) async {
     final headers = await _authHeaders();
-    return http.post(Uri.parse('$baseUrl$endpoint'), headers: headers, body: jsonEncode(body));
+    return http.post(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
   }
 
-  static Future<http.Response> delete(String endpoint) async {
+  static Future<http.Response> _delete(String endpoint) async {
     final headers = await _authHeaders();
     return http.delete(Uri.parse('$baseUrl$endpoint'), headers: headers);
   }
 
-  static Future<http.Response> patch(String endpoint, Map<String, dynamic> body) async {
+  static Future<http.Response> _patch(String endpoint, Map<String, dynamic> body) async {
     final headers = await _authHeaders();
-    return http.patch(Uri.parse('$baseUrl$endpoint'), headers: headers, body: jsonEncode(body));
+    return http.patch(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
   }
 
-  // 👤 LOGIN
+  // 👤 AUTHENTICATION
   static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
-    final url = Uri.parse('$baseUrl/sim-login');
     final response = await http.post(
-      url,
+      Uri.parse('$baseUrl/sim-login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'sim_userid': userId, 'password': password}),
     );
@@ -56,19 +63,57 @@ class ApiService {
       await prefs.setString('jwt_token', data['token']);
       return data;
     } else {
-      throw Exception('Login fejlede');
+      throw Exception('Login fejlede: ${response.statusCode}');
     }
   }
 
-  // ✉️ MESSAGES
+  // 👥 PATIENT METHODS
+  static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
+    try {
+      final response = await _get('/patients/search?q=$query');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List;
+        return data.cast<Map<String, dynamic>>();
+      } else if (response.statusCode == 401) {
+        throw Exception('Ikke autoriseret - log venligst ind igen');
+      } else {
+        throw Exception('Fejl ved søgning: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Netværksfejl: ${e.toString()}');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPatientDetails(int patientId) async {
+    final response = await _get('/patients/$patientId');
+    return _handleResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> getPatientSensors(int patientId) async {
+    final response = await _get('/patients/$patientId/sensors');
+    return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> getPatientEvents(int patientId) async {
+    final response = await _get('/patients/$patientId/events');
+    return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> getBatteryStatus(int patientId) async {
+    final response = await _get('/patients/$patientId/battery');
+    return _handleListResponse(response);
+  }
+
+  // ✉️ MESSAGE METHODS
   static Future<List<Map<String, dynamic>>> fetchInbox() async {
-    final res = await get('/messages/inbox');
-    return List<Map<String, dynamic>>.from(jsonDecode(res.body)['messages']);
+    final response = await _get('/messages/inbox');
+    return _handleListResponse(response, key: 'messages');
   }
 
   static Future<List<Map<String, dynamic>>> fetchThread(int threadId) async {
-    final res = await get('/messages/thread/$threadId');
-    return List<Map<String, dynamic>>.from(jsonDecode(res.body));
+    final response = await _get('/messages/thread-by-id/$threadId');
+    return _handleListResponse(response);
   }
 
   static Future<void> sendMessage({
@@ -83,54 +128,34 @@ class ApiService {
       'subject': subject,
       if (replyTo != null) 'reply_to': replyTo,
     };
-    final res = await post('/messages/send', payload);
-    if (res.statusCode != 200) {
-      throw Exception('Kunne ikke sende besked');
-    }
+    final response = await _post('/messages/send', payload);
+    _handleVoidResponse(response, successCode: 200);
   }
 
   static Future<void> markThreadAsRead(int threadId) async {
-    final res = await patch('/messages/thread/$threadId/read', {});
-    if (res.statusCode != 204) {
-      throw Exception('Kunne ikke markere tråd som læst');
-    }
+    final response = await _patch('/messages/thread/$threadId/read', {});
+    _handleVoidResponse(response, successCode: 204);
   }
 
   static Future<void> deleteThread(int threadId) async {
-    final res = await delete('/messages/thread/$threadId');
-    if (res.statusCode != 204) {
-      throw Exception('Kunne ikke slette tråd');
-    }
+    final response = await _delete('/messages/thread/$threadId');
+    _handleVoidResponse(response, successCode: 204);
   }
 
   static Future<List<Map<String, dynamic>>> fetchRecipients() async {
-    final res = await get('/messages/recipients');
-    return List<Map<String, dynamic>>.from(jsonDecode(res.body));
+    final response = await _get('/messages/recipients');
+    return _handleListResponse(response);
   }
 
   static Future<List<Map<String, dynamic>>> fetchClinicianPatients() async {
-    final res = await get('/clinician/patients');
-    return List<Map<String, dynamic>>.from(jsonDecode(res.body));
+    final response = await _get('/clinician/patients');
+    return _handleListResponse(response);
   }
 
-  // 🧠 SPØRGSMÅL
-  static Future<List<dynamic>> fetchQuestions() async {
-    final res = await http.get(Uri.parse('$baseUrl/questions'));
-    if (res.statusCode == 200) {
-      return jsonDecode(res.body);
-    } else {
-      throw Exception('Kunne ikke hente spørgsmål');
-    }
-  }
-
-  // 📅 AKTIVITETER
+  // 📅 ACTIVITY METHODS
   static Future<List<Map<String, dynamic>>> fetchActivities(int patientId) async {
-    final res = await http.get(Uri.parse('$baseUrl/activities?patient_id=$patientId'));
-    if (res.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(res.body));
-    } else {
-      throw Exception('Kunne ikke hente aktiviteter');
-    }
+    final response = await _get('/activities?patient_id=$patientId');
+    return _handleListResponse(response);
   }
 
   static Future<void> addActivity({
@@ -149,32 +174,80 @@ class ApiService {
       if (durationMinutes != null) 'duration_minutes': durationMinutes,
       if (patientId != null) 'patient_id': patientId,
     };
-
-    final res = await post('/activities', payload);
-    if (res.statusCode != 201) {
-      throw Exception('Kunne ikke oprette aktivitet');
-    }
+    final response = await _post('/activities', payload);
+    _handleVoidResponse(response, successCode: 201);
   }
 
   static Future<void> deleteActivity(int activityId, {required String userId}) async {
-    final res = await http.delete(
-      Uri.parse('$baseUrl/activities/$activityId?user_id=$userId'),
-      headers: {'Content-Type': 'application/json'},
-    );
-    if (res.statusCode != 200) {
-      throw Exception('Fejl ved sletning af aktivitet');
-    }
+    final response = await _delete('/activities/$activityId?user_id=$userId');
+    _handleVoidResponse(response, successCode: 200);
   }
 
   static Future<void> addActivityLabel(String label) async {
-    final res = await post('/patient/activity-labels', {'label': label});
-    if (res.statusCode != 201) {
-      throw Exception('Kunne ikke tilføje label');
-    }
+    final response = await _post('/patient/activity-labels', {'label': label});
+    _handleVoidResponse(response, successCode: 201);
   }
 
   static Future<List<String>> fetchActivityLabels() async {
-    final res = await get('/patient/activity-labels');
-    return List<String>.from(jsonDecode(res.body));
+    final response = await _get('/patient/activity-labels');
+    return List<String>.from(jsonDecode(response.body));
+  }
+
+  // 🧠 QUESTION METHODS
+  static Future<List<dynamic>> fetchQuestions() async {
+    final response = await _get('/questions');
+    return _handleDynamicListResponse(response);
+  }
+
+  // 🔄 PAGINATION
+  static Future<List<Map<String, dynamic>>> fetchPaginatedData(String endpoint) async {
+    final List<Map<String, dynamic>> allData = [];
+    int page = 1;
+    bool hasMore = true;
+
+    while (hasMore) {
+      final response = await _get('$endpoint?page=$page');
+      final data = jsonDecode(response.body);
+      final items = data['items'] as List;
+      allData.addAll(items.cast<Map<String, dynamic>>());
+      hasMore = data['hasMore'] as bool;
+      page++;
+    }
+
+    return allData;
+  }
+
+  // 🛠 HELPER METHODS
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 404) {
+      throw Exception('Ressource ikke fundet');
+    } else {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+  }
+
+  static List<Map<String, dynamic>> _handleListResponse(http.Response response, {String? key}) {
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(key != null ? data[key] : data);
+    } else {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+  }
+
+  static List<dynamic> _handleDynamicListResponse(http.Response response) {
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+  }
+
+  static void _handleVoidResponse(http.Response response, {required int successCode}) {
+    if (response.statusCode != successCode) {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
   }
 }

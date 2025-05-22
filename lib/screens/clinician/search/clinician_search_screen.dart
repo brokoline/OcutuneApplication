@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
+import '../../../models/patient.dart';
 import '../../../services/controller/clinician_dashboard_controller.dart';
 import '../../../theme/colors.dart';
-import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/ocutune_textfield.dart';
+import 'clinician_patient_detail_screen.dart';
+
 
 class ClinicianSearchScreen extends StatelessWidget {
   const ClinicianSearchScreen({Key? key}) : super(key: key);
@@ -14,7 +16,6 @@ class ClinicianSearchScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: const ClinicianAppBar(showLogout: false),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
         child: Column(
@@ -60,6 +61,7 @@ class ClinicianSearchScreen extends StatelessWidget {
                     separatorBuilder: (context, index) =>
                         SizedBox(height: 8.h),
                     itemBuilder: (context, index) {
+                      final Patient patient = controller.searchResults[index];
                       return Container(
                         decoration: BoxDecoration(
                           color: generalBox,
@@ -72,19 +74,36 @@ class ClinicianSearchScreen extends StatelessWidget {
                             vertical: 8.h,
                           ),
                           title: Text(
-                            controller.searchResults[index],
+                            '${patient.firstName} ${patient.lastName}',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14.sp,
                             ),
                           ),
+                          subtitle: patient.cpr != null
+                              ? Text(
+                            patient.cpr!,
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12.sp,
+                            ),
+                          )
+                              : null,
                           trailing: Icon(
                             Icons.arrow_forward_ios,
                             size: 16.sp,
                             color: Colors.white70,
                           ),
                           onTap: () {
-                            // TODO: Naviger til patientdetaljer
+                            controller.selectPatient(patient);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PatientDetailScreen(
+                                  patientId: patient.id,
+                                ),
+                              ),
+                            );
                           },
                         ),
                       );
