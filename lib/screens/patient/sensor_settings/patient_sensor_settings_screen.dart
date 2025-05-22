@@ -4,9 +4,9 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/services/ble_controller.dart';
+import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
 import 'package:ocutune_light_logger/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 
 class PatientSensorSettingsScreen extends StatefulWidget {
@@ -153,12 +153,8 @@ class _PatientSensorSettingsScreenState
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
@@ -233,7 +229,7 @@ class _PatientSensorSettingsScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             ValueListenableBuilder<DiscoveredDevice?>(
               valueListenable: BleController.connectedDeviceNotifier,
               builder: (context, device, _) {
@@ -258,9 +254,9 @@ class _PatientSensorSettingsScreenState
                   icon: const Icon(Icons.link_off),
                   label: const Text('Afbryd forbindelse'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: defaultBoxRed,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -286,23 +282,88 @@ class _PatientSensorSettingsScreenState
                 ),
                 child: _devices.isEmpty
                     ? const Center(
-                    child: Text('Ingen enheder fundet',
-                        style: TextStyle(color: Colors.white54)))
+                  child: Text(
+                    'Ingen enheder fundet',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                )
                     : ListView.builder(
                   itemCount: _devices.length,
                   itemBuilder: (context, index) {
                     final device = _devices[index];
-                    return ListTile(
-                      title: Text(
-                        device.name.isNotEmpty
-                            ? device.name
-                            : 'Ukendt enhed',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                      subtitle: Text(device.id,
-                          style:
-                          const TextStyle(color: Colors.white70)),
-                      onTap: () => _connectToDevice(device),
+                    return Column(
+                      children: [
+                        if (index > 0)
+                          const Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: Color.fromRGBO(255, 255, 255, 0.1),
+                          ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              final connectedDevice = BleController.connectedDevice;
+                              if (connectedDevice == null || connectedDevice.id != device.id) {
+                                _connectToDevice(device);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            hoverColor: const Color.fromRGBO(255, 255, 255, 0.1),
+                            splashColor: const Color.fromRGBO(255, 255, 255, 0.2),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.bluetooth,
+                                      color: Colors.white70, size: 20),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          device.name.isNotEmpty
+                                              ? device.name
+                                              : 'Ukendt enhed',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          device.id,
+                                          style: const TextStyle(
+                                            color: Color.fromRGBO(
+                                                255, 255, 255, 0.6),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  ValueListenableBuilder<DiscoveredDevice?>(
+                                    valueListenable:
+                                    BleController.connectedDeviceNotifier,
+                                    builder: (context, connectedDevice, _) {
+                                      if (connectedDevice?.id == device.id) {
+                                        return const Icon(
+                                          Icons.link,
+                                          color: Colors.white70,
+                                          size: 20,
+                                        );
+                                      }
+                                      return const SizedBox();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),

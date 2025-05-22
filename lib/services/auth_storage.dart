@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthStorage {
@@ -48,16 +49,12 @@ class AuthStorage {
     required String lastName,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('clinician_first_name', firstName);
-    await prefs.setString('clinician_last_name', lastName);
+    await prefs.setString('clinician_name', '$firstName $lastName');
   }
 
   static Future<String> getClinicianName() async {
     final prefs = await SharedPreferences.getInstance();
-    final first = prefs.getString('clinician_first_name') ?? '';
-    final last = prefs.getString('clinician_last_name') ?? '';
-    final name = '$first $last'.trim();
-    return name.isNotEmpty ? name : 'Ukendt kliniker';
+    return prefs.getString('clinician_name') ?? 'Kliniker Dashboard';
   }
 
   static Future<void> savePatientProfile({
@@ -93,6 +90,7 @@ class AuthStorage {
     final name = '$first $last'.trim();
     return name.isNotEmpty ? name : 'Bruger';
   }
+
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();

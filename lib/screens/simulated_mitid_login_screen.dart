@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:ocutune_light_logger/services/api_services.dart';
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart' as auth;
@@ -66,11 +66,18 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           simUserId: data['sim_userid'],
         );
 
-        // Gem navn til visning senere
-        await auth.AuthStorage.savePatientProfile(
-          firstName: data['first_name'],
-          lastName: data['last_name'],
-        );
+        // TILFØJET: Gem klinikerens navn baseret på rolle
+        if (data['role'] == 'clinician') {
+          await auth.AuthStorage.saveClinicianProfile(
+            firstName: data['first_name'],
+            lastName: data['last_name'],
+          );
+        } else {
+          await auth.AuthStorage.savePatientProfile(
+            firstName: data['first_name'],
+            lastName: data['last_name'],
+          );
+        }
 
         if (!mounted) return;
 
@@ -95,7 +102,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       backgroundColor: generalBackground,
@@ -118,16 +124,14 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            left: 24.w,
-            right: 24.w,
-            top: keyboardVisible ? 24.h : 80.h,
-            bottom: keyboardVisible ? 24.h : 40.h,
+          padding: EdgeInsets.symmetric(
+            horizontal: 24.w,
+            vertical: 24.h,
           ),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (!keyboardVisible) SizedBox(height: 24.h),
               SimulatedMitIDBox(
                 title: widget.title,
                 controller: userIdController,

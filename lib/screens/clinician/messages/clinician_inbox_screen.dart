@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ocutune_light_logger/services/api_services.dart' as api;
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'dart:io'; // for HttpDate
+import 'dart:io';
+
+import '../../../services/services/message_service.dart';
+import '../../../widgets/clinician_widgets/clinician_app_bar.dart'; // for HttpDate
 
 class ClinicianInboxScreen extends StatefulWidget {
   const ClinicianInboxScreen({super.key});
@@ -28,7 +30,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-      final msgs = await api.ApiService.getClinicianInboxMessages();
+      final msgs = await MessageService.fetchInbox();
       final Map<int, List<Map<String, dynamic>>> grouped = {};
 
       for (var msg in msgs) {
@@ -45,13 +47,15 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
         final newest = threadMsgs.first;
         final oldest = threadMsgs.last;
 
-        final displayName = oldest['sender_id'] == currentUserId
-            ? oldest['receiver_name']
-            : oldest['sender_name'];
+        final isSentByMe = oldest['sender_id'] == currentUserId;
+        final labelPrefix = isSentByMe ? 'Til: ' : 'Fra: ';
+        final name = isSentByMe
+            ? (oldest['receiver_name'] ?? 'Ukendt')
+            : (oldest['sender_name'] ?? 'Ukendt');
 
         threads.add({
           ...newest,
-          'display_name': displayName,
+          'display_name': '$labelPrefix$name',
         });
       }
 
@@ -63,10 +67,11 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
         _loading = false;
       });
     } catch (e) {
-      print('❌ Fejl ved indlæsning af indbakke: $e');
+      print('❌ Fejl ved hentning af indbakke: $e');
       setState(() => _loading = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -79,19 +84,9 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         backgroundColor: generalBackground,
-        appBar: AppBar(
-          backgroundColor: generalBackground,
-          elevation: 0,
-          centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white70),
-          title: const Text(
-            'Indbakke',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+        appBar: ClinicianAppBar(
+          showLogout: false,
+          title: 'Indbakke',
         ),
         body: Column(
           children: [
@@ -101,7 +96,7 @@ class _ClinicianInboxScreenState extends State<ClinicianInboxScreen> {
                   : _messages.isEmpty
                   ? const Center(
                 child: Text(
-                  'Indbakken er tom.',
+                  'Ingen beskeder endnu.',
                   style: TextStyle(color: Colors.white54),
                 ),
               )

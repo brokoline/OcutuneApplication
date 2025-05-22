@@ -1,72 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ocutune_light_logger/services/services/message_service.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'dart:io';
 
-import '../../../services/services/message_service.dart'; // for HttpDate
-
-class PatientInboxScreen extends StatefulWidget {
-  const PatientInboxScreen({super.key});
+class InboxScreen extends StatefulWidget {
+  const InboxScreen({super.key});
 
   @override
-  State<PatientInboxScreen> createState() => _PatientInboxScreenState();
+  State<InboxScreen> createState() => _InboxScreenState();
 }
 
-class _PatientInboxScreenState extends State<PatientInboxScreen> {
+class _InboxScreenState extends State<InboxScreen> {
   List<Map<String, dynamic>> _messages = [];
   bool _loading = true;
+  String _role = 'patient'; // fallback
 
   @override
   void initState() {
     super.initState();
+    _loadUserRole();
     _loadMessages();
+  }
+
+  Future<void> _loadUserRole() async {
+    final payload = await AuthStorage.getTokenPayload();
+    setState(() {
+      _role = payload['role'] ?? 'patient';
+    });
   }
 
   Future<void> _loadMessages() async {
     try {
-      final jwt = await AuthStorage.getTokenPayload();
-      final currentUserId = jwt['id'];
-
       final msgs = await MessageService.fetchInbox();
-      final Map<int, List<Map<String, dynamic>>> grouped = {};
-
-      // Gruppér beskeder pr. thread_id
-      for (var msg in msgs) {
-        final threadId = msg['thread_id'];
-        grouped.putIfAbsent(threadId, () => []).add(msg);
-      }
-
-      final List<Map<String, dynamic>> threads = [];
-
-      for (var threadMsgs in grouped.values) {
-        // Sortér: nyeste først
-        threadMsgs.sort((a, b) =>
-            HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
-
-        final newest = threadMsgs.first;
-        final oldest = threadMsgs.last;
-
-        // Vis navn på kliniker (baseret på første besked i tråden)
-        final isSentByMe = oldest['sender_id'] == currentUserId;
-        final labelPrefix = isSentByMe ? 'Til: ' : 'Fra: ';
-        final otherPartyName = isSentByMe
-            ? oldest['receiver_name'] ?? 'Ukendt'
-            : oldest['sender_name'] ?? 'Ukendt';
-
-        threads.add({
-          ...newest,
-          'display_name': '$labelPrefix$otherPartyName',
-        });
-      }
-
-      // Sortér tråde efter seneste besked
-      threads.sort((a, b) =>
-          HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
-
       setState(() {
-        _messages = threads;
+        _messages = msgs;
         _loading = false;
       });
     } catch (e) {
@@ -77,6 +46,11 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final detailRoute =
+    _role == 'clinician' ? '/clinician/message_detail' : '/patient/message_detail';
+    final newMessageRoute =
+    _role == 'clinician' ? '/clinician/new_message' : '/patient/new_message';
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -93,9 +67,9 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
           elevation: 0,
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.white70),
-          title: const Text(
-            'Indbakke',
-            style: TextStyle(
+          title: Text(
+            _role == 'clinician' ? 'Kliniker-indbakke' : 'Indbakke',
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -123,13 +97,10 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
                     onTap: () async {
                       final changed = await Navigator.pushNamed(
                         context,
-                        '/patient/message_detail',
+                        detailRoute,
                         arguments: msg['thread_id'],
                       );
-
-                      if (changed == true) {
-                        _loadMessages();
-                      }
+                      if (changed == true) _loadMessages();
                     },
                   );
                 },
@@ -139,7 +110,7 @@ class _PatientInboxScreenState extends State<PatientInboxScreen> {
               padding: const EdgeInsets.only(bottom: 32),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/patient/new_message')
+                  Navigator.pushNamed(context, newMessageRoute)
                       .then((value) {
                     if (value == true) _loadMessages();
                   });

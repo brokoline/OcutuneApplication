@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
-import '../../../services/api_services.dart';
+import '../../../services/services/api_services.dart';
 import '../../../services/auth_storage.dart';
 import '../../../widgets/confirm_dialog.dart';
 
@@ -28,23 +28,22 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
   Future<void> loadActivityLabels() async {
     try {
       final labels = await ApiService.fetchActivityLabels();
+      if (!mounted) return;
       setState(() {
         activities = labels;
       });
     } catch (e) {
-      print('❌ Kunne ikke hente labels: $e');
+      debugPrint('Kunne ikke hente labels: $e');
     }
   }
 
   Future<void> loadActivities() async {
     try {
       final patientId = await AuthStorage.getUserId();
-      if (patientId == null) {
-        print('⚠️ patientId er null — kan ikke hente aktiviteter');
-        return;
-      }
+      if (patientId == null) return;
 
       final activitiesFromDb = await ApiService.fetchActivities(patientId);
+      if (!mounted) return;
 
       setState(() {
         recent = activitiesFromDb.map((a) {
@@ -62,7 +61,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
         }).toList();
       });
     } catch (e) {
-      print('❌ Error loading activities: $e');
+      debugPrint('Error loading activities: $e');
     }
   }
 
@@ -76,20 +75,14 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
     return '$minutes min';
   }
 
-  void registerActivity(String label, DateTime startTime, DateTime endTime) async {
+  Future<void> registerActivity(String label, DateTime startTime, DateTime endTime) async {
     final duration = endTime.difference(startTime).inMinutes;
 
     try {
       final int? patientId = await AuthStorage.getUserId();
-      if (patientId == null) {
-        print('⚠️ patientId er null');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ingen bruger ID fundet')),
-        );
-        return;
-      }
+      if (patientId == null) return;
 
-      await ApiService.addActivityWithTimes(
+      await ApiService.addActivity(
         patientId: patientId,
         eventType: label,
         note: 'Manuelt registreret',
@@ -101,15 +94,13 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       await loadActivities();
       await loadActivityLabels();
 
-      setState(() {
-        selected = null;
-      });
-
+      if (!mounted) return;
+      setState(() => selected = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Aktivitet "$label" registreret')),
       );
     } catch (e) {
-      print('❌ Error saving activity: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke gemme aktivitet')),
       );
@@ -119,22 +110,17 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
   Future<void> deleteActivity(int id) async {
     try {
       final userId = await AuthStorage.getUserId();
-      if (userId == null) {
-        print('⚠️ userId er null');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bruger-ID mangler')),
-        );
-        return;
-      }
+      if (userId == null) return;
 
       await ApiService.deleteActivity(id, userId: userId.toString());
       await loadActivities();
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Aktivitet slettet')),
       );
     } catch (e) {
-      print('❌ Fejl ved sletning: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke slette aktivitet')),
       );
@@ -188,8 +174,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                     try {
                       await ApiService.addActivityLabel(newLabel.trim());
                       await loadActivityLabels();
+                      if (!mounted) return;
                       Navigator.pop(context);
                     } catch (e) {
+                      if (!mounted) return;
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Kunne ikke tilføje aktivitetstype')),
@@ -213,14 +201,14 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            timePickerTheme: const TimePickerThemeData(
+            timePickerTheme: TimePickerThemeData(
               backgroundColor: generalBox,
               hourMinuteTextColor: Colors.white70,
               dialHandColor: Colors.white70,
               dayPeriodTextColor: Colors.white70,
-              helpTextStyle: TextStyle(color: Colors.white70),
+              helpTextStyle: const TextStyle(color: Colors.white70),
             ),
-            colorScheme: const ColorScheme.dark(
+            colorScheme: ColorScheme.dark(
               primary: Colors.white70,
               onPrimary: Colors.black,
               surface: generalBox,
@@ -237,27 +225,25 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
   }
 
   Future<void> openConfirmDialog() async {
-    if (selected == null) return;
+    if (selected == null || !mounted) return;
 
     final now = DateTime.now();
 
-    TimeOfDay? start = await showStyledTimePicker('Hvornår startede aktiviteten ca.?');
-    if (start == null) return;
+    final start = await showStyledTimePicker('Hvornår startede aktiviteten ca.?');
+    if (start == null || !mounted) return;
     final startDateTime = DateTime(now.year, now.month, now.day, start.hour, start.minute);
 
-    TimeOfDay? end = await showStyledTimePicker('Hvornår sluttede aktiviteten ca.?');
-    if (end == null) return;
+    final end = await showStyledTimePicker('Hvornår sluttede aktiviteten ca.?');
+    if (end == null || !mounted) return;
     final endDateTime = DateTime(now.year, now.month, now.day, end.hour, end.minute);
 
-    registerActivity(selected!, startDateTime, endDateTime);
+    await registerActivity(selected!, startDateTime, endDateTime);
   }
 
   Widget buildRecentCard(Map<String, dynamic> item) {
     final start = item['start'] as DateTime;
     final end = item['end'] as DateTime;
     final duration = end.difference(start);
-
-    final bool showDelete = item['deletable'] == true;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -272,8 +258,11 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(item['label'], style: const TextStyle(color: Colors.white70, fontSize: 16)),
-              if (item['id'] != null && showDelete)
+              Text(
+                item['label'],
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+              if (item['deletable'] == true)
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.white54),
                   onPressed: () async {
@@ -285,19 +274,25 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                         onConfirm: () {},
                       ),
                     );
-                    if (confirmed == true) {
+                    if (confirmed == true && mounted) {
                       await deleteActivity(item['id']);
                     }
                   },
-                )
+                ),
             ],
           ),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Varighed: ${formatDuration(duration)}', style: const TextStyle(color: Colors.white70)),
-              Text(formatDateTime(start), style: const TextStyle(color: Colors.white38)),
+              Text(
+                'Varighed: ${formatDuration(duration)}',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              Text(
+                formatDateTime(start),
+                style: const TextStyle(color: Colors.white38),
+              ),
             ],
           ),
         ],
@@ -332,7 +327,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   padding: EdgeInsets.only(bottom: 16),
                   child: Text(
                     'Her kan du registrere aktiviteter, hvor du har været udsat for dagslys, '
-                        'men ikke har haft din lyslogger med dig – f.eks. hvis du har været på stranden, '
+                        'men ikke har haft din lyslogger med dig - f.eks. hvis du har været på stranden, '
                         'ude og motionere eller blot haft den glemt derhjemme.',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
@@ -361,9 +356,31 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   menuMaxHeight: 300,
                   onChanged: (val) => setState(() => selected = val),
                   items: activities.map((label) {
-                    return DropdownMenuItem(
+                    return DropdownMenuItem<String>(
                       value: label,
-                      child: Text(label, style: const TextStyle(color: Colors.white70)),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Color.fromRGBO(255, 255, 255, 0.1),
+                              width: 0.5,
+                            ),
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                label,
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                            if (selected == label)
+                              const Icon(Icons.check, color: Colors.white70, size: 16),
+                          ],
+                        ),
+                      ),
                     );
                   }).toList(),
                 ),
@@ -390,7 +407,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                     child: Text('Seneste registreringer', style: TextStyle(color: Colors.white70)),
                   ),
                   const SizedBox(height: 12),
-                  ...recent.take(5).map(buildRecentCard).toList(),
+                  ...recent.take(5).map(buildRecentCard),
                 ],
               ],
             ),
