@@ -16,33 +16,41 @@ class InboxListTile extends StatefulWidget {
 
 class _InboxListTileState extends State<InboxListTile> {
   String? label;
+  bool? isSender;
+  bool? isUnread;
 
   @override
   void initState() {
     super.initState();
-    // Start async job uden at blokere UI
-    Future.microtask(_determineLabel);
+    Future.microtask(_determineState);
   }
 
-  Future<void> _determineLabel() async {
+  Future<void> _determineState() async {
     try {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-      final isSender = widget.msg['sender_id'] == currentUserId;
-      final name = isSender
+      final sender = widget.msg['sender_id'];
+      final receiver = widget.msg['receiver_id'];
+
+      isSender = sender == currentUserId;
+      isUnread = widget.msg['read'] == 0;
+
+      final name = isSender!
           ? widget.msg['receiver_name'] ?? 'Ukendt'
           : widget.msg['sender_name'] ?? 'Ukendt';
 
       if (mounted) {
         setState(() {
-          label = isSender ? 'Til: $name' : 'Fra: $name';
+          label = isSender! ? 'Til: $name' : 'Fra: $name';
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() {
           label = 'Ukendt';
+          isSender = false;
+          isUnread = false;
         });
       }
     }
@@ -63,7 +71,6 @@ class _InboxListTileState extends State<InboxListTile> {
       );
     }
 
-    final isUnread = widget.msg['read'] == 0;
     final subject = widget.msg['subject']?.toString().trim().isNotEmpty == true
         ? widget.msg['subject']
         : '(Uden emne)';
@@ -83,12 +90,7 @@ class _InboxListTileState extends State<InboxListTile> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  isUnread
-                      ? Icons.mark_email_unread
-                      : Icons.mark_email_read_outlined,
-                  color: isUnread ? Colors.blueGrey : Colors.grey,
-                ),
+                _buildStatusIcon(),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: Column(
@@ -99,15 +101,14 @@ class _InboxListTileState extends State<InboxListTile> {
                         style: TextStyle(
                           color: Colors.white70,
                           fontWeight:
-                          isUnread ? FontWeight.bold : FontWeight.w500,
+                          (isUnread! && !isSender!) ? FontWeight.bold : FontWeight.w500,
                           fontSize: 14.sp,
                         ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         label!,
-                        style: TextStyle(
-                            color: Colors.white60, fontSize: 12.sp),
+                        style: TextStyle(color: Colors.white60, fontSize: 12.sp),
                       ),
                     ],
                   ),
@@ -122,6 +123,38 @@ class _InboxListTileState extends State<InboxListTile> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 🔥 Her definerer vi ikonlogikken med 3 tilstande
+  Widget _buildStatusIcon() {
+    if (isSender == null || isUnread == null) {
+      return const Icon(Icons.mail_outline, color: Colors.grey);
+    }
+
+    if (!isUnread!) {
+      return const Icon(Icons.mark_email_read_outlined, color: Colors.grey);
+    }
+
+    if (!isSender!) {
+      return const Icon(Icons.mark_email_unread, color: Colors.blueGrey);
+    }
+
+    // Hvis afsender og besked stadig ulæst af modtager → special-ikon
+    return Stack(
+      alignment: Alignment.center,
+      children: const [
+        Icon(Icons.email_outlined, color: Colors.grey),
+        Positioned(
+          bottom: -2,
+          right: -2,
+          child: Icon(
+            Icons.access_time,
+            size: 16,
+            color: Colors.white70,
+          ),
+        ),
+      ],
     );
   }
 

@@ -75,8 +75,23 @@ class MessageService {
 
   // ✅ Marker tråd som læst
   static Future<void> markAsRead(int threadId) async {
-    await ApiService.markThreadAsRead(threadId);
+    final token = await AuthStorage.getToken();
+    final url = Uri.parse('https://ocutune.ddns.net/messages/mark_read/$threadId');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    print('📤 Markerer som læst: $threadId – status: ${response.statusCode}');
+    if (response.statusCode != 200) {
+      throw Exception('Kunne ikke markere som læst');
+    }
   }
+
 
   // 📇 Hent mulige modtagere (for patienter)
   static Future<List<Map<String, dynamic>>> getRecipients() async {
