@@ -78,103 +78,105 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
           builder: (context, snapshot) {
             final greeting = 'Hej ${snapshot.data ?? 'Bruger'}';
 
-            return Padding(
+            return SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: 18.h),
-                  Center(
-                    child: Column(
-                      children: [
-                        Image.asset(
-                          'assets/logo/logo_ocutune.png',
-                          height: 100.h,
-                          color: Colors.white70,
-                        ),
-                        SizedBox(height: 20.h),
-                        Text(
-                          greeting,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 18.h),
-
-                  // Sensorindstillinger
-                  ValueListenableBuilder<int>(
-                    valueListenable: BleController.batteryNotifier,
-                    builder: (context, battery, _) {
-                      final connected = battery > 0;
-                      return OcutunePatientDashboardTile(
-                        label: 'Sensorforbindelse',
-                        iconAsset: 'assets/icon/BLE-sensor-ikon.png',
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            '/patient_sensor_settings',
-                            arguments: widget.patientId,
-                          );
-                        },
-                        trailingWidget: connected
-                            ? Row(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - kToolbarHeight - 32.h,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: 18.h),
+                      Center(
+                        child: Column(
                           children: [
-                            Icon(
-                              _batteryIcon(battery),
-                              color: _batteryColor(battery),
-                              size: 20.sp,
+                            Image.asset(
+                              'assets/logo/logo_ocutune.png',
+                              height: 100.h,
+                              color: Colors.white70,
                             ),
-                            SizedBox(width: 6.w),
+                            SizedBox(height: 20.h),
                             Text(
-                              '$battery%',
+                              greeting,
                               style: TextStyle(
-                                fontSize: 13.sp,
-                                color: _batteryColor(battery),
-                                fontWeight: FontWeight.w500,
+                                color: Colors.white70,
+                                fontSize: 22.sp,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
-                        )
-                            : null,
-                      );
-                    },
+                        ),
+                      ),
+                      SizedBox(height: 18.h),
+
+                      ValueListenableBuilder<int>(
+                        valueListenable: BleController.batteryNotifier,
+                        builder: (context, battery, _) {
+                          final connected = battery > 0;
+                          return OcutunePatientDashboardTile(
+                            label: 'Sensorforbindelse',
+                            iconAsset: 'assets/icon/BLE-sensor-ikon.png',
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/patient_sensor_settings',
+                                arguments: widget.patientId,
+                              );
+                            },
+                            trailingWidget: connected
+                                ? Row(
+                              children: [
+                                Icon(
+                                  _batteryIcon(battery),
+                                  color: _batteryColor(battery),
+                                  size: 20.sp,
+                                ),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  '$battery%',
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    color: _batteryColor(battery),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            )
+                                : null,
+                          );
+                        },
+                      ),
+
+                      OcutunePatientDashboardTile(
+                        label: 'Registrér en aktivitet',
+                        iconAsset: 'assets/icon/activity-log-icon.png',
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/patient/activities');
+                        },
+                      ),
+
+                      OcutunePatientDashboardTile(
+                        label: 'Indbakke',
+                        iconAsset: 'assets/icon/mail-outline.png',
+                        onPressed: () async {
+                          final jwt = await AuthStorage.getTokenPayload();
+                          final patientId = jwt['id'];
+                          Navigator.pushNamed(context, '/patient/inbox');
+                        },
+                      ),
+
+                      SizedBox(height: 10.h),
+                    ],
                   ),
-
-                  OcutunePatientDashboardTile(
-                    label: 'Registrér en aktivitet',
-                    iconAsset: 'assets/icon/activity-log-icon.png',
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/patient/activities');
-                    },
-                  ),
-
-                  OcutunePatientDashboardTile(
-                    label: 'Indbakke',
-                    iconAsset: 'assets/icon/mail-outline.png',
-                      onPressed: () async {
-                        final jwt = await AuthStorage.getTokenPayload();
-                        final patientId = jwt['id'];
-
-                        Navigator.pushNamed(
-                          context,
-                          '/patient/inbox',
-                        );
-                      }
-                  ),
-
-
-                  SizedBox(height: 10.h),
-                ],
+                ),
               ),
             );
           },
         ),
       ),
+
     );
   }
 }

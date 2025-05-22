@@ -1,18 +1,41 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+
+import '../auth_storage.dart';
 import 'api_services.dart';
 
 class MessageService {
   // 📥 Hent indbakke
   static Future<List<Map<String, dynamic>>> fetchInbox() async {
+    try {
+      final token = await AuthStorage.getToken();
+      final url = Uri.parse('https://ocutune.ddns.net/messages/inbox');
 
-    final inbox = await MessageService.fetchInbox();
-    debugPrint('📥 Antal beskeder i indbakke: ${inbox.length}');
-    for (var msg in inbox) {
-      debugPrint('🧾 Tråd: ${msg['thread_id']} – Afsender: ${msg['sender_name']} (${msg['sender_id']}) → Modtager: ${msg['receiver_name']} (${msg['receiver_id']})');
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📨 Kaldt: GET /messages/inbox');
+      print('📥 Statuskode: ${response.statusCode}');
+      print('📦 Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        final messages = json['messages'] as List;
+        return List<Map<String, dynamic>>.from(messages);
+      } else {
+        throw Exception('Kunne ikke hente beskeder: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Fejl i fetchInbox(): $e');
+      rethrow;
     }
-
-    return await ApiService.fetchInbox();
   }
 
   // 🧵 Hent tråd
