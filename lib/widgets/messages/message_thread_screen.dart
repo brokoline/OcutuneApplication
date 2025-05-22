@@ -28,7 +28,6 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   Message? _original;
   int? _currentUserId;
   bool _isDeleting = false;
-  bool _hasSentReply = false;
 
   @override
   void initState() {
@@ -40,44 +39,63 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     final jwt = await AuthStorage.getTokenPayload();
     _currentUserId = jwt['id'];
 
-    final raw = await MessageService.fetchThread(widget.threadId);
-    final parsed = raw.map((m) => Message.fromJson(m, _currentUserId!)).toList();
+    try {
+      final raw = await MessageService.fetchThread(widget.threadId);
+      final parsed = raw.map((m) => Message.fromJson(m, _currentUserId!)).toList();
 
-    if (!mounted) return;
-    setState(() {
-      _messages = parsed;
-      _original = parsed.isNotEmpty ? parsed.first : null;
-    });
-
-    if (scrollToBottom) {
-      Future.delayed(const Duration(milliseconds: 150), () {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
+      if (!mounted) return;
+      setState(() {
+        _messages = parsed;
+        _original = parsed.isNotEmpty ? parsed.first : null;
       });
+
+      if (scrollToBottom) {
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Kunne ikke hente tråd: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kunne ikke hente beskedtråd: $e')),
+        );
+        Navigator.pop(context);
+      }
     }
   }
 
-  void _sendReply(String text) async {
+ void _sendReply(String text) async {
     if (_original == null) return;
 
-    final receiverId = _original!.senderId == _currentUserId
-        ? _original!.receiverId
-        : _original!.senderId;
+    final currentUserId = _currentUserId;
+    final isMeSender = _original!.senderId == currentUserId;
+    final receiverId = isMeSender ? _original!.receiverId : _original!.senderId;
 
-    await MessageService.send(
-      receiverId: receiverId,
-      message: text,
-      subject: '',
-      replyTo: widget.threadId,
-    );
-    _replyController.clear();
-    setState(() => _hasSentReply = true);
-    await _loadMessages();
+    try {
+      await MessageService.send(
+        receiverId: receiverId,
+        message: text,
+        subject: 'Re: ${_original!.subject}',
+        replyTo: widget.threadId,
+      );
+
+      _replyController.clear();
+      await _loadMessages(scrollToBottom: true);
+    } catch (e) {
+      debugPrint('❌ Fejl ved afsendelse: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kunne ikke sende besked: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _deleteThread() async {

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'message_service.dart';
+
 class ApiService {
   static const String baseUrl = 'https://ocutune.ddns.net';
 
@@ -131,6 +133,7 @@ class ApiService {
     final response = await _post('/messages/send', payload);
     _handleVoidResponse(response, successCode: 200);
   }
+  
 
   static Future<void> markThreadAsRead(int threadId) async {
     final response = await _patch('/messages/thread/$threadId/read', {});
