@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 
 class InboxListTile extends StatelessWidget {
   final Map<String, dynamic> msg;
@@ -13,6 +14,19 @@ class InboxListTile extends StatelessWidget {
     required this.onTap,
   });
 
+  Future<String> _buildLabel() async {
+    final jwt = await AuthStorage.getTokenPayload();
+    final currentUserId = jwt['id'];
+
+    final isSender = msg['sender_id'] == currentUserId;
+
+    final otherPartyName = isSender
+        ? msg['receiver_name'] ?? 'Ukendt'
+        : msg['sender_name'] ?? 'Ukendt';
+
+    return isSender ? 'Til: $otherPartyName' : 'Fra: $otherPartyName';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSentByClinician = msg['sender_type'] == 'clinician';
@@ -21,65 +35,68 @@ class InboxListTile extends StatelessWidget {
         ? msg['subject']
         : '(Uden emne)';
 
-    final label = isSentByClinician
-        ? 'Til: ${msg['receiver_name'] ?? 'Ukendt'}'
-        : 'Fra: ${msg['sender_name'] ?? 'Ukendt'}';
+    return FutureBuilder<String>(
+      future: _buildLabel(),
+      builder: (context, snapshot) {
+        final label = snapshot.data ?? '';
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-      child: Material(
-        color: generalBox,
-        borderRadius: BorderRadius.circular(12.r),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12.r),
-          splashColor: Colors.white24,
-          highlightColor: Colors.white10,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStatusIcon(isSentByClinician, isUnread),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        subject,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontWeight: (isUnread && !isSentByClinician)
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                          fontSize: 14.sp,
-                        ),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+          child: Material(
+            color: generalBox,
+            borderRadius: BorderRadius.circular(12.r),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12.r),
+              splashColor: Colors.white24,
+              highlightColor: Colors.white10,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatusIcon(isSentByClinician, isUnread),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            subject,
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontWeight: (isUnread && !isSentByClinician)
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12.sp,
-                        ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      _formatDate(msg['sent_at']),
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12.sp,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 8.w),
-                Text(
-                  _formatDate(msg['sent_at']),
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12.sp,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
