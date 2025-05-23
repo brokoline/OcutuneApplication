@@ -17,8 +17,6 @@ class OfflineSyncManager {
       try {
         if (type == 'battery') {
           await BatteryService.sendToBackend(
-            patientId: json['patient_id'],
-            sensorId: json['sensor_id'],
             batteryLevel: json['battery_level'],
           );
         } else if (type == 'light') {

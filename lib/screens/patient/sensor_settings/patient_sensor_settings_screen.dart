@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -95,9 +96,8 @@ class _PatientSensorSettingsScreenState
     final sensorId = device.id.hashCode;
 
     try {
+      final batteryLevel = BleController.batteryNotifier.value;
       await BatteryService.sendToBackend(
-        patientId: widget.patientId,
-        sensorId: sensorId,
         batteryLevel: batteryLevel,
       );
     } catch (_) {
@@ -120,11 +120,11 @@ class _PatientSensorSettingsScreenState
           final battery = BleController.batteryNotifier.value;
 
           try {
+            final batteryLevel = BleController.batteryNotifier.value;
             await BatteryService.sendToBackend(
-              patientId: widget.patientId,
-              sensorId: sensorId,
-              batteryLevel: battery,
+              batteryLevel: batteryLevel,
             );
+
           } catch (_) {
             await OfflineStorageService.saveLocally(
               type: 'battery',

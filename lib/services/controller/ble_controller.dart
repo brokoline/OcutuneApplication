@@ -57,7 +57,6 @@ class BleController {
             connectedDeviceNotifier.value = device;
             print("\u2705 Forbundet til: \${device.name}");
 
-            final sensorId = device.id.hashCode;
 
             await Future.delayed(const Duration(milliseconds: 500));
 
@@ -81,9 +80,8 @@ class BleController {
             _lightDataListener = BleLightDataListener(
               lightCharacteristic: lightCharacteristic,
               ble: _ble,
-              patientId: patientId,
-              sensorId: sensorId,
             );
+
 
             _lightDataListener!.startListening();
             _lightDataListener!.startPollingReads();
@@ -93,7 +91,7 @@ class BleController {
               try {
                 final char = QualifiedCharacteristic(
                   deviceId: device.id,
-                  serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
+                  serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"),
                   characteristicId: Uuid.parse("00001fbf-30c2-496b-a199-5710fc709961"),
                 );
                 await _ble.writeCharacteristicWithoutResponse(
