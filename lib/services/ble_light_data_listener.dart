@@ -69,56 +69,32 @@ class BleLightDataListener {
       return;
     }
 
-    if (data.length < 16) {
-      print("⚠️ Modtaget data er for kort (<16 bytes), mulig fejl i sensor eller format.");
+    if (data.length < 48) {
+      print("⚠️ Forventede 48 bytes, fik kun ${data.length} – ignoreres.");
       return;
     }
 
     try {
       final byteData = ByteData.sublistView(Uint8List.fromList(data));
-      final lux = byteData.getFloat32(0, Endian.little);
-      final melanopicEdi = byteData.getFloat32(4, Endian.little);
-      final der = byteData.getFloat32(8, Endian.little);
-      final illuminance = byteData.getFloat32(12, Endian.little);
+      final values = List.generate(12, (i) => byteData.getInt32(i * 4, Endian.little));
       final now = DateTime.now().toIso8601String();
 
-      print("📊 Decode → Lux: $lux, EDI: $melanopicEdi, DER: $der, Illu: $illuminance");
-
-      await PatientLightDataService.sendToBackend(
-        patientId: patientId,
-        sensorId: sensorId,
-        luxLevel: lux,
-        melanopicEdi: melanopicEdi,
-        der: der,
-        illuminance: illuminance,
-        spectrum: [],
-        lightType: 'LED',
-        exposureScore: 80.0,
-        actionRequired: false,
-      );
-
-      print("✅ Lysdata sendt til backend.");
-      LocalLogService.log('✅ Lysdata gemt @ $now: $lux lux');
-    } catch (e) {
-      print("❌ Fejl under behandling af notify/polling-data: $e");
+      print("📊 Decode → ${values.map((v) => v.toString()).join(', ')}");
 
       await OfflineStorageService.saveLocally(
-        type: 'light',
+        type: 'light_sample',
         data: {
+          "timestamp": now,
+          "values": values,
           "patient_id": patientId,
           "sensor_id": sensorId,
-          "lux_level": null,
-          "melanopic_edi": null,
-          "der": null,
-          "illuminance": null,
-          "spectrum": [],
-          "light_type": "LED",
-          "exposure_score": 0,
-          "action_required": false,
         },
       );
 
-      LocalLogService.log('⚠️ Gemt offline pga. fejl: $e');
+      LocalLogService.log('✅ Parsed sample @ $now → $values');
+    } catch (e) {
+      print("❌ Fejl under behandling af int32-pakke: $e");
+      LocalLogService.log('⚠️ Gemt fejl ved parsing: $e');
     }
   }
 

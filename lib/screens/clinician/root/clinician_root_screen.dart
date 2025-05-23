@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/auth_storage.dart';
-import '../../../services/controller/clinician_dashboard_controller.dart';
+import '../../../services/controller/clinician_root_controller.dart';
 import '../../../widgets/clinician_widgets/clinician_nav_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../search/clinician_search_screen.dart';

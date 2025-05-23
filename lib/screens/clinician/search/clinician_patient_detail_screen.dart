@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/patient.dart';
-import '../../../services/controller/clinician_dashboard_controller.dart';
+import '../../../services/controller/clinician_root_controller.dart';
 import '../../../theme/colors.dart';
 
 class PatientDetailScreen extends StatelessWidget {

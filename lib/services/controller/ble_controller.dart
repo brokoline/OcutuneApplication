@@ -71,9 +71,12 @@ class BleController {
 
             final lightCharacteristic = QualifiedCharacteristic(
               deviceId: device.id,
-              serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
-              characteristicId: Uuid.parse("00001fbe-30c2-496b-a199-5710fc709961"),
+              serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"), // ✅ korrekt!
+              characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
             );
+
+
+
 
             _lightDataListener = BleLightDataListener(
               lightCharacteristic: lightCharacteristic,
@@ -222,4 +225,7 @@ class BleController {
       print('\u274c Fejl ved discoverServices: $e');
     }
   }
+
+
+  FlutterReactiveBle get bleInstance => _ble;
 }
