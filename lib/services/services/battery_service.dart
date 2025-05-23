@@ -17,7 +17,8 @@ class BatteryService {
       final deviceSerial = BleController.connectedDevice?.id ?? "unknown-device";
 
       if (jwt == null || patientId == null) {
-        throw Exception("JWT eller bruger-id mangler");
+        print("❌ JWT eller patientId mangler – sender ikke batteri");
+        return;
       }
 
       final sensorId = await ApiService.registerSensorUse(
