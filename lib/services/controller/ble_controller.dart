@@ -33,7 +33,7 @@ class BleController {
     _scanStream?.cancel();
     _scanStream = _ble.scanForDevices(withServices: []).listen((device) {
       final name = device.name.isNotEmpty ? device.name : "Ukendt enhed";
-      print("📱 Fundet enhed: $name (\${device.id})");
+      print("📱 Fundet enhed: $name (${device.id})");
       onDeviceDiscovered?.call(device);
     }, onError: (e) {
       print("🚨 Scan fejl: $e");
@@ -57,7 +57,7 @@ class BleController {
             stopScan();
             connectedDevice = device;
             connectedDeviceNotifier.value = device;
-            print("✅ Forbundet til: \${device.name}");
+            print("✅ Forbundet til: ${device.name}");
 
             await Future.delayed(const Duration(milliseconds: 500));
 
@@ -72,7 +72,7 @@ class BleController {
 
               _batteryTimer = Timer.periodic(Duration(minutes: 30), (_) async {
                 final level = batteryNotifier.value;
-                print("🔁 Periodisk batteri-upload: \$level%");
+                print("🔁 Periodisk batteri-upload: $level%");
                 await BatteryService.sendToBackend(batteryLevel: level);
               });
 
@@ -151,18 +151,18 @@ class BleController {
           );
 
           await _ble.writeCharacteristicWithoutResponse(char, value: value);
-          print("➡️ Writing \$value to \$uuid...");
+          print("➡️ Writing $value to $uuid...");
 
           await Future.delayed(Duration(milliseconds: 500));
           final result = await _ble.readCharacteristic(readCharacteristic);
-          print("🔍 Read after \$value → \$result");
+          print("🔍 Read after $value → $result");
 
           if (result.isNotEmpty) {
-            print("✅ SUCCESS! Data received after writing \$value to \$uuid");
+            print("✅ SUCCESS! Data received after writing $value to $uuid");
             return;
           }
         } catch (e) {
-          print("❌ Error writing to \$uuid with \$value: $e");
+          print("❌ Error writing to $uuid with $value: $e");
         }
       }
     }
@@ -183,7 +183,7 @@ class BleController {
       final result = await _ble.readCharacteristic(standardChar);
       if (result.isNotEmpty) {
         batteryNotifier.value = result[0];
-        print("🔋 Batteri: \${batteryNotifier.value}%");
+        print("🔋 Batteri: ${batteryNotifier.value}%");
       }
     } catch (e) {
       print("⚠️ Fejl ved batterilæsning: $e");
@@ -198,15 +198,16 @@ class BleController {
       final services = await _ble.getDiscoveredServices(connectedDevice!.id);
 
       for (final service in services) {
-        print('🟩 Service UUID: \$service');
+        print('🟩 Service UUID: $service');
         for (final char in service.characteristics) {
-          print('  └─ 🔹 Characteristic UUID: \$char');
+          print('  └─ 🔹 Characteristic UUID: $char');
         }
       }
     } catch (e) {
-      print('❌ Fejl ved discoverServices: $e');
+      print('❌ discoverServices-fejl: $e');
     }
   }
+
 
   FlutterReactiveBle get bleInstance => _ble;
 }
