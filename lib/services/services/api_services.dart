@@ -107,6 +107,8 @@ class ApiService {
     return _handleListResponse(response);
   }
 
+
+
   // ✉️ MESSAGE METHODS
   static Future<List<Map<String, dynamic>>> fetchInbox() async {
     final response = await _get('/messages/inbox');
@@ -196,7 +198,7 @@ class ApiService {
     return List<String>.from(jsonDecode(response.body));
   }
 
-  // 🧠 QUESTION METHODS
+  // QUESTION METHODS
   static Future<List<dynamic>> fetchQuestions() async {
     final response = await _get('/questions');
     return _handleDynamicListResponse(response);
@@ -219,6 +221,88 @@ class ApiService {
 
     return allData;
   }
+
+
+
+  // BLE DATA MANAGEMENT
+  static Future<int?> registerSensorUse({
+    required int patientId,
+    required String deviceSerial,
+    required String jwt,
+  }) async {
+    final url = Uri.parse("$baseUrl/register-sensor-use");
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      },
+      body: jsonEncode({
+        'patient_id': patientId,
+        'device_serial': deviceSerial,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      return body["sensor_id"];
+    } else {
+      print("❌ Fejl ved sensor-registrering: ${response.body}");
+      return null;
+    }
+  }
+
+  static Future<void> sendBatteryStatus({
+    required int patientId,
+    required int sensorId,
+    required int batteryLevel,
+    required String jwt,
+  }) async {
+    final url = Uri.parse("$baseUrl/patient-battery-status");
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      },
+      body: jsonEncode({
+        'patient_id': patientId,
+        'sensor_id': sensorId,
+        'battery_level': batteryLevel,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print("✅ Batteriniveau sendt til backend");
+    } else {
+      print("❌ Fejl ved batteri-API: ${response.body}");
+    }
+  }
+
+  static const String lightDataEndpoint = "$baseUrl/patient-light-data";
+  static Future<bool> sendLightData(Map<String, dynamic> data, String jwt) async {
+    final url = Uri.parse("$baseUrl/patient-light-data");
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 201) {
+      print("✅ Light data sendt succesfuldt");
+      return true;
+    } else {
+      print("❌ Fejl ved sendLightData: ${response.statusCode} ${response.body}");
+      return false;
+    }
+  }
+
 
   // 🛠 HELPER METHODS
   static Map<String, dynamic> _handleResponse(http.Response response) {

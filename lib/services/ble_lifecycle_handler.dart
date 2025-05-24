@@ -1,14 +1,19 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
+import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
 class BleLifecycleHandler extends WidgetsBindingObserver {
   final BleController bleController;
+  final BlePollingService pollingService;
 
   DiscoveredDevice? _lastDevice;
   int? _lastPatientId;
 
-  BleLifecycleHandler({required this.bleController});
+  BleLifecycleHandler({
+    required this.bleController,
+    required this.pollingService,
+  });
 
   void start() {
     WidgetsBinding.instance.addObserver(this);
@@ -39,8 +44,7 @@ class BleLifecycleHandler extends WidgetsBindingObserver {
           device: _lastDevice!,
           patientId: _lastPatientId!,
         );
-      } else {
-        print("⚠️ Ingen tidligere BLE-enhed gemt – reconnect springes over");
+        pollingService.startPolling();
       }
     }
   }

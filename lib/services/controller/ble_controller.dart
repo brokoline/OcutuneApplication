@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/ble_light_data_listener.dart';
+import 'package:ocutune_light_logger/services/services/battery_service.dart';
 
 class BleController {
   static final BleController _instance = BleController._internal();
@@ -19,6 +20,7 @@ class BleController {
   static final ValueNotifier<int> batteryNotifier = ValueNotifier(0);
   static final ValueNotifier<bool> isBluetoothOn = ValueNotifier(false);
 
+  Timer? _batteryTimer;
   BleLightDataListener? _lightDataListener;
 
   void monitorBluetoothState() {
@@ -31,10 +33,10 @@ class BleController {
     _scanStream?.cancel();
     _scanStream = _ble.scanForDevices(withServices: []).listen((device) {
       final name = device.name.isNotEmpty ? device.name : "Ukendt enhed";
-      print("\ud83d\udcf1 Fundet enhed: $name (\${device.id})");
+      print("📱 Fundet enhed: $name (\${device.id})");
       onDeviceDiscovered?.call(device);
     }, onError: (e) {
-      print("\ud83d\udea8 Scan fejl: $e");
+      print("🚨 Scan fejl: $e");
     });
   }
 
@@ -55,67 +57,52 @@ class BleController {
             stopScan();
             connectedDevice = device;
             connectedDeviceNotifier.value = device;
-            print("\u2705 Forbundet til: \${device.name}");
-
-            final sensorId = device.id.hashCode;
+            print("✅ Forbundet til: \${device.name}");
 
             await Future.delayed(const Duration(milliseconds: 500));
 
             try {
               await discoverServices();
               await readBatteryLevel();
+
+              _batteryTimer?.cancel();
+              Future.delayed(const Duration(seconds: 20), () {
+                BatteryService.sendToBackend(batteryLevel: batteryNotifier.value);
+              });
+
+              _batteryTimer = Timer.periodic(Duration(minutes: 30), (_) async {
+                final level = batteryNotifier.value;
+                print("🔁 Periodisk batteri-upload: \$level%");
+                await BatteryService.sendToBackend(batteryLevel: level);
+              });
+
               await trySensorActivationWrites(device.id);
             } catch (e) {
-              print("\u274c Fejl under discoverServices/init: $e");
+              print("❌ Fejl under discoverServices/init: $e");
             }
 
             final lightCharacteristic = QualifiedCharacteristic(
               deviceId: device.id,
-              serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
-              characteristicId: Uuid.parse("00001fbe-30c2-496b-a199-5710fc709961"),
+              serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"),
+              characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
             );
 
             _lightDataListener = BleLightDataListener(
               lightCharacteristic: lightCharacteristic,
               ble: _ble,
-              patientId: patientId,
-              sensorId: sensorId,
             );
 
-            _lightDataListener!.startListening();
             _lightDataListener!.startPollingReads();
-            await _lightDataListener!.testReadOnce();
-
-            Future.delayed(const Duration(seconds: 5), () async {
-              try {
-                final char = QualifiedCharacteristic(
-                  deviceId: device.id,
-                  serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
-                  characteristicId: Uuid.parse("00001fbf-30c2-496b-a199-5710fc709961"),
-                );
-                await _ble.writeCharacteristicWithoutResponse(
-                  char,
-                  value: [0x06, 0x08, 0x01],
-                );
-                print("\ud83d\udd01 Re-sendt init-v\u00e6rdi til sensor efter 5 sek.");
-                await _lightDataListener?.testReadOnce();
-              } catch (e) {
-                print("\u274c Fejl ved re-send af init efter delay: $e");
-              }
-            });
           } else if (update.connectionState == DeviceConnectionState.disconnected) {
-            connectedDevice = null;
-            connectedDeviceNotifier.value = null;
-            batteryNotifier.value = 0;
-            print("\u274c Forbindelsen mistet.");
+            disconnect();
             startScan();
           }
         } catch (e) {
-          print("\u274c Exception i BLE connection: $e");
+          print("❌ Exception i BLE connection: $e");
         }
       },
       onError: (error) {
-        print("\u274c BLE connection fejl: $error");
+        print("❌ BLE connection fejl: $error");
         disconnect();
       },
     );
@@ -128,7 +115,11 @@ class BleController {
     connectedDevice = null;
     connectedDeviceNotifier.value = null;
     batteryNotifier.value = 0;
-    print("\ud83d\udd0c Forbindelsen er afbrudt manuelt");
+
+    _batteryTimer?.cancel();
+    _batteryTimer = null;
+
+    print("🔌 Forbindelsen er afbrudt manuelt");
   }
 
   Future<void> trySensorActivationWrites(String deviceId) async {
@@ -139,13 +130,9 @@ class BleController {
     ];
 
     final valuesToTry = [
-      [0x01],
-      [0x00],
-      [0xFF],
+      [0x01], [0x00], [0xFF],
       [0x06, 0x08, 0x01],
-      [0xA0],
-      [0xAA],
-      [0x01, 0x00],
+      [0xA0], [0xAA], [0x01, 0x00],
     ];
 
     final readCharacteristic = QualifiedCharacteristic(
@@ -164,25 +151,23 @@ class BleController {
           );
 
           await _ble.writeCharacteristicWithoutResponse(char, value: value);
-          print("\u2794 Writing $value to $uuid...");
+          print("➡️ Writing \$value to \$uuid...");
 
           await Future.delayed(Duration(milliseconds: 500));
-
           final result = await _ble.readCharacteristic(readCharacteristic);
-          print("\ud83d\udd0d Read after $value → $result");
+          print("🔍 Read after \$value → \$result");
 
           if (result.isNotEmpty) {
-            print("\u2705 SUCCESS! Data received after writing $value to $uuid");
-            return; // Stop test hvis data modtages
+            print("✅ SUCCESS! Data received after writing \$value to \$uuid");
+            return;
           }
         } catch (e) {
-          print("\u274c Error writing to $uuid with $value: $e");
+          print("❌ Error writing to \$uuid with \$value: $e");
         }
       }
     }
 
-    print("\u2705 F\u00e6rdig med at pr\u00f8ve aktiverings-writes.");
-    await _lightDataListener?.testReadOnce();
+    print("✅ Færdig med at prøve aktiverings-writes.");
   }
 
   Future<void> readBatteryLevel() async {
@@ -198,10 +183,10 @@ class BleController {
       final result = await _ble.readCharacteristic(standardChar);
       if (result.isNotEmpty) {
         batteryNotifier.value = result[0];
-        print("\ud83d\udd0b Batteri: \${batteryNotifier.value}%");
+        print("🔋 Batteri: \${batteryNotifier.value}%");
       }
     } catch (e) {
-      print("\u26a0\ufe0f Fejl ved batteril\u00e6sning: $e");
+      print("⚠️ Fejl ved batterilæsning: $e");
     }
   }
 
@@ -213,13 +198,15 @@ class BleController {
       final services = await _ble.getDiscoveredServices(connectedDevice!.id);
 
       for (final service in services) {
-        print('\ud83d\udfe9 Service UUID: \$service');
+        print('🟩 Service UUID: \$service');
         for (final char in service.characteristics) {
-          print('  └─ \ud83d\udd39 Characteristic UUID: $char');
+          print('  └─ 🔹 Characteristic UUID: \$char');
         }
       }
     } catch (e) {
-      print('\u274c Fejl ved discoverServices: $e');
+      print('❌ Fejl ved discoverServices: $e');
     }
   }
+
+  FlutterReactiveBle get bleInstance => _ble;
 }

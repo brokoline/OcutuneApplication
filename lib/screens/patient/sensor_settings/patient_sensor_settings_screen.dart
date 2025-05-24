@@ -5,9 +5,10 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
-import 'package:ocutune_light_logger/services/battery_service.dart';
+import 'package:ocutune_light_logger/services/services/battery_service.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
+import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
 class PatientSensorSettingsScreen extends StatefulWidget {
   final int patientId;
@@ -25,6 +26,7 @@ class _PatientSensorSettingsScreenState
   final List<DiscoveredDevice> _devices = [];
   Timer? _batterySyncTimer;
   BleLifecycleHandler? _lifecycleHandler;
+  BlePollingService? _pollingService;
 
   @override
   void initState() {
@@ -41,13 +43,12 @@ class _PatientSensorSettingsScreenState
     };
 
     _bleController.monitorBluetoothState();
-    _lifecycleHandler = BleLifecycleHandler(bleController: _bleController);
-    _lifecycleHandler?.start();
   }
 
   @override
   void dispose() {
     _batterySyncTimer?.cancel();
+    _pollingService?.stopPolling();
     _lifecycleHandler?.stop();
     super.dispose();
   }
@@ -94,9 +95,8 @@ class _PatientSensorSettingsScreenState
     final sensorId = device.id.hashCode;
 
     try {
+      final batteryLevel = BleController.batteryNotifier.value;
       await BatteryService.sendToBackend(
-        patientId: widget.patientId,
-        sensorId: sensorId,
         batteryLevel: batteryLevel,
       );
     } catch (_) {
@@ -112,18 +112,18 @@ class _PatientSensorSettingsScreenState
 
     _batterySyncTimer?.cancel();
     _batterySyncTimer =
-        Timer.periodic(const Duration(seconds: 10), (timer) async {
+        Timer.periodic(const Duration(minutes: 10), (timer) async {
           if (!mounted || BleController.connectedDevice == null) return;
 
           await _bleController.readBatteryLevel();
           final battery = BleController.batteryNotifier.value;
 
           try {
+            final batteryLevel = BleController.batteryNotifier.value;
             await BatteryService.sendToBackend(
-              patientId: widget.patientId,
-              sensorId: sensorId,
-              batteryLevel: battery,
+              batteryLevel: batteryLevel,
             );
+
           } catch (_) {
             await OfflineStorageService.saveLocally(
               type: 'battery',
@@ -136,6 +136,25 @@ class _PatientSensorSettingsScreenState
           }
         });
 
+    // 👉 Start BLE polling
+    _pollingService = BlePollingService(
+      ble: _bleController.bleInstance,
+      readChar: QualifiedCharacteristic(
+        serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
+        characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
+        deviceId: device.id,
+      ),
+    );
+    _pollingService?.startPolling();
+
+    // 👉 Start Lifecycle handler
+    _lifecycleHandler = BleLifecycleHandler(
+      bleController: _bleController,
+      pollingService: _pollingService!,
+    );
+    _lifecycleHandler?.start();
+    _lifecycleHandler?.updateDevice(device: device, patientId: widget.patientId);
+
     if (mounted) {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,6 +165,7 @@ class _PatientSensorSettingsScreenState
 
   void _disconnectFromDevice() {
     _batterySyncTimer?.cancel();
+    _pollingService?.stopPolling();
     _bleController.disconnect();
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
@@ -218,7 +238,8 @@ class _PatientSensorSettingsScreenState
                                     : _devices.isEmpty
                                     ? 'Bluetooth er slået til.\nIngen sensor forbundet.'
                                     : 'Bluetooth er slået til.\n${_devices.length} enhed(er) fundet.',
-                                style: const TextStyle(color: Colors.white, fontSize: 15),
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 15),
                               );
                             },
                           );
@@ -303,14 +324,18 @@ class _PatientSensorSettingsScreenState
                           color: Colors.transparent,
                           child: InkWell(
                             onTap: () {
-                              final connectedDevice = BleController.connectedDevice;
-                              if (connectedDevice == null || connectedDevice.id != device.id) {
+                              final connectedDevice =
+                                  BleController.connectedDevice;
+                              if (connectedDevice == null ||
+                                  connectedDevice.id != device.id) {
                                 _connectToDevice(device);
                               }
                             },
                             borderRadius: BorderRadius.circular(8),
-                            hoverColor: const Color.fromRGBO(255, 255, 255, 0.1),
-                            splashColor: const Color.fromRGBO(255, 255, 255, 0.2),
+                            hoverColor: const Color.fromRGBO(
+                                255, 255, 255, 0.1),
+                            splashColor: const Color.fromRGBO(
+                                255, 255, 255, 0.2),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 12),
@@ -344,11 +369,14 @@ class _PatientSensorSettingsScreenState
                                       ],
                                     ),
                                   ),
-                                  ValueListenableBuilder<DiscoveredDevice?>(
-                                    valueListenable:
-                                    BleController.connectedDeviceNotifier,
-                                    builder: (context, connectedDevice, _) {
-                                      if (connectedDevice?.id == device.id) {
+                                  ValueListenableBuilder<
+                                      DiscoveredDevice?>(
+                                    valueListenable: BleController
+                                        .connectedDeviceNotifier,
+                                    builder:
+                                        (context, connectedDevice, _) {
+                                      if (connectedDevice?.id ==
+                                          device.id) {
                                         return const Icon(
                                           Icons.link,
                                           color: Colors.white70,
