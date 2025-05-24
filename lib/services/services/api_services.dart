@@ -281,7 +281,7 @@ class ApiService {
     }
   }
 
-
+  static const String lightDataEndpoint = "$baseUrl/patient-light-data";
   static Future<bool> sendLightData(Map<String, dynamic> data, String jwt) async {
     final url = Uri.parse("$baseUrl/patient-light-data");
 

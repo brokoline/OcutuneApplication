@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 
@@ -16,8 +17,7 @@ class PatientLightDataService {
     required double exposureScore,
     required bool actionRequired,
   }) async {
-    final uri = Uri.parse('http://192.168.64.6:5000/patient-light-data');
-
+    final uri = Uri.parse('${ApiService.baseUrl}/patient-light-data');
     final data = {
       "patient_id": patientId,
       "sensor_id": sensorId,

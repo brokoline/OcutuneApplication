@@ -8,9 +8,24 @@ import 'package:ocutune_light_logger/services/auth_storage.dart';
 import '../controller/ble_controller.dart';
 
 class BatteryService {
+  static DateTime? _lastSent;
+  static const Duration minInterval = Duration(minutes: 10);
+
   static Future<void> sendToBackend({
     required int batteryLevel,
   }) async {
+    final now = DateTime.now();
+
+    if (batteryLevel <= 0) {
+      print("⏱️ Batteriniveau er 0 eller ukendt – venter med upload.");
+      return;
+    }
+
+    if (_lastSent != null && now.difference(_lastSent!) < minInterval) {
+      print("⏱️ Springer batteri-upload over (for nylig sendt)");
+      return;
+    }
+
     try {
       final jwt = await AuthStorage.getToken();
       final patientId = await AuthStorage.getUserId();
@@ -27,25 +42,37 @@ class BatteryService {
         jwt: jwt,
       );
 
-      final uri = Uri.parse('http://192.168.64.6:5000/patient-battery-status');
+      if (sensorId == null) {
+        print("❌ Sensor-registrering mislykkedes – batteridata springes over");
+        return;
+      }
+
+      final uri = Uri.parse('${ApiService.baseUrl}/patient-battery-status');
+      final payload = {
+        "patient_id": patientId,
+        "sensor_id": sensorId,
+        "battery_level": batteryLevel,
+      };
+
+      print("📤 Batteri-upload til $uri");
+      print("🧾 Payload: $payload");
+
       final response = await http.post(
         uri,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $jwt',
         },
-        body: jsonEncode({
-          "patient_id": patientId,
-          "sensor_id": sensorId,
-          "battery_level": batteryLevel,
-        }),
+        body: jsonEncode(payload),
       );
 
-      if (response.statusCode != 201) {
-        throw Exception("Fejl i serverresponse: ${response.body}");
+      if (response.statusCode == 201) {
+        _lastSent = now;
+        print("✅ Batteriniveau sendt");
+      } else {
+        throw Exception("Fejl i serverresponse: ${response.statusCode} ${response.body}");
       }
 
-      print("✅ Batteriniveau sendt");
     } catch (e) {
       print("⚠️ Fejl i batteri-upload: $e");
 
