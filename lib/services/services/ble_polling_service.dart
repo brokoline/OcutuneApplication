@@ -39,9 +39,9 @@ class BlePollingService {
           data: parsed,
           type: "light_sample",
         );
-        print("📥 Polled and saved: $parsed");
+        print("📥 Henter og gemmer: $parsed");
       } catch (e) {
-        print("⚠️ BLE polling error: $e");
+        print("⚠️ BLE polling fejl: $e");
       }
     });
   }

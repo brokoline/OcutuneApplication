@@ -295,7 +295,7 @@ class ApiService {
     );
 
     if (response.statusCode == 201) {
-      print("✅ Light data sendt succesfuldt");
+      print("✅ Lys data sendt succesfuldt");
       return true;
     } else {
       print("❌ Fejl ved sendLightData: ${response.statusCode} ${response.body}");

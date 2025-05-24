@@ -136,18 +136,18 @@ class _PatientSensorSettingsScreenState
           }
         });
 
-    // 👉 Start BLE polling
+    // Start BLE polling
     _pollingService = BlePollingService(
       ble: _bleController.bleInstance,
       readChar: QualifiedCharacteristic(
-        serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
+        serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"),
         characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
         deviceId: device.id,
       ),
     );
     _pollingService?.startPolling();
 
-    // 👉 Start Lifecycle handler
+    // Start Lifecycle handler
     _lifecycleHandler = BleLifecycleHandler(
       bleController: _bleController,
       pollingService: _pollingService!,
