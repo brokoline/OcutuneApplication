@@ -10,6 +10,9 @@ import 'package:ocutune_light_logger/services/services/offline_storage_service.d
 import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
+import '../../../services/auth_storage.dart';
+import '../../../services/services/api_services.dart';
+
 class PatientSensorSettingsScreen extends StatefulWidget {
   final int patientId;
 
@@ -87,6 +90,16 @@ class _PatientSensorSettingsScreenState
       device: device,
       patientId: widget.patientId,
     );
+    final jwt = await AuthStorage.getToken();
+    if (jwt != null) {
+      final sensorId = await ApiService.registerSensorUse(
+        patientId: widget.patientId,
+        deviceSerial: device.id,
+        jwt: jwt,
+      );
+      print("✅ Sensor registreret med ID: $sensorId");
+    }
+
 
     await _bleController.discoverServices();
     await _bleController.readBatteryLevel();
@@ -109,32 +122,6 @@ class _PatientSensorSettingsScreenState
         },
       );
     }
-
-    _batterySyncTimer?.cancel();
-    _batterySyncTimer =
-        Timer.periodic(const Duration(minutes: 10), (timer) async {
-          if (!mounted || BleController.connectedDevice == null) return;
-
-          await _bleController.readBatteryLevel();
-          final battery = BleController.batteryNotifier.value;
-
-          try {
-            final batteryLevel = BleController.batteryNotifier.value;
-            await BatteryService.sendToBackend(
-              batteryLevel: batteryLevel,
-            );
-
-          } catch (_) {
-            await OfflineStorageService.saveLocally(
-              type: 'battery',
-              data: {
-                "patient_id": widget.patientId,
-                "sensor_id": sensorId,
-                "battery_level": battery,
-              },
-            );
-          }
-        });
 
     // Start BLE polling
     _pollingService = BlePollingService(

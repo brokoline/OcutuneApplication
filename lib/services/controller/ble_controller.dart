@@ -5,6 +5,9 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/ble_light_data_listener.dart';
 import 'package:ocutune_light_logger/services/services/battery_service.dart';
 
+import '../auth_storage.dart';
+import '../services/api_services.dart';
+
 class BleController {
   static final BleController _instance = BleController._internal();
   factory BleController() => _instance;
@@ -105,10 +108,28 @@ class BleController {
     );
   }
 
-  void disconnect() {
+  void disconnect() async {
     _connectionStream?.cancel();
     _lightDataListener?.stopListening();
     _lightDataListener = null;
+
+    // Kalder til backend for at afslutte sensoren
+    try {
+      final patientId = await AuthStorage.getUserId();
+      final jwt = await AuthStorage.getToken();
+      final sensorId = await ApiService.getSensorIdFromDevice(connectedDevice!.id, jwt!);
+
+      await ApiService.endSensorUse(
+        patientId: patientId!,
+        sensorId: sensorId!,
+        jwt: jwt,
+        status: "disconnected",
+      );
+
+    } catch (e) {
+      print("⚠️ Kunne ikke afslutte sensorbrug: $e");
+    }
+
     connectedDevice = null;
     connectedDeviceNotifier.value = null;
     batteryNotifier.value = 0;
@@ -116,6 +137,7 @@ class BleController {
     _batteryTimer = null;
     print("🔌 Forbindelsen er afbrudt");
   }
+
 
   Future<void> readBatteryLevel() async {
     if (connectedDevice == null) return;
