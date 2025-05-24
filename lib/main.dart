@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
@@ -59,8 +60,28 @@ void main() async {
     print('❌ FEJL under opstart: $e');
   }
 
+  FlutterForegroundTask.init(
+    androidNotificationOptions: AndroidNotificationOptions(
+      channelId: 'foreground_service_channel',
+      channelName: 'Foreground Service',
+      channelDescription: 'This channel is used for foreground service.',
+      channelImportance: NotificationChannelImportance.LOW,
+      priority: NotificationPriority.LOW,
+      iconData: const NotificationIconData(
+        resType: ResourceType.mipmap,
+        resPrefix: ResourcePrefix.ic,
+        name: 'launcher',
+      ),
+    ),
+    iosNotificationOptions: const IOSNotificationOptions(),
+    foregroundTaskOptions: const ForegroundTaskOptions(),
+  );
+
   runApp(const OcutuneApp());
+
 }
+
+
 
 class OcutuneApp extends StatelessWidget {
   const OcutuneApp({super.key});

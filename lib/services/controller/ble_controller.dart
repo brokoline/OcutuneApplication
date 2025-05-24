@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/ble_light_data_listener.dart';
 import 'package:ocutune_light_logger/services/services/battery_service.dart';
@@ -58,6 +59,11 @@ class BleController {
           connectedDevice = device;
           connectedDeviceNotifier.value = device;
           print("✅ Forbundet til: ${device.name}");
+          await FlutterForegroundTask.startService(
+            notificationTitle: 'Lysmåling aktiv',
+            notificationText: 'Din sensor logger lysdata i baggrunden',
+          );
+
 
           await Future.delayed(const Duration(milliseconds: 500));
           await discoverServices();
@@ -88,6 +94,7 @@ class BleController {
           _lightDataListener!.startPollingReads();
         } else if (update.connectionState == DeviceConnectionState.disconnected) {
           disconnect();
+          await FlutterForegroundTask.stopService();
           startScan();
         }
       },
