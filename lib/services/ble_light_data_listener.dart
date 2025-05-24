@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
@@ -11,49 +10,38 @@ class BleLightDataListener {
   final QualifiedCharacteristic lightCharacteristic;
   final FlutterReactiveBle ble;
 
-  StreamSubscription<List<int>>? _subscription;
   Timer? _readTimer;
+  bool _isReading = false;
 
   BleLightDataListener({
     required this.lightCharacteristic,
     required this.ble,
   });
 
-  void startListening() {
-    print("🎧 Starter BLE notify-lytning på: ${lightCharacteristic.characteristicId}");
+  void startPollingReads({Duration interval = const Duration(seconds: 10)}) {
+    print("📆 Starter polling-læsning hver ${interval.inSeconds} sek. fra ${lightCharacteristic.characteristicId}");
 
-    _subscription = ble.subscribeToCharacteristic(lightCharacteristic).listen(
-          (data) async {
-        print("📦 Notify-data modtaget: $data (length: ${data.length})");
-        await _handleData(data);
-      },
-      onError: (e) {
-        print("❌ Notify stream-fejl: $e");
-        LocalLogService.log('❌ BLE notify-fejl: $e');
-      },
-    );
-  }
+    _readTimer?.cancel();
+    _readTimer = Timer.periodic(interval, (_) async {
+      if (_isReading) return;
+      _isReading = true;
 
-  void startPollingReads() {
-    print("📆 Starter polling-læsning hver 10. sekund fra ${lightCharacteristic.characteristicId}");
-
-    _readTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
       try {
         final result = await ble.readCharacteristic(lightCharacteristic);
         print("🧾 Manuel læsning (poll): $result");
         await _handleData(result);
       } catch (e) {
-        print("❌ Fejl under polling-læsning: $e");
+        print("⚠️ BLE polling error: $e");
+      } finally {
+        _isReading = false;
       }
     });
   }
 
   Future<void> stopListening() async {
-    await _subscription?.cancel();
-    _subscription = null;
     _readTimer?.cancel();
     _readTimer = null;
-    print("🔕 Stopper BLE notify/polling-lytning");
+    print("🔕 Stopper BLE polling-lytning");
   }
 
   double calculateExposureScore(double melanopic, DateTime now) {
@@ -69,16 +57,12 @@ class BleLightDataListener {
 
   String getActionRequired(double melanopic, DateTime now) {
     final hour = now.hour + now.minute / 60.0;
-
     if (hour >= 7 && hour < 19) {
-      if (melanopic < 250) return "increase";
-      return "none";
+      return melanopic < 250 ? "increase" : "none";
     } else if (hour >= 19 && hour < 23) {
-      if (melanopic > 10) return "decrease";
-      return "none";
+      return melanopic > 10 ? "decrease" : "none";
     } else {
-      if (melanopic > 1) return "decrease";
-      return "none";
+      return melanopic > 1 ? "decrease" : "none";
     }
   }
 
@@ -112,20 +96,17 @@ class BleLightDataListener {
       final actionRequired = getActionRequired(melanopic, now);
       final lightType = lightTypeFromCode(values[5]);
 
-      print("📊 Decode → ${values.map((v) => v.toString()).join(', ')}");
+      print("📊 Decode → ${values.join(', ')}");
       print("📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired, light_type: $lightType");
 
       final jwt = await AuthStorage.getToken();
       final patientId = await AuthStorage.getUserId();
-
       if (jwt == null || patientId == null) {
         LocalLogService.log("❌ JWT eller patient-ID mangler – kan ikke sende data");
         return;
       }
 
       final deviceSerial = lightCharacteristic.characteristicId.toString();
-
-      // Registrér sensor automatisk
       final sensorId = await ApiService.registerSensorUse(
         patientId: patientId,
         deviceSerial: deviceSerial,
@@ -160,7 +141,11 @@ class BleLightDataListener {
         "spectrum": values.sublist(4),
         "light_type": lightType,
         "exposure_score": exposureScore,
-        "action_required": actionRequired == "increase" ? 1 : actionRequired == "decrease" ? 2 : 0,
+        "action_required": actionRequired == "increase"
+            ? 1
+            : actionRequired == "decrease"
+            ? 2
+            : 0,
       };
 
       final success = await ApiService.sendLightData(lightData, jwt);
@@ -170,16 +155,6 @@ class BleLightDataListener {
     } catch (e) {
       print("❌ Fejl i håndtering af BLE-data: $e");
       LocalLogService.log("⚠️ Fejl ved parsing eller upload: $e");
-    }
-  }
-
-  Future<void> testReadOnce() async {
-    try {
-      print("🧪 Læser én gang fra karakteristik manuelt...");
-      final result = await ble.readCharacteristic(lightCharacteristic);
-      print("🧾 Manuel læsning: $result");
-    } catch (e) {
-      print("❌ Fejl ved manuel læsning: $e");
     }
   }
 }

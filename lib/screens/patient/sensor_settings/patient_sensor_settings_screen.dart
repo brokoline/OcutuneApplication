@@ -112,7 +112,7 @@ class _PatientSensorSettingsScreenState
 
     _batterySyncTimer?.cancel();
     _batterySyncTimer =
-        Timer.periodic(const Duration(seconds: 10), (timer) async {
+        Timer.periodic(const Duration(minutes: 10), (timer) async {
           if (!mounted || BleController.connectedDevice == null) return;
 
           await _bleController.readBatteryLevel();
