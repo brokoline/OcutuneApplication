@@ -48,7 +48,8 @@ class OfflineSyncManager {
         }
 
         await OfflineStorageService.deleteById(id);
-        print("✅ Synkroniseret: $type $id");
+        final now = DateTime.now().toIso8601String();
+        print("✅ [$now] Synkroniseret: $type $id");
       } catch (e) {
         print("❌ Fejl ved synkronisering af $type $id: $e");
 
