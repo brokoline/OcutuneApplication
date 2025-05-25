@@ -59,7 +59,7 @@ class OfflineStorageService {
         'sensor_id': data['sensor_id'],
         'patient_id': data['patient_id'],
         'started_at': data['timestamp'],
-        'ended_at': data['ended_at'], // Optional: can be null
+        'ended_at': data['ended_at'],
         'status': data['status'],     // Optional: 'connected', 'disconnected', etc.
       });
       return;

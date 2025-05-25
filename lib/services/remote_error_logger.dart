@@ -9,7 +9,7 @@ class RemoteErrorLogger {
   }) async {
     try {
       await http.post(
-        Uri.parse('http://192.168.64.6:5000/log-report'),
+        Uri.parse('https://ocutune.ddns.net/log-report'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'patient_id': patientId,

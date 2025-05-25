@@ -82,7 +82,6 @@ class BleController {
             await BatteryService.sendToBackend(batteryLevel: level);
           });
 
-          // 👇 Ret her: korrekt service ID til characteristic!
           final lightCharacteristic = QualifiedCharacteristic(
             deviceId: device.id,
             serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"), // ✅ KORREKT service!

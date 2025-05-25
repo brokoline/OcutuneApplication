@@ -10,6 +10,7 @@ import 'package:ocutune_light_logger/services/services/ble_polling_service.dart'
 
 import '../../../services/auth_storage.dart';
 import '../../../services/services/api_services.dart';
+import '../../../services/services/battery_service.dart';
 
 class PatientSensorSettingsScreen extends StatefulWidget {
   final int patientId;
@@ -54,6 +55,7 @@ class _PatientSensorSettingsScreenState
     super.dispose();
   }
 
+
   void _startScanning() {
     if (mounted) {
       setState(() {
@@ -88,6 +90,7 @@ class _PatientSensorSettingsScreenState
       device: device,
       patientId: widget.patientId,
     );
+
     final jwt = await AuthStorage.getToken();
     if (jwt != null) {
       final sensorId = await ApiService.registerSensorUse(
@@ -97,7 +100,6 @@ class _PatientSensorSettingsScreenState
       );
       print("✅ Sensor registreret med ID: $sensorId");
     }
-
 
     await _bleController.discoverServices();
 
@@ -120,6 +122,20 @@ class _PatientSensorSettingsScreenState
     _lifecycleHandler?.start();
     _lifecycleHandler?.updateDevice(device: device, patientId: widget.patientId);
 
+    // 🔋 Start batteri-timer
+    _batterySyncTimer?.cancel();
+    _batterySyncTimer = Timer.periodic(Duration(minutes: 10), (_) async {
+      try {
+        if (BleController.connectedDevice != null) {
+          final batteryLevel = BleController.batteryNotifier.value;
+          await BatteryService.sendToBackend(batteryLevel: batteryLevel);
+        }
+      } catch (e) {
+        print("⚠️ Batteri-upload fejlede: $e");
+      }
+    });
+
+
     if (mounted) {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
@@ -127,6 +143,7 @@ class _PatientSensorSettingsScreenState
       );
     }
   }
+
 
   void _disconnectFromDevice() {
     _batterySyncTimer?.cancel();
