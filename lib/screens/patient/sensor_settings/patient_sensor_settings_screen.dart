@@ -103,17 +103,6 @@ class _PatientSensorSettingsScreenState
 
     await _bleController.discoverServices();
 
-    // Start BLE polling
-    _pollingService = BlePollingService(
-      ble: _bleController.bleInstance,
-      characteristic: QualifiedCharacteristic(
-        serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"),
-        characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
-        deviceId: device.id,
-      ),
-    );
-    _pollingService?.startPolling();
-
 
     // Start Lifecycle handler
     _lifecycleHandler = BleLifecycleHandler(

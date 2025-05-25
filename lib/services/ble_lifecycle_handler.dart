@@ -44,7 +44,6 @@ class BleLifecycleHandler extends WidgetsBindingObserver {
           device: _lastDevice!,
           patientId: _lastPatientId!,
         );
-        pollingService.startPolling();
       }
     }
   }

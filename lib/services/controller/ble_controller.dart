@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:ocutune_light_logger/services/ble_light_data_listener.dart';
 import 'package:ocutune_light_logger/services/services/battery_service.dart';
+import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
 import '../auth_storage.dart';
 import '../services/api_services.dart';
@@ -25,7 +25,7 @@ class BleController {
   static final ValueNotifier<bool> isBluetoothOn = ValueNotifier(false);
 
   Timer? _batteryTimer;
-  BleLightDataListener? _lightDataListener;
+  BlePollingService? _lightPollingService;
 
   void monitorBluetoothState() {
     _ble.statusStream.listen((status) {
@@ -67,7 +67,6 @@ class BleController {
             notificationText: 'Din sensor logger lysdata i baggrunden',
           );
 
-
           await Future.delayed(const Duration(milliseconds: 500));
           await discoverServices();
           await readBatteryLevel();
@@ -84,22 +83,15 @@ class BleController {
 
           final lightCharacteristic = QualifiedCharacteristic(
             deviceId: device.id,
-            serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"), // ✅ KORREKT service!
+            serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"),
             characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
           );
 
-          _lightDataListener = BleLightDataListener(
-            lightCharacteristic: lightCharacteristic,
+          _lightPollingService = BlePollingService(
             ble: _ble,
+            characteristic: lightCharacteristic,
           );
-
-          _lightDataListener?.stopListening(); // <- STOPPER tidligere timer
-          _lightDataListener = BleLightDataListener(
-            lightCharacteristic: lightCharacteristic,
-            ble: _ble,
-          );
-
-          _lightDataListener!.startPollingReads(); // Starter en ny polling-timer
+          _lightPollingService!.startPolling();
         } else if (update.connectionState == DeviceConnectionState.disconnected) {
           disconnect();
           await FlutterForegroundTask.stopService();
@@ -115,8 +107,8 @@ class BleController {
 
   void disconnect() async {
     _connectionStream?.cancel();
-    _lightDataListener?.stopListening();
-    _lightDataListener = null;
+    _lightPollingService?.stopPolling();
+    _lightPollingService = null;
 
     // Kalder til backend for at afslutte sensoren
     try {
@@ -130,7 +122,6 @@ class BleController {
         jwt: jwt,
         status: "disconnected",
       );
-
     } catch (e) {
       print("⚠️ Kunne ikke afslutte sensorbrug: $e");
     }
@@ -143,17 +134,14 @@ class BleController {
     print("🔌 Forbindelsen er afbrudt");
   }
 
-
   Future<void> readBatteryLevel() async {
     if (connectedDevice == null) return;
-
     try {
       final char = QualifiedCharacteristic(
         deviceId: connectedDevice!.id,
         serviceId: Uuid.parse("180F"),
         characteristicId: Uuid.parse("2A19"),
       );
-
       final result = await _ble.readCharacteristic(char);
       if (result.isNotEmpty) {
         batteryNotifier.value = result[0];
@@ -166,11 +154,9 @@ class BleController {
 
   Future<void> discoverServices() async {
     if (connectedDevice == null) return;
-
     try {
       await _ble.discoverAllServices(connectedDevice!.id);
       final services = await _ble.getDiscoveredServices(connectedDevice!.id);
-
       for (final service in services) {
         print('🟩 Service UUID: $service');
         for (final char in service.characteristics) {
