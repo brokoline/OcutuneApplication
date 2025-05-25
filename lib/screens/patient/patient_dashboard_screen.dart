@@ -6,7 +6,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_patient_dashboard_tile.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
-  final int patientId;
+  final String patientId;
 
   const PatientDashboardScreen({super.key, required this.patientId});
 

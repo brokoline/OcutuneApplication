@@ -1,165 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:provider/provider.dart';
+import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
-import 'dart:io';
 
-import '../../../services/services/message_service.dart'; // for HttpDate
-
-class PatientInboxScreen extends StatefulWidget {
+class PatientInboxScreen extends StatelessWidget {
   const PatientInboxScreen({super.key});
 
   @override
-  State<PatientInboxScreen> createState() => _PatientInboxScreenState();
-}
-
-class _PatientInboxScreenState extends State<PatientInboxScreen> {
-  List<Map<String, dynamic>> _messages = [];
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMessages();
-  }
-
-  Future<void> _loadMessages() async {
-    try {
-      final jwt = await AuthStorage.getTokenPayload();
-      final currentUserId = jwt['id'];
-
-      final msgs = await MessageService.fetchInbox();
-      final Map<int, List<Map<String, dynamic>>> grouped = {};
-
-      // Gruppér beskeder pr. thread_id
-      for (var msg in msgs) {
-        final threadId = msg['thread_id'];
-        grouped.putIfAbsent(threadId, () => []).add(msg);
-      }
-
-      final List<Map<String, dynamic>> threads = [];
-
-      for (var threadMsgs in grouped.values) {
-        // Sortér: nyeste først
-        threadMsgs.sort((a, b) =>
-            HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
-
-        final newest = threadMsgs.first;
-        final oldest = threadMsgs.last;
-
-        // Vis navn på kliniker (baseret på første besked i tråden)
-        final isSentByMe = oldest['sender_id'] == currentUserId;
-        final labelPrefix = isSentByMe ? 'Til: ' : 'Fra: ';
-        final otherPartyName = isSentByMe
-            ? oldest['receiver_name'] ?? 'Ukendt'
-            : oldest['sender_name'] ?? 'Ukendt';
-
-        threads.add({
-          ...newest,
-          'display_name': '$labelPrefix$otherPartyName',
-        });
-      }
-
-      // Sortér tråde efter seneste besked
-      threads.sort((a, b) =>
-          HttpDate.parse(b['sent_at']).compareTo(HttpDate.parse(a['sent_at'])));
-
-      setState(() {
-        _messages = threads;
-        _loading = false;
-      });
-    } catch (e) {
-      print('❌ Fejl ved hentning af indbakke: $e');
-      setState(() => _loading = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
+    return ChangeNotifierProvider(
+      create: (_) => InboxController(inboxType: InboxType.patient)..loadMessages(),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        backgroundColor: generalBackground,
         appBar: AppBar(
+          title: const Text("Patientens Indbakke"),
           backgroundColor: generalBackground,
-          surfaceTintColor: Colors.transparent,
-          scrolledUnderElevation: 0,
-          elevation: 0,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.white70),
-          title: const Text(
-            'Indbakke',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _messages.isEmpty
-                  ? const Center(
+        backgroundColor: generalBackground,
+        body: Consumer<InboxController>(
+          builder: (context, controller, _) {
+            if (controller.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (controller.error != null) {
+              return Center(
                 child: Text(
-                  'Ingen beskeder endnu.',
+                  controller.error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
+            }
+
+            if (controller.messages.isEmpty) {
+              return const Center(
+                child: Text(
+                  "Ingen beskeder endnu.",
                   style: TextStyle(color: Colors.white54),
                 ),
-              )
-                  : ListView.builder(
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  return InboxListTile(
-                    msg: msg,
-                    onTap: () async {
-                      final changed = await Navigator.pushNamed(
-                        context,
-                        '/patient/message_detail',
-                        arguments: msg['thread_id'],
-                      );
+              );
+            }
 
-                      if (changed == true) {
-                        _loadMessages();
-                      }
-                    },
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 32),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/patient/new_message')
-                      .then((value) {
-                    if (value == true) _loadMessages();
-                  });
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Ny besked'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white70,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            return ListView.builder(
+              itemCount: controller.messages.length,
+              itemBuilder: (context, index) {
+                final msg = controller.messages[index];
+                return InboxListTile(
+                  msg: msg,
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/patient/message_detail',
+                      arguments: msg.threadId,
+                    );
+                  },
+                );
+              },
+            );
+          },
         ),
       ),
     );

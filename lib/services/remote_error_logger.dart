@@ -2,7 +2,7 @@ import 'package:ocutune_light_logger/services/services/api_services.dart';
 
 class RemoteErrorLogger {
   static Future<void> log({
-    required int patientId,
+    required String patientId,
     required String type,
     required String message,
   }) async {

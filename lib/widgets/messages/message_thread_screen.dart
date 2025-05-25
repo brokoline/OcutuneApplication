@@ -9,7 +9,7 @@ import 'reply_input.dart';
 import '../confirm_dialog.dart';
 
 class MessageThreadScreen extends StatefulWidget {
-  final int threadId;
+  final String threadId; // ✅ ændret fra int til String
 
   const MessageThreadScreen({
     super.key,
@@ -26,7 +26,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
   List<Message> _messages = [];
   Message? _original;
-  int? _currentUserId;
+  String? _currentUserId; // ✅ String i stedet for int
   bool _isDeleting = false;
 
   @override
@@ -40,7 +40,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     _currentUserId = jwt['id'];
 
     try {
-      final raw = await MessageService.fetchThread(widget.threadId);
+      final raw = await MessageService.fetchThread(widget.threadId); // ✅ String ID
       final parsed = raw.map((m) => Message.fromJson(m, _currentUserId!)).toList();
 
       if (!mounted) return;
@@ -71,10 +71,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     }
   }
 
- void _sendReply(String text) async {
+  void _sendReply(String text) async {
     if (_original == null) return;
 
-    final currentUserId = _currentUserId;
+    final currentUserId = _currentUserId!;
     final isMeSender = _original!.senderId == currentUserId;
     final receiverId = isMeSender ? _original!.receiverId : _original!.senderId;
 
@@ -215,9 +215,8 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   child: Column(
-                    crossAxisAlignment: msg.isMe
-                        ? CrossAxisAlignment.end
-                        : CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                    msg.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                     children: [
                       MessageBubble(
                         message: msg.message,

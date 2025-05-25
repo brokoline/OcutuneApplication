@@ -39,11 +39,11 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> loadActivities() async {
     try {
-      final patientId = await AuthStorage.getUserId();
-      if (patientId == null) return;
+      final rawId = await AuthStorage.getUserId();
+      if (rawId == null) return;
+      final patientId = rawId.toString();
 
       final activitiesFromDb = await ApiService.fetchActivities(patientId);
-      if (!mounted) return;
 
       setState(() {
         recent = activitiesFromDb.map((a) {
@@ -79,9 +79,9 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
     final duration = endTime.difference(startTime).inMinutes;
 
     try {
-      final int? patientId = await AuthStorage.getUserId();
-      if (patientId == null) return;
+      final patientId = await AuthStorage.getUserId();
 
+      if (patientId == null) return;
       await ApiService.addActivity(
         patientId: patientId,
         eventType: label,
@@ -90,6 +90,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
         endTime: endTime.toIso8601String(),
         durationMinutes: duration,
       );
+
 
       await loadActivities();
       await loadActivityLabels();

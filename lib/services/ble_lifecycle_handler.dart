@@ -8,7 +8,7 @@ class BleLifecycleHandler extends WidgetsBindingObserver {
   final BlePollingService pollingService;
 
   DiscoveredDevice? _lastDevice;
-  int? _lastPatientId;
+  String? _lastPatientId;
 
   BleLifecycleHandler({
     required this.bleController,
@@ -27,12 +27,13 @@ class BleLifecycleHandler extends WidgetsBindingObserver {
 
   void updateDevice({
     required DiscoveredDevice device,
-    required int patientId,
+    required String patientId, // ✅
   }) {
     _lastDevice = device;
     _lastPatientId = patientId;
     print("💾 Husker BLE-enhed: ${device.name} (${device.id}), patientId: $patientId");
   }
+
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

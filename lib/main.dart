@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
 import 'package:provider/provider.dart';
+
+
 
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
@@ -21,9 +24,10 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
@@ -54,13 +58,13 @@ void main() async {
     print('✅ Synk-forsøg færdig');
 
     print('🔄 Starter gentaget synk...');
-    SyncScheduler.start(interval: Duration(minutes: 3));
+    SyncScheduler.start(interval: Duration(minutes: 10));
 
     print('📶 Starter netværksovervågning...');
     NetworkListenerService.start();
     print('✅ Klar til at starte appen!');
   } catch (e) {
-    print('❌ FEJL under opstart: \$e');
+    print('❌ FEJL under opstart: $e');
   }
 
   FlutterForegroundTask.init(
@@ -97,6 +101,11 @@ class OcutuneApp extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
         ],
         child: MaterialApp(
+
+          onGenerateRoute: (settings) {
+            print('🧭 Navigated to ${settings.name} with arguments: ${settings.arguments.runtimeType}');
+            return null; // allow MaterialApp to continue with routes
+          },
           title: 'Ocutune',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
@@ -108,8 +117,7 @@ class OcutuneApp extends StatelessWidget {
           routes: {
             '/login': (_) => LoginScreen(),
             '/chooseAccess': (_) => ChooseAccessScreen(),
-            '/simulated_login': (_) =>
-            const SimulatedLoginScreen(title: 'Simuleret login'),
+            '/simulated_login': (_) => const SimulatedLoginScreen(title: 'Simuleret login'),
             '/register': (_) => const RegisterScreen(),
             '/privacy': (_) => const PrivacyPolicyScreen(),
             '/terms': (_) => const TermsConditionsScreen(),
@@ -117,8 +125,7 @@ class OcutuneApp extends StatelessWidget {
             '/chooseChronotype': (_) => const ChooseChronotypeScreen(),
             '/learn': (_) => const LearnAboutChronotypesScreen(),
             '/aboutChronotype': (context) {
-              final typeKey =
-              ModalRoute.of(context)!.settings.arguments as String;
+              final typeKey = ModalRoute.of(context)!.settings.arguments as String;
               return AboutChronotypeScreen(chronotypeId: typeKey);
             },
             '/Q1': (_) => const QuestionOneScreen(),
@@ -128,28 +135,39 @@ class OcutuneApp extends StatelessWidget {
             '/Q5': (_) => const QuestionFiveScreen(),
             '/doneSetup': (_) => const DoneSetupScreen(),
             '/patient/dashboard': (context) {
-              final patientId =
-              ModalRoute.of(context)!.settings.arguments as int;
+              final patientId = ModalRoute.of(context)!.settings.arguments as String;
               return PatientDashboardScreen(patientId: patientId);
             },
-            '/patient/inbox': (_) => const InboxScreen(),
+
+            // 👇 Patient inbox
+            '/patient/inbox': (_) => const InboxScreen(
+              inboxType: InboxType.patient,
+              useClinicianAppBar: false,
+              showNewMessageButton: true,
+            ),
+
+            // 👇 Clinician inbox
+            '/clinician/inbox': (_) => const InboxScreen(
+              inboxType: InboxType.clinician,
+              useClinicianAppBar: true,
+              showNewMessageButton: true,
+            ),
+
             '/patient/message_detail': (context) {
-              final threadId =
-              ModalRoute.of(context)!.settings.arguments as int;
+              final threadId = ModalRoute.of(context)!.settings.arguments as String;
               return MessageThreadScreen(threadId: threadId);
             },
             '/patient/new_message': (_) => const NewMessageScreen(),
-            '/clinician/inbox': (_) => const InboxScreen(),
+
             '/clinician/message_detail': (context) {
-              final threadId =
-              ModalRoute.of(context)!.settings.arguments as int;
+              final threadId = ModalRoute.of(context)!.settings.arguments as String;
               return MessageThreadScreen(threadId: threadId);
             },
             '/clinician/new_message': (_) => const NewMessageScreen(),
-            '/clinician': (context) => ClinicianRootScreen(),
+
+            '/clinician': (_) => ClinicianRootScreen(),
             '/patient_sensor_settings': (context) {
-              final patientId =
-              ModalRoute.of(context)!.settings.arguments as int;
+              final patientId = ModalRoute.of(context)!.settings.arguments as String;
               return PatientSensorSettingsScreen(patientId: patientId);
             },
             '/patient/activities': (_) => PatientActivityScreen(),
