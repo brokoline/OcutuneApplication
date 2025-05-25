@@ -5,10 +5,12 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
-import 'package:ocutune_light_logger/services/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
+
+import '../../../services/auth_storage.dart';
+import '../../../services/services/api_services.dart';
+import '../../../services/services/battery_service.dart';
 
 class PatientSensorSettingsScreen extends StatefulWidget {
   final int patientId;
@@ -53,6 +55,7 @@ class _PatientSensorSettingsScreenState
     super.dispose();
   }
 
+
   void _startScanning() {
     if (mounted) {
       setState(() {
@@ -88,72 +91,40 @@ class _PatientSensorSettingsScreenState
       patientId: widget.patientId,
     );
 
-    await _bleController.discoverServices();
-    await _bleController.readBatteryLevel();
-
-    final batteryLevel = BleController.batteryNotifier.value;
-    final sensorId = device.id.hashCode;
-
-    try {
-      final batteryLevel = BleController.batteryNotifier.value;
-      await BatteryService.sendToBackend(
-        batteryLevel: batteryLevel,
+    final jwt = await AuthStorage.getToken();
+    if (jwt != null) {
+      final sensorId = await ApiService.registerSensorUse(
+        patientId: widget.patientId,
+        deviceSerial: device.id,
+        jwt: jwt,
       );
-    } catch (_) {
-      await OfflineStorageService.saveLocally(
-        type: 'battery',
-        data: {
-          "patient_id": widget.patientId,
-          "sensor_id": sensorId,
-          "battery_level": batteryLevel,
-        },
-      );
+      print("✅ Sensor registreret med ID: $sensorId");
     }
 
-    _batterySyncTimer?.cancel();
-    _batterySyncTimer =
-        Timer.periodic(const Duration(minutes: 10), (timer) async {
-          if (!mounted || BleController.connectedDevice == null) return;
+    await _bleController.discoverServices();
 
-          await _bleController.readBatteryLevel();
-          final battery = BleController.batteryNotifier.value;
 
-          try {
-            final batteryLevel = BleController.batteryNotifier.value;
-            await BatteryService.sendToBackend(
-              batteryLevel: batteryLevel,
-            );
-
-          } catch (_) {
-            await OfflineStorageService.saveLocally(
-              type: 'battery',
-              data: {
-                "patient_id": widget.patientId,
-                "sensor_id": sensorId,
-                "battery_level": battery,
-              },
-            );
-          }
-        });
-
-    // 👉 Start BLE polling
-    _pollingService = BlePollingService(
-      ble: _bleController.bleInstance,
-      readChar: QualifiedCharacteristic(
-        serviceId: Uuid.parse("00001fbd-30c2-496b-a199-5710fc709961"),
-        characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
-        deviceId: device.id,
-      ),
-    );
-    _pollingService?.startPolling();
-
-    // 👉 Start Lifecycle handler
+    // Start Lifecycle handler
     _lifecycleHandler = BleLifecycleHandler(
       bleController: _bleController,
       pollingService: _pollingService!,
     );
     _lifecycleHandler?.start();
     _lifecycleHandler?.updateDevice(device: device, patientId: widget.patientId);
+
+    // 🔋 Start batteri-timer
+    _batterySyncTimer?.cancel();
+    _batterySyncTimer = Timer.periodic(Duration(minutes: 10), (_) async {
+      try {
+        if (BleController.connectedDevice != null) {
+          final batteryLevel = BleController.batteryNotifier.value;
+          await BatteryService.sendToBackend(batteryLevel: batteryLevel);
+        }
+      } catch (e) {
+        print("⚠️ Batteri-upload fejlede: $e");
+      }
+    });
+
 
     if (mounted) {
       setState(() {});
@@ -162,6 +133,7 @@ class _PatientSensorSettingsScreenState
       );
     }
   }
+
 
   void _disconnectFromDevice() {
     _batterySyncTimer?.cancel();

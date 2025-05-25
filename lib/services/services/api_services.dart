@@ -253,6 +253,30 @@ class ApiService {
     }
   }
 
+  static Future<void> endSensorUse({
+    required int patientId,
+    required int sensorId,
+    required String jwt,
+    String status = "manual",
+  }) async {
+    final url = Uri.parse("$baseUrl/end-sensor-use");
+
+    await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      },
+      body: jsonEncode({
+        "patient_id": patientId,
+        "sensor_id": sensorId,
+        "status": status,
+      }),
+    );
+  }
+
+
+
   static Future<void> sendBatteryStatus({
     required int patientId,
     required int sensorId,
@@ -281,6 +305,24 @@ class ApiService {
     }
   }
 
+  static Future<int?> getSensorIdFromDevice(String deviceSerial, String jwt) async {
+    final url = Uri.parse('$baseUrl/get-sensor-id?device_serial=$deviceSerial');
+
+    final response = await http.get(url, headers: {
+      'Authorization': 'Bearer $jwt',
+      'Content-Type': 'application/json',
+    });
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      return body['sensor_id'];
+    } else {
+      print("❌ Kunne ikke hente sensor_id: ${response.statusCode}");
+      return null;
+    }
+  }
+
+
   static const String lightDataEndpoint = "$baseUrl/patient-light-data";
   static Future<bool> sendLightData(Map<String, dynamic> data, String jwt) async {
     final url = Uri.parse("$baseUrl/patient-light-data");
@@ -295,13 +337,23 @@ class ApiService {
     );
 
     if (response.statusCode == 201) {
-      print("✅ Light data sendt succesfuldt");
+      print("✅ Lys data sendt succesfuldt");
       return true;
     } else {
       print("❌ Fejl ved sendLightData: ${response.statusCode} ${response.body}");
       return false;
     }
   }
+
+  static Future<void> postSyncErrorLog(Map<String, dynamic> data) async {
+    final headers = await _authHeaders();
+    await http.post(
+      Uri.parse('$baseUrl/sync-error-log'),
+      headers: headers,
+      body: jsonEncode(data),
+    );
+  }
+
 
 
   // 🛠 HELPER METHODS
