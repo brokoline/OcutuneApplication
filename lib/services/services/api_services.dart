@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/patient.dart';
+
 
 
 class ApiService {
@@ -87,9 +89,10 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getPatientDetails(String patientId) async {
+  static Future<Patient> getPatientDetails(String patientId) async {
     final response = await _get('/patients/$patientId');
-    return _handleResponse(response);
+    final data = _handleResponse(response);
+    return Patient.fromJson(data);
   }
 
   static Future<List<Map<String, dynamic>>> getPatientSensors(String patientId) async {

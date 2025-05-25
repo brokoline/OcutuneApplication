@@ -22,31 +22,6 @@ class ClinicianDashboardController extends ChangeNotifier {
       'Patient Zs lysniveau er under normalen',
     ];
 
-    // Brug Patient model
-    _allPatients = [
-      Patient(
-        id: 1,
-        firstName: 'Anders',
-        lastName: 'And',
-        cpr: '1234567890',
-        simUserid: '1234',
-      ),
-      Patient(
-        id: 2,
-        firstName: 'Børge',
-        lastName: 'Børgesen',
-        cpr: '0987654321',
-        simUserid: '1234',
-      ),
-      Patient(
-        id: 3,
-        firstName: 'Carla',
-        lastName: 'Carlsen',
-        cpr: '4567890123',
-        simUserid: '9012',
-      ),
-    ];
-
     notifyListeners();
   }
 

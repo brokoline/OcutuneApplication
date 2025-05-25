@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../screens/clinician/search/clinician_patient_detail_screen.dart';
-import '../../services/controller/clinician_root_controller.dart';
+import '../../screens/clinician/root/clinician_root_controller.dart';
 import 'package:provider/provider.dart';
 
 class ClinicianPatientSearch extends StatelessWidget {

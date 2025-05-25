@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/auth_storage.dart';
-import '../../../services/controller/clinician_root_controller.dart';
+import '../search/clinician_search_controller.dart';
+import 'clinician_root_controller.dart';
 import '../../../widgets/clinician_widgets/clinician_nav_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../search/clinician_search_screen.dart';
@@ -21,11 +22,15 @@ class ClinicianRootScreen extends StatefulWidget {
 class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    _ClinicianDashboardContent(),
-    ClinicianSearchScreen(),
-    ClinicianInboxScreen(),
+  final List<Widget> _screens = [
+    const _ClinicianDashboardContent(),
+    ChangeNotifierProvider(
+      create: (_) => ClinicianSearchController()..fetchPatients(),
+      child: const ClinicianSearchScreen(),
+    ),
+    const ClinicianInboxScreen(),
   ];
+
 
   @override
   void initState() {
