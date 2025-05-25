@@ -77,7 +77,7 @@ class BleController {
           Future.delayed(const Duration(seconds: 20), () {
             BatteryService.sendToBackend(batteryLevel: batteryNotifier.value);
           });
-          _batteryTimer = Timer.periodic(Duration(minutes: 30), (_) async {
+          _batteryTimer = Timer.periodic(Duration(minutes: 10), (_) async {
             final level = batteryNotifier.value;
             await BatteryService.sendToBackend(batteryLevel: level);
           });

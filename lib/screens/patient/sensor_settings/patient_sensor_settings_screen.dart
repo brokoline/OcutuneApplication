@@ -5,8 +5,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
-import 'package:ocutune_light_logger/services/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
@@ -102,26 +100,6 @@ class _PatientSensorSettingsScreenState
 
 
     await _bleController.discoverServices();
-    await _bleController.readBatteryLevel();
-
-    final batteryLevel = BleController.batteryNotifier.value;
-    final sensorId = device.id.hashCode;
-
-    try {
-      final batteryLevel = BleController.batteryNotifier.value;
-      await BatteryService.sendToBackend(
-        batteryLevel: batteryLevel,
-      );
-    } catch (_) {
-      await OfflineStorageService.saveLocally(
-        type: 'battery',
-        data: {
-          "patient_id": widget.patientId,
-          "sensor_id": sensorId,
-          "battery_level": batteryLevel,
-        },
-      );
-    }
 
     // Start BLE polling
     _pollingService = BlePollingService(
