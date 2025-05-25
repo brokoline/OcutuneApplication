@@ -1,17 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
-import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
-
+import 'package:ocutune_light_logger/screens/splash_screen.dart';
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
-import 'package:ocutune_light_logger/services/controller/clinician_root_controller.dart';
-import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/customer_register_screen.dart';
@@ -35,6 +30,13 @@ import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 
+import 'package:ocutune_light_logger/services/controller/clinician_root_controller.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
+import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
+import 'package:ocutune_light_logger/services/sync_scheduler.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -43,7 +45,6 @@ void main() async {
     statusBarIconBrightness: Brightness.light,
   ));
 
-  // 👇 Din init og logik før appen starter
   try {
     print('🔧 Initialiserer lokal SQLite...');
     await OfflineStorageService.init();
@@ -53,11 +54,14 @@ void main() async {
     await OfflineSyncManager.syncAll();
     print('✅ Synk-forsøg færdig');
 
+    print('🔄 Starter gentaget synk...');
+    SyncScheduler.start(interval: Duration(minutes: 3));
+
     print('📶 Starter netværksovervågning...');
     NetworkListenerService.start();
     print('✅ Klar til at starte appen!');
   } catch (e) {
-    print('❌ FEJL under opstart: $e');
+    print('❌ FEJL under opstart: \$e');
   }
 
   FlutterForegroundTask.init(
@@ -78,10 +82,7 @@ void main() async {
   );
 
   runApp(const OcutuneApp());
-
 }
-
-
 
 class OcutuneApp extends StatelessWidget {
   const OcutuneApp({super.key});

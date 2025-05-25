@@ -11,7 +11,7 @@ class OfflineStorageService {
 
     _db = await openDatabase(
       path,
-      version: 2, // ny version for migrering
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE IF NOT EXISTS unsynced_data (
@@ -54,18 +54,49 @@ class OfflineStorageService {
     required String type,
     required Map<String, dynamic> data,
   }) async {
+    if (_db == null) return;
+
+    // ✅ Debug: log det indkomne payload
+    print("📥 saveLocally kaldes med type: $type, data: ${jsonEncode(data)}");
+
+    if (type == 'light') {
+      final dynamic patientId = data['patient_id'];
+      final dynamic sensorId = data['sensor_id'];
+
+      print("💡 Kontrollér patientId/sensorId i saveLocally: $patientId / $sensorId");
+
+      if (patientId == null || sensorId == null || patientId == -1 || sensorId == -1) {
+        print("⚠️ Afvist: Ugyldig patientId/sensorId: $patientId/$sensorId");
+        return;
+      }
+
+      final spectrum = data['spectrum'];
+      if (spectrum is! List) {
+        print("⚠️ Afvist: spectrum er ikke List");
+        return;
+      }
+
+      // Konverter spectrum til double[]
+      data['spectrum'] = spectrum.map((e) => (e as num).toDouble()).toList();
+
+      // fallback værdier hvis nødvendigt
+      data['light_type'] = data['light_type'] ?? 'Unknown';
+      data['action_required'] = data['action_required'] ?? 0;
+      data['timestamp'] = data['timestamp'] ?? DateTime.now().toIso8601String();
+    }
+
     if (type == 'sensor_log') {
       await _db!.insert('patient_sensor_log', {
         'sensor_id': data['sensor_id'],
         'patient_id': data['patient_id'],
         'started_at': data['timestamp'],
         'ended_at': data['ended_at'],
-        'status': data['status'],     // Optional: 'connected', 'disconnected', etc.
+        'status': data['status'],
       });
       return;
     }
 
-    // Default fallback
+    // 👇 Til sidst, indsæt i offline tabellen
     await _db!.insert(
       'unsynced_data',
       {
@@ -73,6 +104,14 @@ class OfflineStorageService {
         'json': jsonEncode(data),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  static Future<void> deleteInvalidLightData() async {
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['light', '%"patient_id":-1%'],
     );
   }
 

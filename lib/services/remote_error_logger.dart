@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 
 class RemoteErrorLogger {
   static Future<void> log({
@@ -8,17 +7,13 @@ class RemoteErrorLogger {
     required String message,
   }) async {
     try {
-      await http.post(
-        Uri.parse('https://ocutune.ddns.net/log-report'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'patient_id': patientId,
-          'type': type,
-          'message': message,
-        }),
-      );
-    } catch (_) {
-      // Bevidst tomt – vi forsøger ikke at logge log-fejl......
+      await ApiService.postSyncErrorLog({
+        "patient_id": patientId,
+        "type": type,
+        "message": message,
+      });
+    } catch (e) {
+      print("❌ Kunne ikke sende fejl-log til backend: $e");
     }
   }
 }

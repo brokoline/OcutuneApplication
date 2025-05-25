@@ -12,14 +12,41 @@ class BleLightDataListener {
 
   Timer? _readTimer;
   bool _isReading = false;
+  int? _patientId;
+  String? _jwt;
+  int? _sensorId;
 
   BleLightDataListener({
     required this.lightCharacteristic,
     required this.ble,
   });
 
-  void startPollingReads({Duration interval = const Duration(seconds: 10)}) {
+  void startPollingReads({Duration interval = const Duration(seconds: 10)}) async {
     print("📆 Starter polling-læsning hver ${interval.inSeconds} sek. fra ${lightCharacteristic.characteristicId}");
+
+    if (_readTimer?.isActive ?? false) {
+      print("⛔️ Allerede aktiv polling – annullerer nyt startforsøg.");
+      return;
+    }
+
+    // Hent login og sensor-oplysninger én gang
+    _jwt = await AuthStorage.getToken();
+    _patientId = await AuthStorage.getUserId();
+    if (_jwt == null || _patientId == null) {
+      LocalLogService.log("❌ JWT eller patient-ID mangler – kan ikke starte polling");
+      return;
+    }
+
+    _sensorId = await ApiService.registerSensorUse(
+      patientId: _patientId!,
+      deviceSerial: lightCharacteristic.characteristicId.toString(),
+      jwt: _jwt!,
+    );
+
+    if (_sensorId == null) {
+      LocalLogService.log("❌ Kunne ikke registrere sensor – polling afbrudt.");
+      return;
+    }
 
     _readTimer?.cancel();
     _readTimer = Timer.periodic(interval, (_) async {
@@ -99,59 +126,34 @@ class BleLightDataListener {
       print("📊 Decode → ${values.join(', ')}");
       print("📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired, light_type: $lightType");
 
-      final jwt = await AuthStorage.getToken();
-      final patientId = await AuthStorage.getUserId();
-      if (jwt == null || patientId == null) {
-        LocalLogService.log("❌ JWT eller patient-ID mangler – kan ikke sende data");
+      // Sikring
+      if (_patientId == null || _sensorId == null) {
+        print("❌ patientId/sensorId mangler – afviser måling.");
         return;
       }
 
-      final deviceSerial = lightCharacteristic.characteristicId.toString();
-      final sensorId = await ApiService.registerSensorUse(
-        patientId: patientId,
-        deviceSerial: deviceSerial,
-        jwt: jwt,
-      );
-
-      if (sensorId == null) {
-        LocalLogService.log("❌ Kunne ikke registrere sensor – måling afbrudt.");
-        return;
-      }
+      print("💾 Gemmer med patient_id: $_patientId, sensor_id: $_sensorId");
 
       await OfflineStorageService.saveLocally(
-        type: 'light_sample',
+        type: 'light',
         data: {
           "timestamp": nowString,
-          "values": values,
-          "patient_id": patientId,
-          "sensor_id": sensorId,
+          "patient_id": _patientId,
+          "sensor_id": _sensorId,
+          "lux_level": values[0],
+          "melanopic_edi": values[1],
+          "der": values[2],
+          "illuminance": values[3],
+          "spectrum": values.sublist(4, 8),
+          "light_type": values[5],
           "exposure_score": exposureScore,
-          "action_required": actionRequired,
+          "action_required": actionRequired == "increase"
+              ? 1
+              : actionRequired == "decrease"
+              ? 2
+              : 0,
         },
       );
-
-      final lightData = {
-        "patient_id": patientId,
-        "sensor_id": sensorId,
-        "captured_at": nowString,
-        "lux_level": values[0],
-        "melanopic_edi": values[1],
-        "der": values[2],
-        "illuminance": values[3],
-        "spectrum": values.sublist(4),
-        "light_type": lightType,
-        "exposure_score": exposureScore,
-        "action_required": actionRequired == "increase"
-            ? 1
-            : actionRequired == "decrease"
-            ? 2
-            : 0,
-      };
-
-      final success = await ApiService.sendLightData(lightData, jwt);
-      if (!success) {
-        LocalLogService.log("⚠️ Data blev ikke sendt til API – beholdt lokalt.");
-      }
     } catch (e) {
       print("❌ Fejl i håndtering af BLE-data: $e");
       LocalLogService.log("⚠️ Fejl ved parsing eller upload: $e");

@@ -11,19 +11,20 @@ class BatteryService {
   static DateTime? _lastSent;
   static const Duration minInterval = Duration(minutes: 10);
 
-  static Future<void> sendToBackend({
+  static Future<bool> sendToBackend({
     required int batteryLevel,
+    bool returnSuccess = false,
   }) async {
     final now = DateTime.now();
 
     if (batteryLevel <= 0) {
       print("⏱️ Batteriniveau er 0 eller ukendt – venter med upload.");
-      return;
+      return false;
     }
 
     if (_lastSent != null && now.difference(_lastSent!) < minInterval) {
       print("⏱️ Springer batteri-upload over (for nylig sendt)");
-      return;
+      return true;
     }
 
     try {
@@ -33,7 +34,7 @@ class BatteryService {
 
       if (jwt == null || patientId == null) {
         print("❌ JWT eller patientId mangler – sender ikke batteri");
-        return;
+        return false;
       }
 
       final sensorId = await ApiService.registerSensorUse(
@@ -44,7 +45,7 @@ class BatteryService {
 
       if (sensorId == null) {
         print("❌ Sensor-registrering mislykkedes – batteridata springes over");
-        return;
+        return false;
       }
 
       final uri = Uri.parse('${ApiService.baseUrl}/patient-battery-status');
@@ -69,6 +70,7 @@ class BatteryService {
       if (response.statusCode == 201) {
         _lastSent = now;
         print("✅ Batteriniveau sendt");
+        return true;
       } else {
         throw Exception("Fejl i serverresponse: ${response.statusCode} ${response.body}");
       }
@@ -93,6 +95,7 @@ class BatteryService {
           message: e.toString(),
         );
       }
+      return false;
     }
   }
 }

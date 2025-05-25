@@ -345,6 +345,16 @@ class ApiService {
     }
   }
 
+  static Future<void> postSyncErrorLog(Map<String, dynamic> data) async {
+    final headers = await _authHeaders();
+    await http.post(
+      Uri.parse('$baseUrl/sync-error-log'),
+      headers: headers,
+      body: jsonEncode(data),
+    );
+  }
+
+
 
   // 🛠 HELPER METHODS
   static Map<String, dynamic> _handleResponse(http.Response response) {

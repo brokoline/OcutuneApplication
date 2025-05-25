@@ -93,7 +93,13 @@ class BleController {
             ble: _ble,
           );
 
-          _lightDataListener!.startPollingReads();
+          _lightDataListener?.stopListening(); // <- STOPPER tidligere timer
+          _lightDataListener = BleLightDataListener(
+            lightCharacteristic: lightCharacteristic,
+            ble: _ble,
+          );
+
+          _lightDataListener!.startPollingReads(); // Starter en ny polling-timer
         } else if (update.connectionState == DeviceConnectionState.disconnected) {
           disconnect();
           await FlutterForegroundTask.stopService();
