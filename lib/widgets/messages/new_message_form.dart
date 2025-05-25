@@ -83,7 +83,7 @@ class _NewMessageFormState extends State<NewMessageForm> {
         const SnackBar(content: Text('✅ Besked sendt')),
       );
 
-      Navigator.pop(context, true);
+      Navigator.pop(context, true); // ✅ trigger reload i inbox
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
