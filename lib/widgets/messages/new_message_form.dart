@@ -4,10 +4,8 @@ import '../../services/services/message_service.dart';
 import '../../theme/colors.dart';
 import '../ocutune_textfield.dart';
 
-
 class NewMessageForm extends StatefulWidget {
   const NewMessageForm({super.key});
-
 
   @override
   State<NewMessageForm> createState() => _NewMessageFormState();
@@ -18,7 +16,7 @@ class _NewMessageFormState extends State<NewMessageForm> {
   final TextEditingController _messageController = TextEditingController();
   bool _sending = false;
 
-  int? _selectedReceiverId;
+  String? _selectedReceiverId;
   String? _selectedReceiverName;
   List<Map<String, dynamic>> _recipients = [];
 
@@ -32,9 +30,8 @@ class _NewMessageFormState extends State<NewMessageForm> {
     try {
       final list = await MessageService.getRecipients();
 
-
       final unique = {
-        for (var c in list) c['id']: c
+        for (var c in list) c['id'].toString(): c
       }.values.toList();
 
       if (!mounted) return;
@@ -43,7 +40,7 @@ class _NewMessageFormState extends State<NewMessageForm> {
         _recipients = unique;
         if (unique.length == 1) {
           final single = unique.first;
-          _selectedReceiverId = single['id'];
+          _selectedReceiverId = single['id'].toString();
           _selectedReceiverName = _extractName(single);
         } else {
           _selectedReceiverId = null;
@@ -81,7 +78,6 @@ class _NewMessageFormState extends State<NewMessageForm> {
         message: body,
       );
 
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Besked sendt')),
@@ -110,7 +106,7 @@ class _NewMessageFormState extends State<NewMessageForm> {
   Widget build(BuildContext context) {
     final multiple = _recipients.length > 1;
     final validValue = _selectedReceiverId != null &&
-        _recipients.any((c) => c['id'] == _selectedReceiverId);
+        _recipients.any((c) => c['id'].toString() == _selectedReceiverId);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
@@ -120,7 +116,7 @@ class _NewMessageFormState extends State<NewMessageForm> {
           if (multiple)
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: DropdownButtonFormField2<int>(
+              child: DropdownButtonFormField2<String>(
                 isExpanded: true,
                 value: validValue ? _selectedReceiverId : null,
                 iconStyleData: const IconStyleData(iconEnabledColor: Colors.white70),
@@ -152,11 +148,12 @@ class _NewMessageFormState extends State<NewMessageForm> {
                   ),
                 ),
                 items: _recipients.map((c) {
+                  final id = c['id'].toString();
                   final name = _extractName(c);
-                  final isSelected = c['id'] == _selectedReceiverId;
+                  final isSelected = id == _selectedReceiverId;
 
-                  return DropdownMenuItem<int>(
-                    value: c['id'],
+                  return DropdownMenuItem<String>(
+                    value: id,
                     child: Row(
                       children: [
                         Expanded(
@@ -176,8 +173,10 @@ class _NewMessageFormState extends State<NewMessageForm> {
                   );
                 }).toList(),
                 onChanged: (val) {
-                  final selected =
-                  _recipients.firstWhere((c) => c['id'] == val, orElse: () => {});
+                  final selected = _recipients.firstWhere(
+                        (c) => c['id'].toString() == val,
+                    orElse: () => {},
+                  );
                   setState(() {
                     _selectedReceiverId = val;
                     _selectedReceiverName = _extractName(selected);
@@ -196,7 +195,6 @@ class _NewMessageFormState extends State<NewMessageForm> {
                 ),
               ),
             ),
-
           const SizedBox(height: 16),
           OcutuneTextField(
             label: 'Emne',

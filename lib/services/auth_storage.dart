@@ -21,13 +21,13 @@ class AuthStorage {
 
   // Gem token og rolle ved login
   static Future<void> saveLogin({
-    required int id,
+    required String id,
     required String role,
     required String token,
     required String simUserId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('user_id', id);
+    await prefs.setString('user_id', id);
     await prefs.setString('user_role', role);
     await prefs.setString('sim_userid', simUserId);
     await prefs.setString('jwt_token', token);
@@ -66,9 +66,9 @@ class AuthStorage {
     await prefs.setString('patient_last_name', lastName);
   }
 
-  static Future<int?> getUserId() async {
+  static Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt('user_id');
+    return prefs.getString('user_id'); // ✅ matcher dine token-data
   }
 
 

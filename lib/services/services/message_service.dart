@@ -1,14 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:ocutune_light_logger/models/messages_model.dart';
 import '../auth_storage.dart';
 import 'api_services.dart';
 
 class MessageService {
-  // 📥 Hent indbakke
-  static Future<List<Map<String, dynamic>>> fetchInbox() async {
+  // 📥 Hent indbakke (og map til Message-objekter)
+  static Future<List<Message>> fetchMessages(String currentUserId) async {
     try {
       final token = await AuthStorage.getToken();
       final url = Uri.parse('https://ocutune.ddns.net/messages/inbox');
@@ -21,25 +20,26 @@ class MessageService {
         },
       );
 
-      print('📨 Kaldt: GET /messages/inbox');
-      print('📥 Statuskode: ${response.statusCode}');
-      print('📦 Body: ${response.body}');
+      debugPrint('📨 GET /messages/inbox – Status: ${response.statusCode}');
+      debugPrint('📦 Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final messages = json['messages'] as List;
-        return List<Map<String, dynamic>>.from(messages);
+        final data = jsonDecode(response.body);
+        final messages = data['messages'] as List;
+        return messages
+            .map((json) => Message.fromJson(json, currentUserId))
+            .toList();
       } else {
         throw Exception('Kunne ikke hente beskeder: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Fejl i fetchInbox(): $e');
+      debugPrint('❌ Fejl i fetchMessages(): $e');
       rethrow;
     }
   }
 
   // 🧵 Hent tråd
-  static Future<List<Map<String, dynamic>>> fetchThread(int threadId) async {
+  static Future<List<Map<String, dynamic>>> fetchThread(String threadId) async {
     debugPrint('📨 Henter tråd $threadId');
     final thread = await ApiService.fetchThread(threadId);
     debugPrint('🧵 Tråd #$threadId – ${thread.length} beskeder');
@@ -51,13 +51,12 @@ class MessageService {
     return thread;
   }
 
-
   // ✉️ Send besked
   static Future<void> send({
-    required int receiverId,
+    required String receiverId,
     required String message,
     String subject = '',
-    int? replyTo,
+    String? replyTo,
   }) async {
     await ApiService.sendMessage(
       receiverId: receiverId,
@@ -65,18 +64,18 @@ class MessageService {
       subject: subject,
       replyTo: replyTo,
     );
-
   }
 
   // 🗑️ Slet tråd
-  static Future<void> deleteThread(int threadId) async {
+  static Future<void> deleteThread(String threadId) async {
     await ApiService.deleteThread(threadId);
   }
 
   // ✅ Marker tråd som læst
-  static Future<void> markAsRead(int threadId) async {
+  static Future<void> markAsRead(String threadId) async {
     final token = await AuthStorage.getToken();
-    final url = Uri.parse('https://ocutune.ddns.net/messages/mark_read/$threadId');
+    final url =
+    Uri.parse('https://ocutune.ddns.net/messages/mark_read/$threadId');
 
     final response = await http.post(
       url,
@@ -86,16 +85,14 @@ class MessageService {
       },
     );
 
-    print('📤 Markerer som læst: $threadId – status: ${response.statusCode}');
+    debugPrint('📤 Markerer som læst: $threadId – status: ${response.statusCode}');
     if (response.statusCode != 200) {
       throw Exception('Kunne ikke markere som læst');
     }
   }
-
 
   // 📇 Hent mulige modtagere (for patienter)
   static Future<List<Map<String, dynamic>>> getRecipients() async {
     return await ApiService.fetchRecipients();
   }
 }
-

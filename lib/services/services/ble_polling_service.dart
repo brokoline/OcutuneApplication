@@ -13,9 +13,9 @@ class BlePollingService {
 
   Timer? _pollingTimer;
   bool _isPolling = false;
-  int? _patientId;
+  String? _patientId; // ✅ ændret fra int?
   String? _jwt;
-  int? _sensorId;
+  String? _sensorId;
 
   BlePollingService({
     required this.ble,
@@ -32,8 +32,9 @@ class BlePollingService {
 
     // Hent login og sensor-oplysninger én gang
     _jwt = await AuthStorage.getToken();
-    _patientId = await AuthStorage.getUserId();
-    if (_jwt == null || _patientId == null) {
+    final rawId = await AuthStorage.getUserId(); // kan være int
+    _patientId = rawId?.toString(); // konverteres til String?
+    if (_jwt == null || _patientId == null || _patientId!.isEmpty) {
       LocalLogService.log("❌ JWT eller patient-ID mangler – kan ikke starte polling");
       return;
     }
@@ -95,13 +96,13 @@ class BlePollingService {
       print("📊 Decode → ${values.join(', ')}");
       print("📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired, light_type: $lightTypeName");
 
-      // Sikring af nødvendige data
       if (_patientId == null || _sensorId == null) {
         print("❌ patientId/sensorId mangler – afviser måling.");
         return;
       }
 
       print("💾 Gemmer med patient_id: $_patientId, sensor_id: $_sensorId");
+
       final lightData = {
         "timestamp": nowString,
         "patient_id": _patientId,

@@ -1,8 +1,8 @@
 import 'dart:io';
 
 class Message {
-  final int id;
-  final int threadId;
+  final String id;
+  final String threadId;
   final String subject;
   final String message;
   final DateTime sentAt;
@@ -10,8 +10,8 @@ class Message {
   final String senderName;
   final String receiverName;
 
-  final int senderId;
-  final int receiverId;
+  final String senderId;
+  final String receiverId;
 
   Message({
     required this.id,
@@ -26,19 +26,21 @@ class Message {
     required this.receiverId,
   });
 
-  factory Message.fromJson(Map<String, dynamic> json, int currentUserId) {
+  factory Message.fromJson(Map<String, dynamic> json, String currentUserId) {
+    final senderId = json['sender_id'].toString();
+    final receiverId = json['receiver_id'].toString();
+
     return Message(
-      id: json['id'],
-      threadId: json['thread_id'],
+      id: json['id'].toString(),
+      threadId: json['thread_id'].toString(),
       subject: json['subject'] ?? '',
       message: json['message'] ?? '',
       sentAt: HttpDate.parse(json['sent_at']),
-      isMe: json['sender_id'] == currentUserId,
+      isMe: senderId == currentUserId,
       senderName: json['sender_name'] ?? '',
       receiverName: json['receiver_name'] ?? '',
-
-      senderId: json['sender_id'],
-      receiverId: json['receiver_id'],
+      senderId: senderId,
+      receiverId: receiverId,
     );
   }
 }

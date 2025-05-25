@@ -12,7 +12,7 @@ import '../../../services/services/ble_polling_service.dart';
 
 
 class PatientSensorController {
-  final int patientId;
+  final String patientId;
   final BleController bleController = BleController();
   final List<DiscoveredDevice> devices = [];
   final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier([]);
@@ -69,7 +69,7 @@ class PatientSensorController {
     final jwt = await AuthStorage.getToken();
     if (jwt != null) {
       final sensorId = await ApiService.registerSensorUse(
-        patientId: patientId,
+        patientId: patientId.toString(),
         deviceSerial: device.id,
         jwt: jwt,
       );

@@ -87,22 +87,22 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> getPatientDetails(int patientId) async {
+  static Future<Map<String, dynamic>> getPatientDetails(String patientId) async {
     final response = await _get('/patients/$patientId');
     return _handleResponse(response);
   }
 
-  static Future<List<Map<String, dynamic>>> getPatientSensors(int patientId) async {
+  static Future<List<Map<String, dynamic>>> getPatientSensors(String patientId) async {
     final response = await _get('/patients/$patientId/sensors');
     return _handleListResponse(response);
   }
 
-  static Future<List<Map<String, dynamic>>> getPatientEvents(int patientId) async {
+  static Future<List<Map<String, dynamic>>> getPatientEvents(String patientId) async {
     final response = await _get('/patients/$patientId/events');
     return _handleListResponse(response);
   }
 
-  static Future<List<Map<String, dynamic>>> getBatteryStatus(int patientId) async {
+  static Future<List<Map<String, dynamic>>> getBatteryStatus(String patientId) async {
     final response = await _get('/patients/$patientId/battery');
     return _handleListResponse(response);
   }
@@ -115,16 +115,16 @@ class ApiService {
     return _handleListResponse(response, key: 'messages');
   }
 
-  static Future<List<Map<String, dynamic>>> fetchThread(int threadId) async {
+  static Future<List<Map<String, dynamic>>> fetchThread(String threadId) async {
     final response = await _get('/messages/thread-by-id/$threadId');
     return _handleListResponse(response);
   }
 
   static Future<void> sendMessage({
-    required int receiverId,
+    required String receiverId,
     required String message,
     String subject = '',
-    int? replyTo,
+    String? replyTo,
   }) async {
     final payload = {
       'receiver_id': receiverId,
@@ -137,15 +137,18 @@ class ApiService {
   }
 
 
-  static Future<void> markThreadAsRead(int threadId) async {
+
+  static Future<void> markThreadAsRead(String threadId) async {
     final response = await _patch('/messages/thread/$threadId/read', {});
     _handleVoidResponse(response, successCode: 204);
   }
 
-  static Future<void> deleteThread(int threadId) async {
+
+  static Future<void> deleteThread(String threadId) async {
     final response = await _delete('/messages/thread/$threadId');
     _handleVoidResponse(response, successCode: 204);
   }
+
 
   static Future<List<Map<String, dynamic>>> fetchRecipients() async {
     final response = await _get('/messages/recipients');
@@ -158,7 +161,7 @@ class ApiService {
   }
 
   // 📅 ACTIVITY METHODS
-  static Future<List<Map<String, dynamic>>> fetchActivities(int patientId) async {
+  static Future<List<Map<String, dynamic>>> fetchActivities(String patientId) async {
     final response = await _get('/activities?patient_id=$patientId');
     return _handleListResponse(response);
   }
@@ -169,7 +172,7 @@ class ApiService {
     String? startTime,
     String? endTime,
     int? durationMinutes,
-    int? patientId,
+    String? patientId, // ændret fra int?
   }) async {
     final payload = {
       'event_type': eventType,
@@ -225,8 +228,8 @@ class ApiService {
 
 
   // BLE DATA MANAGEMENT
-  static Future<int?> registerSensorUse({
-    required int patientId,
+  static Future<String?> registerSensorUse({
+    required String patientId,
     required String deviceSerial,
     required String jwt,
   }) async {
@@ -246,7 +249,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-      return body["sensor_id"];
+      return body["sensor_id"].toString(); // sikrer string
     } else {
       print("❌ Fejl ved sensor-registrering: ${response.body}");
       return null;
@@ -254,7 +257,7 @@ class ApiService {
   }
 
   static Future<void> endSensorUse({
-    required int patientId,
+    required String patientId,
     required int sensorId,
     required String jwt,
     String status = "manual",
@@ -276,9 +279,8 @@ class ApiService {
   }
 
 
-
   static Future<void> sendBatteryStatus({
-    required int patientId,
+    required String patientId,
     required int sensorId,
     required int batteryLevel,
     required String jwt,

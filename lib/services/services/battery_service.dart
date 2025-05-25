@@ -29,7 +29,8 @@ class BatteryService {
 
     try {
       final jwt = await AuthStorage.getToken();
-      final patientId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getUserId();
+      final patientId = rawId?.toString(); // ✅ konverter til String
       final deviceSerial = BleController.connectedDevice?.id ?? "unknown-device";
 
       if (jwt == null || patientId == null) {
@@ -78,7 +79,8 @@ class BatteryService {
     } catch (e) {
       print("⚠️ Fejl i batteri-upload: $e");
 
-      final patientId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getUserId();
+      final patientId = rawId?.toString(); // ✅ samme her
 
       await OfflineStorageService.saveLocally(
         type: 'battery',

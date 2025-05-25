@@ -9,7 +9,7 @@ import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
 
 
 class PatientSensorSettingsScreen extends StatefulWidget {
-  final int patientId;
+  final String patientId;
 
   const PatientSensorSettingsScreen({super.key, required this.patientId});
 

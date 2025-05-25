@@ -51,7 +51,7 @@ class BleController {
 
   Future<void> connectToDevice({
     required DiscoveredDevice device,
-    required int patientId,
+    required String patientId, // ✅
   }) async {
     _connectionStream?.cancel();
 
@@ -117,7 +117,7 @@ class BleController {
       final sensorId = await ApiService.getSensorIdFromDevice(connectedDevice!.id, jwt!);
 
       await ApiService.endSensorUse(
-        patientId: patientId!,
+        patientId: patientId!.toString(),
         sensorId: sensorId!,
         jwt: jwt,
         status: "disconnected",

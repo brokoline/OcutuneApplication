@@ -3,9 +3,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:ocutune_light_logger/models/messages_model.dart';
 
 class InboxListTile extends StatefulWidget {
-  final Map<String, dynamic> msg;
+  final Message msg;
   final VoidCallback onTap;
 
   const InboxListTile({super.key, required this.msg, required this.onTap});
@@ -30,15 +31,14 @@ class _InboxListTileState extends State<InboxListTile> {
       final jwt = await AuthStorage.getTokenPayload();
       final currentUserId = jwt['id'];
 
-      final sender = widget.msg['sender_id'];
-      final receiver = widget.msg['receiver_id'];
+      final sender = widget.msg.senderId;
 
       isSender = sender == currentUserId;
-      isUnread = widget.msg['read'] == 0;
+      isUnread = widget.msg.isMe == false; // kun modtaget = ulæst
 
       final name = isSender!
-          ? widget.msg['receiver_name'] ?? 'Ukendt'
-          : widget.msg['sender_name'] ?? 'Ukendt';
+          ? widget.msg.receiverName
+          : widget.msg.senderName;
 
       if (mounted) {
         setState(() {
@@ -71,8 +71,8 @@ class _InboxListTileState extends State<InboxListTile> {
       );
     }
 
-    final subject = widget.msg['subject']?.toString().trim().isNotEmpty == true
-        ? widget.msg['subject']
+    final subject = widget.msg.subject.trim().isNotEmpty
+        ? widget.msg.subject
         : '(Uden emne)';
 
     return Padding(
@@ -115,7 +115,7 @@ class _InboxListTileState extends State<InboxListTile> {
                 ),
                 SizedBox(width: 8.w),
                 Text(
-                  _formatDate(widget.msg['sent_at']),
+                  _formatDate(widget.msg.sentAt),
                   style: TextStyle(color: Colors.white54, fontSize: 12.sp),
                 ),
               ],
@@ -126,7 +126,6 @@ class _InboxListTileState extends State<InboxListTile> {
     );
   }
 
-  /// 🔥 Her definerer vi ikonlogikken med 3 tilstande
   Widget _buildStatusIcon() {
     if (isSender == null || isUnread == null) {
       return const Icon(Icons.mail_outline, color: Colors.grey);
@@ -140,7 +139,6 @@ class _InboxListTileState extends State<InboxListTile> {
       return const Icon(Icons.mark_email_unread, color: Colors.blueGrey);
     }
 
-    // Hvis afsender og besked stadig ulæst af modtager → special-ikon
     return Stack(
       alignment: Alignment.center,
       children: const [
@@ -158,12 +156,8 @@ class _InboxListTileState extends State<InboxListTile> {
     );
   }
 
-  String _formatDate(String rawDate) {
+  String _formatDate(DateTime dt) {
     try {
-      final dt = DateFormat('EEE, dd MMM yyyy HH:mm:ss', 'en_US')
-          .parseUtc(rawDate)
-          .toLocal();
-
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final msgDay = DateTime(dt.year, dt.month, dt.day);
