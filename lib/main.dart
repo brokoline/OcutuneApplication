@@ -23,7 +23,7 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_settings_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
@@ -54,7 +54,7 @@ void main() async {
     print('✅ Synk-forsøg færdig');
 
     print('🔄 Starter gentaget synk...');
-    SyncScheduler.start(interval: Duration(minutes: 3));
+    SyncScheduler.start(interval: Duration(minutes: 10));
 
     print('📶 Starter netværksovervågning...');
     NetworkListenerService.start();
