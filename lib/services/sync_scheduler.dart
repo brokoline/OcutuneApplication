@@ -5,7 +5,7 @@ class SyncScheduler {
   static Timer? _syncTimer;
   static bool _isRunning = false;
 
-  static void start({Duration interval = const Duration(minutes: 3)}) {
+  static void start({Duration interval = const Duration(minutes: 10)}) {
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(interval, (_) async {
       if (_isRunning) return;
