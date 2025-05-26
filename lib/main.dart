@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
 import 'package:provider/provider.dart';
-
+import 'package:intl/date_symbol_data_local.dart';
 
 
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
@@ -29,7 +29,6 @@ import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.da
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
-import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 
@@ -41,7 +40,10 @@ import 'package:ocutune_light_logger/services/services/network_listener_service.
 import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('da_DK', null); // 👈 tilføj dette
+  runApp(const OcutuneApp());
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF2D2D2D),
@@ -83,6 +85,8 @@ void main() async {
     iosNotificationOptions: const IOSNotificationOptions(),
     foregroundTaskOptions: const ForegroundTaskOptions(),
   );
+
+
 
   runApp(const OcutuneApp());
 }

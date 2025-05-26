@@ -6,11 +6,16 @@ import '../../../models/diagnose_model.dart';
 import '../../../models/light_data_model.dart';
 import '../../../services/services/api_services.dart';
 import '../../../theme/colors.dart';
+import '../../../utils/light_utils.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_diagnose_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_contact_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_info_card.dart';
-import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_data_card.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_score_card.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_daily_line_chart.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_weekly_bar_chart.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_latest_events_list.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_recommendations_card.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String patientId;
@@ -124,7 +129,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             ),
             SizedBox(height: 8.h),
 
-            // Lysdata
+            // Lysdata – visuelle widgets
             FutureBuilder<List<LightData>>(
               future: _lightDataFuture,
               builder: (context, snapshot) {
@@ -137,7 +142,28 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
                     style: TextStyle(color: Colors.red, fontSize: 14.sp),
                   );
                 }
-                return LightDataCard(lightData: snapshot.data ?? []);
+
+                final data = snapshot.data ?? [];
+                final score = data.isEmpty
+                    ? 0.0
+                    : data.map((d) => d.exposureScore).reduce((a, b) => a + b) / data.length;
+
+                final weekMap = groupLuxByDay(data);
+                final recs = generateRecommendations(data);
+
+                return Column(
+                  children: [
+                    LightScoreCard(score: score),
+                    SizedBox(height: 8.h),
+                    LightDailyLineChart(lightData: data),
+                    SizedBox(height: 8.h),
+                    LightWeeklyBarChart(luxPerDay: weekMap),
+                    SizedBox(height: 8.h),
+                    LightLatestEventsList(lightData: data),
+                    SizedBox(height: 8.h),
+                    LightRecommendationsCard(recommendations: recs),
+                  ],
+                );
               },
             ),
           ],

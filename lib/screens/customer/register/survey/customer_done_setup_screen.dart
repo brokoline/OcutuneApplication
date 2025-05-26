@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
-import '/models/user_data_service.dart';
+import '../../../../services/services/user_data_service.dart';
 
 
 class DoneSetupScreen extends StatefulWidget {

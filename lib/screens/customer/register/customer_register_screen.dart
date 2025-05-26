@@ -7,7 +7,7 @@ import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/widgets/ocutune_textfield.dart';
 import '/widgets/ocutune_card.dart';
-import '/models/user_data_service.dart';
+import '../../../services/services/user_data_service.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
