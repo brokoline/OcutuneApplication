@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
 import 'package:provider/provider.dart';
-
-
-
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/screens/login_screen.dart';
@@ -24,7 +19,6 @@ import 'package:ocutune_light_logger/screens/customer/register/survey/customer_q
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
-import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -33,56 +27,27 @@ import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 
+import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
-import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
-import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Color(0xFF2D2D2D),
+    statusBarColor: Color(0xFF4C4C4C),
     statusBarIconBrightness: Brightness.light,
   ));
 
-  try {
-    print('🔧 Initialiserer lokal SQLite...');
-    await OfflineStorageService.init();
-    print('✅ Lokal storage klar');
-
-    print('🔁 Synkroniserer usendte data...');
-    await OfflineSyncManager.syncAll();
-    print('✅ Synk-forsøg færdig');
-
-    print('🔄 Starter gentaget synk...');
-    SyncScheduler.start(interval: Duration(minutes: 10));
-
-    print('📶 Starter netværksovervågning...');
-    NetworkListenerService.start();
-    print('✅ Klar til at starte appen!');
-  } catch (e) {
-    print('❌ FEJL under opstart: $e');
-  }
-
-  FlutterForegroundTask.init(
-    androidNotificationOptions: AndroidNotificationOptions(
-      channelId: 'foreground_service_channel',
-      channelName: 'Foreground Service',
-      channelDescription: 'This channel is used for foreground service.',
-      channelImportance: NotificationChannelImportance.LOW,
-      priority: NotificationPriority.LOW,
-      iconData: const NotificationIconData(
-        resType: ResourceType.mipmap,
-        resPrefix: ResourcePrefix.ic,
-        name: 'launcher',
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Center(
+      child: Text(
+        '🚨 FEJL: ${details.exception}',
+        style: const TextStyle(color: Colors.red),
+        textAlign: TextAlign.center,
       ),
-    ),
-    iosNotificationOptions: const IOSNotificationOptions(),
-    foregroundTaskOptions: const ForegroundTaskOptions(),
-  );
+    );
+  };
 
   runApp(const OcutuneApp());
 }
@@ -101,19 +66,14 @@ class OcutuneApp extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
         ],
         child: MaterialApp(
-
-          onGenerateRoute: (settings) {
-            print('🧭 Navigated to ${settings.name} with arguments: ${settings.arguments.runtimeType}');
-            return null; // allow MaterialApp to continue with routes
-          },
-          title: 'Ocutune',
           debugShowCheckedModeBanner: false,
+          title: 'Ocutune',
           theme: ThemeData(
             scaffoldBackgroundColor: darkGray,
             brightness: Brightness.dark,
             fontFamily: 'Roboto',
           ),
-          home: SplashScreen(),
+          home: const SplashScreen(),
           routes: {
             '/login': (_) => LoginScreen(),
             '/chooseAccess': (_) => ChooseAccessScreen(),
@@ -138,33 +98,32 @@ class OcutuneApp extends StatelessWidget {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;
               return PatientDashboardScreen(patientId: patientId);
             },
-
-            // 👇 Patient inbox
-            '/patient/inbox': (_) => const InboxScreen(
-              inboxType: InboxType.patient,
-              useClinicianAppBar: false,
-              showNewMessageButton: true,
+            '/clinician/inbox': (_) => ChangeNotifierProvider(
+              create: (_) => InboxController(inboxType: InboxType.clinician),
+              child: const InboxScreen(
+                inboxType: InboxType.clinician,
+                useClinicianAppBar: true,
+                showNewMessageButton: true,
+              ),
             ),
-
-            // 👇 Clinician inbox
-            '/clinician/inbox': (_) => const InboxScreen(
-              inboxType: InboxType.clinician,
-              useClinicianAppBar: true,
-              showNewMessageButton: true,
+            '/patient/inbox': (_) => ChangeNotifierProvider(
+              create: (_) => InboxController(inboxType: InboxType.patient),
+              child: const InboxScreen(
+                inboxType: InboxType.patient,
+                useClinicianAppBar: false,
+                showNewMessageButton: true,
+              ),
             ),
-
             '/patient/message_detail': (context) {
               final threadId = ModalRoute.of(context)!.settings.arguments as String;
               return MessageThreadScreen(threadId: threadId);
             },
             '/patient/new_message': (_) => const NewMessageScreen(),
-
             '/clinician/message_detail': (context) {
               final threadId = ModalRoute.of(context)!.settings.arguments as String;
               return MessageThreadScreen(threadId: threadId);
             },
             '/clinician/new_message': (_) => const NewMessageScreen(),
-
             '/clinician': (_) => ClinicianRootScreen(),
             '/patient_sensor_settings': (context) {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;

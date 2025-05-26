@@ -3,9 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../theme/colors.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_search.dart';
 import '../../../widgets/ocutune_textfield.dart';
-import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
-import '../../../widgets/clinician_widgets/clinician_patient_search.dart'; // 👈 import til din nye widget
 import 'clinician_search_controller.dart';
 
 class ClinicianSearchScreen extends StatefulWidget {
@@ -45,16 +44,23 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
       create: (_) => ClinicianSearchController(),
       child: Scaffold(
         backgroundColor: generalBackground,
-        appBar: const ClinicianAppBar(
-          title: 'Søg efter patient',
-          showLogout: false,
-        ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 8.h),
+              Center(
+                child: Text(
+                  'Søg efter patient',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+
+              // Søgning
               Consumer<ClinicianSearchController>(
                 builder: (context, controller, _) {
                   return OcutuneTextField(
@@ -66,6 +72,8 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                 },
               ),
               SizedBox(height: 16.h),
+
+              // Resultatliste
               Expanded(
                 child: ClinicianPatientSearch(controller: _searchController),
               ),

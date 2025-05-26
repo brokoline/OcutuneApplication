@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import '../../../theme/colors.dart';
-import '../../models/patient_model.dart';
+import '../../../../theme/colors.dart';
+import '../../../models/patient_model.dart';
 
 class PatientContactCard extends StatelessWidget {
   final Patient patient;

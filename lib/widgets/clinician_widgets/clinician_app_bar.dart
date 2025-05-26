@@ -22,26 +22,31 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
+      backgroundColor: generalBackground,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+      elevation: 0,
+      centerTitle: true,
       leading: showBackButton && Navigator.canPop(context)
           ? IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Navigator.of(context).pop(),
       )
           : null,
-      backgroundColor: generalBackground,
-      surfaceTintColor: Colors.transparent,
-      scrolledUnderElevation: 0,
-      elevation: 0,
-      centerTitle: true,
       title: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Image.asset(
+            'assets/logo/logo_ocutune.png',
+            height: 32.h,
+            color: Colors.white,
+          ),
           if (title != null)
             Text(
               title!,
               style: TextStyle(
-                color: white,
-                fontSize: 18.sp,
+                color: Colors.white,
+                fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -51,7 +56,6 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 12.sp,
-                fontWeight: FontWeight.w400,
               ),
             ),
         ],

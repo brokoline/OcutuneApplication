@@ -227,6 +227,14 @@ class ApiService {
     return List<String>.from(jsonDecode(response.body));
   }
 
+  // Kliniker hent LightData
+  static Future<List<Map<String, dynamic>>> getPatientLightData(String patientId) async {
+    final response = await _get('/patients/$patientId/lightdata');
+    return _handleListResponse(response);
+  }
+
+
+
   // QUESTION METHODS
   static Future<List<dynamic>> fetchQuestions() async {
     final response = await _get('/questions');
