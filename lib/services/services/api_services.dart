@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../models/patient.dart';
+import '../../models/patient_model.dart';
 
 
 
@@ -71,7 +71,12 @@ class ApiService {
     }
   }
 
-  // 👥 PATIENT METHODS
+  // 👥 SEARCH PATIENT METHODS
+  static Future<List<Map<String, dynamic>>> getPatientDiagnoses(String patientId) async {
+    final response = await _get('/patients/$patientId/diagnoses');
+    return _handleListResponse(response);
+  }
+
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
     try {
       final response = await _get('/patients/search?q=$query');

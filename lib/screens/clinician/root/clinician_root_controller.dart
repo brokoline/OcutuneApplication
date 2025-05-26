@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/models/patient.dart'; // ← Juster path hvis nødvendigt
+import 'package:ocutune_light_logger/models/patient_model.dart'; // ← Juster path hvis nødvendigt
 
 class ClinicianDashboardController extends ChangeNotifier {
   List<String> _notifications = [];

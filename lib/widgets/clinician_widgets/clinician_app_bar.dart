@@ -6,6 +6,7 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showLogout;
   final VoidCallback? onLogout;
   final String? title;
+  final String? subtitle;
   final bool showBackButton;
 
   const ClinicianAppBar({
@@ -13,6 +14,7 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showLogout = false,
     this.onLogout,
     this.title,
+    this.subtitle,
     this.showBackButton = false,
   });
 
@@ -31,19 +33,28 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       elevation: 0,
       centerTitle: true,
-      title: title != null
-          ? Text(
-        title!,
-        style: TextStyle(
-          color: white,
-          fontSize: 18.sp,
-          fontWeight: FontWeight.w600,
-        ),
-      )
-          : Image.asset(
-        'assets/logo/logo_ocutune.png',
-        height: 40.h,
-        color: white,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (title != null)
+            Text(
+              title!,
+              style: TextStyle(
+                color: white,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          if (subtitle != null)
+            Text(
+              subtitle!,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+        ],
       ),
       actions: showLogout
           ? [

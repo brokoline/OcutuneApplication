@@ -1,107 +1,129 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../models/patient.dart';
+import '../../../models/patient_model.dart';
+import '../../../models/diagnose_model.dart';
 import '../../../services/services/api_services.dart';
 import '../../../theme/colors.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
+import '../../../widgets/clinician_widgets/clinician_patient_diagnose_card.dart';
+import '../../../widgets/clinician_widgets/clinician_patient_info_card.dart';
+import '../../../widgets/clinician_widgets/clinician_patient_contact_card.dart';
+import '../../../widgets/clinician_widgets/clinician_section_title.dart';
 
-class PatientDetailScreen extends StatelessWidget {
+class PatientDetailScreen extends StatefulWidget {
   final String patientId;
 
-  const PatientDetailScreen({Key? key, required this.patientId}) : super(key: key);
+  const PatientDetailScreen({super.key, required this.patientId});
+
+  @override
+  State<PatientDetailScreen> createState() => _PatientDetailScreenState();
+}
+
+class _PatientDetailScreenState extends State<PatientDetailScreen> {
+  late Future<Patient> _patientFuture;
+  late Future<List<Diagnosis>> _diagnosisFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _patientFuture = ApiService.getPatientDetails(widget.patientId);
+    _diagnosisFuture = ApiService.getPatientDiagnoses(widget.patientId)
+        .then((list) => list.map((e) => Diagnosis.fromJson(e)).toList());
+  }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Patient>(
-      future: ApiService.getPatientDetails(patientId),
+      future: _patientFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            backgroundColor: generalBackground,
-            appBar: const ClinicianAppBar(
-              title: 'Patient detaljer',
-              showLogout: false,
-              showBackButton: true,
-            ),
-            body: const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
-          );
+          return _buildLoadingScreen();
         }
 
         if (snapshot.hasError) {
-          return Scaffold(
-            backgroundColor: generalBackground,
-            appBar: const ClinicianAppBar(
-              title: 'Patient detaljer',
-              showLogout: false,
-              showBackButton: true,
-            ),
-            body: Center(
-              child: Text(
-                'Fejl: ${snapshot.error}',
-                style: TextStyle(color: Colors.red, fontSize: 16.sp),
-              ),
-            ),
-          );
+          return _buildErrorScreen(snapshot.error.toString());
         }
 
-        final patient = snapshot.data!;
-        final fullName = '${patient.firstName} ${patient.lastName}';
-
-        return Scaffold(
-          backgroundColor: generalBackground,
-          appBar: ClinicianAppBar(
-            title: 'Detaljer: $fullName',
-            showLogout: false,
-            showBackButton: true,
-          ),
-          body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildField('Navn', fullName),
-                _buildField('CPR', patient.cpr),
-                _buildField('Adresse', patient.street),
-                _buildField('Postnummer', patient.zipCode),
-                _buildField('By', patient.city),
-                _buildField('Telefon', patient.phone),
-                _buildField('Email', patient.email),
-              ],
-            ),
-          ),
-        );
+        return _buildPatientDetailScreen(snapshot.data!);
       },
     );
   }
 
-  Widget _buildField(String label, String? value) {
-    if (value == null || value.isEmpty) return const SizedBox();
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w400,
+  Widget _buildLoadingScreen() {
+    return Scaffold(
+      backgroundColor: generalBackground,
+      appBar: const ClinicianAppBar(
+        title: 'Patient detaljer',
+        showLogout: false,
+        showBackButton: true,
+      ),
+      body: const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildErrorScreen(String error) {
+    return Scaffold(
+      backgroundColor: generalBackground,
+      appBar: const ClinicianAppBar(
+        title: 'Patient detaljer',
+        showLogout: false,
+        showBackButton: true,
+      ),
+      body: Center(
+        child: Text(
+          'Fejl: $error',
+          style: TextStyle(color: Colors.red, fontSize: 16.sp),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPatientDetailScreen(Patient patient) {
+    final fullName = '${patient.firstName} ${patient.lastName}';
+
+    return Scaffold(
+      backgroundColor: generalBackground,
+      appBar: ClinicianAppBar(
+        title: 'Patient detaljer',
+        subtitle: fullName,
+        showLogout: false,
+        showBackButton: true,
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PatientInfoCard(patient: patient),
+            SizedBox(height: 24.h),
+            Center(child: SectionTitle(title: 'Kontaktinformation')),
+            SizedBox(height: 12.h),
+            PatientContactCard(patient: patient),
+            SizedBox(height: 24.h),
+            Center(child: SectionTitle(title: 'Diagnoser')),
+            SizedBox(height: 12.h),
+            FutureBuilder<List<Diagnosis>>(
+              future: _diagnosisFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Colors.white));
+                }
+
+                if (snapshot.hasError) {
+                  return Text(
+                    'Fejl ved hentning af diagnoser: ${snapshot.error}',
+                    style: TextStyle(color: Colors.red, fontSize: 14.sp),
+                  );
+                }
+
+                return DiagnosisCard(diagnoses: snapshot.data ?? []);
+              },
             ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

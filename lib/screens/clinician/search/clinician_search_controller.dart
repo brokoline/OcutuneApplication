@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../models/patient.dart';
+import '../../../models/patient_model.dart';
 import '../../../services/services/api_services.dart';
 
 class ClinicianSearchController with ChangeNotifier {

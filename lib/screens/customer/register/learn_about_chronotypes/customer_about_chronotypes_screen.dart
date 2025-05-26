@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
-import 'package:ocutune_light_logger/models/chronotype.dart';
+import 'package:ocutune_light_logger/models/chronotype_model.dart';
 
 class AboutChronotypeScreen extends StatefulWidget {
   final String chronotypeId;  // STRING: lark, dove, owl
