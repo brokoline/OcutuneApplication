@@ -4,6 +4,8 @@ import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
 
+import '../../../widgets/messages/message_thread_screen.dart';
+
 class PatientInboxScreen extends StatelessWidget {
   const PatientInboxScreen({super.key});
 
@@ -50,12 +52,14 @@ class PatientInboxScreen extends StatelessWidget {
                 final msg = controller.messages[index];
                 return InboxListTile(
                   msg: msg,
-                  onTap: () {
-                    Navigator.pushNamed(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
-                      '/patient/message_detail',
-                      arguments: msg.threadId,
+                      MaterialPageRoute(
+                        builder: (_) => MessageThreadScreen(threadId: msg.threadId.toString()),
+                      ),
                     );
+                    await controller.refresh(); // ⬅️ Henter ny data når man vender tilbage
                   },
                 );
               },

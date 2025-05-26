@@ -19,6 +19,21 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Provider.of<ClinicianSearchController>(context, listen: false);
+      controller.fetchPatients().then((_) {
+        final lastQuery = controller.currentQuery;
+        if (lastQuery.isNotEmpty) {
+          _searchController.text = lastQuery;
+          controller.searchPatients(lastQuery);
+        }
+      });
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -27,7 +42,7 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ClinicianSearchController()..fetchPatients(),
+      create: (_) => ClinicianSearchController(),
       child: Scaffold(
         backgroundColor: generalBackground,
         body: Padding(
@@ -49,7 +64,7 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                   return OcutuneTextField(
                     label: 'Søg...',
                     controller: _searchController,
-                    textColor: Colors.black38,
+                    textColor: Colors.black,
                     onChanged: (query) {
                       controller.searchPatients(query);
                     },
@@ -75,7 +90,16 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                       );
                     }
 
+                    // Vis intet før der søges
+                    if (_searchController.text.trim().isEmpty) {
+                      return const SizedBox();
+                    }
+
                     final List<Patient> patients = controller.filteredPatients;
+
+                    if (_searchController.text.trim().isEmpty) {
+                      return const SizedBox(); // ← vis intet før der søges
+                    }
 
                     if (patients.isEmpty) {
                       return Center(
@@ -88,6 +112,7 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                         ),
                       );
                     }
+
 
                     return ListView.separated(
                       itemCount: patients.length,

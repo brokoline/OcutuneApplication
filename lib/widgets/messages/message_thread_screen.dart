@@ -9,12 +9,9 @@ import 'reply_input.dart';
 import '../confirm_dialog.dart';
 
 class MessageThreadScreen extends StatefulWidget {
-  final String threadId; // ✅ ændret fra int til String
+  final String threadId;
 
-  const MessageThreadScreen({
-    super.key,
-    required this.threadId,
-  });
+  const MessageThreadScreen({super.key, required this.threadId});
 
   @override
   State<MessageThreadScreen> createState() => _MessageThreadScreenState();
@@ -26,7 +23,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
   List<Message> _messages = [];
   Message? _original;
-  String? _currentUserId; // ✅ String i stedet for int
+  String? _currentUserId;
   bool _isDeleting = false;
 
   @override
@@ -36,14 +33,18 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   }
 
   Future<void> _loadMessages({bool scrollToBottom = true}) async {
-    final jwt = await AuthStorage.getTokenPayload();
-    _currentUserId = jwt['id'];
-
     try {
-      final raw = await MessageService.fetchThread(widget.threadId); // ✅ String ID
-      final parsed = raw.map((m) => Message.fromJson(m, _currentUserId!)).toList();
+      final jwt = await AuthStorage.getTokenPayload();
+      _currentUserId = jwt['sub'];
+
+      final raw = await MessageService.fetchThread(widget.threadId);
+      print('🧪 raw length: ${raw.length}');
+      print('🧪 raw: $raw');
+
+      final parsed = raw.map((m) => Message.fromJson(m, _currentUserId ?? '')).toList();
 
       if (!mounted) return;
+
       setState(() {
         _messages = parsed;
         _original = parsed.isNotEmpty ? parsed.first : null;
@@ -71,25 +72,41 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     }
   }
 
-  void _sendReply(String text) async {
-    if (_original == null) return;
 
-    final currentUserId = _currentUserId!;
-    final isMeSender = _original!.senderId == currentUserId;
+  void _sendReply(String text) async {
+    if (_original == null || _currentUserId == null) {
+      print('❌ _original eller currentUserId er null');
+      return;
+    }
+
+    final isMeSender = _original!.senderId == _currentUserId;
     final receiverId = isMeSender ? _original!.receiverId : _original!.senderId;
+
+    if (receiverId.isEmpty) {
+      print('❌ receiverId er tom');
+      return;
+    }
+
+    final subject = _original!.subject.isNotEmpty
+        ? 'Re: ${_original!.subject}'
+        : 'Svar';
+
+    print('📨 Klar til at sende: "$text"');
+    print('➡️  Til: $receiverId');
+    print('📎 ThreadId: ${_original!.threadId}');
 
     try {
       await MessageService.send(
         receiverId: receiverId,
         message: text,
-        subject: 'Re: ${_original!.subject}',
-        replyTo: widget.threadId,
+        subject: subject,
+        replyTo: _original!.threadId.toString(), // 👈 ikke message.id
       );
 
       _replyController.clear();
       await _loadMessages(scrollToBottom: true);
     } catch (e) {
-      debugPrint('❌ Fejl ved afsendelse: $e');
+      print('❌ Fejl ved send(): $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Kunne ikke sende besked: $e')),
@@ -97,6 +114,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       }
     }
   }
+
+
+
 
   Future<void> _deleteThread() async {
     final confirmed = await showDialog<bool>(
@@ -150,6 +170,12 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final subject = (_original?.subject != null && _original!.subject.isNotEmpty)
+        ? _original!.subject
+        : 'Uden emne';
+    final sender = _original?.senderName ?? 'Ukendt afsender';
+    final receiver = _original?.receiverName ?? 'Ukendt modtager';
+
     if (_original == null || _messages.isEmpty) {
       return const Scaffold(
         backgroundColor: generalBackground,
@@ -166,7 +192,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white70),
         title: Text(
-          _original!.subject.isNotEmpty ? _original!.subject : 'Uden emne',
+          subject,
           style: const TextStyle(
             color: Colors.white70,
             fontSize: 18,
@@ -195,12 +221,12 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Fra: ${_original!.senderName}',
+                  'Fra: $sender',
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Til: ${_original!.receiverName}',
+                  'Til: $receiver',
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],

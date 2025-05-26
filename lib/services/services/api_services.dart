@@ -120,24 +120,42 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> fetchThread(String threadId) async {
     final response = await _get('/messages/thread-by-id/$threadId');
+    print('📦 Thread response body: ${response.body}');
     return _handleListResponse(response);
   }
+
 
   static Future<void> sendMessage({
     required String receiverId,
     required String message,
     String subject = '',
-    String? replyTo,
+    dynamic replyTo, // accepterer både int og String
   }) async {
+    // Trim og fallback
+    final cleanSubject = subject.trim().isNotEmpty ? subject.trim() : 'Uden emne';
+    final cleanMessage = message.trim();
+
+    if (cleanMessage.isEmpty) {
+      throw Exception('Besked kan ikke være tom');
+    }
+
     final payload = {
       'receiver_id': receiverId,
-      'message': message,
-      'subject': subject,
-      if (replyTo != null) 'reply_to': replyTo,
+      'message': cleanMessage,
+      'subject': cleanSubject,
+      if (replyTo != null) 'reply_to': int.tryParse(replyTo.toString()),
     };
+
+    print('📨 Sender besked:');
+    print('➡️  Til: $receiverId');
+    print('📝  Emne: $cleanSubject');
+    print('💬  Indhold: $cleanMessage');
+    if (replyTo != null) print('↩️  Svar på besked-ID: $replyTo');
+
     final response = await _post('/messages/send', payload);
     _handleVoidResponse(response, successCode: 200);
   }
+
 
 
 
@@ -394,4 +412,18 @@ class ApiService {
       throw Exception('Fejl: ${response.statusCode}');
     }
   }
+
+  // ✅ Gør dem tilgængelige offentligt
+  static Future<http.Response> post(String endpoint, Map<String, dynamic> body) =>
+      _post(endpoint, body);
+
+  static Future<http.Response> patch(String endpoint, Map<String, dynamic> body) =>
+      _patch(endpoint, body);
+
+  static Future<http.Response> del(String endpoint) =>
+      _delete(endpoint);
+
+  static void handleVoidResponse(http.Response response, {required int successCode}) =>
+      _handleVoidResponse(response, successCode: successCode);
+
 }
