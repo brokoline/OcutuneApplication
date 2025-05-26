@@ -49,7 +49,18 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 8.h),
+              Center(
+                child: Text(
+                  'Søg efter patient',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+
+              // Søgning
               Consumer<ClinicianSearchController>(
                 builder: (context, controller, _) {
                   return OcutuneTextField(
@@ -61,6 +72,8 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                 },
               ),
               SizedBox(height: 16.h),
+
+              // Resultatliste
               Expanded(
                 child: ClinicianPatientSearch(controller: _searchController),
               ),

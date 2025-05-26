@@ -95,19 +95,25 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Overskrift og navn
-            Text(
-              'Patient detaljer',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              fullName,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14.sp,
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Patient detaljer',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    fullName,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 20.h),

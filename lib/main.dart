@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/date_symbol_data_local.dart';
-
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
 import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/screens/login_screen.dart';
@@ -36,13 +34,20 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Fix til intl (DateFormat)
-  await initializeDateFormatting('da_DK', null);
-
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF4C4C4C),
     statusBarIconBrightness: Brightness.light,
   ));
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Center(
+      child: Text(
+        '🚨 FEJL: ${details.exception}',
+        style: const TextStyle(color: Colors.red),
+        textAlign: TextAlign.center,
+      ),
+    );
+  };
 
   runApp(const OcutuneApp());
 }
@@ -61,8 +66,8 @@ class OcutuneApp extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
         ],
         child: MaterialApp(
-          title: 'Ocutune',
           debugShowCheckedModeBanner: false,
+          title: 'Ocutune',
           theme: ThemeData(
             scaffoldBackgroundColor: darkGray,
             brightness: Brightness.dark,

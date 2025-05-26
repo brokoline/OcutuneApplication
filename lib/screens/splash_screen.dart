@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/screens/login_screen.dart';
 
 import '../services/services/app_initializer.dart';
@@ -27,21 +26,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
 
-    Future.delayed(Duration.zero, _initializeApp);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeApp();
+    });
   }
 
   Future<void> _initializeApp() async {
-    try {
-      await AppInitializer.initialize();
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted && !_hasNavigated) {
-        _hasNavigated = true;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => LoginScreen()),
-        );
-      }
-    } catch (e) {
-      debugPrint('❌ Init-fejl: $e');
+    await Future.delayed(const Duration(milliseconds: 100));
+    await AppInitializer.initialize();
+
+    if (mounted && !_hasNavigated) {
+      _hasNavigated = true;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+      );
     }
   }
 
@@ -54,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: generalBackground,
       body: Center(
         child: FadeTransition(
           opacity: _fadeIn,
@@ -62,14 +59,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(
-                color: Colors.white70,
                 'assets/logo/logo_ocutune.png',
+                color: Colors.white70,
                 width: 140,
-                fit: BoxFit.contain,
               ),
               const SizedBox(height: 32),
               const CircularProgressIndicator(color: Colors.white70),
-              const SizedBox(height: 16),
             ],
           ),
         ),
