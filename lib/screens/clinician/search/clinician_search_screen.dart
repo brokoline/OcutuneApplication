@@ -3,9 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../theme/colors.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_search.dart';
 import '../../../widgets/ocutune_textfield.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
-import '../../../widgets/clinician_widgets/clinician_patient_search.dart'; // 👈 import til din nye widget
 import 'clinician_search_controller.dart';
 
 class ClinicianSearchScreen extends StatefulWidget {

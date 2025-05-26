@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-import '../../../models/patient_model.dart';
-import '../../../theme/colors.dart';
-import '../../../screens/clinician/search/clinician_patient_detail_screen.dart';
-import '../../../screens/clinician/search/clinician_search_controller.dart';
+import '../../../../models/patient_model.dart';
+import '../../../../theme/colors.dart';
+import '../../../../screens/clinician/search/clinician_patient_detail_screen.dart';
+import '../../../../screens/clinician/search/clinician_search_controller.dart';
 
 class ClinicianPatientSearch extends StatelessWidget {
   final TextEditingController controller;

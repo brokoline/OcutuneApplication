@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../models/diagnose_model.dart';
-import '../../../theme/colors.dart';
+import '../../../../models/diagnose_model.dart';
+import '../../../../theme/colors.dart';
 
 class DiagnosisCard extends StatelessWidget {
   final List<Diagnosis> diagnoses;
