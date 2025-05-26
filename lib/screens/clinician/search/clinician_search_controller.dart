@@ -10,8 +10,11 @@ class ClinicianSearchController with ChangeNotifier {
   String _currentQuery = '';
 
   bool get isLoading => _isLoading;
+
   String? get error => _error;
+
   List<Patient> get filteredPatients => _filteredPatients;
+
   String get currentQuery => _currentQuery;
 
   Future<void> fetchPatients() async {
@@ -31,25 +34,24 @@ class ClinicianSearchController with ChangeNotifier {
     notifyListeners();
   }
 
-  void searchPatients(String query) {
+  Future<void> searchPatients(String query) async {
     _currentQuery = query;
-    print('🔍 Søgning: "$query"');
+    print('🔍 Backend-søgning: "$query"');
+    _isLoading = true;
+    notifyListeners();
 
-    if (query.trim().isEmpty) {
-      _filteredPatients = [];
-      print('⚠️ Tom søgning');
-    } else {
-      final lower = query.toLowerCase();
-      _filteredPatients = _allPatients.where((p) {
-        final fname = p.firstName.toLowerCase();
-        final lname = p.lastName.toLowerCase();
-        final cpr = p.cpr ?? '';
-        return fname.contains(lower) || lname.contains(lower) || cpr.contains(query);
-      }).toList();
-
+    try {
+      final response = await ApiService.searchPatients(query);
+      _filteredPatients = response.map((p) => Patient.fromJson(p)).toList();
+      _error = null;
       print('✅ Resultater: ${_filteredPatients.length}');
+    } catch (e) {
+      _error = e.toString();
+      print('❌ Fejl i søgning: $_error');
+      _filteredPatients = [];
     }
 
-  notifyListeners();
+    _isLoading = false;
+    notifyListeners();
   }
 }
