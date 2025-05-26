@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../theme/colors.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_search.dart';
 import '../../../widgets/ocutune_textfield.dart';
-import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import 'clinician_search_controller.dart';
 
 class ClinicianSearchScreen extends StatefulWidget {
@@ -45,10 +44,6 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
       create: (_) => ClinicianSearchController(),
       child: Scaffold(
         backgroundColor: generalBackground,
-        appBar: const ClinicianAppBar(
-          title: 'Søg efter patient',
-          showLogout: false,
-        ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
           child: Column(

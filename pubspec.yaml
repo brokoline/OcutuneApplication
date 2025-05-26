@@ -20,8 +20,8 @@ dependencies:
   dropdown_button2: ^2.3.9
   flutter_reactive_ble: ^5.0.2
   flutter_screenutil: ^5.5.4
-  fl_chart: ^0.64.0
-  flutter_foreground_task: ^6.0.0
+  fl_chart: ^1.0.0
+  flutter_foreground_task: 8.0.0
   flutter_secure_storage: ^10.0.0-beta.4
   sqflite: ^2.3.0
   path: ^1.8.3
@@ -30,6 +30,8 @@ dependencies:
   permission_handler: ^12.0.0+1
   provider: ^6.1.1
 
+dependency_overrides:
+  flutter_foreground_task: 8.0.0
 
 dev_dependencies:
   flutter_test:
@@ -58,7 +60,7 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/logo/logo_ocutune"
+  image_path: "assets/logo/logo_ocutune.png"
   adaptive_icon_background: "#676767"
   adaptive_icon_foreground: "assets/logo/logo_ocutune.png"
 

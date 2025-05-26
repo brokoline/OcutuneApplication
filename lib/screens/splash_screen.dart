@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
-import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
 import 'package:ocutune_light_logger/screens/login_screen.dart';
+
+import '../services/services/app_initializer.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,20 +32,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _initializeApp() async {
     try {
-      debugPrint('🔧 Initialiserer lokal SQLite...');
-      await OfflineStorageService.init();
-      debugPrint('✅ Lokal storage klar');
-
-      debugPrint('🔁 Synkroniserer usendte data...');
-      await OfflineSyncManager.syncAll();
-      debugPrint('✅ Synk-forsøg færdig');
-
-      debugPrint('📶 Starter netværksovervågning...');
-      NetworkListenerService.start();
-      debugPrint('✅ Klar til at starte appen!');
-
+      await AppInitializer.initialize();
       await Future.delayed(const Duration(milliseconds: 500));
-
       if (mounted && !_hasNavigated) {
         _hasNavigated = true;
         Navigator.of(context).pushReplacement(

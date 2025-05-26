@@ -6,16 +6,11 @@ import '../../../models/diagnose_model.dart';
 import '../../../models/light_data_model.dart';
 import '../../../services/services/api_services.dart';
 import '../../../theme/colors.dart';
-import '../../../utils/light_utils.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_diagnose_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_contact_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_info_card.dart';
-import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_score_card.dart';
-import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_daily_line_chart.dart';
-import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_weekly_bar_chart.dart';
-import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_latest_events_list.dart';
-import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_recommendations_card.dart';
+import '../../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String patientId;
@@ -60,14 +55,12 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
   }
 
   Widget _buildLoadingScreen() {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: generalBackground,
-      appBar: const ClinicianAppBar(
-        title: 'Patient detaljer',
-        showLogout: false,
+      appBar: ClinicianAppBar(
         showBackButton: true,
       ),
-      body: const Center(
+      body: Center(
         child: CircularProgressIndicator(color: Colors.white),
       ),
     );
@@ -77,14 +70,12 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: const ClinicianAppBar(
-        title: 'Patient detaljer',
-        showLogout: false,
         showBackButton: true,
       ),
       body: Center(
         child: Text(
           'Fejl: $error',
-          style: TextStyle(color: Colors.red, fontSize: 16.sp),
+          style: TextStyle(color: Colors.red, fontSize: 16),
         ),
       ),
     );
@@ -95,10 +86,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
 
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: ClinicianAppBar(
-        title: 'Patient detaljer',
-        subtitle: fullName,
-        showLogout: false,
+      appBar: const ClinicianAppBar(
         showBackButton: true,
       ),
       body: SingleChildScrollView(
@@ -106,8 +94,28 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Overskrift og navn
+            Text(
+              'Patient detaljer',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              fullName,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14.sp,
+              ),
+            ),
+            SizedBox(height: 20.h),
+
+            // Patient info
             PatientInfoCard(patient: patient),
             SizedBox(height: 8.h),
+
             PatientContactCard(patient: patient),
             SizedBox(height: 8.h),
 
@@ -129,7 +137,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             ),
             SizedBox(height: 8.h),
 
-            // Lysdata – visuelle widgets
+            // Lysdata
             FutureBuilder<List<LightData>>(
               future: _lightDataFuture,
               builder: (context, snapshot) {
@@ -144,26 +152,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
                 }
 
                 final data = snapshot.data ?? [];
-                final score = data.isEmpty
-                    ? 0.0
-                    : data.map((d) => d.exposureScore).reduce((a, b) => a + b) / data.length;
-
-                final weekMap = groupLuxByDay(data);
-                final recs = generateRecommendations(data);
-
-                return Column(
-                  children: [
-                    LightScoreCard(score: score),
-                    SizedBox(height: 8.h),
-                    LightDailyLineChart(lightData: data),
-                    SizedBox(height: 8.h),
-                    LightWeeklyBarChart(luxPerDay: weekMap),
-                    SizedBox(height: 8.h),
-                    LightLatestEventsList(lightData: data),
-                    SizedBox(height: 8.h),
-                    LightRecommendationsCard(recommendations: recs),
-                  ],
-                );
+                return LightSummarySection(data: data);
               },
             ),
           ],
