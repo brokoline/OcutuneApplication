@@ -7,6 +7,7 @@ import '../../../widgets/ocutune_textfield.dart';
 import '../../../models/patient.dart';
 import 'clinician_patient_detail_screen.dart';
 import 'clinician_search_controller.dart';
+import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 
 class ClinicianSearchScreen extends StatefulWidget {
   const ClinicianSearchScreen({super.key});
@@ -45,20 +46,16 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
       create: (_) => ClinicianSearchController(),
       child: Scaffold(
         backgroundColor: generalBackground,
+        appBar: const ClinicianAppBar(
+          title: 'Søg efter patient',
+          showLogout: false,
+        ),
         body: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Søg efter patient',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 22.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 8.h),
               Consumer<ClinicianSearchController>(
                 builder: (context, controller, _) {
                   return OcutuneTextField(
@@ -90,16 +87,11 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                       );
                     }
 
-                    // Vis intet før der søges
                     if (_searchController.text.trim().isEmpty) {
                       return const SizedBox();
                     }
 
                     final List<Patient> patients = controller.filteredPatients;
-
-                    if (_searchController.text.trim().isEmpty) {
-                      return const SizedBox(); // ← vis intet før der søges
-                    }
 
                     if (patients.isEmpty) {
                       return Center(
@@ -112,7 +104,6 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
                         ),
                       );
                     }
-
 
                     return ListView.separated(
                       itemCount: patients.length,

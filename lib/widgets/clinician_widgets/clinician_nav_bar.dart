@@ -43,6 +43,11 @@ class ClinicianNavBar extends StatelessWidget {
             activeIcon: Icon(Icons.mail),
             label: 'Indbakke',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profil',
+          ),
         ],
       ),
     );

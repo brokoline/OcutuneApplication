@@ -5,19 +5,27 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showLogout;
   final VoidCallback? onLogout;
-  final String? title;  // Tilføjet titel parameter
+  final String? title;
+  final bool showBackButton;
 
   const ClinicianAppBar({
     super.key,
     this.showLogout = false,
     this.onLogout,
-    this.title,  // Tilføjet til konstruktør
+    this.title,
+    this.showBackButton = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
+      leading: showBackButton && Navigator.canPop(context)
+          ? IconButton(
+        icon: Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
+      )
+          : null,
       backgroundColor: generalBackground,
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,

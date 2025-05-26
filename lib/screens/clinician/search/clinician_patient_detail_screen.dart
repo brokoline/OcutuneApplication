@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/patient.dart';
 import '../../../services/services/api_services.dart';
 import '../../../theme/colors.dart';
+import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 
 class PatientDetailScreen extends StatelessWidget {
   final String patientId;
@@ -13,11 +14,16 @@ class PatientDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Patient>(
-      future: ApiService.getPatientDetails(patientId.toString()),
+      future: ApiService.getPatientDetails(patientId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: generalBackground,
+            appBar: const ClinicianAppBar(
+              title: 'Patient detaljer',
+              showLogout: false,
+              showBackButton: true,
+            ),
             body: const Center(
               child: CircularProgressIndicator(color: Colors.white),
             ),
@@ -27,6 +33,11 @@ class PatientDetailScreen extends StatelessWidget {
         if (snapshot.hasError) {
           return Scaffold(
             backgroundColor: generalBackground,
+            appBar: const ClinicianAppBar(
+              title: 'Patient detaljer',
+              showLogout: false,
+              showBackButton: true,
+            ),
             body: Center(
               child: Text(
                 'Fejl: ${snapshot.error}',
@@ -37,24 +48,21 @@ class PatientDetailScreen extends StatelessWidget {
         }
 
         final patient = snapshot.data!;
+        final fullName = '${patient.firstName} ${patient.lastName}';
 
         return Scaffold(
           backgroundColor: generalBackground,
-          appBar: AppBar(
-            backgroundColor: generalBackground,
-            elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
-            title: Text(
-              'Patientprofil',
-              style: TextStyle(color: Colors.white, fontSize: 20.sp),
-            ),
+          appBar: ClinicianAppBar(
+            title: 'Detaljer: $fullName',
+            showLogout: false,
+            showBackButton: true,
           ),
           body: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildField('Navn', '${patient.firstName} ${patient.lastName}'),
+                _buildField('Navn', fullName),
                 _buildField('CPR', patient.cpr),
                 _buildField('Adresse', patient.street),
                 _buildField('Postnummer', patient.zipCode),
