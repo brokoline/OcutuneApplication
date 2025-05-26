@@ -9,7 +9,6 @@ import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_patient_diagnose_card.dart';
 import '../../../widgets/clinician_widgets/clinician_patient_info_card.dart';
 import '../../../widgets/clinician_widgets/clinician_patient_contact_card.dart';
-import '../../../widgets/clinician_widgets/clinician_section_title.dart';
 
 class PatientDetailScreen extends StatefulWidget {
   final String patientId;
@@ -98,13 +97,9 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             PatientInfoCard(patient: patient),
-            SizedBox(height: 24.h),
-            Center(child: SectionTitle(title: 'Kontaktinformation')),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
             PatientContactCard(patient: patient),
-            SizedBox(height: 24.h),
-            Center(child: SectionTitle(title: 'Diagnoser')),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
             FutureBuilder<List<Diagnosis>>(
               future: _diagnosisFuture,
               builder: (context, snapshot) {
