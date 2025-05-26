@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/models/patient.dart'; // ← Juster path hvis nødvendigt
+import 'package:ocutune_light_logger/models/patient_model.dart'; // ← Juster path hvis nødvendigt
 
 class ClinicianDashboardController extends ChangeNotifier {
   List<String> _notifications = [];
@@ -20,31 +20,6 @@ class ClinicianDashboardController extends ChangeNotifier {
       'Patient X har sendt en ny besked',
       'Patient Y har registreret ny aktivitet',
       'Patient Zs lysniveau er under normalen',
-    ];
-
-    // Brug Patient model
-    _allPatients = [
-      Patient(
-        id: 1,
-        firstName: 'Anders',
-        lastName: 'And',
-        cpr: '1234567890',
-        simUserid: '1234',
-      ),
-      Patient(
-        id: 2,
-        firstName: 'Børge',
-        lastName: 'Børgesen',
-        cpr: '0987654321',
-        simUserid: '1234',
-      ),
-      Patient(
-        id: 3,
-        firstName: 'Carla',
-        lastName: 'Carlsen',
-        cpr: '4567890123',
-        simUserid: '9012',
-      ),
     ];
 
     notifyListeners();

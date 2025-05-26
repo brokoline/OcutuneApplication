@@ -16,6 +16,33 @@ class InboxController extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
+  Future<void> fetchInbox() async {
+    isLoading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      final jwt = await AuthStorage.getTokenPayload();
+      final userId = jwt['sub']?.toString();
+
+      if (userId == null) {
+        error = 'Bruger-ID mangler.';
+        isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      final raw = await MessageService.fetchMessages(userId);
+      raw.sort((a, b) => b.sentAt.compareTo(a.sentAt));
+      _allMessages = raw;
+    } catch (e) {
+      error = '❌ Kunne ikke hente beskeder: $e';
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
   Future<void> loadMessages() async {
     isLoading = true;
     error = null;
@@ -28,25 +55,28 @@ class InboxController extends ChangeNotifier {
 
       if (token != null && userId != null) {
         final fetched = await MessageService.fetchMessages(userId);
-
-        // sortér nyeste øverst
         fetched.sort((a, b) => b.sentAt.compareTo(a.sentAt));
-
         _allMessages = fetched;
       } else {
         error = 'Bruger-ID eller token mangler.';
       }
     } catch (e) {
-      error = 'Kunne ikke hente beskeder.';
+      error = '❌ Kunne ikke hente beskeder: $e';
     }
 
     isLoading = false;
     notifyListeners();
   }
 
+  /// 📬 Filtrerer beskeder baseret på brugerens rolle
   List<Message> _filteredMessages() {
     return _allMessages.where((msg) {
       return inboxType == InboxType.clinician ? msg.isMe : !msg.isMe;
     }).toList();
+  }
+
+
+  Future<void> refresh() async {
+    await fetchInbox();
   }
 }

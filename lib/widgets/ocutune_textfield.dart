@@ -8,9 +8,8 @@ class OcutuneTextField extends StatelessWidget {
   final int maxLines;
   final bool expands;
   final bool obscureText;
-
-  /// Alias for obscureText to support legacy usage
   final bool? isPassword;
+  final Color? textColor; // 👈 NYT
 
   const OcutuneTextField({
     super.key,
@@ -22,6 +21,7 @@ class OcutuneTextField extends StatelessWidget {
     this.expands = false,
     this.obscureText = false,
     this.isPassword,
+    this.textColor, // 👈 NYT
   });
 
   @override
@@ -34,6 +34,7 @@ class OcutuneTextField extends StatelessWidget {
       obscureText: effectiveObscureText,
       maxLines: expands ? null : maxLines,
       expands: expands,
+      style: TextStyle(color: textColor ?? Colors.black), // 👈 NYT
       decoration: InputDecoration(
         labelText: label,
         labelStyle: labelStyle,

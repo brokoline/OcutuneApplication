@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthStorage {
@@ -9,17 +8,34 @@ class AuthStorage {
   }
 
   static Future<Map<String, dynamic>> getTokenPayload() async {
-    final token = await getToken();
-    if (token == null) throw Exception('JWT token mangler');
+    try {
+      final token = await getToken();
 
-    final payloadBase64 = token.split('.')[1];
-    final normalized = base64.normalize(payloadBase64);
-    final payload = utf8.decode(base64.decode(normalized));
+      if (token == null) {
+        print('❌ Token mangler i SharedPreferences (getTokenPayload)');
+        return {};
+      }
 
-    return json.decode(payload);
+      print('🔑 Fundet token: $token');
+
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        print('❌ Token format er ugyldigt (dele: ${parts.length})');
+        return {};
+      }
+
+      final payloadBase64 = base64.normalize(parts[1]);
+      final payloadString = utf8.decode(base64.decode(payloadBase64));
+      final Map<String, dynamic> payload = json.decode(payloadString);
+
+      print('📦 JWT Payload: $payload');
+      return payload;
+    } catch (e) {
+      print('❌ Kunne ikke parse JWT payload: $e');
+      return {};
+    }
   }
 
-  // Gem token og rolle ved login
   static Future<void> saveLogin({
     required String id,
     required String role,
@@ -31,10 +47,11 @@ class AuthStorage {
     await prefs.setString('user_role', role);
     await prefs.setString('sim_userid', simUserId);
     await prefs.setString('jwt_token', token);
+    print('✅ Login info gemt i SharedPreferences');
   }
 
 
-  static Future<int?> getPatientId() async {
+static Future<int?> getPatientId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt('patientId');
   }

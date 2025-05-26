@@ -6,7 +6,6 @@ import '../auth_storage.dart';
 import 'api_services.dart';
 
 class MessageService {
-  // 📥 Hent indbakke (og map til Message-objekter)
   static Future<List<Message>> fetchMessages(String currentUserId) async {
     try {
       final token = await AuthStorage.getToken();
@@ -38,7 +37,6 @@ class MessageService {
     }
   }
 
-  // 🧵 Hent tråd
   static Future<List<Map<String, dynamic>>> fetchThread(String threadId) async {
     debugPrint('📨 Henter tråd $threadId');
     final thread = await ApiService.fetchThread(threadId);
@@ -51,47 +49,42 @@ class MessageService {
     return thread;
   }
 
-  // ✉️ Send besked
   static Future<void> send({
     required String receiverId,
     required String message,
     String subject = '',
     String? replyTo,
   }) async {
-    await ApiService.sendMessage(
-      receiverId: receiverId,
-      message: message,
-      subject: subject,
-      replyTo: replyTo,
-    );
-  }
+    final trimmedMessage = message.trim();
+    final trimmedSubject = subject.trim().isNotEmpty ? subject.trim() : 'Uden emne';
 
-  // 🗑️ Slet tråd
-  static Future<void> deleteThread(String threadId) async {
-    await ApiService.deleteThread(threadId);
-  }
-
-  // ✅ Marker tråd som læst
-  static Future<void> markAsRead(String threadId) async {
-    final token = await AuthStorage.getToken();
-    final url =
-    Uri.parse('https://ocutune.ddns.net/messages/mark_read/$threadId');
-
-    final response = await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    debugPrint('📤 Markerer som læst: $threadId – status: ${response.statusCode}');
-    if (response.statusCode != 200) {
-      throw Exception('Kunne ikke markere som læst');
+    if (trimmedMessage.isEmpty) {
+      throw Exception('Besked må ikke være tom');
     }
+
+    final payload = {
+      'receiver_id': receiverId,
+      'message': trimmedMessage,
+      'subject': trimmedSubject,
+      if (replyTo != null) 'reply_to': replyTo,
+    };
+
+    print('📤 Sender besked med payload: $payload');
+
+    final response = await ApiService.post('/messages/send', payload);
+    ApiService.handleVoidResponse(response, successCode: 200);
   }
 
-  // 📇 Hent mulige modtagere (for patienter)
+  static Future<void> deleteThread(String threadId) async {
+    final response = await ApiService.del('/messages/thread/$threadId');
+    ApiService.handleVoidResponse(response, successCode: 204);
+  }
+
+  static Future<void> markAsRead(String threadId) async {
+    final response = await ApiService.patch('/messages/thread/$threadId/read', {});
+    ApiService.handleVoidResponse(response, successCode: 204);
+  }
+
   static Future<List<Map<String, dynamic>>> getRecipients() async {
     return await ApiService.fetchRecipients();
   }

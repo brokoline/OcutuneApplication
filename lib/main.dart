@@ -33,7 +33,7 @@ import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
 
-import 'package:ocutune_light_logger/services/controller/clinician_root_controller.dart';
+import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/offline_sync_manager.dart';

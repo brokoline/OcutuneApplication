@@ -22,7 +22,7 @@ class InboxScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => InboxController(inboxType: inboxType)..loadMessages(),
+      create: (_) => InboxController(inboxType: inboxType)..fetchInbox(),
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -90,8 +90,9 @@ class InboxScreen extends StatelessWidget {
                                   : '/patient/message_detail',
                               arguments: msg.threadId,
                             );
+
                             if (changed == true && context.mounted) {
-                              context.read<InboxController>().loadMessages();
+                              await context.read<InboxController>().fetchInbox();
                             }
                           },
                         );
@@ -110,7 +111,7 @@ class InboxScreen extends StatelessWidget {
                                 : '/patient/new_message',
                           );
                           if (changed == true && context.mounted) {
-                            context.read<InboxController>().loadMessages();
+                            await context.read<InboxController>().fetchInbox();
                           }
                         },
                         icon: const Icon(Icons.add),

@@ -5,7 +5,7 @@ import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/models/user_data_service.dart';
 import '/models/user_response.dart';
-import 'package:ocutune_light_logger/models/chronotype.dart';
+import 'package:ocutune_light_logger/models/chronotype_model.dart';
 
 class ChooseChronotypeScreen extends StatefulWidget {
   const ChooseChronotypeScreen({super.key});

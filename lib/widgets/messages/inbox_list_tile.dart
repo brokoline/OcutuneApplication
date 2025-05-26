@@ -23,34 +23,36 @@ class _InboxListTileState extends State<InboxListTile> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(_determineState);
+    Future.microtask(_resolveLabelState);
   }
 
-  Future<void> _determineState() async {
+  Future<void> _resolveLabelState() async {
     try {
       final jwt = await AuthStorage.getTokenPayload();
-      final currentUserId = jwt['id'];
+      final currentUserId = (jwt['id'] ?? jwt['sub'])?.toString().trim();
+      final senderId = widget.msg.senderId.trim();
 
-      final sender = widget.msg.senderId;
+      debugPrint('🧪 currentUserId: $currentUserId');
+      debugPrint('🧪 message.senderId: $senderId');
 
-      isSender = sender == currentUserId;
-      isUnread = widget.msg.isMe == false; // kun modtaget = ulæst
-
-      final name = isSender!
-          ? widget.msg.receiverName
-          : widget.msg.senderName;
+      final sentByMe = currentUserId == senderId;
+      final receiverName = widget.msg.receiverName.trim();
+      final senderName = widget.msg.senderName.trim();
 
       if (mounted) {
         setState(() {
-          label = isSender! ? 'Til: $name' : 'Fra: $name';
+          isSender = sentByMe;
+          isUnread = !sentByMe && widget.msg.isMe == false;
+          label = sentByMe ? 'Til: $receiverName' : 'Fra: $senderName';
         });
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('❌ Label state fejl: $e');
       if (mounted) {
         setState(() {
-          label = 'Ukendt';
           isSender = false;
           isUnread = false;
+          label = 'Ukendt';
         });
       }
     }
@@ -58,19 +60,6 @@ class _InboxListTileState extends State<InboxListTile> {
 
   @override
   Widget build(BuildContext context) {
-    if (label == null) {
-      return Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-        child: Container(
-          height: 60.h,
-          decoration: BoxDecoration(
-            color: generalBox,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-      );
-    }
-
     final subject = widget.msg.subject.trim().isNotEmpty
         ? widget.msg.subject
         : '(Uden emne)';
@@ -100,16 +89,19 @@ class _InboxListTileState extends State<InboxListTile> {
                         subject,
                         style: TextStyle(
                           color: Colors.white70,
-                          fontWeight:
-                          (isUnread! && !isSender!) ? FontWeight.bold : FontWeight.w500,
+                          fontWeight: (isUnread ?? false)
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                           fontSize: 14.sp,
                         ),
                       ),
                       SizedBox(height: 4.h),
-                      Text(
-                        label!,
-                        style: TextStyle(color: Colors.white60, fontSize: 12.sp),
-                      ),
+                      if (label != null)
+                        Text(
+                          label!,
+                          style:
+                          TextStyle(color: Colors.white60, fontSize: 12.sp),
+                        ),
                     ],
                   ),
                 ),
