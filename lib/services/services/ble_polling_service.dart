@@ -112,17 +112,26 @@ class BlePollingService {
         throw Exception("❌ Ugyldigt classId: $classId – udenfor bounds for regressionMatrix");
       }
 
+
+
       final weights = _regressionMatrix![classId];
-      final spectrum = LightClassifier.reconstructSpectrum(rawInput, weights);
 
-      const calibrationFactor = 1 / 1000.0;
-      final melanopic = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!) * calibrationFactor;
-      final illuminance = LightClassifier.calculateIlluminance(spectrum, _yBarCurve!) * calibrationFactor;
-      final der = (melanopic * 1000) / (illuminance > 0 ? illuminance : 1);
+// 🔹 Brug 1/1000.0 til melanopic-beregning
+      final spectrum = LightClassifier.reconstructSpectrum(rawInput, weights, normalizationFactor: 1 / 1000.0);
+      final melanopic = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
 
+// 🔹 Brug 1/1_000_000.0 til illuminance-beregning
+      final spectrumLux = LightClassifier.reconstructSpectrum(rawInput, weights, normalizationFactor: 1 / 1000000.0);
+      final illuminance = LightClassifier.calculateIlluminance(spectrumLux, _yBarCurve!);
+
+// 🔹 Brug lux fra korrekt spektrum i DER
+      final der = melanopic / (illuminance > 0 ? illuminance : 1.0);
+
+// 🔹 Beregn exposure og action baseret på melanopic
       final exposureScore = _calculateExposureScore(melanopic, now);
-      final actionRequired = _getActionRequired(melanopic, now);
+      final actionRequired = _getActionRequired(exposureScore, now);
       final lightTypeName = _lightTypeFromCode(classId);
+
 
       print("📊 Decode → ${values.join(', ')}");
       print("🧠 ClassId: $classId ($lightTypeName)");
@@ -154,29 +163,33 @@ class BlePollingService {
   }
 
   double _calculateExposureScore(double melanopic, DateTime now) {
-    final hour = now.hour + now.minute / 60.0;
-    if (hour >= 7 && hour < 19) {
-      return (melanopic / 250).clamp(0.0, 1.0) * 100;
-    } else if (hour >= 19 && hour < 23) {
-      return (10 / (melanopic > 0 ? melanopic : 0.01)).clamp(0.0, 1.0) * 100;
+    final hour = now.hour;
+
+    if (hour >= 7 && hour <= 19) {
+      // Dagslys: normaliseret ift. 150 melanopic (fuld eksponering)
+      return (melanopic / 150).clamp(0.0, 1.0) * 100;
+    } else if (hour > 19 && hour <= 23) {
+      // Aften: vi tolererer lavere lysniveau
+      return (melanopic / 50).clamp(0.0, 1.0) * 100;
     } else {
-      return (1 / (melanopic > 0 ? melanopic : 0.01)).clamp(0.0, 1.0) * 100;
+      // Nat: meget følsom → lav melanopic bør give lav score
+      return (melanopic / 30).clamp(0.0, 1.0) * 100;
     }
   }
 
-  String _getActionRequired(double melanopic, DateTime now) {
+
+  String _getActionRequired(double exposureScore, DateTime now) {
     final hour = now.hour + now.minute / 60.0;
+
     if (hour >= 7 && hour < 19) {
-      final result = melanopic < 250 ? "increase" : "none";
-      print("🕒 Time: $hour, Melanopic: $melanopic → Action: $result (DAY)");
-      return result;
-    } else if (hour >= 19 && hour < 23) {
-      final result = melanopic > 10 ? "decrease" : "none";
-      print("🌆 Time: $hour, Melanopic: $melanopic → Action: $result (EVENING)");
+      // DAG: Hvis vi mangler lys → øg
+      final result = exposureScore < 80 ? "increase" : "none";
+      print("🕒 Time: $hour, Exposure: $exposureScore% → Action: $result (DAY)");
       return result;
     } else {
-      final result = melanopic > 1 ? "decrease" : "none";
-      print("🌙 Time: $hour, Melanopic: $melanopic → Action: $result (NIGHT)");
+      // AFTEN/NAT: Hvis vi har for meget → dæmp
+      final result = exposureScore > 20 ? "decrease" : "none";
+      print("🌙 Time: $hour, Exposure: $exposureScore% → Action: $result (NIGHT)");
       return result;
     }
   }
@@ -185,6 +198,7 @@ class BlePollingService {
     switch (code) {
       case 0: return "Daylight";
       case 1: return "LED";
+      case 2: return "Mixed";
       case 2: return "Mixed";
       case 3: return "Halogen";
       case 4: return "Fluorescent";

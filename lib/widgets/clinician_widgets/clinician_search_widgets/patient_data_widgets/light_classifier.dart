@@ -82,7 +82,7 @@ class LightClassifier {
     }
   }
 
-  static List<double> reconstructSpectrum(List<double> input, List<double> weights) {
+  static List<double> reconstructSpectrum(List<double> input, List<double> weights, {double normalizationFactor = 1 / 1000.0}) {
     final inputLength = input.length;
     final weightLength = weights.length;
 
@@ -95,13 +95,14 @@ class LightClassifier {
 
     for (int i = 0; i < weightLength; i++) {
       final inputIndex = i ~/ bandsPerInput;
-      reconstructed[i] = input[inputIndex] * weights[i];
+      reconstructed[i] = input[inputIndex] * weights[i] * normalizationFactor;
     }
 
-    print("🔧 Rekonstrueret spektrum (${reconstructed.length} værdier) fra input=$input");
-
+    print("🔧 Rekonstrueret spektrum (${reconstructed.length} værdier) fra input=$input med faktor $normalizationFactor");
     return reconstructed;
   }
+
+
 
   static Future<List<double>> loadCurve(String path) async {
     try {

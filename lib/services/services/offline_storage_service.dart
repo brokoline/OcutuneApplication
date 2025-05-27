@@ -56,9 +56,6 @@ class OfflineStorageService {
   }) async {
     if (_db == null) return;
 
-    // ✅ Debug: log det indkomne payload
-    print("📥 saveLocally kaldes med type: $type, data: ${jsonEncode(data)}");
-
     if (type == 'light') {
       final dynamic patientId = data['patient_id'];
       final dynamic sensorId = data['sensor_id'];
