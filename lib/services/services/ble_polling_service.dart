@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -114,9 +115,10 @@ class BlePollingService {
       final weights = _regressionMatrix![classId];
       final spectrum = LightClassifier.reconstructSpectrum(rawInput, weights);
 
-      final melanopic = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
-      final illuminance = LightClassifier.calculateIlluminance(spectrum, _yBarCurve!);
-      final der = melanopic / (illuminance > 0 ? illuminance : 1);
+      const calibrationFactor = 1 / 1000.0;
+      final melanopic = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!) * calibrationFactor;
+      final illuminance = LightClassifier.calculateIlluminance(spectrum, _yBarCurve!) * calibrationFactor;
+      final der = (melanopic * 1000) / (illuminance > 0 ? illuminance : 1);
 
       final exposureScore = _calculateExposureScore(melanopic, now);
       final actionRequired = _getActionRequired(melanopic, now);
@@ -127,7 +129,7 @@ class BlePollingService {
       print("📈 EDI: ${melanopic.toStringAsFixed(1)}, Lux: ${illuminance.toStringAsFixed(1)}, DER: ${der.toStringAsFixed(4)}");
       print("📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired");
 
-      if (_patientId == null || _sensorId == null) return;
+      int actionCode = (actionRequired == "increase") ? 1 : (actionRequired == "decrease") ? 2 : 0;
 
       final lightData = {
         "timestamp": nowString,
@@ -140,15 +142,10 @@ class BlePollingService {
         "spectrum": spectrum,
         "light_type": classId,
         "exposure_score": exposureScore,
-        "action_required": actionRequired == "increase"
-            ? 1
-            : actionRequired == "decrease"
-            ? 2
-            : 0,
+        "action_required": actionCode,
       };
 
-      print("📬 saveLocally kaldes med type: light, data: $lightData");
-
+      print("🧾 Final data to save: ${jsonEncode(lightData)}");
       await OfflineStorageService.saveLocally(type: 'light', data: lightData);
     } catch (e) {
       print("❌ Fejl i håndtering af BLE-data: $e");
@@ -170,11 +167,17 @@ class BlePollingService {
   String _getActionRequired(double melanopic, DateTime now) {
     final hour = now.hour + now.minute / 60.0;
     if (hour >= 7 && hour < 19) {
-      return melanopic < 250 ? "increase" : "none";
+      final result = melanopic < 250 ? "increase" : "none";
+      print("🕒 Time: $hour, Melanopic: $melanopic → Action: $result (DAY)");
+      return result;
     } else if (hour >= 19 && hour < 23) {
-      return melanopic > 10 ? "decrease" : "none";
+      final result = melanopic > 10 ? "decrease" : "none";
+      print("🌆 Time: $hour, Melanopic: $melanopic → Action: $result (EVENING)");
+      return result;
     } else {
-      return melanopic > 1 ? "decrease" : "none";
+      final result = melanopic > 1 ? "decrease" : "none";
+      print("🌙 Time: $hour, Melanopic: $melanopic → Action: $result (NIGHT)");
+      return result;
     }
   }
 

@@ -33,7 +33,7 @@ class OfflineSyncManager {
             "spectrum": json['spectrum'],
             "light_type": lightTypeFromCode(json['light_type']),
             "exposure_score": json['exposure_score'],
-            "action_required": json['action_required'] == 1,
+            "action_required": json['action_required'],
           };
 
           final response = await http.post(

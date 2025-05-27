@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class LightClassifier {
   late final Interpreter _interpreter;
+  late Map<int, double> ybarData;
 
   LightClassifier._(this._interpreter);
 
@@ -22,12 +24,14 @@ class LightClassifier {
       );
 
       final interpreter = Interpreter.fromFile(file);
+      final classifier = LightClassifier._(interpreter);
+      await classifier._loadYBarData();
 
       print("✅ Interpreter oprettet fra: $modelPath");
       print("📐 Input shape: ${interpreter.getInputTensor(0).shape}");
       print("📐 Output shape: ${interpreter.getOutputTensor(0).shape}");
 
-      return LightClassifier._(interpreter);
+      return classifier;
     } catch (e) {
       print("❌ Fejl ved oprettelse af LightClassifier: $e");
       rethrow;
@@ -53,7 +57,7 @@ class LightClassifier {
     }
 
     final prediction = outputTensor[0];
-    final maxValue = prediction.reduce((a, b) => a > b ? a : b);
+    final maxValue = prediction.reduce(max);
     final maxIndex = prediction.indexOf(maxValue);
 
     print("📊 Klassificering: input=$input → prediction=$prediction → class=$maxIndex");
@@ -117,7 +121,6 @@ class LightClassifier {
     }
   }
 
-  /// Interpolér kurve til samme længde som spektrum
   static List<double> _resampleCurve(List<double> curve, int targetLength) {
     final List<double> resampled = List.filled(targetLength, 0.0);
     final double factor = (curve.length - 1) / (targetLength - 1);
@@ -142,7 +145,6 @@ class LightClassifier {
   static double calculateMelanopicEDI(List<double> spectrum, List<double> melanopicCurve) {
     const melanopicConstant = 1.3262;
 
-    // resampling hvis nødvendigt
     final curve = (spectrum.length == melanopicCurve.length)
         ? melanopicCurve
         : _resampleCurve(melanopicCurve, spectrum.length);
@@ -160,7 +162,6 @@ class LightClassifier {
   static double calculateIlluminance(List<double> spectrum, List<double> yBar) {
     const K = 683.0;
 
-    //  resampling hvis nødvendigt
     final curve = (spectrum.length == yBar.length)
         ? yBar
         : _resampleCurve(yBar, spectrum.length);
@@ -173,5 +174,37 @@ class LightClassifier {
     final lux = sum * K;
     print("💡 Illuminance (Lux): $lux");
     return lux;
+  }
+
+  /// Y-bar CSV-læsning og korrekt lux-beregning fra spektrum som map
+  Future<void> _loadYBarData() async {
+    final csvString = await rootBundle.loadString('assets/ybar_curve.csv');
+    final lines = LineSplitter().convert(csvString);
+    ybarData = {};
+    for (var line in lines.skip(1)) {
+      final parts = line.split(',');
+      if (parts.length >= 2) {
+        final wavelength = int.tryParse(parts[0]);
+        final value = double.tryParse(parts[1]);
+        if (wavelength != null && value != null) {
+          ybarData[wavelength] = value;
+        }
+      }
+    }
+    print("📥 Y-bar kurve indlæst med ${ybarData.length} værdier");
+  }
+
+  double computeIlluminance(Map<int, double> spectrum) {
+    if (ybarData.isEmpty) {
+      throw Exception('Y-bar data not loaded');
+    }
+    double lux = 0.0;
+    for (final entry in spectrum.entries) {
+      final y = ybarData[entry.key] ?? 0.0;
+      lux += entry.value * y;
+    }
+    final result = lux * 683.0;
+    print("🔬 Lux (map-baseret): $result");
+    return result;
   }
 }
