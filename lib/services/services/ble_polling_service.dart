@@ -199,7 +199,6 @@ class BlePollingService {
       case 0: return "Daylight";
       case 1: return "LED";
       case 2: return "Mixed";
-      case 2: return "Mixed";
       case 3: return "Halogen";
       case 4: return "Fluorescent";
       case 5: return "Fluorescent daylight";
