@@ -29,6 +29,7 @@ dependencies:
   connectivity_plus: ^6.1.4
   permission_handler: ^12.0.0+1
   provider: ^6.1.1
+  tflite_flutter: ^0.11.0
 
 dependency_overrides:
   flutter_foreground_task: 8.0.0
@@ -55,6 +56,16 @@ flutter:
     - assets/images/lark.png
     - assets/images/dove.png
     - assets/images/nightowl.png
+    - assets/classifier.tflite
+    - assets/regression_matrix.csv
+    - assets/melanopic_curve.csv
+    - assets/ybar_curve.csv
+    - assets/matrices/matrixdaylight_8.csv
+    - assets/matrices/matrixled_8.csv
+    - assets/matrices/matrixhalogen_8.csv
+    - assets/matrices/matrixmix_8.csv
+    - assets/matrices/matrixfluoday_8.csv
+    - assets/matrices/matrixscreenday_8.csv
 
 
 flutter_icons:

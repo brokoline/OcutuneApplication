@@ -9,6 +9,11 @@ android {
     compileSdk = 35 // BLE kræver mindst 31 
     ndkVersion = "27.0.12077973"
 
+    aaptOptions {
+    noCompress += "tflite"
+    }
+
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -21,7 +26,7 @@ android {
     defaultConfig {
         applicationId = "com.example.ocutune_light_logger"
         minSdk = 23
-        targetSdk = 35 // VIGTIGT for BLE på Android 12+
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
