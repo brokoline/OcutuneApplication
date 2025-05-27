@@ -117,7 +117,7 @@ class LightClassifier {
     }
   }
 
-  /// Interpolér en kurve til samme længde som spektrum
+  /// Interpolér kurve til samme længde som spektrum
   static List<double> _resampleCurve(List<double> curve, int targetLength) {
     final List<double> resampled = List.filled(targetLength, 0.0);
     final double factor = (curve.length - 1) / (targetLength - 1);
@@ -142,7 +142,7 @@ class LightClassifier {
   static double calculateMelanopicEDI(List<double> spectrum, List<double> melanopicCurve) {
     const melanopicConstant = 1.3262;
 
-    // Brug resampling hvis nødvendigt
+    // resampling hvis nødvendigt
     final curve = (spectrum.length == melanopicCurve.length)
         ? melanopicCurve
         : _resampleCurve(melanopicCurve, spectrum.length);
@@ -152,7 +152,7 @@ class LightClassifier {
       sum += spectrum[i] * curve[i];
     }
 
-    final edi = sum / melanopicConstant;
+    final edi = (sum * 683.0) / melanopicConstant;
     print("☀️ Melanopic EDI: $edi");
     return edi;
   }
@@ -160,7 +160,7 @@ class LightClassifier {
   static double calculateIlluminance(List<double> spectrum, List<double> yBar) {
     const K = 683.0;
 
-    // Brug resampling hvis nødvendigt
+    //  resampling hvis nødvendigt
     final curve = (spectrum.length == yBar.length)
         ? yBar
         : _resampleCurve(yBar, spectrum.length);

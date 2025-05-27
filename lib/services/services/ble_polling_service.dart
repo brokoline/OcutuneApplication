@@ -116,7 +116,7 @@ class BlePollingService {
 
       final melanopic = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
       final illuminance = LightClassifier.calculateIlluminance(spectrum, _yBarCurve!);
-      final der = (melanopic / (illuminance > 0 ? illuminance : 1)).clamp(0.0, 1.0);
+      final der = melanopic / (illuminance > 0 ? illuminance : 1);
 
       final exposureScore = _calculateExposureScore(melanopic, now);
       final actionRequired = _getActionRequired(melanopic, now);
