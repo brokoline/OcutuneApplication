@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
@@ -123,7 +124,7 @@ class BlePollingService {
 
       print("📊 Decode → ${values.join(', ')}");
       print("🧠 ClassId: $classId ($lightTypeName)");
-      print("📈 EDI: ${melanopic.toStringAsFixed(1)}, Lux: ${illuminance.toStringAsFixed(1)}, DER: ${der.toStringAsFixed(2)}");
+      print("📈 EDI: ${melanopic.toStringAsFixed(1)}, Lux: ${illuminance.toStringAsFixed(1)}, DER: ${der.toStringAsFixed(4)}");
       print("📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired");
 
       if (_patientId == null || _sensorId == null) return;
@@ -135,7 +136,7 @@ class BlePollingService {
         "lux_level": illuminance.round(),
         "melanopic_edi": melanopic,
         "der": der,
-        "illuminance": illuminance.round(),
+        "illuminance": illuminance,
         "spectrum": spectrum,
         "light_type": classId,
         "exposure_score": exposureScore,
@@ -145,6 +146,8 @@ class BlePollingService {
             ? 2
             : 0,
       };
+
+      print("📬 saveLocally kaldes med type: light, data: $lightData");
 
       await OfflineStorageService.saveLocally(type: 'light', data: lightData);
     } catch (e) {
