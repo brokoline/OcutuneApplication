@@ -80,6 +80,27 @@ class OfflineStorageService {
       data['light_type'] = data['light_type'] ?? 'Unknown';
       data['action_required'] = data['action_required'] ?? 0;
       data['timestamp'] = data['timestamp'] ?? DateTime.now().toIso8601String();
+
+      // Dublet-tjek baseret på patient_id, sensor_id og timestamp
+      final timestamp = data['timestamp'];
+      final jsonLike = '%"timestamp":"$timestamp"%';
+
+      final existing = await _db!.query(
+        'unsynced_data',
+        where: 'type = ? AND json LIKE ?',
+        whereArgs: ['light', jsonLike],
+      );
+
+      final alreadyExists = existing.any((row) {
+        final decoded = jsonDecode(row['json'] as String);
+        return decoded['patient_id'] == patientId &&
+            decoded['sensor_id'] == sensorId;
+      });
+
+      if (alreadyExists) {
+        print("⚠️ Dublet fundet – data ikke gemt for timestamp $timestamp");
+        return;
+      }
     }
 
     if (type == 'sensor_log') {
