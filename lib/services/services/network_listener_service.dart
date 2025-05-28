@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
+import 'package:ocutune_light_logger/services/sync_use_case.dart';
 
 class NetworkListenerService {
   static StreamSubscription<List<ConnectivityResult>>? _subscription;

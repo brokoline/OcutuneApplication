@@ -1,7 +1,7 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
+import 'package:ocutune_light_logger/services/sync_use_case.dart';
 import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
 import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 

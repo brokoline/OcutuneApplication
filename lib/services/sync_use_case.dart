@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/services/battery_service.dart';
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
+import 'package:ocutune_light_logger/services/services/battery_service.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 
-class OfflineSyncManager {
+class SyncUseCase {
   static Future<void> syncAll() async {
     final rows = await OfflineStorageService.getUnsyncedData();
 
