@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../models/user_response_model.dart';
+import '../models/user_response_model.dart';
 
 UserResponse? currentUserResponse;
 

@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:ocutune_light_logger/services/services/api_services.dart';
-import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/api_services.dart';
+import 'package:ocutune_light_logger/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 
-import '../../controller/ble_controller.dart';
+import '../controller/ble_controller.dart';
 
 
 class BatteryService {

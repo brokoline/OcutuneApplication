@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:ocutune_light_logger/services/offline_sync_manager.dart';
+import 'package:ocutune_light_logger/services/sync_use_case.dart';
 
 class SyncScheduler {
   static Timer? _syncTimer;
@@ -12,7 +12,7 @@ class SyncScheduler {
       _isRunning = true;
       try {
         print("🔄 Starter offline synkronisering...");
-        await OfflineSyncManager.syncAll();
+        await SyncUseCase.syncAll();
       } catch (e) {
         print("❌ Fejl i SyncScheduler: $e");
       } finally {

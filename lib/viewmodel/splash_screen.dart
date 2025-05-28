@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/viewmodel/login_screen.dart';
 
-import '../services/services/app_initializer.dart';
+import '../services/app_initializer.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

@@ -1,4 +1,4 @@
-import 'package:ocutune_light_logger/services/services/api_services.dart';
+import 'package:ocutune_light_logger/services/api_services.dart';
 
 class RemoteErrorLogger {
   static Future<void> log({

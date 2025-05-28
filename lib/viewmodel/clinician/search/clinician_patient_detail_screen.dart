@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/patient_model.dart';
 import '../../../models/diagnose_model.dart';
 import '../../../models/light_data_model.dart';
-import '../../../services/services/api_services.dart';
+import '../../../services/api_services.dart';
 import '../../../theme/colors.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_diagnose_card.dart';

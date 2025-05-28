@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/light_data_model.dart';
-import '../../services/services/api_services.dart';
+import '../services/api_services.dart';
 
 class LightDataController with ChangeNotifier {
   List<LightData> _data = [];

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:ocutune_light_logger/models/messages_model.dart';
-import '../auth_storage.dart';
+import 'auth_storage.dart';
 import 'api_services.dart';
 
 class MessageService {

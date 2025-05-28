@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/messages_model.dart';
 import '../../services/auth_storage.dart';
-import '../../services/services/message_service.dart';
+import '../../services/message_service.dart';
 import '../../theme/colors.dart';
 import 'message_bubble.dart';
 import 'reply_input.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/patient_model.dart';
-import '../../../services/services/api_services.dart';
+import '../../../services/api_services.dart';
 
 class ClinicianSearchController with ChangeNotifier {
   List<Patient> _allPatients = [];

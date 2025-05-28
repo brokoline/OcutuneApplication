@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:ocutune_light_logger/services/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
+import 'package:ocutune_light_logger/services/battery_service.dart';
+import 'package:ocutune_light_logger/services/ble_polling_service.dart';
 
 import '../services/auth_storage.dart';
-import '../services/services/api_services.dart';
+import '../services/api_services.dart';
 
 
 

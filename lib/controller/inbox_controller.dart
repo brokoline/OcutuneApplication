@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
-import 'package:ocutune_light_logger/services/services/message_service.dart';
+import 'package:ocutune_light_logger/services/message_service.dart';
 import 'package:ocutune_light_logger/models/messages_model.dart';
 
 enum InboxType { patient, clinician }
