@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+
 import '../../models/light_data_model.dart';
 import '../../services/services/api_services.dart';
 
@@ -26,5 +29,50 @@ class LightDataController with ChangeNotifier {
 
     _loading = false;
     notifyListeners();
+  }
+
+  List<BarChartGroupData> generateWeeklyBars() {
+    final Map<int, List<double>> grouped = {};
+
+    for (var entry in _data) {
+      final weekday = entry.capturedAt.weekday;
+      grouped.putIfAbsent(weekday, () => []).add(entry.exposureScore);
+    }
+
+    return grouped.entries.map((entry) {
+      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
+      return BarChartGroupData(
+        x: entry.key,
+        barRods: [
+          BarChartRodData(
+            toY: avg.clamp(0, 100),
+            color: avg >= 75 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
+  List<BarChartGroupData> generateMonthlyBars() {
+    final Map<String, List<double>> grouped = {};
+
+    for (var entry in _data) {
+      final dayKey = DateFormat('dd').format(entry.capturedAt);
+      grouped.putIfAbsent(dayKey, () => []).add(entry.exposureScore);
+    }
+
+    int index = 0;
+    return grouped.entries.map((entry) {
+      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
+      return BarChartGroupData(
+        x: index++,
+        barRods: [
+          BarChartRodData(
+            toY: avg.clamp(0, 100),
+            color: avg >= 75 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
+          ),
+        ],
+      );
+    }).toList();
   }
 }

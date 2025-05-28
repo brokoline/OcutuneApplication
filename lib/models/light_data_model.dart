@@ -8,6 +8,10 @@ class LightData {
   final double exposureScore;
   final bool actionRequired;
 
+  // 👇 Tilføjede getters her
+  DateTime get timestamp => capturedAt;
+  double get ediLux => melanopicEdi.toDouble();
+
   LightData({
     required this.capturedAt,
     required this.melanopicEdi,

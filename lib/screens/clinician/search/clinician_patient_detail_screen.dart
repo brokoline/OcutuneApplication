@@ -169,7 +169,10 @@ class PatientDetailView extends StatelessWidget {
                 }
 
                 final data = snapshot.data ?? [];
-                return LightSummarySection(data: data);
+                return LightSummarySection(
+                  data: data,
+                  totalScore: patient.totalScore ?? 0, // fallback hvis null
+                );
               },
             ),
           ],

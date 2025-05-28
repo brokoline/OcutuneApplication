@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import '../../../../models/light_data_model.dart';
 import '../../../../utils/light_utils.dart';
@@ -12,8 +13,13 @@ import 'light_recommendations_card.dart';
 
 class LightSummarySection extends StatelessWidget {
   final List<LightData> data;
+  final int totalScore; // Tilføjet for at kunne bruge chronotype i grafen
 
-  const LightSummarySection({super.key, required this.data});
+  const LightSummarySection({
+    super.key,
+    required this.data,
+    required this.totalScore,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +35,11 @@ class LightSummarySection extends StatelessWidget {
     final weekMap = groupLuxByDay(data);
     final recs = generateRecommendations(data);
 
+    final List<FlSpot> spots = data.map((e) => FlSpot(
+      e.timestamp.hour.toDouble() + (e.timestamp.minute.toDouble() / 60),
+      e.ediLux ?? 0,
+    )).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,7 +47,10 @@ class LightSummarySection extends StatelessWidget {
         SizedBox(height: 8.h),
         LightScoreCard(score: score),
         SizedBox(height: 8.h),
-        LightDailyLineChart(lightData: data),
+        LightDailyLineChart(
+          lightData: spots,
+          totalScore: totalScore, weeklyBars: [], monthlyBars: [],
+        ),
         SizedBox(height: 8.h),
         LightWeeklyBarChart(luxPerDay: weekMap),
         SizedBox(height: 8.h),

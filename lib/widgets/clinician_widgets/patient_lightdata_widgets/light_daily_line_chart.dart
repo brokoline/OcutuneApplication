@@ -1,82 +1,272 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../models/light_data_model.dart';
-import '../../../../theme/colors.dart';
+import '../../../controller/chronotype_controller.dart';
+import '../../../theme/colors.dart';
 
-class LightDailyLineChart extends StatelessWidget {
-  final List<LightData> lightData;
+class LightDailyLineChart extends StatefulWidget {
+  final List<FlSpot> lightData;
+  final int totalScore;
+  final List<BarChartGroupData> weeklyBars;
+  final List<BarChartGroupData> monthlyBars;
 
-  const LightDailyLineChart({super.key, required this.lightData});
+  const LightDailyLineChart({
+    super.key,
+    required this.lightData,
+    required this.totalScore,
+    required this.weeklyBars,
+    required this.monthlyBars,
+  });
+
+  @override
+  State<LightDailyLineChart> createState() => _LightDailyLineChartState();
+}
+
+class _LightDailyLineChartState extends State<LightDailyLineChart> {
+  int _currentPage = 0;
 
   @override
   Widget build(BuildContext context) {
-    final List<FlSpot> luxPoints = lightData
-        .map((d) => FlSpot(
-      d.capturedAt.hour + d.capturedAt.minute / 60,
-      d.illuminance.toDouble(),
-    ))
-        .toList();
+    final chrono = ChronotypeManager(widget.totalScore);
+    final timeWindows = chrono.getRecommendedTimes();
+
+    final List<Widget> chartViews = [
+      _buildLineChart(widget.lightData, timeWindows),
+      _buildBarChart(widget.weeklyBars),
+      _buildBarChart(widget.monthlyBars),
+    ];
 
     return Card(
+      elevation: 6,
       color: generalBox,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Lux over døgnet",
-              style: TextStyle(color: Colors.white, fontSize: 16.sp),
+              _currentPage == 0
+                  ? 'Daglig lyseksponering'
+                  : _currentPage == 1
+                  ? 'Ugentlig lyseksponering'
+                  : 'Månedlig lyseksponering',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16.sp,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            SizedBox(
+              height: 240.h, // Øget højde for bedre plads
+              child: PageView.builder(
+                itemCount: chartViews.length,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemBuilder: (_, i) => Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w), // Tilføjet padding til siderne
+                  child: chartViews[i],
+                ),
+              ),
             ),
             SizedBox(height: 12.h),
-            SizedBox(
-              height: 180.h,
-              child: LineChart(
-                LineChartData(
-                  minY: 0,
-                  backgroundColor: generalBox,
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 200,
-                        reservedSize: 32,
-                        getTitlesWidget: (value, _) => Text(
-                          value.toInt().toString(),
-                          style: TextStyle(fontSize: 10.sp, color: Colors.white70),
-                        ),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 24,
-                        interval: 3,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '${value.toInt()}:00',
-                            style: TextStyle(color: Colors.white70, fontSize: 10.sp),
-                          );
-                        },
-                      ),
-                    ),
+            _buildColorLegend(_currentPage),
+            SizedBox(height: 8.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                chartViews.length,
+                    (index) => Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: CircleAvatar(
+                    radius: 5.r,
+                    backgroundColor: _currentPage == index ? Colors.blueAccent : Colors.grey,
                   ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: luxPoints,
-                      isCurved: true,
-                      color: Colors.amberAccent,
-                      dotData: FlDotData(show: false),
-                      belowBarData: BarAreaData(show: false),
-                    ),
-                  ],
                 ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLineChart(List<FlSpot> spots, Map<String, DateTime> timeWindows) {
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 20,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.grey.withOpacity(0.5),
+            strokeWidth: 1,
+            dashArray: [4],
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22.h,
+              interval: 4,
+              getTitlesWidget: (value, _) => Text(
+                '${value.toInt()}',
+                style: TextStyle(color: Colors.white70, fontSize: 10.sp),
+              ),
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 20,
+              reservedSize: 30.w,
+              getTitlesWidget: (value, _) => Text(
+                '${value.toInt()}%',
+                style: TextStyle(color: Colors.white70, fontSize: 10.sp),
+              ),
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        minX: 0,
+        maxX: 24,
+        minY: 0,
+        maxY: 100,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: Colors.blueAccent,
+            barWidth: 2,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                colors: [
+                  Colors.blueAccent.withOpacity(0.3),
+                  Colors.blueAccent.withOpacity(0.1),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarChart(List<BarChartGroupData> bars) {
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: 100,
+        barTouchData: BarTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, _) => Text(
+                value.toInt().toString(),
+                style: TextStyle(color: Colors.white70, fontSize: 10.sp),
+              ),
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, _) => Text(
+                '${value.toInt()}%',
+                style: TextStyle(color: Colors.white70, fontSize: 10.sp),
+              ),
+              reservedSize: 30.w,
+            ),
+          ),
+        ),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 20,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.grey.withOpacity(0.5),
+            strokeWidth: 1,
+            dashArray: [4],
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        barGroups: bars.map((bar) => BarChartGroupData(
+          x: bar.x,
+          barRods: [
+            BarChartRodData(
+              toY: bar.barRods[0].toY,
+              color: Colors.blueAccent,
+              width: 12.w,
+              borderRadius: BorderRadius.circular(4.r),
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: 100,
+                color: Colors.grey.withOpacity(0.2),
+              ),
+            ),
+          ],
+        )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildColorLegend(int chartType) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLegendItem(
+            Colors.blueAccent,
+            chartType == 0 ? 'Optimal lyseksponering' : 'Aktuel lyseksponering',
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 4.h),
+          _buildLegendItem(
+            Colors.orangeAccent, // Ændret til orange
+            chartType == 0 ? 'Anbefalet område' : 'Maksimalt muligt',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String text, {TextAlign? textAlign}) {
+    return SizedBox(
+      width: 150.w, // Fast bredde for at centrere teksten bedre
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 12.w,
+            height: 12.w,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 10.sp,
+            ),
+            textAlign: textAlign,
+          ),
+        ],
       ),
     );
   }

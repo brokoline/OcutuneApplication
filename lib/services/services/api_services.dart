@@ -7,7 +7,7 @@ import '../../models/patient_model.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'https://ocutune.ddns.net';
+  static const String baseUrl = 'https://ocutune2025.ddns.net';
 
   // 🔐 TOKEN MANAGEMENT
   static Future<String?> getToken() async {
