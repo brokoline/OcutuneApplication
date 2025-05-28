@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import '../../services/controller/ble_controller.dart';
+import 'package:ocutune_light_logger/controller/ble_controller.dart';
 import '../../services/services/api_services.dart';
 import '../../services/services/battery_service.dart';
 import '../../services/ble_lifecycle_handler.dart';

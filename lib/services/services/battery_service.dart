@@ -5,7 +5,7 @@ import 'package:ocutune_light_logger/services/services/offline_storage_service.d
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 
-import '../controller/ble_controller.dart';
+import 'package:ocutune_light_logger/controller/ble_controller.dart';
 
 class BatteryService {
   static DateTime? _lastSent;

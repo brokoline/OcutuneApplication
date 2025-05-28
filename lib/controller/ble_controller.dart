@@ -5,8 +5,8 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/battery_service.dart';
 import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
-import '../auth_storage.dart';
-import '../services/api_services.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 
 class BleController {
   static final BleController _instance = BleController._internal();

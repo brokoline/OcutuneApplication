@@ -48,7 +48,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo/logo_ocutune.png
-    - assets/logo_ocutune.png
     - assets/icon/mitid_logo.png
     - assets/icon/BLE-sensor-ikon.png
     - assets/icon/activity-log-icon.png

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
+import 'package:ocutune_light_logger/controller/inbox_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_list_tile.dart';
 import 'package:ocutune_light_logger/widgets/clinician_widgets/clinician_app_bar.dart';

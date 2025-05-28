@@ -34,7 +34,7 @@ class LoginScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Image.asset(
-                        'assets/logo_ocutune.png',
+                        'assets/logo/logo_ocutune.png',
                         width: 100.w,
                         color: Colors.white70,
                       ),

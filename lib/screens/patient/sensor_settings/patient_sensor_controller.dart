@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../services/auth_storage.dart';
 import '../../../services/ble_lifecycle_handler.dart';
-import '../../../services/controller/ble_controller.dart';
+import '../../../controller/ble_controller.dart';
 import '../../../services/services/api_services.dart';
 import '../../../services/services/battery_service.dart';
 import '../../../services/services/ble_polling_service.dart';
