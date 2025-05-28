@@ -14,7 +14,7 @@ class AppInitializer {
       await OfflineStorageService.init();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      await OfflineSyncManager.syncAll();
+      await SyncUseCase.syncAll();
       await Future.delayed(const Duration(milliseconds: 50));
 
       SyncScheduler.start(interval: const Duration(minutes: 10));

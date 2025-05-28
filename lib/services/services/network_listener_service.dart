@@ -9,7 +9,7 @@ class NetworkListenerService {
     _subscription = Connectivity().onConnectivityChanged.listen((results) {
       final result = results.first;
       if (result != ConnectivityResult.none) {
-        OfflineSyncManager.syncAll();
+        SyncUseCase.syncAll();
       }
     });
   }
