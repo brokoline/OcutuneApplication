@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/screens/login_screen.dart';
+import 'package:ocutune_light_logger/screens/login/login_screen.dart';
 
 import '../services/services/app_initializer.dart';
 
