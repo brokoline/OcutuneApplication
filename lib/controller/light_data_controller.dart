@@ -35,8 +35,8 @@ class LightDataController with ChangeNotifier {
     final Map<int, List<double>> grouped = {};
 
     for (var entry in _data) {
-      final weekday = entry.capturedAt.weekday;
-      grouped.putIfAbsent(weekday, () => []).add(entry.exposureScore);
+      final weekday = entry.timestamp.weekday;
+      grouped.putIfAbsent(weekday, () => []).add(entry.calculatedScore * 100);
     }
 
     return grouped.entries.map((entry) {
@@ -57,8 +57,8 @@ class LightDataController with ChangeNotifier {
     final Map<String, List<double>> grouped = {};
 
     for (var entry in _data) {
-      final dayKey = DateFormat('dd').format(entry.capturedAt);
-      grouped.putIfAbsent(dayKey, () => []).add(entry.exposureScore);
+      final dayKey = DateFormat('dd').format(entry.timestamp);
+      grouped.putIfAbsent(dayKey, () => []).add(entry.calculatedScore * 100);
     }
 
     int index = 0;

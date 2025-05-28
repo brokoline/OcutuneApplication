@@ -12,7 +12,7 @@ class Patient {
   final String? simUserid;
   final String? simPassword;
   final DateTime? createdAt;
-  final int? totalScore; // 👈 tilføjet her
+  final int? totalScore; // 👈 nyt felt til rMEQ
 
   Patient({
     required this.id,
@@ -48,7 +48,7 @@ class Patient {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
           : null,
-      totalScore: json['total_score'],
+      totalScore: json['total_score'], // 👈 fra backend
     );
   }
 
@@ -67,7 +67,7 @@ class Patient {
       'sim_userid': simUserid,
       'sim_password': simPassword,
       'created_at': createdAt?.toIso8601String(),
-      'total_score': totalScore,
+      'total_score': totalScore, // 👈 med i toJson
     };
   }
 

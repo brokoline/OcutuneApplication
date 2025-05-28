@@ -34,7 +34,7 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
     print('🔍 Tjekker bruger-ID: $userId');
     try {
       final response = await http.post(
-        Uri.parse('https://ocutune.ddns.net/sim-check-userid'),
+        Uri.parse('https://ocutune2025.ddns.net/sim-check-userid'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'sim_userid': userId}),
       );

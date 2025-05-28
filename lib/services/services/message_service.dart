@@ -9,7 +9,7 @@ class MessageService {
   static Future<List<Message>> fetchMessages(String currentUserId) async {
     try {
       final token = await AuthStorage.getToken();
-      final url = Uri.parse('https://ocutune.ddns.net/messages/inbox');
+      final url = Uri.parse('https://ocutune2025.ddns.net/messages/inbox');
 
       final response = await http.get(
         url,

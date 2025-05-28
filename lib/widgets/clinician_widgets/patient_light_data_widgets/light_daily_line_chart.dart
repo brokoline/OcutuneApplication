@@ -54,16 +54,17 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
               ),
             ),
             SizedBox(height: 16.h),
             SizedBox(
-              height: 220.h, // Øget højde for bedre plads
+              height: 280.h, // Increased height for better visibility
               child: PageView.builder(
                 itemCount: chartViews.length,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (_, i) => Padding(
-                  padding: EdgeInsets.only(right: 24.w), // Mere padding til højre
+                  padding: EdgeInsets.only(left: 8.w, right: 32.w), // Adjusted padding
                   child: chartViews[i],
                 ),
               ),
@@ -122,7 +123,7 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
             sideTitles: SideTitles(
               showTitles: true,
               interval: 20,
-              reservedSize: 40.w, // Øget plads til y-akse
+              reservedSize: 45.w, // More space for y-axis
               getTitlesWidget: (value, _) => Text(
                 '${value.toInt()}%',
                 style: TextStyle(color: Colors.white70, fontSize: 10.sp),
@@ -186,7 +187,7 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
                 '${value.toInt()}%',
                 style: TextStyle(color: Colors.white70, fontSize: 10.sp),
               ),
-              reservedSize: 40.w, // Øget plads til y-akse
+              reservedSize: 45.w, // More space for y-axis
             ),
           ),
         ),
