@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -34,6 +36,9 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ⚠️ Midlertidig bypass af certifikatvalidering (kun til udvikling!)
+  HttpOverrides.global = MyHttpOverrides();
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF4C4C4C),
     statusBarIconBrightness: Brightness.light,
@@ -50,6 +55,17 @@ void main() async {
   };
 
   runApp(const OcutuneApp());
+}
+// 🛠️ Klasse der deaktiverer certifikatvalidering (kun midlertidigt!)
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        print('⚠️ Certifikat for $host blev godkendt manuelt under udvikling.');
+        return true;
+      };
+  }
 }
 
 class OcutuneApp extends StatelessWidget {

@@ -49,8 +49,8 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
               _currentPage == 0
                   ? 'Daglig lyseksponering'
                   : _currentPage == 1
-                  ? 'Ugentlig lyseksponering'
-                  : 'Månedlig lyseksponering',
+                  ? 'Ugentlig lysmængde'
+                  : 'Månedlig lysmængde',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16.sp,
@@ -58,12 +58,12 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
             ),
             SizedBox(height: 16.h),
             SizedBox(
-              height: 240.h, // Øget højde for bedre plads
+              height: 220.h, // Øget højde for bedre plads
               child: PageView.builder(
                 itemCount: chartViews.length,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (_, i) => Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w), // Tilføjet padding til siderne
+                  padding: EdgeInsets.only(right: 24.w), // Mere padding til højre
                   child: chartViews[i],
                 ),
               ),
@@ -122,7 +122,7 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
             sideTitles: SideTitles(
               showTitles: true,
               interval: 20,
-              reservedSize: 30.w,
+              reservedSize: 40.w, // Øget plads til y-akse
               getTitlesWidget: (value, _) => Text(
                 '${value.toInt()}%',
                 style: TextStyle(color: Colors.white70, fontSize: 10.sp),
@@ -186,7 +186,7 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
                 '${value.toInt()}%',
                 style: TextStyle(color: Colors.white70, fontSize: 10.sp),
               ),
-              reservedSize: 30.w,
+              reservedSize: 40.w, // Øget plads til y-akse
             ),
           ),
         ),
@@ -222,52 +222,46 @@ class _LightDailyLineChartState extends State<LightDailyLineChart> {
   }
 
   Widget _buildColorLegend(int chartType) {
-    return Center(
+    return IntrinsicWidth(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildLegendItem(
             Colors.blueAccent,
             chartType == 0 ? 'Optimal lyseksponering' : 'Aktuel lyseksponering',
-            textAlign: TextAlign.center,
           ),
           SizedBox(height: 4.h),
           _buildLegendItem(
-            Colors.orangeAccent, // Ændret til orange
+            Colors.orangeAccent,
             chartType == 0 ? 'Anbefalet område' : 'Maksimalt muligt',
-            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(Color color, String text, {TextAlign? textAlign}) {
-    return SizedBox(
-      width: 150.w, // Fast bredde for at centrere teksten bedre
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 12.w,
-            height: 12.w,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4.r),
-            ),
+  Widget _buildLegendItem(Color color, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12.w,
+          height: 12.w,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4.r),
           ),
-          SizedBox(width: 6.w),
-          Text(
-            text,
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 10.sp,
-            ),
-            textAlign: textAlign,
+        ),
+        SizedBox(width: 8.w),
+        Text(
+          text,
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 10.sp,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
