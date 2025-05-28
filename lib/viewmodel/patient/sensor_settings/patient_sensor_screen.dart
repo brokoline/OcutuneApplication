@@ -1,11 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_controller.dart';
+import 'package:ocutune_light_logger/viewmodel/patient/sensor_settings/patient_sensor_controller.dart';
 
 
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
+import 'package:ocutune_light_logger/controller/ble_controller.dart';
 
 
 class PatientSensorSettingsScreen extends StatefulWidget {
