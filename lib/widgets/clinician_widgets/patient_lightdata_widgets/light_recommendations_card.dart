@@ -15,7 +15,7 @@ class LightRecommendationsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Anbefalinger", style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600)),
+          Text("Anbefalinger", style: TextStyle(color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.w600)),
           SizedBox(height: 8.h),
           ...recommendations.map((r) => Padding(
             padding: EdgeInsets.only(bottom: 6.h),
@@ -24,7 +24,7 @@ class LightRecommendationsCard extends StatelessWidget {
               children: [
                 Icon(Icons.lightbulb_outline, color: Colors.white70, size: 18.sp),
                 SizedBox(width: 10.w),
-                Expanded(child: Text(r, style: TextStyle(color: Colors.white, fontSize: 13.sp))),
+                Expanded(child: Text(r, style: TextStyle(color: Colors.white70, fontSize: 13.sp))),
               ],
             ),
           )),

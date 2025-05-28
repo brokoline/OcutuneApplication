@@ -18,7 +18,7 @@ class LightLatestEventsList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Seneste målinger", style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+            Text("Seneste målinger", style: TextStyle(color: Colors.white70, fontSize: 16.sp)),
             SizedBox(height: 12.h),
             ...lightData.take(10).map((d) => Padding(
               padding: EdgeInsets.symmetric(vertical: 3.h),
@@ -34,7 +34,7 @@ class LightLatestEventsList extends StatelessWidget {
                     child: Text(
                       DateFormat('HH:mm').format(d.capturedAt) +
                           " • Lux: ${d.illuminance}  • EDI: ${d.melanopicEdi}",
-                      style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                      style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                     ),
                   )
                 ],

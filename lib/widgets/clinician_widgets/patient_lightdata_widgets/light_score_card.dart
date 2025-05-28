@@ -14,7 +14,7 @@ class LightScoreCard extends StatelessWidget {
     final glowColor = color.withOpacity(0.4);
 
     return Card(
-      color: generalBox, // Brug din egen baggrundsfarve her
+      color: generalBox,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       elevation: 8,
       shadowColor: glowColor,

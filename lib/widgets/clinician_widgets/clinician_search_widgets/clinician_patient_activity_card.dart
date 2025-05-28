@@ -22,10 +22,10 @@ class PatientActivityCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r)),
         collapsedShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r)),
-        trailing: Icon(Icons.expand_more, color: Colors.white),
+        trailing: Icon(Icons.expand_more, color: Colors.white70),
         title: Text(
           'Registrerede aktiviteter',
-          style: TextStyle(color: Colors.white,
+          style: TextStyle(color: Colors.white70,
               fontSize: 16.sp,
               fontWeight: FontWeight.w600),
         ),
@@ -63,14 +63,14 @@ class PatientActivityCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(FontAwesome5Solid.clock, size: 18.sp, color: Colors.white),
+            Icon(FontAwesome5Solid.clock, size: 18.sp, color: Colors.white70),
             SizedBox(width: 8.w),
             Expanded(
               child: Text(
                 '${event.eventType}${startTimeText.isNotEmpty
                     ? ' $startTimeText'
                     : ''}',
-                style: TextStyle(color: Colors.white,
+                style: TextStyle(color: Colors.white70,
                     fontSize: 15.sp,
                     fontWeight: FontWeight.bold),
               ),
@@ -86,7 +86,7 @@ class PatientActivityCard extends StatelessWidget {
           SizedBox(height: 6.h),
           Text(
             event.note!,
-            style: TextStyle(color: Colors.white, fontSize: 13.sp, height: 1.4),
+            style: TextStyle(color: Colors.white70, fontSize: 13.sp, height: 1.4),
           ),
         ],
       ],
@@ -109,7 +109,7 @@ class PatientActivityCard extends StatelessWidget {
     }
 
     if (!hasStart && !hasEnd && !hasDuration) {
-      return ''; // lad note tage over
+      return '';
     }
 
     final start = hasStart
@@ -126,7 +126,6 @@ class PatientActivityCard extends StatelessWidget {
   }
 
   bool _shouldShowNote(PatientEvent e) {
-    // Kun vis note, hvis den ikke allerede er dækket af fallback
     return e.note != null && e.note!.trim().isNotEmpty &&
         e.note != 'Manuelt registreret';
   }

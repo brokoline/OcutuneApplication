@@ -22,7 +22,7 @@ class LightWeeklyBarChart extends StatelessWidget {
           children: [
             Text(
               "Ugentlig lysmængde",
-              style: TextStyle(color: Colors.white, fontSize: 16.sp),
+              style: TextStyle(color: Colors.white70, fontSize: 16.sp),
             ),
             SizedBox(height: 12.h),
             SizedBox(
