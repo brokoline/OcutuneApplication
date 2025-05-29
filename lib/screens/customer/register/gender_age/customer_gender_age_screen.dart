@@ -42,7 +42,7 @@ class _CustomerGenderAgeScreenState extends State<CustomerGenderAgeScreen> {
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: SingleChildScrollView(
-            padding: EdgeInsets.only(bottom: 120.h, top: 24.h),
+            padding: EdgeInsets.only(top: 80.h, bottom: 300.h), // 👈 Skubber indholdet lidt ned
             child: CustomerGenderAgeForm(
               selectedGender: selectedGender,
               selectedYear: selectedYear,

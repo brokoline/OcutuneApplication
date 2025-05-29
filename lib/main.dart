@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/screens/customer/register/registration_complete/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_complete/customer_complete_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_1_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
@@ -21,7 +21,7 @@ import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/
 import 'package:ocutune_light_logger/screens/customer/register/gender_age/customer_gender_age_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_setup/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_details_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';

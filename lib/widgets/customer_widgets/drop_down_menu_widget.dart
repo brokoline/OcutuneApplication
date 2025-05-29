@@ -26,42 +26,41 @@ class OcutuneDropdown<T> extends StatelessWidget {
         hint: hintText != null
             ? Text(
           hintText!,
-          style: TextStyle(color: Colors.white70, fontSize: 16.sp),
+          style: TextStyle(color: Colors.white70, fontSize: 14.sp),
         )
             : null,
         items: _buildItems(),
         onChanged: onChanged,
         buttonStyleData: ButtonStyleData(
-          height: 56.h,
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          height: 44.h, // 👈 mindre dropdownknap
+          padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
             color: Colors.white10,
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(10.r),
             border: Border.all(color: Colors.white24),
           ),
         ),
         dropdownStyleData: DropdownStyleData(
-          maxHeight: 300.h,
+          maxHeight: 240.h,
           padding: EdgeInsets.zero,
           decoration: BoxDecoration(
             color: darkGray,
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(10.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           offset: const Offset(0, 0),
         ),
         iconStyleData: IconStyleData(
-          icon: const Icon(
-              Icons.keyboard_arrow_down_rounded, color: Colors.white),
-          iconSize: 24.sp,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white),
+          iconSize: 20.sp,
         ),
-        style: TextStyle(color: Colors.white, fontSize: 16.sp),
+        style: TextStyle(color: Colors.white, fontSize: 14.sp),
       ),
     );
   }
@@ -75,20 +74,18 @@ class OcutuneDropdown<T> extends StatelessWidget {
           child: Center(child: items[i].child),
         ),
       );
-
-      // Tilføj tynd divider efter hvert item, undtagen sidste
       if (i < items.length - 1) {
         styledItems.add(
           DropdownMenuItem<T>(
             enabled: false,
             child: SizedBox(
-              height: 2.h,
+              height: 1.h,
               child: Divider(
                 color: Colors.white12,
-                thickness: 0.4,
-                height: 0.4,
-                indent: 6.w,
-                endIndent: 6.w,
+                thickness: 0.3,
+                height: 0.3,
+                indent: 4.w,
+                endIndent: 4.w,
               ),
             ),
           ),
