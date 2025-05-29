@@ -29,7 +29,7 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       leading: showBackButton && Navigator.canPop(context)
           ? IconButton(
-        icon: Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: Colors.white70),
         onPressed: () => Navigator.of(context).pop(),
       )
           : null,
@@ -38,14 +38,14 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           Image.asset(
             'assets/logo/logo_ocutune.png',
-            height: 32.h,
-            color: Colors.white,
+            height: 35.h,
+            color: Colors.white70,
           ),
           if (title != null)
             Text(
               title!,
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.white70,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
               ),

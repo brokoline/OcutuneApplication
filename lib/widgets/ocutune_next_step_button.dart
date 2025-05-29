@@ -28,22 +28,28 @@ class OcutuneButton extends StatelessWidget {
 
     switch (type) {
       case OcutuneButtonType.primary:
-        backgroundColor = Colors.white70;
+        backgroundColor = Colors.white;
         textColor = Colors.black;
         borderSide = null;
         break;
       case OcutuneButtonType.secondary:
         backgroundColor = darkGray;
-        textColor = Colors.white70;
+        textColor = Colors.white38;
         borderSide = BorderSide(color: Colors.white70, width: 1.w);
         break;
+
       case OcutuneButtonType.floatingIcon:
-        return FloatingActionButton(
-          shape: const CircleBorder(),
-          backgroundColor: Colors.white70,
-          foregroundColor: Colors.black,
-          onPressed: onPressed,
-          child: Icon(Icons.arrow_forward, size: 24.sp),
+        return SizedBox(
+          width: 48.w,
+          height: 48.w,
+          child: FloatingActionButton(
+            shape: const CircleBorder(),
+            backgroundColor: loginButton ,
+            foregroundColor: Colors.black,
+            onPressed: onPressed,
+            elevation: 2,
+            child: Icon(Icons.arrow_forward, size: 24.sp),
+          ),
         );
     }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '/theme/colors.dart';
-import '/widgets/ocutune_button.dart';
+import '../../../widgets/ocutune_next_step_button.dart';
 import '../../../services/services/user_data_service.dart';
 
 class GenderAgeScreen extends StatefulWidget {

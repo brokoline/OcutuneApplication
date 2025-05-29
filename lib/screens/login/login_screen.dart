@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_textfield.dart';
-import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
+import 'package:ocutune_light_logger/widgets/ocutune_next_step_button.dart';
 import 'package:ocutune_light_logger/widgets/ocutune_card.dart';
 
 class LoginScreen extends StatelessWidget {

@@ -7,6 +7,10 @@ const generalDropDownBoxBacground = Color(0xFF323131);
 
 const navBar = Color(0xFF3A3A3A);
 
+
+const loginButton = Color(0xFF7C7F93);
+
+
 const defaultBoxRed = Color(0xFF9A3333);
 
 const lightGray = Color(0xFF676767);
