@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -388,36 +389,81 @@ class ApiService {
     );
   }
 
-// KUNDE API
-  // Add these new methods to your ApiService class:
-
-// ❓ QUESTION METHODS
-  static Future<List<Map<String, dynamic>>> fetchQuestionsWithChoices() async {
-    final response = await _get('/questions');
-    return _handleListResponse(response);
+  // 🔐 Tjek om bruger er logget ind
+  static Future<bool> isLoggedIn() async {
+    final token = await getToken();
+    final loggedIn = token != null;
+    debugPrint('🔐 isLoggedIn → $loggedIn');
+    return loggedIn;
   }
 
-  static Future<List<Map<String, dynamic>>> fetchChoicesForQuestion(int questionId) async {
-    final response = await _get('/choices/$questionId');
-    return _handleListResponse(response);
-  }
-
-  static Future<List<Map<String, dynamic>>> fetchAllChoices() async {
-    final response = await _get('/choices');
-    return _handleListResponse(response);
-  }
-
-  static Future<void> submitAnswer(AnswerModel answer) async {
-    final response = await http.post(
-      Uri.parse('/submit_answer'),
+// 🌐 GET uden auth
+  static Future<http.Response> _getWithoutAuth(String endpoint) async {
+    debugPrint('🌐 [GET - NoAuth] $baseUrl$endpoint');
+    return http.get(
+      Uri.parse('$baseUrl$endpoint'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(answer.toJson()),
     );
+  }
+
+// 🌐 POST uden auth
+  static Future<http.Response> _postWithoutAuth(String endpoint, Map<String, dynamic> body) async {
+    debugPrint('🌐 [POST - NoAuth] $baseUrl$endpoint');
+    debugPrint('📤 Payload: ${jsonEncode(body)}');
+    return http.post(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+  }
+
+// ❓ SMART QUESTION METHODS (med log)
+  static Future<List<Map<String, dynamic>>> fetchQuestionsWithChoicesSmart() async {
+    final loggedIn = await isLoggedIn();
+    debugPrint('❓ Henter spørgsmål (auth=$loggedIn)');
+    final response = loggedIn
+        ? await _get('/questions')
+        : await _getWithoutAuth('/questions');
+    return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchChoicesForQuestionSmart(int questionId) async {
+    final loggedIn = await isLoggedIn();
+    debugPrint('❓ Henter valgmuligheder til spørgsmål $questionId (auth=$loggedIn)');
+    final response = loggedIn
+        ? await _get('/choices/$questionId')
+        : await _getWithoutAuth('/choices/$questionId');
+    return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchAllChoicesSmart() async {
+    final loggedIn = await isLoggedIn();
+    debugPrint('❓ Henter alle valgmuligheder (auth=$loggedIn)');
+    final response = loggedIn
+        ? await _get('/choices')
+        : await _getWithoutAuth('/choices');
+    return _handleListResponse(response);
+  }
+
+  static Future<void> submitAnswerSmart(AnswerModel answer) async {
+    final loggedIn = await isLoggedIn();
+    final json = answer.toJson();
+
+    debugPrint('📝 Indsender svar (auth=$loggedIn)');
+    debugPrint('📤 $json');
+
+    final response = loggedIn
+        ? await _post('/submit_answer', json)
+        : await _postWithoutAuth('/submit_answer', json);
+
+    debugPrint('📥 Response status: ${response.statusCode}');
+    debugPrint('📥 Response body: ${response.body}');
 
     if (response.statusCode != 200) {
       throw Exception('Kunne ikke indsende svar: ${response.body}');
     }
   }
+
 
 
 // 🕰 CHRONOTYPE METHODS

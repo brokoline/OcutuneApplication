@@ -37,16 +37,23 @@ class QuestionViewModel extends ChangeNotifier {
   void answerQuestion(ChoiceModel choice) {
     final current = currentQuestion;
 
+    final questionId = int.tryParse(current.id) ?? currentIndex;
+    final choiceId = int.tryParse(choice.id);
+    if (choiceId == null || choice.id == 'fallback') {
+      debugPrint("❌ Ugyldigt valg-ID: '${choice.id}' – gemmer ikke svar");
+      return;
+    }
+
+
     final answer = AnswerModel(
       customerId: CustomerSetupState.instance.customerId,
-      questionId: int.parse(current.id),
-      choiceId: int.parse(choice.id), // 👈 Dette er vigtigt
+      questionId: questionId, // fallback til index
+      choiceId: choiceId,
       answerText: choice.text,
       questionTextSnap: current.question,
       createdAt: DateTime.now(),
     );
 
-    // Gem lokalt – submission til API kan ske senere
     CustomerSetupState.instance.setAnswer(current.id, answer);
   }
 
