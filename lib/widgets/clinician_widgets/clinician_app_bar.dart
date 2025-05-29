@@ -29,7 +29,7 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       leading: showBackButton && Navigator.canPop(context)
           ? IconButton(
-        icon: Icon(Icons.arrow_back, color: Colors.white),
+        icon: Icon(Icons.arrow_back, color: Colors.white70),
         onPressed: () => Navigator.of(context).pop(),
       )
           : null,
@@ -39,13 +39,13 @@ class ClinicianAppBar extends StatelessWidget implements PreferredSizeWidget {
           Image.asset(
             'assets/logo/logo_ocutune.png',
             height: 32.h,
-            color: Colors.white,
+            color: Colors.white70,
           ),
           if (title != null)
             Text(
               title!,
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.white70,
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
               ),

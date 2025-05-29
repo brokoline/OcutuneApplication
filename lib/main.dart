@@ -1,38 +1,45 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_complete/customer_complete_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_1_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_5_screen.dart';
 import 'package:provider/provider.dart';
+
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
-import 'package:ocutune_light_logger/screens/simulated_mitid_login_screen.dart';
-import 'package:ocutune_light_logger/screens/login_screen.dart';
-import 'package:ocutune_light_logger/screens/choose_access_screen.dart';
+import 'package:ocutune_light_logger/screens/login/login_screen.dart';
+import 'package:ocutune_light_logger/screens/login/choose_access_screen.dart';
+import 'package:ocutune_light_logger/screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/customer_register_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/customer_gender_age_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/gender_age/customer_gender_age_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/chronotype_setup/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_1_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_2_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_3_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_details_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
-import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
+import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
-
-import 'package:ocutune_light_logger/services/controller/inbox_controller.dart';
+import 'package:ocutune_light_logger/controller/inbox_controller.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🌐 Udvikling – tillad usikre certifikater
+  if (!kReleaseMode) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF4C4C4C),
@@ -50,6 +57,59 @@ void main() async {
   };
 
   runApp(const OcutuneApp());
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    final inner = super.createHttpClient(context)
+      ..badCertificateCallback = (cert, host, port) {
+        print('⚠️ [CERT] Godkendt manuelt for: $host');
+        return true;
+      };
+    return _LoggingHttpClient(inner);
+  }
+}
+
+class _LoggingHttpClient implements HttpClient {
+  final HttpClient _inner;
+
+  _LoggingHttpClient(this._inner);
+
+  @override
+  Future<HttpClientRequest> getUrl(Uri url) {
+    print('🌐 [GET] $url');
+    return _inner.getUrl(url);
+  }
+
+  @override
+  Future<HttpClientRequest> postUrl(Uri url) {
+    print('📡 [POST] $url');
+    return _inner.postUrl(url);
+  }
+
+  @override
+  Future<HttpClientRequest> openUrl(String method, Uri url) {
+    print('🧩 [OPEN] $method $url');
+    return _inner.openUrl(method, url);
+  }
+
+  @override
+  void close({bool force = false}) {
+    _inner.close(force: force);
+  }
+
+  @override
+  bool get autoUncompress => _inner.autoUncompress;
+
+  @override
+  set autoUncompress(bool value) {
+    _inner.autoUncompress = value;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      Function.apply(_inner.noSuchMethod, [invocation]);
 }
 
 class OcutuneApp extends StatelessWidget {
@@ -81,7 +141,7 @@ class OcutuneApp extends StatelessWidget {
             '/register': (_) => const RegisterScreen(),
             '/privacy': (_) => const PrivacyPolicyScreen(),
             '/terms': (_) => const TermsConditionsScreen(),
-            '/genderage': (_) => const GenderAgeScreen(),
+            '/genderage': (_) => const CustomerGenderAgeScreen(),
             '/chooseChronotype': (_) => const ChooseChronotypeScreen(),
             '/learn': (_) => const LearnAboutChronotypesScreen(),
             '/aboutChronotype': (context) {

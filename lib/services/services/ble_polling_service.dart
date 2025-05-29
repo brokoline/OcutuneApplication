@@ -7,7 +7,7 @@ import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/services/services/local_log_service.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import '../../widgets/clinician_widgets/clinician_search_widgets/patient_data_widgets/light_classifier.dart';
+import 'light_classifier_service.dart';
 
 class BlePollingService {
   final FlutterReactiveBle ble;

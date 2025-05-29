@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
-import '/widgets/ocutune_icon_button.dart';
+import '/widgets/universal/ocutune_icon_button.dart';
 import 'package:ocutune_light_logger/models/chronotype_model.dart';
 
 class LearnAboutChronotypesScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class _LearnAboutChronotypesScreenState
   }
 
   Future<void> fetchChronotypes() async {
-    final url = Uri.parse('https://ocutune.ddns.net/chronotypes');
+    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as List<dynamic>;

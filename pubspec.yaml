@@ -31,6 +31,7 @@ dependencies:
   provider: ^6.1.1
   tflite_flutter: ^0.11.0
 
+
 dependency_overrides:
   flutter_foreground_task: 8.0.0
 
@@ -48,7 +49,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo/logo_ocutune.png
-    - assets/logo_ocutune.png
     - assets/icon/mitid_logo.png
     - assets/icon/BLE-sensor-ikon.png
     - assets/icon/activity-log-icon.png

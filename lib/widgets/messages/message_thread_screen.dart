@@ -6,7 +6,7 @@ import '../../services/services/message_service.dart';
 import '../../theme/colors.dart';
 import 'message_bubble.dart';
 import 'reply_input.dart';
-import '../confirm_dialog.dart';
+import '../universal/confirm_dialog.dart';
 
 class MessageThreadScreen extends StatefulWidget {
   final String threadId;

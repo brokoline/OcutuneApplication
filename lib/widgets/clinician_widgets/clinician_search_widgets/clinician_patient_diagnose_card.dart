@@ -20,10 +20,10 @@ class DiagnosisCard extends StatelessWidget {
           backgroundColor: generalBox,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
           collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          trailing: Icon(Icons.expand_more, color: Colors.white),
+          trailing: Icon(Icons.expand_more, color: Colors.white70),
           title: Text(
             'Diagnoser',
-            style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.w600),
           ),
           children: [
             Padding(
@@ -36,7 +36,7 @@ class DiagnosisCard extends StatelessWidget {
                   padding: EdgeInsets.only(bottom: 8.h),
                   child: Text(
                     '• ${d.diagnosis} (${d.code})',
-                    style: TextStyle(color: Colors.white, fontSize: 14.sp),
+                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                   ),
                 )).toList(),
               ),

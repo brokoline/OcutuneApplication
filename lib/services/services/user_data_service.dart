@@ -61,7 +61,7 @@ void setChronotypeKey(String key) {
 Future<void> submitUserResponse() async {
   if (currentUserResponse == null) return;
 
-  final url = Uri.parse('https://ocutune.ddns.net/customers');
+  final url = Uri.parse('https://ocutune2025.ddns.net/customers');
 
   final jsonBody = json.encode(currentUserResponse!.toJson());
 

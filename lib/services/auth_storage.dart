@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthStorage {
@@ -106,6 +107,27 @@ static Future<int?> getPatientId() async {
     final last = prefs.getString('patient_last_name') ?? '';
     final name = '$first $last'.trim();
     return name.isNotEmpty ? name : 'Bruger';
+  }
+
+
+
+  static Future<bool> emailExists(String email) async {
+    final url = Uri.parse('https://ocutune2025.ddns.net/check-email');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email}),
+      );
+      if (response.statusCode == 200) {
+        final jsonBody = json.decode(response.body);
+        return jsonBody['exists'] == true;
+      } else {
+        return false;
+      }
+    } catch (_) {
+      return false;
+    }
   }
 
 

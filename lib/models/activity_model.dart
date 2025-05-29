@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/widgets/ocutune_button.dart';
+import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 
 class PatientActivityScreen extends StatefulWidget {
   const PatientActivityScreen({super.key});

@@ -5,7 +5,7 @@ import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sen
 
 
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/services/controller/ble_controller.dart';
+import 'package:ocutune_light_logger/controller/ble_controller.dart';
 
 
 class PatientSensorSettingsScreen extends StatefulWidget {
