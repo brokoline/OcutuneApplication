@@ -1,20 +1,19 @@
-
 import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
-import '../../../../services/services/api_services.dart';
-import '../../../../state/customer_setup_state.dart';
+import '../../../../services/services/user_data_service.dart';
 
-class CustomerDoneSetupScreen extends StatefulWidget {
-  const CustomerDoneSetupScreen({super.key});
+
+class DoneSetupScreen extends StatefulWidget {
+  const DoneSetupScreen({super.key});
 
   @override
-  State<CustomerDoneSetupScreen> createState() => _CustomerDoneSetupScreenState();
+  State<DoneSetupScreen> createState() => _DoneSetupScreenState();
 }
 
-class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
+class _DoneSetupScreenState extends State<DoneSetupScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _orbitController;
@@ -41,6 +40,81 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
     _scaleAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _prepareAndSubmit();
+  }
+
+  Future<void> _prepareAndSubmit() async {
+    if ((currentUserResponse?.scores ?? []).isNotEmpty) {
+      final total = currentUserResponse!.scores.fold(0, (a, b) => a + b);
+      await fetchChronotypeFromServer(total);
+    } else if ((currentUserResponse?.answers ?? []).isNotEmpty) {
+      final title = currentUserResponse!.answers.last;
+      await fetchChronotypeByTitle(title);
+    }
+
+    await submitUserResponse();
+  }
+
+  Future<void> fetchChronotypeFromServer(int score) async {
+    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes/by-score/$score');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        currentUserResponse?.chronotypeKey = data['type_key'];
+
+        setState(() {
+          chronotype = data['title'] ?? 'Ukendt kronotype';
+          chronotypeText = data['summary_text'] ?? 'Beskrivelse mangler';
+          chronotypeImageUrl = data['image_url'] ?? '';
+        });
+      } else {
+        setState(() {
+          chronotype = 'Ukendt';
+          chronotypeText = 'Kunne ikke hente kronotype';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        chronotype = 'Fejl';
+        chronotypeText = 'Noget gik galt: $e';
+      });
+    }
+  }
+
+  Future<void> fetchChronotypeByTitle(String title) async {
+    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final match = data.firstWhere((c) => c['title'] == title, orElse: () => null);
+
+        if (match != null) {
+          currentUserResponse?.chronotypeKey = match['type_key'];
+          setState(() {
+            chronotype = match['title'] ?? title;
+            chronotypeText = match['summary_text'] ?? 'Beskrivelse mangler';
+            chronotypeImageUrl = match['image_url'] ?? '';
+          });
+        } else {
+          setState(() {
+            chronotype = title;
+            chronotypeText = 'Beskrivelse ikke fundet';
+          });
+        }
+      }
+    } catch (_) {
+      setState(() {
+        chronotype = title;
+        chronotypeText = 'Kunne ikke hente data';
+      });
+    }
   }
 
   @override
@@ -50,45 +124,8 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
     super.dispose();
   }
 
-  Future<void> _finalizeRegistration() async {
-    try {
-      // 1. Registrer bruger
-      final result = await ApiService.registerCustomer(
-        email: CustomerSetupState.instance.email!,
-        password: CustomerSetupState.instance.password!,
-        firstName: CustomerSetupState.instance.firstName!,
-        lastName: CustomerSetupState.instance.lastName!,
-        birthYear: CustomerSetupState.instance.age,
-        gender: CustomerSetupState.instance.gender,
-      );
-
-      final customerId = result['id'];
-      CustomerSetupState.instance.setCustomerId(customerId);
-
-      // 2. Send svar
-      await CustomerSetupState.instance.flushAnswersToBackend();
-
-      // 3. Beregn score
-      await ApiService.calculateBackendScore(customerId);
-
-      // 4. Find og vis chronotype
-      final chronotypeData = await ApiService.fetchChronotypeByScoreFromBackend(customerId);
-      CustomerSetupState.instance.setChronotype(chronotypeData['type_key']);
-
-      setState(() {
-        chronotype = chronotypeData['title'] ?? 'Ukendt kronotype';
-        chronotypeText = chronotypeData['summary_text'] ?? 'Beskrivelse mangler';
-        chronotypeImageUrl = chronotypeData['image_url'] ?? '';
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fejl under registrering: $e')),
-      );
-    }
-  }
-
-  void _goToCustomerHome(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(context, '/homeCustomer', (route) => false);
+  void _goToHome(BuildContext context) {
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
   }
 
   Widget _orbitingStar({
@@ -198,9 +235,7 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      await _finalizeRegistration();
-                    },
+                    onPressed: () => _goToHome(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,

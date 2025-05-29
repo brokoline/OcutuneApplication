@@ -16,8 +16,12 @@ import 'package:ocutune_light_logger/screens/customer/register/customer_gender_a
 import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_1_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_2_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_3_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -32,7 +36,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 🌐 Aktivér HTTP-override i udvikling
+  // 🌐 Udvikling – tillad usikre certifikater
   if (!kReleaseMode) {
     HttpOverrides.global = MyHttpOverrides();
   }
@@ -55,7 +59,6 @@ void main() async {
   runApp(const OcutuneApp());
 }
 
-/// 🌐 Udviklings-klient der logger HTTP og ignorerer certifikatfejl
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -96,7 +99,6 @@ class _LoggingHttpClient implements HttpClient {
     _inner.close(force: force);
   }
 
-  // ✅ Fix: Videregiv autoUncompress
   @override
   bool get autoUncompress => _inner.autoUncompress;
 
@@ -109,7 +111,6 @@ class _LoggingHttpClient implements HttpClient {
   dynamic noSuchMethod(Invocation invocation) =>
       Function.apply(_inner.noSuchMethod, [invocation]);
 }
-
 
 class OcutuneApp extends StatelessWidget {
   const OcutuneApp({super.key});
@@ -147,8 +148,12 @@ class OcutuneApp extends StatelessWidget {
               final typeKey = ModalRoute.of(context)!.settings.arguments as String;
               return AboutChronotypeScreen(chronotypeId: typeKey);
             },
-            '/survey': (_) => const CustomerQuestionsScreen(),
-            '/doneSetup': (_) => const CustomerDoneSetupScreen(),
+            '/Q1': (_) => const QuestionOneScreen(),
+            '/Q2': (_) => const QuestionTwoScreen(),
+            '/Q3': (_) => const QuestionThreeScreen(),
+            '/Q4': (_) => const QuestionFourScreen(),
+            '/Q5': (_) => const QuestionFiveScreen(),
+            '/doneSetup': (_) => const DoneSetupScreen(),
             '/patient/dashboard': (context) {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;
               return PatientDashboardScreen(patientId: patientId);
