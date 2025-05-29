@@ -1,17 +1,14 @@
-// main.dart
-
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_questions_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
-import 'package:ocutune_light_logger/screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/screens/login/login_screen.dart';
 import 'package:ocutune_light_logger/screens/login/choose_access_screen.dart';
+import 'package:ocutune_light_logger/screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/customer_register_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
@@ -19,14 +16,15 @@ import 'package:ocutune_light_logger/screens/customer/register/customer_gender_a
 import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
-import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
-import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
+import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
+import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/inbox_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/message_thread_screen.dart';
 import 'package:ocutune_light_logger/widgets/messages/new_message_screen.dart';
-
 import 'package:ocutune_light_logger/controller/inbox_controller.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
@@ -34,8 +32,10 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ⚠️ Midlertidig bypass af certifikatvalidering (kun til udvikling!)
-  HttpOverrides.global = MyHttpOverrides();
+  // 🌐 Aktivér HTTP-override i udvikling
+  if (!kReleaseMode) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Color(0xFF4C4C4C),
@@ -55,46 +55,60 @@ void main() async {
   runApp(const OcutuneApp());
 }
 
-// 🛠️ Klasse der deaktiverer certifikatvalidering (kun midlertidigt!)
+/// 🌐 Udviklings-klient der logger HTTP og ignorerer certifikatfejl
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    final client = super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        print('⚠️ Certifikat accepteret manuelt for $host');
+    final inner = super.createHttpClient(context)
+      ..badCertificateCallback = (cert, host, port) {
+        print('⚠️ [CERT] Godkendt manuelt for: $host');
         return true;
       };
-
-    // 📦 Wrap GET/POST med logging
-    return _HttpClientLoggerWrapper(client);
+    return _LoggingHttpClient(inner);
   }
 }
 
-class _HttpClientLoggerWrapper implements HttpClient {
+class _LoggingHttpClient implements HttpClient {
   final HttpClient _inner;
 
-  _HttpClientLoggerWrapper(this._inner);
+  _LoggingHttpClient(this._inner);
 
   @override
   Future<HttpClientRequest> getUrl(Uri url) {
-    print('🌐 HTTP GET → $url');
+    print('🌐 [GET] $url');
     return _inner.getUrl(url);
   }
 
   @override
   Future<HttpClientRequest> postUrl(Uri url) {
-    print('📡 HTTP POST → $url');
+    print('📡 [POST] $url');
     return _inner.postUrl(url);
   }
 
-  // 🧱 Delegér alle andre metoder videre til _inner:
   @override
-  noSuchMethod(Invocation invocation) => Function.apply(
-    _inner.noSuchMethod,
-    [invocation],
-  );
-}
+  Future<HttpClientRequest> openUrl(String method, Uri url) {
+    print('🧩 [OPEN] $method $url');
+    return _inner.openUrl(method, url);
+  }
 
+  @override
+  void close({bool force = false}) {
+    _inner.close(force: force);
+  }
+
+  // ✅ Fix: Videregiv autoUncompress
+  @override
+  bool get autoUncompress => _inner.autoUncompress;
+
+  @override
+  set autoUncompress(bool value) {
+    _inner.autoUncompress = value;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      Function.apply(_inner.noSuchMethod, [invocation]);
+}
 
 
 class OcutuneApp extends StatelessWidget {

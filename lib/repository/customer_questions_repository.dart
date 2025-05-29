@@ -16,35 +16,54 @@ class QuestionRepository {
         http.get(choicesUrl),
       ]);
 
+      print('📥 [API] GET /questions → ${responses[0].statusCode}');
+      print('📥 [API] GET /choices   → ${responses[1].statusCode}');
+
       if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
         final questions = jsonDecode(responses[0].body) as List;
         final choices = jsonDecode(responses[1].body) as List;
 
+        print('🔍 Antal spørgsmål: ${questions.length}');
+        print('🔍 Antal valgmuligheder: ${choices.length}');
+
         final question = questions.firstWhere(
               (q) => q['position'] == position,
-          orElse: () => null,
+          orElse: () {
+            print('❌ Ingen spørgsmål fundet med position = $position');
+            return null;
+          },
         );
 
         if (question == null) return null;
 
         final questionId = question['id'];
-        final filteredChoices =
-        choices.where((c) => c['question_id'] == questionId).toList();
+        print('✅ Spørgsmål fundet: ID = $questionId, tekst = ${question['question_text']}');
 
-        if (filteredChoices.isEmpty) return null;
+        final filteredChoices = choices
+            .where((c) => c['question_id'] == questionId)
+            .toList();
+
+        if (filteredChoices.isEmpty) {
+          print('⚠️ Ingen valgmuligheder fundet til question_id = $questionId');
+          return null;
+        }
 
         final answerChoices = filteredChoices
             .map<ChoiceModel>((c) => ChoiceModel.fromJson(c))
             .toList();
+
+        print('✅ Antal valgmuligheder: ${answerChoices.length}');
 
         return QuestionModel(
           id: questionId.toString(),
           question: question['question_text'],
           answers: answerChoices,
         );
+      } else {
+        print('❌ Fejlstatus: questions = ${responses[0].statusCode}, choices = ${responses[1].statusCode}');
       }
     } catch (e) {
-      print('Fejl ved hentning af spørgsmål: $e');
+      print('💥 Undtagelse ved hentning af spørgsmål: $e');
     }
 
     return null;

@@ -26,22 +26,31 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
   }
 
   Future<void> fetchChronotypes() async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
-    final response = await http.get(url);
+    setState(() => isLoading = true);
+    try {
+      final uri = Uri.parse("https://ocutune2025.ddns.net/chronotypes");
+      print('🔍 Henter chronotypes fra $uri');
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      if (!mounted) return;
-      setState(() {
-        chronotypes = data.map((json) => Chronotype.fromJson(json)).toList();
-        isLoading = false;
-      });
-    } else {
-      if (!mounted) return;
+      final response = await http.get(uri);
+      print('✅ Svarkode: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          chronotypes = data.map((json) => Chronotype.fromJson(json)).toList();
+          isLoading = false;
+        });
+      } else {
+        print('❌ Fejl: Status ${response.statusCode}');
+        setState(() => isLoading = false);
+      }
+    } catch (e, stack) {
+      print('💥 Exception under fetchChronotypes: $e');
+      print(stack);
       setState(() => isLoading = false);
-      showError(context, "Kunne ikke hente data.");
     }
   }
+
 
   void showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
