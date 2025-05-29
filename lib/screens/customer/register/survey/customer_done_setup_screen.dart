@@ -6,14 +6,14 @@ import '/theme/colors.dart';
 import '../../../../services/services/user_data_service.dart';
 
 
-class DoneSetupScreen extends StatefulWidget {
-  const DoneSetupScreen({super.key});
+class CustomerDoneSetupScreen extends StatefulWidget {
+  const CustomerDoneSetupScreen({super.key});
 
   @override
-  State<DoneSetupScreen> createState() => _DoneSetupScreenState();
+  State<CustomerDoneSetupScreen> createState() => _CustomerDoneSetupScreenState();
 }
 
-class _DoneSetupScreenState extends State<DoneSetupScreen>
+class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _orbitController;
@@ -57,7 +57,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> fetchChronotypeFromServer(int score) async {
-    final url = Uri.parse('https://ocutune.ddns.net/chronotypes/by-score/$score');
+    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes/by-score/$score');
 
     try {
       final response = await http.get(url);
@@ -87,7 +87,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> fetchChronotypeByTitle(String title) async {
-    final url = Uri.parse('https://ocutune.ddns.net/chronotypes');
+    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
     try {
       final response = await http.get(url);
 

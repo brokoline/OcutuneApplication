@@ -1,9 +1,13 @@
-import 'dart:io';
+// main.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/survey/customer_questions_screen.dart';
 import 'package:provider/provider.dart';
+
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
 import 'package:ocutune_light_logger/screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 import 'package:ocutune_light_logger/screens/login/login_screen.dart';
@@ -15,12 +19,6 @@ import 'package:ocutune_light_logger/screens/customer/register/customer_gender_a
 import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_1_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_2_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_3_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/clinician/root/clinician_root_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -56,17 +54,48 @@ void main() async {
 
   runApp(const OcutuneApp());
 }
+
 // 🛠️ Klasse der deaktiverer certifikatvalidering (kun midlertidigt!)
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
+    final client = super.createHttpClient(context)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) {
-        print('⚠️ Certifikat for $host blev godkendt manuelt under udvikling.');
+        print('⚠️ Certifikat accepteret manuelt for $host');
         return true;
       };
+
+    // 📦 Wrap GET/POST med logging
+    return _HttpClientLoggerWrapper(client);
   }
 }
+
+class _HttpClientLoggerWrapper implements HttpClient {
+  final HttpClient _inner;
+
+  _HttpClientLoggerWrapper(this._inner);
+
+  @override
+  Future<HttpClientRequest> getUrl(Uri url) {
+    print('🌐 HTTP GET → $url');
+    return _inner.getUrl(url);
+  }
+
+  @override
+  Future<HttpClientRequest> postUrl(Uri url) {
+    print('📡 HTTP POST → $url');
+    return _inner.postUrl(url);
+  }
+
+  // 🧱 Delegér alle andre metoder videre til _inner:
+  @override
+  noSuchMethod(Invocation invocation) => Function.apply(
+    _inner.noSuchMethod,
+    [invocation],
+  );
+}
+
+
 
 class OcutuneApp extends StatelessWidget {
   const OcutuneApp({super.key});
@@ -104,12 +133,8 @@ class OcutuneApp extends StatelessWidget {
               final typeKey = ModalRoute.of(context)!.settings.arguments as String;
               return AboutChronotypeScreen(chronotypeId: typeKey);
             },
-            '/Q1': (_) => const QuestionOneScreen(),
-            '/Q2': (_) => const QuestionTwoScreen(),
-            '/Q3': (_) => const QuestionThreeScreen(),
-            '/Q4': (_) => const QuestionFourScreen(),
-            '/Q5': (_) => const QuestionFiveScreen(),
-            '/doneSetup': (_) => const DoneSetupScreen(),
+            '/survey': (_) => const CustomerQuestionsScreen(),
+            '/doneSetup': (_) => const CustomerDoneSetupScreen(),
             '/patient/dashboard': (context) {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;
               return PatientDashboardScreen(patientId: patientId);

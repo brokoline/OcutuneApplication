@@ -27,7 +27,7 @@ class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
 
   Future<void> fetchChronotype() async {
     final url = Uri.parse(
-        'https://ocutune.ddns.net/chronotypes/${widget.chronotypeId}');
+        'https://ocutune2025.ddns.net/chronotypes/${widget.chronotypeId}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {

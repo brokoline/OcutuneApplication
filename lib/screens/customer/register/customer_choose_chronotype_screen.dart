@@ -155,7 +155,7 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
                                 setState(() {
                                   selectedChronotype = null;
                                 });
-                                Navigator.pushNamed(context, '/Q1');
+                                Navigator.pushNamed(context, '/survey');
                               },
                               child: const Text("Tag testen"),
                             ),

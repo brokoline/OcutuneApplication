@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/customer_register_answers_model.dart';
 import '../../models/patient_model.dart';
 
 
@@ -237,11 +238,6 @@ class ApiService {
 
 
 
-  // QUESTION METHODS
-  static Future<List<dynamic>> fetchQuestions() async {
-    final response = await _get('/questions');
-    return _handleDynamicListResponse(response);
-  }
 
   // 🔄 PAGINATION
   static Future<List<Map<String, dynamic>>> fetchPaginatedData(String endpoint) async {
@@ -391,6 +387,86 @@ class ApiService {
       body: jsonEncode(data),
     );
   }
+
+// KUNDE API
+  // Add these new methods to your ApiService class:
+
+// ❓ QUESTION METHODS
+  static Future<List<Map<String, dynamic>>> fetchQuestionsWithChoices() async {
+    final response = await _get('/questions');
+    return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchChoicesForQuestion(int questionId) async {
+    final response = await _get('/choices/$questionId');
+    return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchAllChoices() async {
+    final response = await _get('/choices');
+    return _handleListResponse(response);
+  }
+
+  static Future<void> submitAnswer(AnswerModel answer) async {
+    final response = await http.post(
+      Uri.parse('/submit_answer'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(answer.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Kunne ikke indsende svar: ${response.body}');
+    }
+  }
+
+
+// 🕰 CHRONOTYPE METHODS
+  static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
+    final response = await _get('/chronotypes');
+    return _handleListResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> fetchChronotype(String typeKey) async {
+    final response = await _get('/chronotypes/$typeKey');
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> fetchChronotypeByScore(int score) async {
+    final response = await _get('/chronotypes/by-score/$score');
+    return _handleResponse(response);
+  }
+
+// 👤 CUSTOMER REGISTRATION
+  static Future<Map<String, dynamic>> checkEmailAvailability(String email) async {
+    final response = await _post('/check-email', {'email': email});
+    return _handleResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> registerCustomer({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    int? birthYear,
+    String? gender,
+    String? chronotypeKey,
+    List<int>? scores,
+  }) async {
+    final payload = {
+      'email': email,
+      'password': password,
+      'first_name': firstName,
+      'last_name': lastName,
+      if (birthYear != null) 'birth_year': birthYear,
+      if (gender != null) 'gender': gender,
+      if (chronotypeKey != null) 'chronotype_key': chronotypeKey,
+      if (scores != null) 'scores': scores,
+    };
+
+    final response = await _post('/customers', payload);
+    return _handleResponse(response);
+  }
+
 
 
 
