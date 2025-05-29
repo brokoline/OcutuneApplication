@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../widgets/customer_widgets/drop_down_menu_widget.dart';
 import '/theme/colors.dart';
 
 class CustomerGenderAgeForm extends StatelessWidget {
@@ -36,18 +37,20 @@ class CustomerGenderAgeForm extends StatelessWidget {
           ),
         ),
         SizedBox(height: 16.h),
-        _buildDropdown(
-          context: context,
+
+        /// 🎯 Fødselsår med OcutuneDropdown
+        OcutuneDropdown<String>(
           value: selectedYear,
-          hint: !yearChosen ? 'Vælg fødselsår' : null,
+          hintText: !yearChosen ? 'Vælg fødselsår' : null,
+          onChanged: onYearChanged,
           items: years.map((year) {
-            return DropdownMenuItem<String>(
+            return DropdownMenuItem(
               value: year,
               child: Text(year),
             );
           }).toList(),
-          onChanged: onYearChanged,
         ),
+
         SizedBox(height: 48.h),
         const Text(
           "Hvad er dit køn?",
@@ -59,60 +62,20 @@ class CustomerGenderAgeForm extends StatelessWidget {
           ),
         ),
         SizedBox(height: 16.h),
-        _buildDropdown(
-          context: context,
+
+        /// 🎯 Køn med OcutuneDropdown
+        OcutuneDropdown<String>(
           value: selectedGender,
-          hint: 'Vælg køn',
+          hintText: 'Vælg køn',
+          onChanged: onGenderChanged,
           items: genders.map((entry) {
-            return DropdownMenuItem<String>(
+            return DropdownMenuItem(
               value: entry['value'],
               child: Text(entry['label']!),
             );
           }).toList(),
-          onChanged: onGenderChanged,
         ),
       ],
-    );
-  }
-
-  Widget _buildDropdown({
-    required BuildContext context,
-    required String? value,
-    required List<DropdownMenuItem<String>> items,
-    required void Function(String?) onChanged,
-    String? hint,
-  }) {
-    return Container(
-      height: 56.h,
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.white24),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 12.w),
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: darkGray, // Dropdown background
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            dropdownColor: darkGray,
-            // dropdownDirection removed for Flutter <3.16
-            borderRadius: BorderRadius.circular(12.r),
-            menuMaxHeight: 300.h,
-            itemHeight: 48.h,
-            iconEnabledColor: Colors.white,
-            style: TextStyle(color: Colors.white, fontSize: 16.sp),
-            hint: hint != null
-                ? Text(hint, style: TextStyle(color: Colors.white70, fontSize: 16.sp))
-                : null,
-            items: items,
-            onChanged: onChanged,
-          ),
-        ),
-      ),
     );
   }
 }

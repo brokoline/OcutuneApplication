@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../theme/colors.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_search.dart';
-import '../../../widgets/ocutune_textfield.dart';
+import '../../../widgets/universal/ocutune_textfield.dart';
 import 'clinician_search_controller.dart';
 
 class ClinicianSearchScreen extends StatefulWidget {

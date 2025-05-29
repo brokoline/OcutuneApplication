@@ -5,7 +5,7 @@ import 'dart:convert';
 
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/widgets/ocutune_mitid_simulated_box.dart';
+import 'package:ocutune_light_logger/widgets/universal/ocutune_mitid_simulated_box.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart' as auth;
 
 class SimulatedLoginScreen extends StatefulWidget {

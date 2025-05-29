@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '../../services/services/message_service.dart';
 import '../../theme/colors.dart';
-import '../ocutune_textfield.dart';
+import '../universal/ocutune_textfield.dart';
 
 class NewMessageForm extends StatefulWidget {
   const NewMessageForm({super.key});

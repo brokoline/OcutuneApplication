@@ -19,7 +19,7 @@ import 'package:ocutune_light_logger/screens/customer/register/customer_register
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/gender_age/customer_gender_age_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/chronotype_setup/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';

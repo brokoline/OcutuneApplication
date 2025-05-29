@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '/widgets/ocutune_textfield.dart';
+import '/widgets/universal/ocutune_textfield.dart';
 
 class RegisterFormFields extends StatelessWidget {
   final TextEditingController firstNameController;

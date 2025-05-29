@@ -27,7 +27,7 @@ class CustomerGenderAgeController {
         backgroundColor: Colors.red.shade700,
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white),
+            const Icon(Icons.error_outline, color: Colors.white70),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],

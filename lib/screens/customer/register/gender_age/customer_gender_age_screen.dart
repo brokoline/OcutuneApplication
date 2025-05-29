@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../widgets/customer_widgets/customer_app_bar.dart';
-import '../../../../widgets/ocutune_next_step_button.dart';
+import '../../../../widgets/universal/ocutune_next_step_button.dart';
 import '/theme/colors.dart';
 import 'customer_gender_age_controller.dart';
 import 'customer_gender_age_form_field_widget.dart';
