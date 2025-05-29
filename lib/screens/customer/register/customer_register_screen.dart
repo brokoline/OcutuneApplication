@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../controller/customer_register_controller.dart';
+import '../../../widgets/customer_widgets/customer_app_bar.dart';
 import '../../../widgets/customer_widgets/customer_register_form_field_widget.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
@@ -19,74 +22,68 @@ class RegisterScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      resizeToAvoidBottomInset: true,
+      appBar: const CustomerAppBar(
+        showBackButton: true,
+        title: 'Opret konto',
       ),
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Align(
-              alignment: Alignment.topCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 48),
-                  const Text(
-                    'Opret konto',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: IntrinsicHeight(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 24.h),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: IntrinsicHeight(
                         child: OcutuneCard(
-                          child: RegisterFormFields(
-                            firstNameController: firstNameController,
-                            lastNameController: lastNameController,
-                            emailController: emailController,
-                            passwordController: passwordController,
-                            confirmPasswordController: confirmPasswordController,
-                            agreement: agreement,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 20.h,
+                              horizontal: 16.w,
+                            ),
+                            child: RegisterFormFields(
+                              firstNameController: firstNameController,
+                              lastNameController: lastNameController,
+                              emailController: emailController,
+                              passwordController: passwordController,
+                              confirmPasswordController: confirmPasswordController,
+                              agreement: agreement,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 24,
-              right: 24,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: () {
-                  RegisterController.handleRegister(
-                    context: context,
-                    firstNameController: firstNameController,
-                    lastNameController: lastNameController,
-                    emailController: emailController,
-                    passwordController: passwordController,
-                    confirmPasswordController: confirmPasswordController,
-                    agreement: agreement,
-                  );
-                },
+                    SizedBox(height: 100.h), // plads til floating button
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: 24.h, right: 8.w),
+        child: OcutuneButton(
+          type: OcutuneButtonType.floatingIcon,
+          onPressed: () {
+            RegisterController.handleRegister(
+              context: context,
+              firstNameController: firstNameController,
+              lastNameController: lastNameController,
+              emailController: emailController,
+              passwordController: passwordController,
+              confirmPasswordController: confirmPasswordController,
+              agreement: agreement,
+            );
+          },
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

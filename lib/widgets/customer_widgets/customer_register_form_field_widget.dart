@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '/widgets/ocutune_textfield.dart';
 
@@ -29,48 +30,64 @@ class RegisterFormFields extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           OcutuneTextField(label: 'Fornavn', controller: firstNameController),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           OcutuneTextField(label: 'Efternavn', controller: lastNameController),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           OcutuneTextField(label: 'E-mail', controller: emailController),
-          const SizedBox(height: 16),
-          OcutuneTextField(label: 'Adgangskode', controller: passwordController, isPassword: true),
-          const SizedBox(height: 16),
-          OcutuneTextField(label: 'Bekræft adgangskode', controller: confirmPasswordController, isPassword: true),
-          const SizedBox(height: 24),
+          SizedBox(height: 16.h),
+          OcutuneTextField(
+            label: 'Adgangskode',
+            controller: passwordController,
+            isPassword: true,
+          ),
+          SizedBox(height: 16.h),
+          OcutuneTextField(
+            label: 'Bekræft adgangskode',
+            controller: confirmPasswordController,
+            isPassword: true,
+          ),
+          SizedBox(height: 24.h),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Checkbox(
                 value: agreement.value,
                 onChanged: (value) => agreement.value = value ?? false,
-                activeColor: Colors.white,
+                activeColor: Colors.white70,
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
+                  padding: EdgeInsets.only(top: 4.h),
                   child: RichText(
                     text: TextSpan(
                       text: 'Jeg accepterer ',
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13.sp,
+                      ),
                       children: [
                         TextSpan(
                           text: 'Vilkår og betingelser',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
-                            color: Colors.white,
+                            color: Colors.white70,
+                            fontSize: 13.sp,
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () => Navigator.pushNamed(context, '/terms'),
                         ),
-                        const TextSpan(text: ' og '),
+                        TextSpan(
+                          text: ' og ',
+                          style: TextStyle(fontSize: 13.sp),
+                        ),
                         TextSpan(
                           text: 'Privatlivspolitik',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
-                            color: Colors.white,
+                            color: Colors.white70,
+                            fontSize: 13.sp,
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () => Navigator.pushNamed(context, '/privacy'),
