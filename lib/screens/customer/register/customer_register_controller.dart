@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/auth_storage.dart';
-import '../services/services/user_data_service.dart';
-import '../utils/validators.dart';
-import '../utils/ui_helpers.dart';
+import '../../../services/auth_storage.dart';
+import '../../../services/services/user_data_service.dart';
+import '../../../utils/validators.dart';
+import '../../../utils/ui_helpers.dart';
 
 class RegisterController {
   static Future<void> handleRegister({

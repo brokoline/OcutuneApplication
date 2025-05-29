@@ -3,6 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_complete/customer_done_setup_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_1_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/registration_steps/chronotype_survey/customer_question_5_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'package:ocutune_light_logger/screens/splash_screen.dart';
@@ -12,16 +18,10 @@ import 'package:ocutune_light_logger/screens/simuleret_mitID_login/simulated_mit
 import 'package:ocutune_light_logger/screens/customer/register/customer_register_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/customer_gender_age_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/gender_age/customer_gender_age_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/customer_choose_chronotype_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/learn_about_chronotypes/customer_about_chronotypes_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_1_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_2_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_3_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_4_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_question_5_screen.dart';
-import 'package:ocutune_light_logger/screens/customer/register/survey/customer_done_setup_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/patient_dashboard_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_screen.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -141,7 +141,7 @@ class OcutuneApp extends StatelessWidget {
             '/register': (_) => const RegisterScreen(),
             '/privacy': (_) => const PrivacyPolicyScreen(),
             '/terms': (_) => const TermsConditionsScreen(),
-            '/genderage': (_) => const GenderAgeScreen(),
+            '/genderage': (_) => const CustomerGenderAgeScreen(),
             '/chooseChronotype': (_) => const ChooseChronotypeScreen(),
             '/learn': (_) => const LearnAboutChronotypesScreen(),
             '/aboutChronotype': (context) {

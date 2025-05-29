@@ -44,7 +44,7 @@ class OcutuneButton extends StatelessWidget {
           height: 48.w,
           child: FloatingActionButton(
             shape: const CircleBorder(),
-            backgroundColor: loginButton ,
+            backgroundColor: nextButton ,
             foregroundColor: Colors.black,
             onPressed: onPressed,
             elevation: 2,

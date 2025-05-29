@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
-import '../../../../widgets/ocutune_next_step_button.dart';
+import '../../../../../widgets/ocutune_next_step_button.dart';
 import '/widgets/ocutune_selectable_tile.dart';
-import '../../../../services/services/user_data_service.dart';
+import '../../../../../services/services/user_data_service.dart';
 
 class QuestionOneScreen extends StatefulWidget {
   const QuestionOneScreen({super.key});

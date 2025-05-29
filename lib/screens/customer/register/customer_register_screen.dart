@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../controller/customer_register_controller.dart';
+import 'customer_register_controller.dart';
 import '../../../widgets/customer_widgets/customer_app_bar.dart';
 import '../../../widgets/customer_widgets/customer_register_form_field_widget.dart';
 import '/theme/colors.dart';

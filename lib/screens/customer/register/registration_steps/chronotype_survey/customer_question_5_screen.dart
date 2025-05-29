@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
-import '../../../../widgets/ocutune_next_step_button.dart';
+import '../../../../../widgets/ocutune_next_step_button.dart';
 import '/widgets/ocutune_selectable_tile.dart';
-import '../../../../services/services/user_data_service.dart';
+import '../../../../../services/services/user_data_service.dart';
 
-class QuestionThreeScreen extends StatefulWidget {
-  const QuestionThreeScreen({super.key});
+class QuestionFiveScreen extends StatefulWidget {
+  const QuestionFiveScreen({super.key});
 
   @override
-  State<QuestionThreeScreen> createState() => _QuestionThreeScreenState();
+  State<QuestionFiveScreen> createState() => _QuestionFiveScreenState();
 }
 
-class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
+class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
   String? selectedOption;
   Map<String, int> choiceScores = {};
   late Future<Map<String, dynamic>> _questionData;
@@ -22,8 +22,8 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
   @override
   void initState() {
     super.initState();
-    currentQuestion = 3;
-    _questionData = fetchQuestionData(3);
+    currentQuestion = 5;
+    _questionData = fetchQuestionData(5);
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
@@ -49,9 +49,8 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final filteredChoices = choices
-          .where((c) => c['question_id'] == questionId)
-          .toList();
+      final filteredChoices =
+      choices.where((c) => c['question_id'] == questionId).toList();
 
       if (filteredChoices.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
@@ -91,7 +90,7 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
     if (selectedOption != null) {
       final score = choiceScores[selectedOption!] ?? 0;
       saveAnswer(selectedOption!, score);
-      Navigator.pushNamed(context, '/Q4');
+      Navigator.pushNamed(context, '/doneSetup');
     } else {
       showError(context, "Vælg venligst en mulighed først");
     }
@@ -142,11 +141,12 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
                     child: ConstrainedBox(
                       constraints: BoxConstraints(minHeight: constraints.maxHeight),
                       child: IntrinsicHeight(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                          child: Stack(
-                            children: [
-                              Column(
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 400),
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
@@ -171,18 +171,9 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
                                       },
                                     );
                                   }),
-                                  const SizedBox(height: 100),
                                 ],
                               ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: OcutuneButton(
-                                  type: OcutuneButtonType.floatingIcon,
-                                  onPressed: _goToNextScreen,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -193,6 +184,10 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
             }
           },
         ),
+      ),
+      floatingActionButton: OcutuneButton(
+        type: OcutuneButtonType.floatingIcon,
+        onPressed: _goToNextScreen,
       ),
     );
   }
