@@ -13,7 +13,7 @@ class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
   Future<bool> emailExists(String email) async {
-    final url = Uri.parse('https://ocutune.ddns.net/check-email');
+    final url = Uri.parse('https://ocutune2025.ddns.net/check-email');
     try {
       final response = await http.post(
         url,
