@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import '/theme/colors.dart';
 import '../../../../services/services/user_data_service.dart';
 
-
 class DoneSetupScreen extends StatefulWidget {
   const DoneSetupScreen({super.key});
 
@@ -26,6 +25,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   @override
   void initState() {
     super.initState();
+    debugPrint("🔄 initState() - starter animationer og fetch");
 
     _pulseController = AnimationController(
       vsync: this,
@@ -45,12 +45,17 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> _prepareAndSubmit() async {
+    debugPrint("🚀 _prepareAndSubmit() kaldt");
     if ((currentUserResponse?.scores ?? []).isNotEmpty) {
       final total = currentUserResponse!.scores.fold(0, (a, b) => a + b);
+      debugPrint("📊 Score fundet lokalt: $total");
       await fetchChronotypeFromServer(total);
     } else if ((currentUserResponse?.answers ?? []).isNotEmpty) {
       final title = currentUserResponse!.answers.last;
+      debugPrint("📥 Sidste svar (titel): $title");
       await fetchChronotypeByTitle(title);
+    } else {
+      debugPrint("⚠️ Ingen scores eller answers fundet i currentUserResponse");
     }
 
     await submitUserResponse();
@@ -58,13 +63,14 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
 
   Future<void> fetchChronotypeFromServer(int score) async {
     final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes/by-score/$score');
+    debugPrint("🌐 Henter chronotype med score: $score → $url");
 
     try {
       final response = await http.get(url);
+      debugPrint("📥 Response: ${response.statusCode} ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         currentUserResponse?.chronotypeKey = data['type_key'];
 
         setState(() {
@@ -75,10 +81,11 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
       } else {
         setState(() {
           chronotype = 'Ukendt';
-          chronotypeText = 'Kunne ikke hente kronotype';
+          chronotypeText = 'Kunne ikke hente chronotype';
         });
       }
     } catch (e) {
+      debugPrint("❌ Fejl under fetchChronotypeFromServer: $e");
       setState(() {
         chronotype = 'Fejl';
         chronotypeText = 'Noget gik galt: $e';
@@ -88,8 +95,11 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
 
   Future<void> fetchChronotypeByTitle(String title) async {
     final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
+    debugPrint("🌐 Henter chronotype via titel: $title → $url");
+
     try {
       final response = await http.get(url);
+      debugPrint("📥 Response: ${response.statusCode} ${response.body}");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -109,7 +119,8 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
           });
         }
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint("❌ Fejl under fetchChronotypeByTitle: $e");
       setState(() {
         chronotype = title;
         chronotypeText = 'Kunne ikke hente data';
@@ -125,6 +136,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   void _goToHome(BuildContext context) {
+    debugPrint("➡️ Går til /home");
     Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
   }
 
@@ -142,8 +154,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
         final angle = angleDeg * (pi / 180);
         final dx = radius * cos(angle);
         final dy = radius * sin(angle);
-        final size = minSize +
-            (maxSize - minSize) * (1 - sin(angle).clamp(-1.0, 1.0));
+        final size = minSize + (maxSize - minSize) * (1 - sin(angle).clamp(-1.0, 1.0));
 
         return Transform.translate(
           offset: Offset(dx, dy),
