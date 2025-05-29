@@ -1,6 +1,7 @@
-
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
 import '../models/customer_register_answers_model.dart';
-import '../services/services/api_services.dart';
 
 class CustomerSetupState {
   static final CustomerSetupState instance = CustomerSetupState._internal();
@@ -13,69 +14,125 @@ class CustomerSetupState {
   String? lastName;
   String? gender;
   int? age;
-  String? chronotype;
   int? customerId;
+  String? token;
 
+  // --- Chronotype-data og score ---
+  int? totalScore;
+  String? chronotype;
+  String? chronotypeText;
+  String? chronotypeImageUrl;
+
+  // --- Svaropsamling ---
+  final Map<String, AnswerModel> _answers = {};
+
+  // --- Settere ---
   void setEmail(String value) => email = value;
   void setPassword(String value) => password = value;
   void setFirstName(String value) => firstName = value;
   void setLastName(String value) => lastName = value;
   void setGender(String value) => gender = value;
   void setAge(int value) => age = value;
+  void setCustomerId(int id) => customerId = id;
   void setChronotype(String value) => chronotype = value;
+  void setChronotypeText(String value) => chronotypeText = value;
+  void setChronotypeImageUrl(String value) => chronotypeImageUrl = value;
+  void setTotalScore(int value) => totalScore = value;
 
-  void setCustomerId(int id) {
-    customerId = id;
+  bool get hasValidRegistrationData {
+    return email != null &&
+        password != null &&
+        firstName != null &&
+        lastName != null &&
+        gender != null &&
+        age != null &&
+        age! > 0;
   }
-
-  // --- Midlertidig svaropsamling ---
-  final Map<String, AnswerModel> _answers = {};
 
   void setAnswer(String questionId, AnswerModel answer) {
     _answers[questionId] = answer;
   }
 
   AnswerModel? getAnswer(String questionId) => _answers[questionId];
-
   List<AnswerModel> getAllAnswers() => _answers.values.toList();
+  Map<String, AnswerModel> get answers => _answers;
 
-  // --- Tilknyt ID efter registrering ---
-  void attachCustomerIdToAnswers(int customerId) {
-    for (var answer in _answers.values) {
-      answer.attachCustomerId(customerId);
+  void attachCustomerIdToAnswers(int? id) {
+    if (id == null) return;
+    for (final answer in _answers.values) {
+      answer.customerId = id;
     }
   }
 
-  // --- Send alle svar til backend efter registrering ---
+  // --- SEND TIL BACKEND OG GEM SCORE + PATCH ---
   Future<void> flushAnswersToBackend() async {
-    if (customerId == null) {
-      throw Exception('Kan ikke sende svar – customerId mangler');
+    if (customerId == null || token == null) {
+      throw Exception('❌ Mangler customerId eller token');
     }
+
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    };
 
     attachCustomerIdToAnswers(customerId!);
 
     for (final answer in _answers.values) {
       try {
-        await ApiService.submitAnswerSmart(answer);
-        print("✅ Svar sendt: ${answer.questionTextSnap}");
+        final response = await http.post(
+          Uri.parse('https://ocutune2025.ddns.net/submit_answer'),
+          headers: headers,
+          body: jsonEncode(answer.toJson()),
+        );
+
+        if (response.statusCode != 200) {
+          debugPrint("❌ Fejl ved svar (${answer.questionId}): ${response.body}");
+          continue;
+        }
+
+        debugPrint("✅ Svar sendt: ${answer.questionTextSnap}");
       } catch (e) {
-        print("❌ Fejl ved afsendelse af svar: $e");
+        debugPrint("❌ Fejl ved afsendelse af svar: $e");
       }
     }
 
-    // Når alle svar er sendt, beregn score i backend
+    // 🔢 Beregn total score og PATCH til backend
     try {
-      await ApiService.calculateBackendScore(customerId!);
-      print("🎯 Score beregnet i backend for ID: $customerId");
-    } catch (e) {
-      print("⚠️ Fejl ved beregning af score: $e");
-    }
+      final scoreResponse = await http.post(
+        Uri.parse('https://ocutune2025.ddns.net/calculate-score/$customerId'),
+        headers: headers,
+      );
 
-    // Valgfrit: ryd svar når alt er sendt
-    // _answers.clear();
+      if (scoreResponse.statusCode != 200) {
+        throw Exception('❌ Fejl ved beregning af score: ${scoreResponse.body}');
+      }
+
+      final scoreData = jsonDecode(scoreResponse.body);
+      final totalScore = scoreData['total_score'];
+      this.totalScore = totalScore;
+
+      debugPrint("🎯 Total score: $totalScore");
+
+      // 🧠 PATCH score og evt. chronotype
+      final patchResponse = await http.patch(
+        Uri.parse('https://ocutune2025.ddns.net/customers/$customerId'),
+        headers: headers,
+        body: jsonEncode({
+          'total_score': totalScore,
+          if (chronotype != null) 'chronotype_key': chronotype,
+        }),
+      );
+
+      if (patchResponse.statusCode != 200) {
+        debugPrint("⚠️ Fejl ved opdatering af kunde: ${patchResponse.body}");
+      } else {
+        debugPrint("✅ Kunde opdateret med score + chronotype");
+      }
+    } catch (e) {
+      debugPrint("⚠️ Fejl i scoreberegning/opdatering: $e");
+    }
   }
 
-  // --- Nulstil alt efter registrering eller logout ---
   void reset() {
     email = null;
     password = null;
@@ -83,8 +140,12 @@ class CustomerSetupState {
     lastName = null;
     gender = null;
     age = null;
-    chronotype = null;
     customerId = null;
+    token = null;
+    totalScore = null;
+    chronotype = null;
+    chronotypeText = null;
+    chronotypeImageUrl = null;
     _answers.clear();
   }
 }

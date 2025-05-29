@@ -538,8 +538,45 @@ class ApiService {
       if (scores != null) 'scores': scores,
     };
 
-    final response = await _post('/customers', payload);
-    return _handleResponse(response);
+    final response = await _postWithoutAuth('/customers', payload);
+    final data = _handleResponse(response);
+
+    return {
+      'id': data['id'],
+      'token': data['token'],
+    };
+  }
+
+  static Future<void> updateCustomerScoreAndChronotype({
+    required int customerId,
+    required String token,
+    int? totalScore,
+    String? chronotypeKey,
+  }) async {
+    final body = <String, dynamic>{};
+
+    if (totalScore != null) body['total_score'] = totalScore;
+    if (chronotypeKey != null) body['chronotype_key'] = chronotypeKey;
+
+    if (body.isEmpty) {
+      throw Exception('Ingen data at opdatere.');
+    }
+
+    final response = await http.patch(
+      Uri.parse('https://ocutune2025.ddns.net/customers/$customerId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    debugPrint("📤 PATCH → $body");
+    debugPrint("📥 PATCH RESPONSE: ${response.statusCode} - ${response.body}");
+
+    if (response.statusCode != 200) {
+      throw Exception("❌ Fejl ved opdatering af kunde: ${response.body}");
+    }
   }
 
 

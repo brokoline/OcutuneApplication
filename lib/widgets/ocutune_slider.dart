@@ -43,7 +43,7 @@ class OcutuneSlider extends StatelessWidget {
             overlayColor: Color.fromRGBO(color.red, color.green, color.blue, 0.2),
           ),
           child: Slider(
-            value: value,
+            value: value.clamp(0.0, (labels.length - 1).toDouble()),
             min: 0,
             max: (labels.length - 1).toDouble(),
             divisions: labels.length - 1,

@@ -1,11 +1,9 @@
-
-import 'dart:math';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:ocutune_light_logger/state/customer_setup_state.dart';
 import '/theme/colors.dart';
-import '../../../../services/services/api_services.dart';
-import '../../../../state/customer_setup_state.dart';
 
 class CustomerDoneSetupScreen extends StatefulWidget {
   const CustomerDoneSetupScreen({super.key});
@@ -19,10 +17,6 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
   late AnimationController _pulseController;
   late AnimationController _orbitController;
   late Animation<double> _scaleAnim;
-
-  String chronotype = "";
-  String chronotypeText = "";
-  String chronotypeImageUrl = "";
 
   @override
   void initState() {
@@ -50,46 +44,40 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
     super.dispose();
   }
 
-  Future<void> _finalizeRegistration() async {
+  void _goToHome(BuildContext context) async {
+    final setup = CustomerSetupState.instance;
+
     try {
-      // 1. Registrer bruger
-      final result = await ApiService.registerCustomer(
-        email: CustomerSetupState.instance.email!,
-        password: CustomerSetupState.instance.password!,
-        firstName: CustomerSetupState.instance.firstName!,
-        lastName: CustomerSetupState.instance.lastName!,
-        birthYear: CustomerSetupState.instance.age,
-        gender: CustomerSetupState.instance.gender,
+      final headers = {
+        'Authorization': 'Bearer ${setup.token}',
+        'Content-Type': 'application/json',
+      };
+
+      final body = {
+        if (setup.chronotype != null) 'chronotype_key': setup.chronotype,
+        // Hvis du også har en lokal `totalScore`, fx hentet fra backend:
+        // 'total_score': setup.totalScore,
+      };
+
+      final response = await http.patch(
+        Uri.parse('https://ocutune2025.ddns.net/customers/${setup.customerId}'),
+        headers: headers,
+        body: jsonEncode(body),
       );
 
-      final customerId = result['id'];
-      CustomerSetupState.instance.setCustomerId(customerId);
-
-      // 2. Send svar
-      await CustomerSetupState.instance.flushAnswersToBackend();
-
-      // 3. Beregn score
-      await ApiService.calculateBackendScore(customerId);
-
-      // 4. Find og vis chronotype
-      final chronotypeData = await ApiService.fetchChronotypeByScoreFromBackend(customerId);
-      CustomerSetupState.instance.setChronotype(chronotypeData['type_key']);
-
-      setState(() {
-        chronotype = chronotypeData['title'] ?? 'Ukendt kronotype';
-        chronotypeText = chronotypeData['summary_text'] ?? 'Beskrivelse mangler';
-        chronotypeImageUrl = chronotypeData['image_url'] ?? '';
-      });
+      if (response.statusCode == 200) {
+        debugPrint("✅ Kunde opdateret med chronotype_key");
+      } else {
+        debugPrint("⚠️ Fejl ved opdatering: ${response.body}");
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fejl under registrering: $e')),
-      );
+      debugPrint("❌ Fejl ved PATCH til kunde: $e");
     }
+
+    // Naviger videre uanset hvad
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
   }
 
-  void _goToCustomerHome(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(context, '/homeCustomer', (route) => false);
-  }
 
   Widget _orbitingStar({
     required double angleOffset,
@@ -121,6 +109,8 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
 
   @override
   Widget build(BuildContext context) {
+    final setup = CustomerSetupState.instance;
+
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
@@ -149,9 +139,10 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
                             child: child,
                           );
                         },
-                        child: chronotypeImageUrl.isNotEmpty
+                        child: setup.chronotypeImageUrl != null &&
+                            setup.chronotypeImageUrl!.isNotEmpty
                             ? Image.network(
-                          chronotypeImageUrl,
+                          setup.chronotypeImageUrl!,
                           width: 100,
                           height: 100,
                           errorBuilder: (context, error, stackTrace) =>
@@ -167,7 +158,7 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  chronotype,
+                  setup.chronotype ?? 'Ukendt kronotype',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 24,
@@ -177,7 +168,7 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  chronotypeText,
+                  setup.chronotypeText ?? 'Beskrivelse mangler',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 16,
@@ -198,9 +189,7 @@ class _CustomerDoneSetupScreenState extends State<CustomerDoneSetupScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      await _finalizeRegistration();
-                    },
+                    onPressed: () => _goToHome(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,

@@ -33,6 +33,20 @@ class Chronotype {
     language: json["language"],
   );
 
+  factory Chronotype.manual(String title) {
+    return Chronotype(
+      id: -1,
+      typeKey: title.toLowerCase().replaceAll(' ', '_'),
+      title: title,
+      shortDescription: '',
+      longDescription: '',
+      facts: '',
+      imageUrl: '',
+      iconUrl: '',
+      language: 'da',
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     "id": id,
     "type_key": typeKey,

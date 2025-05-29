@@ -23,7 +23,7 @@ class AnswerModel {
     return {
       'customer_id': customerId,
       'question_id': questionId,
-      'choice_id': choiceId, // ✅ Fejlrettet – nu defineret
+      'choice_id': choiceId,
       'answer_text': answerText,
       'question_text_snap': questionTextSnap,
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),

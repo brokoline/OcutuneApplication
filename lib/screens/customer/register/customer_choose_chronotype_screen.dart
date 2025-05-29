@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../../state/customer_setup_state.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '../../../services/services/user_data_service.dart';
@@ -69,19 +70,21 @@ class _ChooseChronotypeScreenState extends State<ChooseChronotypeScreen> {
 
   void _goToNextScreen() {
     if (selectedChronotype != null) {
-      if (currentUserResponse != null) {
-        currentUserResponse = UserResponse(
-          firstName: currentUserResponse!.firstName,
-          lastName: currentUserResponse!.lastName,
-          email: currentUserResponse!.email,
-          password: currentUserResponse!.password,
-          gender: currentUserResponse!.gender,
-          birthYear: currentUserResponse!.birthYear,
-          answers: [...currentUserResponse!.answers, selectedChronotype!],
-          scores: currentUserResponse!.scores,
-        );
+      final chosen = chronotypes.firstWhere(
+            (c) => c.title == selectedChronotype,
+          orElse: () => Chronotype.manual(selectedChronotype!),
+      );
 
-      }
+      final setup = CustomerSetupState.instance;
+      setup.setChronotype(chosen.typeKey ?? selectedChronotype!);
+      setup.setChronotypeText(chosen.shortDescription);
+      setup.setChronotypeImageUrl(chosen.imageUrl ?? '');
+
+      debugPrint("✅ Brugeren valgte kronotype manuelt:");
+      debugPrint("  Type: ${setup.chronotype}");
+      debugPrint("  Tekst: ${setup.chronotypeText}");
+      debugPrint("  Billede: ${setup.chronotypeImageUrl}");
+
       Navigator.pushNamed(context, '/doneSetup');
     } else {
       showError(context, "Vælg en kronotype eller tag testen først");

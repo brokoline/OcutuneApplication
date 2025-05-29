@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../state/customer_setup_state.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '../../../services/services/user_data_service.dart';
@@ -195,6 +196,10 @@ class GenderAgeScreenState extends State<GenderAgeScreen> {
                     currentUserResponse!.gender = selectedGender!;
                     currentUserResponse!.birthYear = selectedYear!;
                   }
+
+                  CustomerSetupState.instance.setGender(selectedGender!);
+                  CustomerSetupState.instance.setAge(int.parse(selectedYear!));
+
 
                   Navigator.pushNamed(context, '/chooseChronotype');
                 },

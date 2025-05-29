@@ -3,14 +3,26 @@ import 'package:flutter/gestures.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../../../state/customer_setup_state.dart';
 import '/theme/colors.dart';
 import '/widgets/ocutune_button.dart';
 import '/widgets/ocutune_textfield.dart';
 import '/widgets/ocutune_card.dart';
-import '../../../services/services/user_data_service.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final agreement = ValueNotifier(false);
 
   Future<bool> emailExists(String email) async {
     final url = Uri.parse('https://ocutune2025.ddns.net/check-email');
@@ -31,35 +43,83 @@ class RegisterScreen extends StatelessWidget {
     }
   }
 
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(r"^[^@]+@[^@]+\.[^@]+$");
+    return emailRegex.hasMatch(email);
+  }
+
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red.shade700,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void handleSubmit() async {
+    final firstName = firstNameController.text.trim();
+    final lastName = lastNameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    if (firstName.isEmpty || lastName.isEmpty) {
+      showError(context, "Udfyld venligst både fornavn og efternavn");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showError(context, "Indtast en gyldig e-mailadresse");
+      return;
+    }
+
+    if (password.length < 6) {
+      showError(context, "Adgangskoden skal være mindst 6 tegn");
+      return;
+    }
+
+    if (password != confirmPassword) {
+      showError(context, "Adgangskoderne matcher ikke");
+      return;
+    }
+
+    if (!agreement.value) {
+      showError(context, "Du skal acceptere vilkårene for at fortsætte");
+      return;
+    }
+
+    final exists = await emailExists(email);
+    if (exists) {
+      showError(context, "Denne e-mail er allerede registreret");
+      return;
+    }
+
+    // ✅ GEM DATA
+    final setup = CustomerSetupState.instance;
+    setup.setFirstName(firstName);
+    setup.setLastName(lastName);
+    setup.setEmail(email);
+    setup.setPassword(password);
+
+    debugPrint("✅ Registreringsdata gemt i CustomerSetupState:");
+    debugPrint("  Fornavn: ${setup.firstName}");
+    debugPrint("  Efternavn: ${setup.lastName}");
+    debugPrint("  Email: ${setup.email}");
+    debugPrint("  Password: [skjult]");
+
+    // 👉 Gå videre
+    Navigator.pushNamed(context, '/genderage');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final firstNameController = TextEditingController();
-    final lastNameController = TextEditingController();
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    final agreement = ValueNotifier(false);
-
-    bool isValidEmail(String email) {
-      final emailRegex = RegExp(r"^[^@]+@[^@]+\.[^@]+$");
-      return emailRegex.hasMatch(email);
-    }
-
-    void showError(BuildContext context, String message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red.shade700,
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(child: Text(message)),
-            ],
-          ),
-        ),
-      );
-    }
-
     final formFields = ValueListenableBuilder<bool>(
       valueListenable: agreement,
       builder: (context, agreed, _) => Column(
@@ -168,55 +228,7 @@ class RegisterScreen extends StatelessWidget {
               right: 24,
               child: OcutuneButton(
                 type: OcutuneButtonType.floatingIcon,
-                onPressed: () async {
-                  final firstName = firstNameController.text.trim();
-                  final lastName = lastNameController.text.trim();
-                  final email = emailController.text.trim();
-                  final password = passwordController.text;
-                  final confirmPassword = confirmPasswordController.text;
-
-                  if (firstName.isEmpty || lastName.isEmpty) {
-                    showError(context, "Udfyld venligst både fornavn og efternavn");
-                    return;
-                  }
-
-                  if (!isValidEmail(email)) {
-                    showError(context, "Indtast en gyldig e-mailadresse");
-                    return;
-                  }
-
-                  if (password.length < 6) {
-                    showError(context, "Adgangskoden skal være mindst 6 tegn");
-                    return;
-                  }
-
-                  if (password != confirmPassword) {
-                    showError(context, "Adgangskoderne matcher ikke");
-                    return;
-                  }
-
-                  if (!agreement.value) {
-                    showError(context, "Du skal acceptere vilkårene for at fortsætte");
-                    return;
-                  }
-
-                  final exists = await emailExists(email);
-                  if (exists) {
-                    showError(context, "Denne e-mail er allerede registreret");
-                    return;
-                  }
-
-                  updateBasicInfo(
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: email,
-                    gender: '',
-                    birthYear: '',
-                  );
-
-                  currentUserResponse?.password = password;
-                  Navigator.pushNamed(context, '/genderage');
-                },
+                onPressed: handleSubmit,
               ),
             ),
           ],

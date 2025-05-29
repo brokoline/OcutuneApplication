@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../theme/colors.dart';
-import '../../../controller/chronotype_controller.dart';
+import '../../../controller/dlmo_controller.dart';
 
 class LightScoreCard extends StatelessWidget {
   final double score;
