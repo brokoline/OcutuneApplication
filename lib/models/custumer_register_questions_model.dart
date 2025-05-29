@@ -11,13 +11,18 @@ class QuestionModel {
     required this.answers,
   });
 
-  factory QuestionModel.fromJson(Map<String, dynamic> questionJson, List<dynamic> choiceJsonList) {
+  factory QuestionModel.fromJson(
+      Map<String, dynamic> json,
+      List<Map<String, dynamic>> allChoices,
+      ) {
+    final relevantChoices = allChoices
+        .where((c) => c['question_id'].toString() == json['id'].toString())
+        .toList();
+
     return QuestionModel(
-      id: questionJson['id'].toString(),
-      question: questionJson['question_text'],
-      answers: choiceJsonList
-          .map((choiceJson) => ChoiceModel.fromJson(choiceJson))
-          .toList(),
+      id: json['id'].toString(),
+      question: json['question_text'] ?? '',
+      answers: relevantChoices.map((c) => ChoiceModel.fromJson(c)).toList(),
     );
   }
 }

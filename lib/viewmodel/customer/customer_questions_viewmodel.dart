@@ -3,24 +3,42 @@ import '../../models/customer_register_answers_model.dart';
 import '../../models/customer_registor_choices_model.dart';
 import '../../models/custumer_register_questions_model.dart';
 import '../../repository/customer_questions_repository.dart';
+import '../../services/services/api_services.dart';
 import '../../state/customer_setup_state.dart';
 
+
 class QuestionViewModel extends ChangeNotifier {
+  int totalQuestionCount = 0;
   List<QuestionModel> questions = [];
   int currentIndex = 0;
   bool isLoading = true;
 
   Future<void> loadInitial() async {
-    final first = await QuestionRepository().getQuestionByPosition(0);
-    if (first != null) {
-      questions = [first];
-    }
+    final rawQuestions = await ApiService.fetchQuestionsWithChoicesSmart(); // /questions
+    final allChoices = await ApiService.fetchAllChoicesSmart();             // /choices
+
+    final allParsed = rawQuestions
+        .map((q) => QuestionModel.fromJson(q, allChoices))
+        .toList();
+
+    questions = [allParsed[0]];
+    totalQuestionCount = allParsed.length;
+
     isLoading = false;
     notifyListeners();
   }
 
+
+
   Future<bool> nextQuestion() async {
     final nextIndex = currentIndex + 1;
+
+    // Tjek om vi allerede har nået slutningen
+    if (nextIndex >= totalQuestionCount) {
+      debugPrint("🚫 Der er ikke flere spørgsmål – stopper flow");
+      return false;
+    }
+
     final next = await QuestionRepository().getQuestionByPosition(nextIndex);
 
     if (next != null) {
@@ -29,6 +47,7 @@ class QuestionViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } else {
+      debugPrint("❌ Ingen spørgsmål fundet med position = $nextIndex");
       return false;
     }
   }

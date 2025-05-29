@@ -46,7 +46,7 @@ class _CustomerQuestionsScreenState extends State<CustomerQuestionsScreen> {
     }
 
     final answer = AnswerModel(
-      customerId: null, // ❗️ Ikke sat endnu – skal tilføjes efter registrering
+      customerId: null, // bliver tilføjet efter registrering
       questionId: questionId,
       choiceId: choiceId,
       answerText: selected.text,
@@ -54,19 +54,20 @@ class _CustomerQuestionsScreenState extends State<CustomerQuestionsScreen> {
       createdAt: DateTime.now(),
     );
 
-    CustomerSetupState.instance.setAnswer(q.id, answer); // 🧠 Kun gem lokalt
+    // 🧠 Brug index som nøgle for at undgå overskrivning
+    CustomerSetupState.instance.setAnswer(viewModel.currentIndex.toString(), answer);
 
     final success = await viewModel.nextQuestion();
     if (!mounted) return;
 
-    if (!success) {
+    if (success) {
+      setState(() => selectedAnswer = null);
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const CustomerDoneSetupScreen()),
       );
     }
-
-    setState(() => selectedAnswer = null);
   }
 
   @override
@@ -91,7 +92,7 @@ class _CustomerQuestionsScreenState extends State<CustomerQuestionsScreen> {
               backgroundColor: Colors.black,
               elevation: 0,
               title: Text(
-                "Spørgsmål ${viewModel.currentIndex + 1}/${viewModel.questions.length}",
+                "Spørgsmål ${viewModel.currentIndex + 1}/${viewModel.totalQuestionCount}",
                 style: TextStyle(fontSize: 18.sp),
               ),
             ),
@@ -99,10 +100,10 @@ class _CustomerQuestionsScreenState extends State<CustomerQuestionsScreen> {
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               child: Builder(
                 builder: (context) {
-                  debugPrint('🧠 Spørgsmål: \${question.question}');
-                  debugPrint('📋 Valgmuligheder: \${question.answers.map((a) => a.text).toList()}');
-                  debugPrint('✅ Valgt: \${selectedAnswer?.text}');
-                  debugPrint('📐 Layouttype: \$layoutType');
+                  debugPrint('🧠 Spørgsmål: ${question.question}');
+                  debugPrint('📋 Valgmuligheder: ${question.answers.map((a) => a.text).toList()}');
+                  debugPrint('✅ Valgt: ${selectedAnswer?.text}');
+                  debugPrint('📐 Layouttype: $layoutType');
 
                   return buildQuestionLayout(
                     questionId: question.id,

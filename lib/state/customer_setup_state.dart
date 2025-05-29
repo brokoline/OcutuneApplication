@@ -1,3 +1,4 @@
+
 import '../models/customer_register_answers_model.dart';
 import '../services/services/api_services.dart';
 
@@ -6,18 +7,26 @@ class CustomerSetupState {
   CustomerSetupState._internal();
 
   // --- Personlige oplysninger ---
+  String? email;
+  String? password;
+  String? firstName;
+  String? lastName;
   String? gender;
   int? age;
   String? chronotype;
   int? customerId;
 
-  void setCustomerId(int id) {
-    customerId = id;
-  }
-
+  void setEmail(String value) => email = value;
+  void setPassword(String value) => password = value;
+  void setFirstName(String value) => firstName = value;
+  void setLastName(String value) => lastName = value;
   void setGender(String value) => gender = value;
   void setAge(int value) => age = value;
   void setChronotype(String value) => chronotype = value;
+
+  void setCustomerId(int id) {
+    customerId = id;
+  }
 
   // --- Midlertidig svaropsamling ---
   final Map<String, AnswerModel> _answers = {};
@@ -54,12 +63,24 @@ class CustomerSetupState {
       }
     }
 
+    // Når alle svar er sendt, beregn score i backend
+    try {
+      await ApiService.calculateBackendScore(customerId!);
+      print("🎯 Score beregnet i backend for ID: $customerId");
+    } catch (e) {
+      print("⚠️ Fejl ved beregning af score: $e");
+    }
+
     // Valgfrit: ryd svar når alt er sendt
     // _answers.clear();
   }
 
   // --- Nulstil alt efter registrering eller logout ---
   void reset() {
+    email = null;
+    password = null;
+    firstName = null;
+    lastName = null;
     gender = null;
     age = null;
     chronotype = null;

@@ -464,7 +464,21 @@ class ApiService {
     }
   }
 
+// Beregning af kronotype
+  static Future<void> calculateBackendScore(int customerId) async {
+    final headers = await _authHeaders();
+    final response = await http.post(
+      Uri.parse('$baseUrl/calculate-score/$customerId'),
+      headers: headers,
+    );
 
+    if (response.statusCode != 200) {
+      throw Exception('Fejl ved beregning af total score: ${response.body}');
+    }
+
+    final data = jsonDecode(response.body);
+    debugPrint("🎯 Total score gemt i backend: ${data['total_score']}");
+  }
 
 // 🕰 CHRONOTYPE METHODS
   static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
@@ -481,6 +495,21 @@ class ApiService {
     final response = await _get('/chronotypes/by-score/$score');
     return _handleResponse(response);
   }
+
+  static Future<Map<String, dynamic>> fetchChronotypeByScoreFromBackend(int customerId) async {
+    // 1. Hent kunden
+    final response = await _get('/customers/$customerId'); // eller det relevante endpoint
+    final customer = _handleResponse(response);
+
+    final score = customer['total_score'];
+    if (score == null) {
+      throw Exception('Total score mangler for bruger $customerId');
+    }
+
+    // 2. Brug scoren til at hente chronotype
+    return fetchChronotypeByScore(score);
+  }
+
 
 // 👤 CUSTOMER REGISTRATION
   static Future<Map<String, dynamic>> checkEmailAvailability(String email) async {

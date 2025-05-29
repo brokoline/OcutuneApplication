@@ -3,15 +3,16 @@ class ChoiceModel {
   final String text;
   final int score;
 
-  ChoiceModel({required this.id, required this.text, required this.score});
+  ChoiceModel({
+    required this.id,
+    required this.text,
+    required this.score,
+  });
 
   factory ChoiceModel.fromJson(Map<String, dynamic> json) {
-    final text = json['choice_text'] ?? '';
-    final rawId = json['id'];
-
     return ChoiceModel(
-      id: rawId?.toString() ?? text,
-      text: text,
+      id: json['id'].toString(),
+      text: json['choice_text'],
       score: json['score'] ?? 0,
     );
   }
