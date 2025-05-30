@@ -1,16 +1,16 @@
-// lib/controllers/choose_chronotype_controller.dart
+// lib/screens/customer/register/chronotype_setup/choose_chronotype_controller.dart
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '/services/services/user_data_service.dart';
-import '/models/user_response_model.dart';
-import 'package:ocutune_light_logger/models/chronotype_model.dart';
+import '../../../../services/services/customer_data_service.dart'; // ← currentCustomerResponse her
+import '/models/customer_response_model.dart';
+import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
 
 class ChooseChronotypeController {
   static const _endpoint = 'https://ocutune2025.ddns.net/chronotypes';
 
-  /// Fetches the list of chronotypes from the server.
+  /// Henter alle kronotyper fra backend
   static Future<List<Chronotype>> fetchChronotypes() async {
     final uri = Uri.parse(_endpoint);
     final resp = await http.get(uri);
@@ -22,7 +22,7 @@ class ChooseChronotypeController {
     }
   }
 
-  /// Shows an error snackbar.
+  /// Vis fejl-snackbar
   static void showError(BuildContext ctx, String msg) {
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
@@ -38,24 +38,35 @@ class ChooseChronotypeController {
     );
   }
 
-  /// Handles the “next” logic: updates the global response and navigates.
+  /// Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
+  /// svar‐tekst, sætter chronotypeKey og navigerer videre.
   static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
-    if (selectedChronotype != null) {
-      if (currentUserResponse != null) {
-        currentUserResponse = UserResponse(
-          firstName: currentUserResponse!.firstName,
-          lastName:  currentUserResponse!.lastName,
-          email:     currentUserResponse!.email,
-          password:  currentUserResponse!.password,
-          gender:    currentUserResponse!.gender,
-          birthYear: currentUserResponse!.birthYear,
-          answers:   [...currentUserResponse!.answers, selectedChronotype],
-          scores:    currentUserResponse!.scores,
-        );
-      }
-      Navigator.pushNamed(ctx, '/doneSetup');
-    } else {
+    if (selectedChronotype == null) {
       showError(ctx, "Vælg en kronotype eller tag testen først");
+      return;
     }
+
+    final resp = currentCustomerResponse;
+    if (resp == null) {
+      showError(ctx, "Intern fejl: brugerdata mangler");
+      return;
+    }
+
+    // Bygger et nyt CustomerResponse-objekt på baggrund af det gamle:
+    currentCustomerResponse = CustomerResponse(
+      firstName:     resp.firstName,
+      lastName:      resp.lastName,
+      email:         resp.email,
+      gender:        resp.gender,
+      birthYear:     resp.birthYear,
+      answers:       [...resp.answers, selectedChronotype],
+      questionScores: Map.from(resp.questionScores),
+      rmeqScore:     resp.rmeqScore,
+      meqScore:      resp.meqScore,
+      chronotypeKey: selectedChronotype,
+      password:      resp.password,
+    );
+
+    Navigator.pushNamed(ctx, '/doneSetup');
   }
 }

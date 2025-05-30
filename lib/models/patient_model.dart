@@ -12,7 +12,10 @@ class Patient {
   final String? simUserid;
   final String? simPassword;
   final DateTime? createdAt;
-  final int? totalScore; // 👈 nyt felt til rMEQ
+
+  // 👉 Erstat totalScore med to felter:
+  final int? meqScore;    // 19-spørgsmålsscoren
+  final int? rmeqScore;   // 5-spørgsmålsscoren
 
   Patient({
     required this.id,
@@ -28,46 +31,52 @@ class Patient {
     this.simUserid,
     this.simPassword,
     this.createdAt,
-    this.totalScore,
+    this.meqScore,
+    this.rmeqScore,
   });
 
   factory Patient.fromJson(Map<String, dynamic> json) {
     return Patient(
-      id: json['id'],
+      id:        json['id'],
       firstName: json['first_name'],
-      lastName: json['last_name'],
-      cpr: json['cpr'],
-      street: json['street'],
-      zipCode: json['zip_code'],
-      city: json['city'],
-      phone: json['phone'],
-      email: json['email'],
-      uuid: json['uuid'],
-      simUserid: json['sim_userid'],
+      lastName:  json['last_name'],
+      cpr:       json['cpr'],
+      street:    json['street'],
+      zipCode:   json['zip_code'],
+      city:      json['city'],
+      phone:     json['phone'],
+      email:     json['email'],
+      uuid:      json['uuid'],
+      simUserid:   json['sim_userid'],
       simPassword: json['sim_password'],
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])
           : null,
-      totalScore: json['total_score'], // 👈 fra backend
+
+
+      meqScore:  json['meq_score']  as int?,
+      rmeqScore: json['rmeq_score'] as int?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'first_name': firstName,
-      'last_name': lastName,
-      'cpr': cpr,
-      'street': street,
-      'zip_code': zipCode,
-      'city': city,
-      'phone': phone,
-      'email': email,
-      'uuid': uuid,
-      'sim_userid': simUserid,
+      'id':           id,
+      'first_name':   firstName,
+      'last_name':    lastName,
+      'cpr':          cpr,
+      'street':       street,
+      'zip_code':     zipCode,
+      'city':         city,
+      'phone':        phone,
+      'email':        email,
+      'uuid':         uuid,
+      'sim_userid':   simUserid,
       'sim_password': simPassword,
-      'created_at': createdAt?.toIso8601String(),
-      'total_score': totalScore, // 👈 med i toJson
+      'created_at':   createdAt?.toIso8601String(),
+
+      'meq_score':   meqScore,
+      'rmeq_score':  rmeqScore,
     };
   }
 

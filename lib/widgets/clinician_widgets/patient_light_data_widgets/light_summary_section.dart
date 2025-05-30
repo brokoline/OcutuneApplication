@@ -14,12 +14,12 @@ import 'light_latest_events_list.dart';
 
 class LightSummarySection extends StatelessWidget {
   final List<LightData> data;
-  final int totalScore;
+  final int rmeqScore;
 
   const LightSummarySection({
     super.key,
     required this.data,
-    required this.totalScore,
+    required this.rmeqScore,
   });
 
   @override
@@ -32,13 +32,13 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    final processor = LightDataProcessing(rMEQ: totalScore);
+    final processor = LightDataProcessing(rMEQ: rmeqScore);
 
     final score = LightData.averageScore(data);
     final weeklyBars = _generateWeeklyBars(data);
     final monthlyBars = _generateMonthlyBars(data);
     final weekMap = processor.groupLuxByWeekdayName(data);
-    final recs = processor.generateAdvancedRecommendations(data: data, rMEQ: totalScore);
+    final recs = processor.generateAdvancedRecommendations(data: data, rMEQ: rmeqScore);
 
     final List<FlSpot> spots = data.map((e) => FlSpot(
       e.timestamp.hour.toDouble() + (e.timestamp.minute.toDouble() / 60),
@@ -52,12 +52,12 @@ class LightSummarySection extends StatelessWidget {
         SizedBox(height: 8.h),
         LightScoreCard(
           score: score,
-          totalScore: totalScore,
+          totalScore: rmeqScore,
         ),
         SizedBox(height: 8.h),
         LightDailyLineChart(
           lightData: spots,
-          totalScore: totalScore,
+          totalScore: rmeqScore,
           weeklyBars: weeklyBars,
           monthlyBars: monthlyBars,
         ),
