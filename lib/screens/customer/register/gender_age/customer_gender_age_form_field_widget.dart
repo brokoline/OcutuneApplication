@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../widgets/customer_widgets/drop_down_menu_widget.dart';
-import '/theme/colors.dart';
+
 
 class CustomerGenderAgeForm extends StatelessWidget {
   final String? selectedGender;
@@ -38,20 +38,21 @@ class CustomerGenderAgeForm extends StatelessWidget {
         ),
         SizedBox(height: 16.h),
 
-        /// 🎯 Fødselsår med OcutuneDropdown
+        /// 🎯 Årstal – brug OcutuneDropdown
         OcutuneDropdown<String>(
           value: selectedYear,
-          hintText: !yearChosen ? 'Vælg fødselsår' : null,
+          hintText: yearChosen ? null : 'Vælg fødselsår',
           onChanged: onYearChanged,
           items: years.map((year) {
             return DropdownMenuItem(
               value: year,
-              child: Text(year),
+              child: Text(year, style: TextStyle(fontSize: 14.sp)),
             );
           }).toList(),
         ),
 
         SizedBox(height: 48.h),
+
         const Text(
           "Hvad er dit køn?",
           textAlign: TextAlign.center,
@@ -63,7 +64,7 @@ class CustomerGenderAgeForm extends StatelessWidget {
         ),
         SizedBox(height: 16.h),
 
-        /// 🎯 Køn med OcutuneDropdown
+        /// 🎯 Køn – brug OcutuneDropdown
         OcutuneDropdown<String>(
           value: selectedGender,
           hintText: 'Vælg køn',
@@ -71,7 +72,7 @@ class CustomerGenderAgeForm extends StatelessWidget {
           items: genders.map((entry) {
             return DropdownMenuItem(
               value: entry['value'],
-              child: Text(entry['label']!),
+              child: Text(entry['label']!, style: TextStyle(fontSize: 14.sp)),
             );
           }).toList(),
         ),
