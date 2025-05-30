@@ -9,7 +9,7 @@ import 'package:ocutune_light_logger/controller/ble_controller.dart';
 
 class BatteryService {
   static DateTime? _lastSent;
-  static const Duration minInterval = Duration(minutes: 10);
+  static const Duration minInterval = Duration(minutes: 5);
 
   static Future<bool> sendToBackend({
     required int batteryLevel,
@@ -18,6 +18,7 @@ class BatteryService {
     final now = DateTime.now();
 
     if (batteryLevel <= 0) {
+      print("⏱️ Springer batteri-upload over (for nylig sendt)");
       print("⏱️ Batteriniveau er 0 eller ukendt – venter med upload.");
       return false;
     }

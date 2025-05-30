@@ -82,7 +82,7 @@ class BleSensorViewModel extends ChangeNotifier {
     _lifecycleHandler?.updateDevice(device: device, patientId: patientId);
 
     _batterySyncTimer?.cancel();
-    _batterySyncTimer = Timer.periodic(Duration(minutes: 10), (_) async {
+    _batterySyncTimer = Timer.periodic(Duration(minutes: 5), (_) async {
       try {
         if (BleController.connectedDevice != null) {
           final batteryLevel = BleController.batteryNotifier.value;

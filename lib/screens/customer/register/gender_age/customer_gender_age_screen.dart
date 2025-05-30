@@ -15,14 +15,19 @@ class CustomerGenderAgeScreen extends StatefulWidget {
 }
 
 class _CustomerGenderAgeScreenState extends State<CustomerGenderAgeScreen> {
-  String? selectedYear = '2000';
+  String? selectedYear;
   bool yearChosen = false;
   String? selectedGender;
 
-  final List<String> years = List.generate(
-    DateTime.now().year - 1925 + 1,
-        (index) => (1925 + index).toString(),
-  );
+  final List<String> years = [
+    '2000',
+    ...List.generate(
+      DateTime.now().year - 1925 + 1,
+          (index) => (1925 + index).toString(),
+    ).where((year) => year != '2000'),
+  ];
+
+
 
   final List<Map<String, String>> genders = [
     {'label': 'Mand', 'value': 'male'},
@@ -36,7 +41,7 @@ class _CustomerGenderAgeScreenState extends State<CustomerGenderAgeScreen> {
       backgroundColor: generalBackground,
       appBar: const CustomerAppBar(
         showBackButton: true,
-        title: 'Køn og alder',
+        title: 'Opret konto',
       ),
       body: SafeArea(
         child: Padding(
