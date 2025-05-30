@@ -15,11 +15,13 @@ import 'light_latest_events_list.dart';
 class LightSummarySection extends StatelessWidget {
   final List<LightData> data;
   final int rmeqScore;
+  final int meqScore;
 
   const LightSummarySection({
     super.key,
     required this.data,
     required this.rmeqScore,
+    required this.meqScore,
   });
 
   @override

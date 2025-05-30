@@ -171,7 +171,9 @@ class PatientDetailView extends StatelessWidget {
                 final data = snapshot.data ?? [];
                 return LightSummarySection(
                   data: data,
-                    rmeqScore: patient.rmeqScore!
+                  rmeqScore: patient.rmeqScore ?? 0,      // Din gamle “totalScore” er nu rmeqScore
+                  // hvis du også vil vise den udvidede MEQ:
+                  meqScore:  patient.meqScore  ?? 0,
                 );
               },
             ),
