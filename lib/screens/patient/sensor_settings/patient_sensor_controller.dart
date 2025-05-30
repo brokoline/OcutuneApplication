@@ -86,14 +86,25 @@ class PatientSensorController {
     _lifecycleHandler?.updateDevice(device: device, patientId: patientId);
 
     _batterySyncTimer?.cancel();
-    _batterySyncTimer = Timer.periodic(Duration(minutes: 10), (_) async {
+    _batterySyncTimer = Timer.periodic(Duration(minutes: 5), (_) async {
       try {
+        final now = DateTime.now();
+        print("🕓 [BatteriTimer] Kører kl: $now");
+
         if (BleController.connectedDevice != null) {
           final batteryLevel = BleController.batteryNotifier.value;
-          await BatteryService.sendToBackend(batteryLevel: batteryLevel);
+          print("🔋 [BatteriTimer] Batteriniveau målt: $batteryLevel");
+
+          final success = await BatteryService.sendToBackend(
+              batteryLevel: batteryLevel);
+
+          print("📡 [BatteriTimer] Sendte data til backend? $success");
+        } else {
+          print("⚠️ [BatteriTimer] Ingen enhed forbundet – sender ikke.");
         }
-      } catch (e) {
-        print("⚠️ Batteri-upload fejlede: $e");
+      } catch (e, stack) {
+        print("❌ [BatteriTimer] Fejl under batteri-upload: $e");
+        print(stack);
       }
     });
 
@@ -102,7 +113,7 @@ class PatientSensorController {
     );
   }
 
-  void disconnectFromDevice(BuildContext context) {
+    void disconnectFromDevice(BuildContext context) {
     _batterySyncTimer?.cancel();
     _pollingService?.stopPolling();
     bleController.disconnect();
