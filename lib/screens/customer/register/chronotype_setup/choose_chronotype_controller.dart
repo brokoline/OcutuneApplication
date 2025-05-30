@@ -3,11 +3,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '/theme/colors.dart';
 import '/services/services/user_data_service.dart';
 import '/models/user_response_model.dart';
 import 'package:ocutune_light_logger/models/chronotype_model.dart';
-import '../../../../widgets/universal/ocutune_next_step_button.dart';
 
 class ChooseChronotypeController {
   static const _endpoint = 'https://ocutune2025.ddns.net/chronotypes';

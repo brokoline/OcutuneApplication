@@ -34,7 +34,6 @@ import 'widgets/messages/new_message_screen.dart';
 // 📦 Controllere
 import 'controller/inbox_controller.dart';
 import 'screens/clinician/root/clinician_root_controller.dart';
-import 'screens/customer/register/chronotype_setup/choose_chronotype_controller.dart';
 
 // 🎨 Tema
 import 'theme/colors.dart';
