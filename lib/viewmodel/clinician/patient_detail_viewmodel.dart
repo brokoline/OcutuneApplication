@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
-import '../../../models/patient_model.dart';
-import '../../../models/diagnose_model.dart';
-import '../../../models/light_data_model.dart';
-import '../../../services/services/api_services.dart';
-import '../../../models/patient_event_model.dart';
-
+import '../../models/diagnose_model.dart';
+import '../../models/light_data_model.dart';
+import '../../models/patient_event_model.dart';
+import '../../models/patient_model.dart';
+import '../../services/services/api_services.dart';
 
 class PatientDetailViewModel extends ChangeNotifier {
   final String patientId;
@@ -14,8 +13,6 @@ class PatientDetailViewModel extends ChangeNotifier {
   late Future<List<Diagnosis>> diagnosisFuture;
   late Future<List<LightData>> lightDataFuture;
   late Future<List<PatientEvent>> patientEventsFuture;
-
-
 
   PatientDetailViewModel(this.patientId) {
     fetchData();
