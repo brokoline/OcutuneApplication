@@ -57,6 +57,9 @@ class ApiService {
     );
   }
 
+
+
+
   // 👤 AUTHENTICATION
   static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
     final response = await http.post(
@@ -79,6 +82,18 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> getPatientDiagnoses(String patientId) async {
     final response = await _get('/patients/$patientId/diagnoses');
     return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> getClinicianPatients() async {
+    final response = await _get('/clinician/patients');
+    return _handleListResponse(response);
+  }
+
+
+  /// Hent detaljer for én patient
+  static Future<Map<String, dynamic>> getClinicianPatientDetail(String id) async {
+    final response = await _get('/clinician/patients/$id');
+    return _handleResponse(response);
   }
 
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
