@@ -1,20 +1,24 @@
+// lib/screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '/theme/colors.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/widgets/universal/ocutune_slider.dart';
+
+
+import '../../../../../services/services/customer_data_service.dart';
 import '../../../../../widgets/universal/ocutune_next_step_button.dart';
-import '/widgets/universal/ocutune_slider.dart';
-import '../../../../../services/services/user_data_service.dart';
 
 class QuestionTwoScreen extends StatefulWidget {
-  const QuestionTwoScreen({super.key});
+  const QuestionTwoScreen({Key? key}) : super(key: key);
 
   @override
-  State<QuestionTwoScreen> createState() => QuestionTwoScreenState();
+  State<QuestionTwoScreen> createState() => _QuestionTwoScreenState();
 }
 
-class QuestionTwoScreenState extends State<QuestionTwoScreen> {
+class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
   double sliderValue = 2;
   late Future<Map<String, dynamic>> _questionData;
 
@@ -36,9 +40,9 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'https://ocutune2025.ddns.net';
+    const baseUrl     = 'https://ocutune2025.ddns.net';
     final questionsUrl = Uri.parse('$baseUrl/questions');
-    final choicesUrl = Uri.parse('$baseUrl/choices');
+    final choicesUrl   = Uri.parse('$baseUrl/choices');
 
     final responses = await Future.wait([
       http.get(questionsUrl),
@@ -46,36 +50,38 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
     ]);
 
     if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
-      final questions = jsonDecode(responses[0].body) as List;
-      final choicesData = jsonDecode(responses[1].body) as List;
+      final List<dynamic> questions   = jsonDecode(responses[0].body) as List<dynamic>;
+      final List<dynamic> choicesData  = jsonDecode(responses[1].body) as List<dynamic>;
 
       final question = questions.firstWhere(
             (q) => q['id'] == questionId,
         orElse: () => null,
       );
-
       if (question == null) {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final filtered = choicesData.where((item) => item['question_id'] == questionId).toList();
-
+      final filtered = choicesData
+          .where((item) => item['question_id'] == questionId)
+          .toList();
       if (filtered.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
       }
 
       filtered.sort((a, b) => (a['score'] as int).compareTo(b['score'] as int));
 
-      final choiceList = filtered.map((item) => item['choice_text'] as String).toList();
-      final scoreMap = {
+      final choiceList = filtered
+          .map((item) => item['choice_text'] as String)
+          .toList();
+      final scoreMap = <String, int>{
         for (var item in filtered)
           item['choice_text'] as String: item['score'] as int,
       };
 
       return {
-        'text': question['question_text'],
+        'text':    question['question_text'] as String,
         'choices': choiceList,
-        'scores': scoreMap,
+        'scores':  scoreMap,
       };
     } else {
       throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder.');
@@ -90,7 +96,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
           ],
         ),
       ),
@@ -113,8 +119,6 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final index = sliderValue.round();
-
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
@@ -137,14 +141,11 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
               return Center(
                 child: Text("Fejl: ${snapshot.error}", style: const TextStyle(color: Colors.white)),
               );
-            } else if (!snapshot.hasData) {
-              return const Center(
-                child: Text("Ingen data tilgængelig.", style: TextStyle(color: Colors.white)),
-              );
             } else {
-              final questionText = snapshot.data!['text'];
-              choices = List<String>.from(snapshot.data!['choices']);
-              final scoreMap = Map<String, int>.from(snapshot.data!['scores']);
+              final data      = snapshot.data!;
+              final questionText = data['text'] as String;
+              choices        = List<String>.from(data['choices'] as List);
+              final scoreMap = Map<String,int>.from(data['scores'] as Map);
 
               return Stack(
                 children: [
@@ -169,9 +170,7 @@ class QuestionTwoScreenState extends State<QuestionTwoScreen> {
                             value: sliderValue,
                             labels: choices,
                             colors: colors,
-                            onChanged: (val) {
-                              setState(() => sliderValue = val);
-                            },
+                            onChanged: (val) => setState(() => sliderValue = val),
                           ),
                         ],
                       ),

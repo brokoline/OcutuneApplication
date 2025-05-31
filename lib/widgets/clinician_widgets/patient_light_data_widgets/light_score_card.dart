@@ -1,30 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../theme/colors.dart';
+import '/theme/colors.dart';
 import '../../../controller/chronotype_controller.dart';
 
 class LightScoreCard extends StatelessWidget {
-  final double score;
-  final int totalScore;
+  /// rMEQ: kort version (5 spørgsmål)
+  final int rmeqScore;
+
+  /// MEQ: lang version (19 spørgsmål)
+  final int meqScore;
 
   const LightScoreCard({
-    super.key,
-    required this.score,
-    required this.totalScore,
-  });
+    Key? key,
+    required this.rmeqScore,
+    required this.meqScore,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final percent = (score * 100).clamp(0, 100).toInt();
+    final ratio = (rmeqScore / 25).clamp(0.0, 1.0);
+    final percent = (ratio * 100).toInt();
 
-    final chrono = ChronotypeManager(totalScore);
-    final meq = chrono.meqScore.toStringAsFixed(0);
-    final chronotype = chrono.getChronotypeLabel();
-
-    final baseColor = _getScoreColor(score);
-    final chronoColor = _getChronotypeColor(chronotype);
-    final donutColor = _blendColors(baseColor, chronoColor, 0.5);
-    final glowColor = donutColor.withOpacity(0.4);
+    final chronoLabel = ChronotypeManager(rmeqScore).getChronotypeLabel();
+    final baseColor   = _getScoreColor(ratio);
+    final chronoColor = _getChronotypeColor(chronoLabel);
+    final donutColor  = Color.lerp(baseColor, chronoColor, 0.5)!;
+    final glowColor   = donutColor.withOpacity(0.4);
 
     return Card(
       color: generalBox,
@@ -47,35 +48,33 @@ class LightScoreCard extends StatelessWidget {
             SizedBox(height: 20.h),
             Center(
               child: TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: score),
+                tween: Tween(begin: 0, end: ratio),
                 duration: const Duration(milliseconds: 1200),
                 curve: Curves.easeOutCubic,
-                builder: (context, value, _) {
+                builder: (ctx, value, _) {
                   return SizedBox(
                     height: 160.w,
                     width: 160.w,
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
+                        // glow
                         Container(
                           width: 140.w,
                           height: 140.w,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             boxShadow: [
-                              BoxShadow(
-                                color: glowColor,
-                                blurRadius: 25.w,
-                                spreadRadius: 8.w,
-                              ),
+                              BoxShadow(color: glowColor, blurRadius: 25.w, spreadRadius: 8.w)
                             ],
                           ),
                         ),
+                        // donut
                         ShaderMask(
                           shaderCallback: (rect) {
                             return SweepGradient(
-                              startAngle: 0.0,
-                              endAngle: 3.14 * 2,
+                              startAngle: 0,
+                              endAngle: 2 * 3.1415,
                               stops: [value, value],
                               center: Alignment.center,
                               colors: [donutColor, Colors.white.withOpacity(0.08)],
@@ -90,6 +89,7 @@ class LightScoreCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        // labels
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -103,7 +103,7 @@ class LightScoreCard extends StatelessWidget {
                             ),
                             SizedBox(height: 6.h),
                             Text(
-                              _getScoreLabel(score),
+                              _getScoreLabel(ratio),
                               style: TextStyle(
                                 color: donutColor,
                                 fontSize: 15.sp,
@@ -131,9 +131,12 @@ class LightScoreCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _InfoTile(label: "Chronotype", value: chronotype),
-                _InfoTile(label: "MEQ", value: meq),
-                _InfoTile(label: "rMEQ", value: totalScore.toString()),
+                _InfoTile(label: "Kronotype", value: chronoLabel),
+                _InfoTile(
+                  label: "MEQ",
+                  value: meqScore > 0 ? meqScore.toString() : "–", // tom hvis 0
+                ),
+                _InfoTile(label: "rMEQ", value: rmeqScore.toString()),
               ],
             ),
           ],
@@ -142,66 +145,41 @@ class LightScoreCard extends StatelessWidget {
     );
   }
 
-  Color _getScoreColor(double score) {
-    if (score >= 0.7) return _blendColors(Colors.greenAccent, Colors.green, 0.6);
-    if (score >= 0.4) return _blendColors(Colors.amber, Colors.orange, 0.5);
-    return _blendColors(Colors.redAccent, Colors.red, 0.5);
+  Color _getScoreColor(double ratio) {
+    if (ratio >= 0.7) return Color.lerp(Colors.greenAccent, Colors.green, 0.6)!;
+    if (ratio >= 0.4) return Color.lerp(Colors.amber, Colors.orange, 0.5)!;
+    return Color.lerp(Colors.redAccent, Colors.red, 0.5)!;
   }
 
   Color _getChronotypeColor(String type) {
     switch (type) {
-      case 'definitely_morning':
-        return Colors.blueAccent;
-      case 'moderately_morning':
-        return Colors.lightBlue;
-      case 'neither':
-        return Colors.grey;
-      case 'moderately_evening':
-        return Colors.orangeAccent;
-      case 'definitely_evening':
-        return Colors.deepOrange;
-      default:
-        return Colors.white60;
+      case 'Helt morgenmenneske':   return Colors.blueAccent;
+      case 'moderately_morning':   return Colors.lightBlue;
+      case 'neither':              return Colors.grey;
+      case 'moderately_evening':   return Colors.orangeAccent;
+      case 'definitely_evening':   return Colors.deepOrange;
+      default:                     return Colors.white60;
     }
   }
 
-  String _getScoreLabel(double score) {
-    if (score >= 0.7) return "Fremragende";
-    if (score >= 0.4) return "Moderat";
+  String _getScoreLabel(double ratio) {
+    if (ratio >= 0.7) return "Fremragende";
+    if (ratio >= 0.4) return "Moderat";
     return "Forbedring";
-  }
-
-  Color _blendColors(Color color1, Color color2, double ratio) {
-    return Color.lerp(color1, color2, ratio)!;
   }
 }
 
 class _InfoTile extends StatelessWidget {
-  final String label;
-  final String value;
-
+  final String label, value;
   const _InfoTile({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white60,
-            fontSize: 12.sp,
-          ),
-        ),
+        Text(label, style: TextStyle(color: Colors.white60, fontSize: 12.sp)),
         SizedBox(height: 4.h),
-        Text(
-          value,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(value, style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w500)),
       ],
     );
   }

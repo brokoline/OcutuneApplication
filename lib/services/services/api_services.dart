@@ -57,6 +57,9 @@ class ApiService {
     );
   }
 
+
+
+
   // 👤 AUTHENTICATION
   static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
     final response = await http.post(
@@ -79,6 +82,18 @@ class ApiService {
   static Future<List<Map<String, dynamic>>> getPatientDiagnoses(String patientId) async {
     final response = await _get('/patients/$patientId/diagnoses');
     return _handleListResponse(response);
+  }
+
+  static Future<List<Map<String, dynamic>>> getClinicianPatients() async {
+    final response = await _get('/clinician/patients');
+    return _handleListResponse(response);
+  }
+
+
+  /// Hent detaljer for én patient
+  static Future<Map<String, dynamic>> getClinicianPatientDetail(String id) async {
+    final response = await _get('/clinician/patients/$id');
+    return _handleResponse(response);
   }
 
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
@@ -477,7 +492,7 @@ class ApiService {
     }
 
     final data = jsonDecode(response.body);
-    debugPrint("🎯 Total score gemt i backend: ${data['total_score']}");
+    debugPrint("🎯 Total score gemt i backend: ${data['remq_score']}");
   }
 
 // 🕰 CHRONOTYPE METHODS
@@ -498,12 +513,12 @@ class ApiService {
 
   static Future<Map<String, dynamic>> fetchChronotypeByScoreFromBackend(int customerId) async {
     // 1. Hent kunden
-    final response = await _get('/customers/$customerId'); // eller det relevante endpoint
+    final response = await _get('/customers/$customerId');
     final customer = _handleResponse(response);
 
-    final score = customer['total_score'];
+    final score = customer['rmeq_score'];
     if (score == null) {
-      throw Exception('Total score mangler for bruger $customerId');
+      throw Exception('rMEQ score mangler for bruger $customerId');
     }
 
     // 2. Brug scoren til at hente chronotype
@@ -525,22 +540,25 @@ class ApiService {
     int? birthYear,
     String? gender,
     String? chronotypeKey,
-    List<int>? scores,
+    required List<String> answers,
+    required Map<String, int> questionScores,
   }) async {
-    final payload = {
-      'email': email,
-      'password': password,
-      'first_name': firstName,
-      'last_name': lastName,
-      if (birthYear != null) 'birth_year': birthYear,
-      if (gender != null) 'gender': gender,
-      if (chronotypeKey != null) 'chronotype_key': chronotypeKey,
-      if (scores != null) 'scores': scores,
+    final payload = <String, dynamic>{
+      'email':           email,
+      'password':        password,
+      'first_name':      firstName,
+      'last_name':       lastName,
+      if (birthYear != null)     'birth_year':      birthYear,
+      if (gender != null)        'gender':          gender,
+      if (chronotypeKey != null) 'chronotype_key':  chronotypeKey,
+      'answers':         answers,
+      'question_scores': questionScores,
     };
 
     final response = await _post('/customers', payload);
     return _handleResponse(response);
   }
+
 
 
 

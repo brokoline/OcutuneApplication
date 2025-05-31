@@ -1,14 +1,17 @@
+// lib/screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '/theme/colors.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
+import 'package:ocutune_light_logger/widgets/universal/ocutune_selectable_tile.dart';
+
+import '../../../../../services/services/customer_data_service.dart';
 import '../../../../../widgets/universal/ocutune_next_step_button.dart';
-import '/widgets/universal/ocutune_selectable_tile.dart';
-import '../../../../../services/services/user_data_service.dart';
 
 class QuestionFourScreen extends StatefulWidget {
-  const QuestionFourScreen({super.key});
+  const QuestionFourScreen({Key? key}) : super(key: key);
 
   @override
   State<QuestionFourScreen> createState() => _QuestionFourScreenState();
@@ -27,9 +30,9 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl = 'https://ocutune2025.ddns.net';
+    const baseUrl     = 'https://ocutune2025.ddns.net';
     final questionsUrl = Uri.parse('$baseUrl/questions');
-    final choicesUrl = Uri.parse('$baseUrl/choices');
+    final choicesUrl   = Uri.parse('$baseUrl/choices');
 
     final responses = await Future.wait([
       http.get(questionsUrl),
@@ -37,14 +40,13 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
     ]);
 
     if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
-      final questions = jsonDecode(responses[0].body) as List;
-      final choices = jsonDecode(responses[1].body) as List;
+      final questions = jsonDecode(responses[0].body) as List<dynamic>;
+      final choices   = jsonDecode(responses[1].body) as List<dynamic>;
 
       final question = questions.firstWhere(
             (q) => q['id'] == questionId,
         orElse: () => null,
       );
-
       if (question == null) {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
@@ -52,20 +54,19 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
       final filteredChoices = choices
           .where((c) => c['question_id'] == questionId)
           .toList();
-
       if (filteredChoices.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
       }
 
-      final scoreMap = {
+      final scoreMap = <String,int>{
         for (var c in filteredChoices)
           c['choice_text'] as String: c['score'] as int,
       };
 
       return {
-        'text': question['question_text'],
+        'text':    question['question_text'] as String,
         'choices': scoreMap.keys.toList(),
-        'scores': scoreMap,
+        'scores':  scoreMap,
       };
     } else {
       throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder.');
@@ -80,7 +81,7 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
           ],
         ),
       ),
@@ -124,71 +125,49 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
                   style: const TextStyle(color: Colors.white),
                 ),
               );
-            } else if (!snapshot.hasData) {
-              return const Center(
-                child: Text(
-                  'Ingen data tilgængelig.',
-                  style: TextStyle(color: Colors.white),
-                ),
-              );
             } else {
-              final questionText = snapshot.data!['text'];
-              final options = snapshot.data!['choices'] as List<String>;
-              choiceScores = Map<String, int>.from(snapshot.data!['scores']);
+              final data         = snapshot.data!;
+              final questionText = data['text']    as String;
+              final options      = List<String>.from(data['choices'] as List);
+              choiceScores       = Map<String,int>.from(data['scores'] as Map);
 
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                      child: IntrinsicHeight(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                          child: Stack(
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    questionText,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.5,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 32),
-                                  ...options.map((option) {
-                                    return OcutuneSelectableTile(
-                                      text: option,
-                                      selected: selectedOption == option,
-                                      onTap: () {
-                                        setState(() {
-                                          selectedOption = option;
-                                        });
-                                      },
-                                    );
-                                  }),
-                                  const SizedBox(height: 100),
-                                ],
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: OcutuneButton(
-                                  type: OcutuneButtonType.floatingIcon,
-                                  onPressed: _goToNextScreen,
-                                ),
-                              ),
-                            ],
+              return Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    child: Column(
+                      children: [
+                        Text(
+                          questionText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            height: 1.5,
+                            color: Colors.white,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 32),
+                        ...options.map((option) {
+                          return OcutuneSelectableTile(
+                            text: option,
+                            selected: selectedOption == option,
+                            onTap: () => setState(() => selectedOption = option),
+                          );
+                        }).toList(),
+                        const SizedBox(height: 100),
+                      ],
                     ),
-                  );
-                },
+                  ),
+                  Positioned(
+                    bottom: 24,
+                    right: 24,
+                    child: OcutuneButton(
+                      type: OcutuneButtonType.floatingIcon,
+                      onPressed: _goToNextScreen,
+                    ),
+                  ),
+                ],
               );
             }
           },

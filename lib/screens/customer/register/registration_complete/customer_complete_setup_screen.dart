@@ -1,12 +1,14 @@
+// lib/screens/customer/register/registration_complete/customer_complete_setup_screen.dart
+
 import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '/theme/colors.dart';
-import '../../../../services/services/user_data_service.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
+import '../../../../services/services/customer_data_service.dart';
 
 class DoneSetupScreen extends StatefulWidget {
-  const DoneSetupScreen({super.key});
+  const DoneSetupScreen({Key? key}) : super(key: key);
 
   @override
   State<DoneSetupScreen> createState() => _DoneSetupScreenState();
@@ -14,9 +16,9 @@ class DoneSetupScreen extends StatefulWidget {
 
 class _DoneSetupScreenState extends State<DoneSetupScreen>
     with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late AnimationController _orbitController;
-  late Animation<double> _scaleAnim;
+  late final AnimationController _pulseController;
+  late final AnimationController _orbitController;
+  late final Animation<double> _scaleAnim;
 
   String chronotype = "";
   String chronotypeText = "";
@@ -44,50 +46,65 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
     _prepareAndSubmit();
   }
 
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _orbitController.dispose();
+    super.dispose();
+  }
+
   Future<void> _prepareAndSubmit() async {
     debugPrint("🚀 _prepareAndSubmit() kaldt");
-    if ((currentUserResponse?.scores ?? []).isNotEmpty) {
-      final total = currentUserResponse!.scores.fold(0, (a, b) => a + b);
-      debugPrint("📊 Score fundet lokalt: $total");
+    final scores = currentCustomerResponse?.questionScores ?? <String, int>{};
+    if (scores.isNotEmpty) {
+      final total = scores.values.fold(0, (sum, v) => sum + v);
+      debugPrint("📊 Lokalt beregnet score: $total");
       await fetchChronotypeFromServer(total);
-    } else if ((currentUserResponse?.answers ?? []).isNotEmpty) {
-      final title = currentUserResponse!.answers.last;
-      debugPrint("📥 Sidste svar (titel): $title");
-      await fetchChronotypeByTitle(title);
     } else {
-      debugPrint("⚠️ Ingen scores eller answers fundet i currentUserResponse");
+      final answers = currentCustomerResponse?.answers ?? <String>[];
+      if (answers.isNotEmpty) {
+        final title = answers.last;
+        debugPrint("📥 Sidste svar-tekst (titel): $title");
+        await fetchChronotypeByTitle(title);
+      } else {
+        debugPrint("⚠️ Ingen scores eller answers fundet i currentCustomerResponse");
+      }
     }
-
-    await submitUserResponse();
+    await submitCustomerResponse();
   }
 
   Future<void> fetchChronotypeFromServer(int score) async {
     final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes/by-score/$score');
     debugPrint("🌐 Henter chronotype med score: $score → $url");
-
     try {
       final response = await http.get(url);
       debugPrint("📥 Response: ${response.statusCode} ${response.body}");
-
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        currentUserResponse?.chronotypeKey = data['type_key'];
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        // Opdater global respons immutabelt
+        final resp = currentCustomerResponse;
+        if (resp != null) {
+          currentCustomerResponse = resp.copyWith(
+            chronotypeKey: data['type_key'] as String?,
+          );
+        }
 
         setState(() {
-          chronotype = data['title'] ?? 'Ukendt kronotype';
-          chronotypeText = data['summary_text'] ?? 'Beskrivelse mangler';
-          chronotypeImageUrl = data['image_url'] ?? '';
+          chronotype        = data['title']        as String? ?? 'Ukendt kronotype';
+          chronotypeText    = data['summary_text'] as String? ?? 'Beskrivelse mangler';
+          chronotypeImageUrl = data['image_url']   as String? ?? '';
         });
       } else {
         setState(() {
-          chronotype = 'Ukendt';
-          chronotypeText = 'Kunne ikke hente chronotype';
+          chronotype     = 'Ukendt';
+          chronotypeText = 'Kunne ikke hente kronotype';
         });
       }
     } catch (e) {
       debugPrint("❌ Fejl under fetchChronotypeFromServer: $e");
       setState(() {
-        chronotype = 'Fejl';
+        chronotype     = 'Fejl';
         chronotypeText = 'Noget gik galt: $e';
       });
     }
@@ -96,43 +113,41 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   Future<void> fetchChronotypeByTitle(String title) async {
     final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
     debugPrint("🌐 Henter chronotype via titel: $title → $url");
-
     try {
       final response = await http.get(url);
       debugPrint("📥 Response: ${response.statusCode} ${response.body}");
-
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final match = data.firstWhere((c) => c['title'] == title, orElse: () => null);
-
+        final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+        final match = data.firstWhere(
+              (c) => c['title'] == title,
+          orElse: () => null,
+        );
         if (match != null) {
-          currentUserResponse?.chronotypeKey = match['type_key'];
+          final resp = currentCustomerResponse;
+          if (resp != null) {
+            currentCustomerResponse = resp.copyWith(
+              chronotypeKey: match['type_key'] as String?,
+            );
+          }
           setState(() {
-            chronotype = match['title'] ?? title;
-            chronotypeText = match['summary_text'] ?? 'Beskrivelse mangler';
-            chronotypeImageUrl = match['image_url'] ?? '';
+            chronotype        = match['title']        as String? ?? title;
+            chronotypeText    = match['summary_text'] as String? ?? 'Beskrivelse mangler';
+            chronotypeImageUrl = match['image_url']   as String? ?? '';
           });
         } else {
           setState(() {
-            chronotype = title;
-            chronotypeText = 'Beskrivelse ikke fundet';
+            chronotype     = title;
+            chronotypeText = 'Ingen beskrivelse fundet';
           });
         }
       }
     } catch (e) {
       debugPrint("❌ Fejl under fetchChronotypeByTitle: $e");
       setState(() {
-        chronotype = title;
+        chronotype     = title;
         chronotypeText = 'Kunne ikke hente data';
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    _orbitController.dispose();
-    super.dispose();
   }
 
   void _goToHome(BuildContext context) {
@@ -151,11 +166,10 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
       animation: _orbitController,
       builder: (_, __) {
         final angleDeg = (_orbitController.value * 360 + angleOffset) % 360;
-        final angle = angleDeg * (pi / 180);
-        final dx = radius * cos(angle);
-        final dy = radius * sin(angle);
-        final size = minSize + (maxSize - minSize) * (1 - sin(angle).clamp(-1.0, 1.0));
-
+        final angle    = angleDeg * (pi / 180);
+        final dx       = radius * cos(angle);
+        final dy       = radius * sin(angle);
+        final size     = minSize + (maxSize - minSize) * (1 - sin(angle).clamp(-1.0, 1.0));
         return Transform.translate(
           offset: Offset(dx, dy),
           child: Opacity(
@@ -191,18 +205,16 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                     children: [
                       AnimatedBuilder(
                         animation: _scaleAnim,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _scaleAnim.value,
-                            child: child,
-                          );
-                        },
+                        builder: (context, child) => Transform.scale(
+                          scale: _scaleAnim.value,
+                          child: child,
+                        ),
                         child: chronotypeImageUrl.isNotEmpty
                             ? Image.network(
                           chronotypeImageUrl,
                           width: 100,
                           height: 100,
-                          errorBuilder: (context, error, stackTrace) =>
+                          errorBuilder: (c, e, st) =>
                           const Icon(Icons.broken_image, size: 80, color: Colors.white),
                         )
                             : const Icon(Icons.image, size: 80, color: Colors.white),
@@ -237,10 +249,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                 const Text(
                   "Du er nu klar til at starte din lyslogning!",
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
                 ),
                 const SizedBox(height: 48),
                 SizedBox(
@@ -257,10 +266,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                     ),
                     child: const Text(
                       "Kom i gang",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),

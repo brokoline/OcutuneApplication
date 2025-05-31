@@ -11,61 +11,61 @@ import 'light_daily_line_chart.dart';
 import 'light_weekly_bar_chart.dart';
 import 'light_latest_events_list.dart';
 
-
 class LightSummarySection extends StatelessWidget {
   final List<LightData> data;
-  final int totalScore;
+  final int rmeqScore;
+  final int? meqScore; // nu valgfri
 
   const LightSummarySection({
-    super.key,
+    Key? key,
     required this.data,
-    required this.totalScore,
-  });
+    required this.rmeqScore,
+    this.meqScore,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (data.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
-        child: Text('Ingen lysdata registreret endnu',
-            style: TextStyle(color: Colors.white70, fontSize: 14.sp)),
+        child: Text(
+          'Ingen lysdata registreret endnu',
+          style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+          textAlign: TextAlign.center,
+        ),
       );
     }
 
-    final processor = LightDataProcessing(rMEQ: totalScore);
+    final processor = LightDataProcessing(rMEQ: rmeqScore);
 
-    final score = LightData.averageScore(data);
-    final weeklyBars = _generateWeeklyBars(data);
-    final monthlyBars = _generateMonthlyBars(data);
-    final weekMap = processor.groupLuxByWeekdayName(data);
-    final recs = processor.generateAdvancedRecommendations(data: data, rMEQ: totalScore);
-
-    final List<FlSpot> spots = data.map((e) => FlSpot(
-      e.timestamp.hour.toDouble() + (e.timestamp.minute.toDouble() / 60),
-      e.ediLux,
-    )).toList();
+    final weeklyBars    = _generateWeeklyBars(data);
+    final monthlyBars   = _generateMonthlyBars(data);
+    final weekMap       = processor.groupLuxByWeekdayName(data);
+    final recs          = processor.generateAdvancedRecommendations(data: data, rMEQ: rmeqScore);
+    final spots         = data.map((e) {
+      final x = e.timestamp.hour.toDouble() + e.timestamp.minute.toDouble() / 60;
+      return FlSpot(x, e.ediLux);
+    }).toList();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LightRecommendationsCard(recommendations: recs),
-        SizedBox(height: 8.h),
+        SizedBox(height: 16.h),
         LightScoreCard(
-          score: score,
-          totalScore: totalScore,
+          rmeqScore: rmeqScore,
+          meqScore: meqScore ?? 0, // vis 0 hvis ikke sat
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 24.h),
         LightDailyLineChart(
           lightData: spots,
-          totalScore: totalScore,
+          totalScore: rmeqScore,
           weeklyBars: weeklyBars,
           monthlyBars: monthlyBars,
         ),
-        SizedBox(height: 8.h),
-        LightWeeklyBarChart(
-          luxPerDay: weekMap,
-        ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 24.h),
+        LightWeeklyBarChart(luxPerDay: weekMap),
+        SizedBox(height: 24.h),
         LightLatestEventsList(lightData: data),
       ],
     );
@@ -73,9 +73,8 @@ class LightSummarySection extends StatelessWidget {
 
   List<BarChartGroupData> _generateWeeklyBars(List<LightData> entries) {
     final Map<int, List<double>> grouped = {};
-    for (var entry in entries) {
-      final weekday = entry.timestamp.weekday;
-      grouped.putIfAbsent(weekday, () => []).add(entry.calculatedScore * 100);
+    for (var e in entries) {
+      grouped.putIfAbsent(e.timestamp.weekday, () => []).add(e.calculatedScore * 100);
     }
     return grouped.entries.map((entry) {
       final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
@@ -92,10 +91,9 @@ class LightSummarySection extends StatelessWidget {
   }
 
   List<BarChartGroupData> _generateMonthlyBars(List<LightData> entries) {
-    final Map<String, List<double>> grouped = {};
-    for (var entry in entries) {
-      final dayKey = entry.timestamp.day.toString();
-      grouped.putIfAbsent(dayKey, () => []).add(entry.calculatedScore * 100);
+    final Map<int, List<double>> grouped = {};
+    for (var e in entries) {
+      grouped.putIfAbsent(e.timestamp.day, () => []).add(e.calculatedScore * 100);
     }
     int index = 0;
     return grouped.entries.map((entry) {
