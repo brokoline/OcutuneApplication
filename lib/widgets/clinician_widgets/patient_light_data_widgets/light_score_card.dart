@@ -153,7 +153,7 @@ class LightScoreCard extends StatelessWidget {
 
   Color _getChronotypeColor(String type) {
     switch (type) {
-      case 'definitely_morning':   return Colors.blueAccent;
+      case 'Helt morgenmenneske':   return Colors.blueAccent;
       case 'moderately_morning':   return Colors.lightBlue;
       case 'neither':              return Colors.grey;
       case 'moderately_evening':   return Colors.orangeAccent;
