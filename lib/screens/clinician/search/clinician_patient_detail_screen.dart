@@ -1,26 +1,30 @@
+// lib/screens/clinician/search/clinician_patient_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 import '../../../models/patient_model.dart';
 import '../../../models/diagnose_model.dart';
-import '../../../models/light_data_model.dart';
 import '../../../models/patient_event_model.dart';
 import '../../../theme/colors.dart';
 import '../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_combined_patient_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_activity_card.dart';
+
+// Nu kalder vi kun uden parametre:
+import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_data_card.dart';
+import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_latest_events_list.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatelessWidget {
   final String patientId;
-
   const PatientDetailScreen({super.key, required this.patientId});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    return ChangeNotifierProvider<PatientDetailViewModel>(
       create: (_) => PatientDetailViewModel(patientId),
       child: const PatientDetailView(),
     );
@@ -32,93 +36,86 @@ class PatientDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<PatientDetailViewModel>(context);
+    final vm = Provider.of<PatientDetailViewModel>(context);
 
     return FutureBuilder<Patient>(
-      future: viewModel.patientFuture,
+      future: vm.patientFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingScreen();
+          return _buildLoading();
         }
-
         if (snapshot.hasError) {
-          return _buildErrorScreen(snapshot.error.toString());
+          return _buildError(snapshot.error.toString());
         }
+        final patient = snapshot.data!;
 
-        return _buildPatientDetailScreen(context, snapshot.data!, viewModel);
+        return _buildBody(context, patient, vm);
       },
     );
   }
 
-  Widget _buildLoadingScreen() {
+  Widget _buildLoading() {
     return const Scaffold(
       backgroundColor: generalBackground,
-      appBar: ClinicianAppBar(
-        showBackButton: true,
-      ),
-      body: Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      ),
+      appBar: ClinicianAppBar(showBackButton: true),
+      body: Center(child: CircularProgressIndicator(color: Colors.white)),
     );
   }
 
-  Widget _buildErrorScreen(String error) {
+  Widget _buildError(String error) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: const ClinicianAppBar(
-        showBackButton: true,
-      ),
+      appBar: const ClinicianAppBar(showBackButton: true),
       body: Center(
-        child: Text(
-          'Fejl: $error',
-          style: TextStyle(color: Colors.red, fontSize: 16),
-        ),
+        child: Text('Fejl: $error', style: const TextStyle(color: Colors.red, fontSize: 16)),
       ),
     );
   }
 
-  Widget _buildPatientDetailScreen(BuildContext context, Patient patient, PatientDetailViewModel viewModel) {
+  Widget _buildBody(
+      BuildContext context,
+      Patient patient,
+      PatientDetailViewModel vm,
+      ) {
     final fullName = '${patient.firstName} ${patient.lastName}';
 
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: const ClinicianAppBar(
-        showBackButton: true,
-      ),
+      appBar: const ClinicianAppBar(showBackButton: true),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ─ Header ───────────────────────────────────────────
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Patient detaljer',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
                       color: Colors.white70,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     fullName,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14.sp,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                   ),
                 ],
               ),
             ),
             SizedBox(height: 20.h),
 
-            // Patient Info & diagnoser
+            // ─ Diagnoser ────────────────────────────────────────
             FutureBuilder<List<Diagnosis>>(
-              future: viewModel.diagnosisFuture,
-              builder: (context, snapshot) {
-                final diagnoses = snapshot.data ?? [];
-
+              future: vm.diagnosisFuture,
+              builder: (context, diagSnap) {
+                final diagnoses = diagSnap.data ?? [];
                 return CombinedPatientInfoCard(
                   patient: patient,
                   diagnoses: diagnoses,
@@ -127,55 +124,71 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
 
-            // Aktiviteter
+            // ─ Aktiviteter ──────────────────────────────────────
             FutureBuilder<List<PatientEvent>>(
-              future: viewModel.patientEventsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Colors.white));
+              future: vm.patientEventsFuture,
+              builder: (context, evtSnap) {
+                if (evtSnap.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
                 }
-                if (snapshot.hasError) {
+                if (evtSnap.hasError) {
                   return Text(
-                    'Fejl ved aktiviteter: ${snapshot.error}',
+                    'Fejl ved aktiviteter: ${evtSnap.error}',
                     style: TextStyle(color: Colors.red, fontSize: 14.sp),
                   );
                 }
-
-                final events = snapshot.data ?? [];
+                final events = evtSnap.data ?? [];
                 if (events.isEmpty) {
                   return Text(
                     'Ingen registrerede aktiviteter.',
                     style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                   );
                 }
-
                 return PatientActivityCard(events: events);
               },
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 16.h),
 
-            // Lysdata
-            FutureBuilder<List<LightData>>(
-              future: viewModel.lightDataFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            // ─ Lysdata (samlet oversigt) ─────────────────────────
+            FutureBuilder<void>(
+              future: vm.getLightDataFuture,
+              builder: (context, lightSnap) {
+                // a) Hvis vi stadig henter rå‐lysdata
+                if (vm.isFetchingRaw) {
                   return const Center(child: CircularProgressIndicator(color: Colors.white));
                 }
-                if (snapshot.hasError) {
-                  return Text(
-                    'Fejl ved lysdata: ${snapshot.error}',
-                    style: TextStyle(color: Colors.red, fontSize: 14.sp),
+                // b) Hvis fejl ved rå data‐kald:
+                if (vm.rawFetchError != null) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Text(
+                      'Fejl ved lysdata: ${vm.rawFetchError}',
+                      style: TextStyle(color: Colors.red, fontSize: 14.sp),
+                    ),
                   );
                 }
 
-                final data = snapshot.data ?? [];
-                return LightSummarySection(
-                  data: data,
-                  rmeqScore: patient.rmeqScore ?? 0,
-                  meqScore:  patient.meqScore  ?? 0,
+                // c) Ellers: vi har nu både råData OG ML‐bearbejdning færdiggjort
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 1) Antal + seneste
+                    const LightDataCard(),
+                    SizedBox(height: 16.h),
+
+                    // 2) De 10 seneste målinger
+                    const LightLatestEventsList(),
+                    SizedBox(height: 16.h),
+
+                    // 3) Hele oversigten: grafer, ML‐metrikker og anbefalinger
+                    const LightSummarySection(),
+                  ],
                 );
               },
             ),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
