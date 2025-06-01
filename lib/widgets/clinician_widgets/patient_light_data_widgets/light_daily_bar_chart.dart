@@ -8,52 +8,69 @@ import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
 import '../../../controller/chronotype_controller.dart';
 
-/// Daglig søjlegraf, der farver timer i boost‐interval orange/gul (god) eller lys blå (ikke‐god),
-/// og prikker de andre timer (uden for vinduet) som medium grå.
 class LightDailyBarChart extends StatelessWidget {
   /// Rå liste af lysmålinger (én LightData pr. timestamp).
   final List<LightData> rawData;
 
-  /// rMEQ‐score (bruges til at finde det anbefalede boost‐vindue).
+  /// rMEQ‐score (bruges af ChronotypeManager til at finde boost‐interval i timer).
   final int rmeqScore;
 
   const LightDailyBarChart({
-    Key? key,
+    super.key,
     required this.rawData,
     required this.rmeqScore,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    // 1) Beregn gennemsnit per time (0..23).
-    List<double> hourlyAverages = LightUtils.groupByHourOfDay(rawData);
+    // ──────────────────────────────────────────────────────────
+    // 1) FILTRÉR rawData til "kun i DAG" (DateTime.now().year/month/day)
+    final DateTime now = DateTime.now();
+    final int todayYear  = now.year;
+    final int todayMonth = now.month;
+    final int todayDay   = now.day;
+
+    final List<LightData> todayData = rawData.where((e) {
+      final ts = e.timestamp;
+      return ts.year == todayYear && ts.month == todayMonth && ts.day == todayDay;
+    }).toList();
+
+    // ──────────────────────────────────────────────────────────
+    // 2) Beregn gennemsnit pr. time (0..23) i procent (0..100) for i dag.
+    List<double> hourlyAverages = LightUtils.groupByHourOfDay(todayData);
+
+    // Hvis utils‐metoden ikke allerede fylder op til 24 elementer, gør vi det her:
     if (hourlyAverages.length < 24) {
-      // Fyld op til 24 elementer med 0.0, hvis gruppen er kortere
-      List<double> filled = List<double>.filled(24, 0.0);
+      final List<double> filled = List<double>.filled(24, 0.0);
       for (int i = 0; i < hourlyAverages.length && i < 24; i++) {
         filled[i] = hourlyAverages[i];
       }
       hourlyAverages = filled;
     }
 
-    // 2) Hent anbefalet “light boost” vindue via ChronotypeManager
-    final chrono = ChronotypeManager(rmeqScore);
+    // ──────────────────────────────────────────────────────────
+    // 3) Find det anbefalede “light boost”‐vindue via ChronotypeManager:
+    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
     final double startBoostHour = chrono.lightboostStartHour; // fx 5.3
     final double endBoostHour   = chrono.lightboostEndHour;   // fx 6.8
 
-    // 3) Farver og tærskel
-    const double threshold = 50.0;             // Procent‐grænse i boost‐vindue
-    const Color goodColor = Color(0xFFFFAB00);  // Orange/gul = optimal
-    const Color badColor  = Color(0xFF5DADE2);  // Lys blå = under threshold
-    final Color outsideColor = Colors.grey.shade600; // Medium grå = uden for vindue
+    // ──────────────────────────────────────────────────────────
+    // 4) Definer farver og tærskel:
+    const double threshold = 50.0;               // Procent‐grænse inde i boost‐window
+    const Color goodColor      = Color(0xFFFFAB00); // Orange/gul   = “optimal eksponering”
+    const Color badColor       = Color(0xFF5DADE2); // Lys blå      = “under threshold”
+    final Color outsideColor   = Colors.grey.shade700; // Neutral grå  = “uden for vinduet”
 
-    // 4) Byg BarChartGroupData for hver time (0..23)
+    // ──────────────────────────────────────────────────────────
+    // 5) Byg én BarChartGroupData pr. time (0..23)
     final List<BarChartGroupData> barGroups = List.generate(24, (int hour) {
       final double rawValue = hourlyAverages[hour].clamp(0.0, 100.0);
 
+      // A) Tjek om denne time er i boost‐intervallet:
       final bool isInBoostWindow = (hour + 0.0 >= startBoostHour && hour + 0.0 < endBoostHour);
+
       if (!isInBoostWindow) {
-        // uden for boostvindue = medium grå
+        // Hvis UDENFOR boost‐vindue: tegn neutral grå
         return BarChartGroupData(
           x: hour,
           barRods: [
@@ -67,9 +84,9 @@ class LightDailyBarChart extends StatelessWidget {
         );
       }
 
-      // i boostvindue → tjek threshold
+      // B) Hvis i boost‐interval: farv orange hvis ≥threshold, ellers blå
       final bool meetsThreshold = rawValue >= threshold;
-      final Color barColor = meetsThreshold ? goodColor : badColor;
+      final Color barColor      = meetsThreshold ? goodColor : badColor;
 
       return BarChartGroupData(
         x: hour,
@@ -84,7 +101,8 @@ class LightDailyBarChart extends StatelessWidget {
       );
     });
 
-    // 5) Returnér BarChart‐widget’en
+    // ──────────────────────────────────────────────────────────
+    // 6) Returnér BarChart‐widgeten
     return Card(
       color: Colors.grey.shade900,
       shape: RoundedRectangleBorder(
@@ -96,7 +114,7 @@ class LightDailyBarChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Titel
+            // – Titel
             Text(
               'Dagligt lys (⌛)',
               style: TextStyle(
@@ -107,29 +125,30 @@ class LightDailyBarChart extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
 
-            // Grafsnit i et AspectRatio for pæn visning
+            // – Selve grafen i et AspectRatio så den får flot bredde/højde
             AspectRatio(
               aspectRatio: 1.7,
               child: BarChart(
                 BarChartData(
                   minY: 0,
                   maxY: 100,
-                  // Tap‐/hover‐funktion
+
+                  // Mulighed for at trykke/tappe/hover
                   barTouchData: BarTouchData(enabled: true),
 
-                  // Tegn både horisontale og lodrette gridlinjer
+                  // Tegn både vandrette og lodrette grid‐linjer
                   gridData: FlGridData(
                     show: true,
                     horizontalInterval: 20,
                     drawVerticalLine: true,
                     verticalInterval: 1,
-                    getDrawingHorizontalLine: (y) {
+                    getDrawingHorizontalLine: (double y) {
                       return FlLine(
                         color: Colors.grey.withOpacity(0.3),
                         strokeWidth: 1,
                       );
                     },
-                    getDrawingVerticalLine: (x) {
+                    getDrawingVerticalLine: (double x) {
                       return FlLine(
                         color: Colors.grey.withOpacity(0.15),
                         strokeWidth: 1,
@@ -140,11 +159,11 @@ class LightDailyBarChart extends StatelessWidget {
                   // Fjern kantlinjer omkring grafen
                   borderData: FlBorderData(show: false),
 
-                  // Titler/labels på akserne
+                  // Titler (labels) på akserne
                   titlesData: FlTitlesData(
                     show: true,
 
-                    // VENSTRE (Y‐aksen)
+                    // VENSTRE (Y‐aksen): Vis “0%, 20%, 40% … 100%”
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -162,7 +181,7 @@ class LightDailyBarChart extends StatelessWidget {
                       ),
                     ),
 
-                    // BUND (X‐aksen): vis kun hver 3. time (interval:3)
+                    // BUND (X‐aksen): Vis kun hver 3. time for at undgå overlap
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -170,7 +189,9 @@ class LightDailyBarChart extends StatelessWidget {
                         reservedSize: 32,
                         getTitlesWidget: (double value, TitleMeta meta) {
                           final int hour = value.toInt();
-                          if (hour < 0 || hour > 23) return const SizedBox.shrink();
+                          if (hour < 0 || hour > 23) {
+                            return const SizedBox.shrink();
+                          }
                           final String label = "${hour.toString().padLeft(2, '0')}:00";
                           return SideTitleWidget(
                             meta: meta,
@@ -186,12 +207,14 @@ class LightDailyBarChart extends StatelessWidget {
                       ),
                     ),
 
-                    // SKJUL top og right
                     topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
 
+                  // Bar‐grupperne (24 styk)
                   barGroups: barGroups,
+
+                  // Lidt afstand mellem søjlerne
                   groupsSpace: 2.w,
                 ),
               ),
