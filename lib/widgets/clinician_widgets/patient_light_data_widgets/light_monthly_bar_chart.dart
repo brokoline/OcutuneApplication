@@ -1,5 +1,4 @@
 // lib/widgets/clinician_widgets/patient_light_data_widgets/light_monthly_bar_chart.dart
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,10 +8,10 @@ import '../../../utils/light_utils.dart';
 import '../../../controller/chronotype_controller.dart';
 
 class LightMonthlyBarChart extends StatelessWidget {
-  /// Hele listen af lysmålinger (kan indeholde flere måneder).
+  // Hele listen af lysmålinger (kan indeholde andre måneder).
   final List<LightData> rawData;
 
-  /// rMEQ‐score (bruges til at beregne DLMO og boost‐vindue).
+  // rMEQ‐score (til at beregne DLMO og boost‐vindue).
   final int rmeqScore;
 
   const LightMonthlyBarChart({
@@ -23,75 +22,157 @@ class LightMonthlyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ────────────────────────────────────────────────────────────────
-    // 1) Filtrér alle målinger til KUN "denne måned" (år + måned = nuværende år og måned)
-    final DateTime now = DateTime.now();
-    final int thisYear  = now.year;
-    final int thisMonth = now.month;
+    // ─────────────────────────────────────────────────────────────
+    // 1) Debug: print alle rawData‐timestamps (så vi ser, om isUtc=false
+    //    og hvordan toUtc()/toLocal() opfører sig).
+    debugPrint("=== DEBUG: light_monthly_bar_chart RAW DATA START ===");
+    for (var i = 0; i < rawData.length; i++) {
+      final e = rawData[i];
+      final DateTime tsLocal = e.capturedAt;
+      final DateTime tsUtc   = tsLocal.toUtc();
+      final DateTime tsBack  = tsUtc.toLocal();
+      debugPrint(
+          " -> [${i.toString().padLeft(3)}] parsed: $tsLocal "
+              "(isUtc=${tsLocal.isUtc}), toUtc: $tsUtc, toLocal(after toUtc): $tsBack"
+      );
+    }
+    debugPrint("=== DEBUG: light_monthly_bar_chart RAW DATA END ===");
 
+    // ─────────────────────────────────────────────────────────────
+    // 2) Filtrér til KUN “denne måned” (år + måned = i dag) i UTC
+    final DateTime nowUtc   = DateTime.now().toUtc();
+    final int thisYearUtc   = nowUtc.year;
+    final int thisMonthUtc  = nowUtc.month;
+
+    // Saml alle målinger, der tilhører år/måned = denne måned (UTC)
     final List<LightData> thisMonthData = rawData.where((e) {
-      final ts = e.timestamp;
-      return ts.year == thisYear && ts.month == thisMonth;
+      final DateTime tsUtc = e.capturedAt.toUtc();
+      return tsUtc.year == thisYearUtc && tsUtc.month == thisMonthUtc;
     }).toList();
 
-    // ────────────────────────────────────────────────────────────────
-    // 2) Gruppér per dag i måneden → Map<int dag, double procent>
-    //    (her vil nøglerne være 1..31 for de dage, hvor vi rent faktisk har målinger)
-    final Map<int, double> domMap = LightUtils.groupByDayOfMonth(thisMonthData);
-    final List<int> sortedDays = domMap.keys.toList()..sort();
-    // sortedDays er fx [1, 2, 3, 5, 6, 8, …] hvis fx. d.4 og d.7 ikke har målinger
+    debugPrint(
+        "‼️ MÅNEDLIG: total rawData‐antal = ${rawData.length}, "
+            "thisMonthData‐antal = ${thisMonthData.length}"
+    );
+    if (thisMonthData.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 32.h),
+        child: Center(
+          child: Text(
+            'Ingen lysmålinger i denne måned (UTC).',
+            style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
 
-    // ────────────────────────────────────────────────────────────────
-    // 3) Hent DLMO‐dag og boost‐vindue fra ChronotypeManager (rmeqScore)
+    // ─────────────────────────────────────────────────────────────
+    // 3) Kald LightUtils.groupByDayOfMonth på denne måneds data
+    //    → Map<int,double> med “dag i måneden” som nøgle (1..31) og
+    //      værdi = gennemsnitlig EDI% (0..100) den dag.
+    final Map<int, double> domMap = LightUtils.groupByDayOfMonth(thisMonthData);
+    debugPrint("‼️ MÅNEDLIG: domMap (dag→avg) = $domMap");
+
+    // Lav en sorteret liste af de dage, der faktisk findes i domMap:
+    final List<int> sortedDays = domMap.keys.toList()..sort();
+    debugPrint("‼️ MÅNEDLIG: sortedDays = $sortedDays");
+
+    // ─────────────────────────────────────────────────────────────
+    // 4) Hent DLMO‐dag og boost‐vindue fra ChronotypeManager
     final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
     final Map<String, DateTime> timeMap = chrono.getRecommendedTimes();
-    final int recommendedDay    = timeMap['dlmo']!.day; // f.eks. 15
-    final double startBoostHour = chrono.lightboostStartHour; // ex. 5.3
-    final double endBoostHour   = chrono.lightboostEndHour;   // ex. 6.8
 
-    // ────────────────────────────────────────────────────────────────
-    // 4) Definér tærskel og farver:
-    const double threshold = 50.0;              // ≥50 % = "god dag"
-    const Color goodColor = Color(0xFFFFAB00);  // Orange/gul = opfyldt
-    const Color badColor  = Color(0xFF5DADE2);  // Lys blå  = ikke fungerende
-    final Color neutralColor = Colors.grey.shade600; // Grå for dage uden DLMO eller ingen data
+    // DLMO‐dag (1..31)
+    final int recommendedDay = timeMap['dlmo']!.toUtc().day;
+    debugPrint("‼️ MÅNEDLIG: anbefalet DLMO‐dag (UTC‐dag) = $recommendedDay");
 
-    // ────────────────────────────────────────────────────────────────
-    // 5) Opbyg en liste af BarChartGroupData – én gruppe pr. dag i sortedDays
+    // Boost‐vindue i timer (f.eks. 18.5 .. 20.2)
+    final double startBoostHour = chrono.lightboostStartHour;
+    final double endBoostHour   = chrono.lightboostEndHour;
+    debugPrint(
+        "‼️ MÅNEDLIG: lightboostStartHour = ${startBoostHour.toStringAsFixed(2)}, "
+            "lightboostEndHour = ${endBoostHour.toStringAsFixed(2)}"
+    );
+
+    // ─────────────────────────────────────────────────────────────
+    // 5) Definér tærskel og farver:
+    const double threshold   = 50.0;               // 50% grænse inde i vinduet
+    const Color goodColor    = Color(0xFFFFAB00);  // Orange/gul = “opfyldt”
+    const Color badColor     = Color(0xFF5DADE2);  // Lys blå = “under”
+    final Color neutralColor = Colors.grey.shade600; // Grå = “ikke DLMO‐dag”
+
+    // ─────────────────────────────────────────────────────────────
+    // 6) Byg BarChartGroupData – én gruppe for hver dag i sortedDays
     final List<BarChartGroupData> groups = [];
 
     for (int idx = 0; idx < sortedDays.length; idx++) {
       final int day = sortedDays[idx];
-      final double dayAvgY = domMap[day]!.clamp(0.0, 100.0);
+      final double dayAvgY = (domMap[day]!).clamp(0.0, 100.0);
 
-      // ──(A) Hent ALLE målinger for netop denne dag (i denne måned)
+      // A) Hvis dag != recommendedDay → sæt neutral grå farve
+      if (day != recommendedDay) {
+        groups.add(
+          BarChartGroupData(
+            x: idx,
+            barRods: [
+              BarChartRodData(
+                toY: dayAvgY,
+                color: neutralColor,
+                width: 16.w,
+                borderRadius: BorderRadius.circular(4.r),
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true,
+                  toY: 100,
+                  color: Colors.grey.withOpacity(0.15),
+                ),
+              ),
+            ],
+            barsSpace: 4.w,
+          ),
+        );
+        continue;
+      }
+
+      // B) Hvis dag == recommendedDay:
+      //    1) Filtrér alle målinger for netop denne dag
       final List<LightData> onlyThatDay = thisMonthData.where((e) {
-        return e.timestamp.day == day;
+        final DateTime tsUtc = e.capturedAt.toUtc();
+        return tsUtc.day == day;
       }).toList();
 
-      // ──(B) Blandt dem, filtrér kun de tidsstempler, som ligger i boost‐intervallet:
+      debugPrint(
+          "   → DLMO‐dag $day: onlyThatDay‐antal = ${onlyThatDay.length}"
+      );
+
+      //    2) Af de data, find kun dem inde i boost‐vindue (UTC‐time)
       final List<LightData> inBoostWindow = onlyThatDay.where((e) {
-        final double hourValue = e.timestamp.hour + (e.timestamp.minute / 60.0);
+        final DateTime tsUtc = e.capturedAt.toUtc();
+        final double hourValue =
+            tsUtc.hour + (tsUtc.minute / 60.0);
         return hourValue >= startBoostHour && hourValue < endBoostHour;
       }).toList();
 
-      // ──(C) Beregn gennemsnitlig EDI*100 (0..100) i dette interval:
+      debugPrint(
+          "       → iBoostWindow‐antal = ${inBoostWindow.length}"
+      );
+
+      //    3) Beregn gennemsnit (ediLux*100) i det boostVindue:
       double avgInWindow = 0.0;
       if (inBoostWindow.isNotEmpty) {
-        avgInWindow = inBoostWindow
+        final double sum = inBoostWindow
             .map((e) => (e.ediLux * 100.0).clamp(0.0, 100.0))
-            .reduce((a, b) => a + b) / inBoostWindow.length;
+            .reduce((a, b) => a + b);
+        avgInWindow = (sum / inBoostWindow.length).clamp(0.0, 100.0);
       }
+      debugPrint(
+          "       → avgInWindow = ${avgInWindow.toStringAsFixed(2)}%"
+      );
 
-      // ──(D) Vælg farve: kun den DAG, der matcher DLMO (“recommendedDay”) skal farves
-      //         – men farven baseres på om “avgInWindow >= threshold”.
-      Color barColor = neutralColor;
-      if (day == recommendedDay) {
-        // Hvis netop DLMO-dag, farv orange/gul (opfyldt) eller lys blå (under)
-        barColor = (avgInWindow >= threshold) ? goodColor : badColor;
-      }
+      //    4) Vælg farve: ≥ threshold → goodColor, ellers badColor
+      final bool meetsThreshold = avgInWindow >= threshold;
+      final Color barColor = meetsThreshold ? goodColor : badColor;
 
-      // ──(E) Tilføj BarChartGroupData for denne dag:
       groups.add(
         BarChartGroupData(
           x: idx,
@@ -104,7 +185,7 @@ class LightMonthlyBarChart extends StatelessWidget {
               backDrawRodData: BackgroundBarChartRodData(
                 show: true,
                 toY: 100,
-                color: Colors.grey.withOpacity(0.15), // baggrund for 100 %
+                color: Colors.grey.withOpacity(0.15),
               ),
             ),
           ],
@@ -113,8 +194,8 @@ class LightMonthlyBarChart extends StatelessWidget {
       );
     }
 
-    // ────────────────────────────────────────────────────────────────
-    // 6) Returnér BarChart med akser, grid, titler osv.
+    // ─────────────────────────────────────────────────────────────
+    // 7) Tegn selve grafen med dag‐i‐måneden langs X‐aksen
     return Card(
       color: Colors.grey.shade900,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -124,7 +205,7 @@ class LightMonthlyBarChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Titel
+            // – Titel
             Text(
               'Månedlig lysmængde',
               style: TextStyle(
@@ -135,19 +216,18 @@ class LightMonthlyBarChart extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
 
-            // Graf i fast højde
+            // – Grafen
             SizedBox(
               height: 200.h,
               child: BarChart(
                 BarChartData(
                   minY: 0,
                   maxY: 100,
-                  // Sæt alignment, hvis du vil have "spaceBetween" i stedet for center
                   alignment: BarChartAlignment.spaceBetween,
                   backgroundColor: Colors.grey.shade900,
                   borderData: FlBorderData(show: false),
 
-                  // Grid: kun vandrette linjer ved 20‐intervaller
+                  // Grid (vandrette linjer ved 20%)
                   gridData: FlGridData(
                     show: true,
                     horizontalInterval: 20,
@@ -159,11 +239,11 @@ class LightMonthlyBarChart extends StatelessWidget {
                     },
                   ),
 
-                  // Titler på akserne
+                  // Aksernes titler
                   titlesData: FlTitlesData(
                     show: true,
 
-                    // BUND (X‐aksen): én dato‐etiket pr. søjle
+                    // BUND (X‐aksen): Vis “dag i måneden” (1,2,3,…)
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -189,7 +269,7 @@ class LightMonthlyBarChart extends StatelessWidget {
                       ),
                     ),
 
-                    // VENSTRE (Y‐aksen): “0%, 20%, 40%…”
+                    // VENSTRE (Y‐aksen): “0%,20%,40%…100%”
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -211,10 +291,10 @@ class LightMonthlyBarChart extends StatelessWidget {
                     rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
 
-                  // Bar‐grupperne (én pr. dag)
+                  // Bar‐grupperne
                   barGroups: groups,
 
-                  // Spacing mellem bar‐grupperne
+                  // Afstand mellem grupperne
                   groupsSpace: 4.w,
                 ),
               ),

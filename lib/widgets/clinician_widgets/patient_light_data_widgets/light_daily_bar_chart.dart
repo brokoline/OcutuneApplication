@@ -1,5 +1,6 @@
 // lib/widgets/clinician_widgets/patient_light_data_widgets/light_daily_bar_chart.dart
 
+import 'dart:math'; // For min() og max()
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,10 +10,10 @@ import '../../../utils/light_utils.dart';
 import '../../../controller/chronotype_controller.dart';
 
 class LightDailyBarChart extends StatelessWidget {
-  /// Rå liste af lysmålinger (én LightData pr. timestamp).
+  /// Hele listen af lysmålinger (UTC), men Dart parser dem som isUtc=false.
   final List<LightData> rawData;
 
-  /// rMEQ‐score (bruges af ChronotypeManager til at finde boost‐interval i timer).
+  /// rMEQ‐score (bruges til at beregne boost‐vindue i timer).
   final int rmeqScore;
 
   const LightDailyBarChart({
@@ -23,180 +24,155 @@ class LightDailyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ──────────────────────────────────────────────────────────
-    // 1) FILTRÉR rawData til "kun i DAG" (DateTime.now().year/month/day)
-    final DateTime now = DateTime.now();
-    final int todayYear  = now.year;
-    final int todayMonth = now.month;
-    final int todayDay   = now.day;
+    // Vi regner i “rene” UTC (DateTime.toUtc()), så vi fanger alle målinger, selvom
+    // d.capturedAt er parsed med isUtc=false.
+    final DateTime nowUtc   = DateTime.now().toUtc();
+    final int todayYear     = nowUtc.year;
+    final int todayMonth    = nowUtc.month;
+    final int todayDay      = nowUtc.day;
 
-    final List<LightData> todayData = rawData.where((e) {
-      final ts = e.timestamp;
-      return ts.year == todayYear && ts.month == todayMonth && ts.day == todayDay;
-    }).toList();
+    // ───────────────────────────────────────────────────────────────────────────
+    // 1) Udskriv antal rå‐målinger:
+    debugPrint("‼️ DAGLIG: total rawData‐antal = ${rawData.length}");
 
-    // ──────────────────────────────────────────────────────────
-    // 2) Beregn gennemsnit pr. time (0..23) i procent (0..100) for i dag.
-    List<double> hourlyAverages = LightUtils.groupByHourOfDay(todayData);
-
-    // Hvis utils‐metoden ikke allerede fylder op til 24 elementer, gør vi det her:
-    if (hourlyAverages.length < 24) {
-      final List<double> filled = List<double>.filled(24, 0.0);
-      for (int i = 0; i < hourlyAverages.length && i < 24; i++) {
-        filled[i] = hourlyAverages[i];
+    // 2) Udskriv kun de første og de sidste 5 timestamps, hvis der er flere end 5:
+    if (rawData.isNotEmpty) {
+      final int n = rawData.length;
+      debugPrint("   → Første 5 timestamps:");
+      for (var i = 0; i < min(5, n); i++) {
+        final d = rawData[i];
+        debugPrint("       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
       }
-      hourlyAverages = filled;
+      if (n > 5) {
+        debugPrint("   → …");
+        for (var i = max(5, n - 5); i < n; i++) {
+          final d = rawData[i];
+          debugPrint("       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
+        }
+      }
     }
 
-    // ──────────────────────────────────────────────────────────
-    // 3) Find det anbefalede “light boost”‐vindue via ChronotypeManager:
-    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
-    final double startBoostHour = chrono.lightboostStartHour; // fx 5.3
-    final double endBoostHour   = chrono.lightboostEndHour;   // fx 6.8
+    // ───────────────────────────────────────────────────────────────────────────
+    // 3) Filtrér “i dag” (UTC) og udskriv, hvor mange der er:
+    final List<LightData> todayData = rawData.where((d) {
+      final DateTime tsUtc = d.capturedAt.toUtc();
+      return tsUtc.year  == todayYear &&
+          tsUtc.month == todayMonth &&
+          tsUtc.day   == todayDay;
+    }).toList();
 
-    // ──────────────────────────────────────────────────────────
-    // 4) Definer farver og tærskel:
-    const double threshold = 50.0;               // Procent‐grænse inde i boost‐window
-    const Color goodColor      = Color(0xFFFFAB00); // Orange/gul   = “optimal eksponering”
-    const Color badColor       = Color(0xFF5DADE2); // Lys blå      = “under threshold”
-    final Color outsideColor   = Colors.grey.shade700; // Neutral grå  = “uden for vinduet”
-
-    // ──────────────────────────────────────────────────────────
-    // 5) Byg én BarChartGroupData pr. time (0..23)
-    final List<BarChartGroupData> barGroups = List.generate(24, (int hour) {
-      final double rawValue = hourlyAverages[hour].clamp(0.0, 100.0);
-
-      // A) Tjek om denne time er i boost‐intervallet:
-      final bool isInBoostWindow = (hour + 0.0 >= startBoostHour && hour + 0.0 < endBoostHour);
-
-      if (!isInBoostWindow) {
-        // Hvis UDENFOR boost‐vindue: tegn neutral grå
-        return BarChartGroupData(
-          x: hour,
-          barRods: [
-            BarChartRodData(
-              toY: rawValue,
-              width: 12.w,
-              color: outsideColor,
-              borderRadius: BorderRadius.zero,
-            ),
-          ],
-        );
+    debugPrint("‼️ DAGLIG: TODAYDATA‐antal = ${todayData.length}");
+    if (todayData.isNotEmpty) {
+      // 3a) Udskriv fordelingen pr. time (UTC), uden at printe hver eneste række:
+      final buckets = List<int>.filled(24, 0);
+      for (var d in todayData) {
+        final int h = d.capturedAt.toUtc().hour;
+        buckets[h]++;
       }
+      debugPrint("   → Antal målinger pr. time (UTC):");
+      for (int h = 0; h < 24; h++) {
+        if (buckets[h] > 0) {
+          debugPrint("       Time $h:00 – $h:59  =>  ${buckets[h]} rækker");
+        }
+      }
+    } else {
+      debugPrint("   → Ingen målinger registreret i dag (UTC).");
+    }
 
-      // B) Hvis i boost‐interval: farv orange hvis ≥threshold, ellers blå
-      final bool meetsThreshold = rawValue >= threshold;
-      final Color barColor      = meetsThreshold ? goodColor : badColor;
+    // ───────────────────────────────────────────────────────────────────────────
+    // 4) Beregn hourly averages (LightUtils.groupByHourOfDay)
+    final List<double> hourlyAverages = LightUtils.groupByHourOfDay(todayData);
+    debugPrint("‼️ DAGLIG: hourlyAverages = $hourlyAverages");
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5) Beregn boost‐vindue (eksempelvis til brug for farve‐skifte):
+    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
+    final double startBoostHour = chrono.lightboostStartHour;
+    final double endBoostHour   = chrono.lightboostEndHour;
+    debugPrint("‼️ DAGLIG: Boost window hours -> startBoost: $startBoostHour, endBoost: $endBoostHour");
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6) Byg selve BarChart‐gruppen:
+    final List<BarChartGroupData> groups = List.generate(24, (int i) {
+      final double yVal = hourlyAverages[i].clamp(0.0, 100.0);
+
+      // Eksempel på at tjekke “boost‐vindue”: Hvis vi ville farve y‐værdier i boost‐timen:
+      // final bool inBoostWindow = (i >= startBoostHour && i < endBoostHour);
+      // final Color barColor = inBoostWindow
+      //     ? const Color(0xFFFFAB00) // GUL, hvis i ligger i boost‐timen
+      //     : const Color(0xFF5DADE2); // BLÅ ellers
+      //
+      // Men her vælger vi farve ud fra procent‐threshold:
+      final Color barColor = (yVal >= 50.0)
+          ? const Color(0xFFFFAB00)
+          : const Color(0xFF5DADE2);
 
       return BarChartGroupData(
-        x: hour,
+        x: i,
         barRods: [
           BarChartRodData(
-            toY: rawValue,
-            width: 12.w,
+            toY: yVal,
             color: barColor,
-            borderRadius: BorderRadius.zero,
+            width: 12.w,
+            borderRadius: BorderRadius.circular(4.r),
+            backDrawRodData: BackgroundBarChartRodData(
+              show: true,
+              toY: 100,
+              color: Colors.grey.withOpacity(0.15),
+            ),
           ),
         ],
       );
     });
 
-    // ──────────────────────────────────────────────────────────
-    // 6) Returnér BarChart‐widgeten
+    // ───────────────────────────────────────────────────────────────────────────
+    // 7) Tegn Card + BarChart:
     return Card(
-      color: Colors.grey.shade900,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      elevation: 4,
+      color: const Color(0xFF2A2A2A),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // – Titel
             Text(
-              'Dagligt lys (⌛)',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              "Dagligt lys (⌛)",
+              style: TextStyle(color: Colors.white70, fontSize: 16.sp),
             ),
             SizedBox(height: 12.h),
-
-            // – Selve grafen i et AspectRatio så den får flot bredde/højde
-            AspectRatio(
-              aspectRatio: 1.7,
+            SizedBox(
+              height: 180.h,
               child: BarChart(
                 BarChartData(
                   minY: 0,
                   maxY: 100,
-
-                  // Mulighed for at trykke/tappe/hover
-                  barTouchData: BarTouchData(enabled: true),
-
-                  // Tegn både vandrette og lodrette grid‐linjer
+                  backgroundColor: const Color(0xFF2A2A2A),
+                  borderData: FlBorderData(show: false),
                   gridData: FlGridData(
                     show: true,
                     horizontalInterval: 20,
-                    drawVerticalLine: true,
-                    verticalInterval: 1,
                     getDrawingHorizontalLine: (double y) {
                       return FlLine(
                         color: Colors.grey.withOpacity(0.3),
                         strokeWidth: 1,
                       );
                     },
-                    getDrawingVerticalLine: (double x) {
-                      return FlLine(
-                        color: Colors.grey.withOpacity(0.15),
-                        strokeWidth: 1,
-                      );
-                    },
                   ),
-
-                  // Fjern kantlinjer omkring grafen
-                  borderData: FlBorderData(show: false),
-
-                  // Titler (labels) på akserne
                   titlesData: FlTitlesData(
-                    show: true,
-
-                    // VENSTRE (Y‐aksen): Vis “0%, 20%, 40% … 100%”
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 20,
-                        reservedSize: 32,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          return Text(
-                            "${value.toInt()}%",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10.sp,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    // BUND (X‐aksen): Vis kun hver 3. time for at undgå overlap
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        interval: 3,
+                        interval: 1,
                         reservedSize: 32,
                         getTitlesWidget: (double value, TitleMeta meta) {
-                          final int hour = value.toInt();
-                          if (hour < 0 || hour > 23) {
+                          final int idx = value.toInt();
+                          if (idx < 0 || idx >= 24) {
                             return const SizedBox.shrink();
                           }
-                          final String label = "${hour.toString().padLeft(2, '0')}:00";
                           return SideTitleWidget(
                             meta: meta,
                             child: Text(
-                              label,
+                              "${idx.toString().padLeft(2, '0')}:00",
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 10.sp,
@@ -206,16 +182,26 @@ class LightDailyBarChart extends StatelessWidget {
                         },
                       ),
                     ),
-
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 20,
+                        reservedSize: 32,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return Text(
+                            "${value.toInt()}%",
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.white54,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                     topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-
-                  // Bar‐grupperne (24 styk)
-                  barGroups: barGroups,
-
-                  // Lidt afstand mellem søjlerne
-                  groupsSpace: 2.w,
+                  barGroups: groups,
                 ),
               ),
             ),
