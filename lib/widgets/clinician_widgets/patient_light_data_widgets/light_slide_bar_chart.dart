@@ -6,25 +6,29 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
 
-// De tre graf-filer ligger i samme mappe som denne fil:
+// De tre graf‐filer ligger i samme mappe som denne fil:
 import 'light_daily_bar_chart.dart';
 import 'light_weekly_bar_chart.dart';
 import 'light_monthly_bar_chart.dart';
 
-// En “slide‐widget” (PageView) med tre sider:
-//   1) Daglig lys‐bar‐graf (tager List<LightData> rawData)
-//   2) Ugentlig lys‐bar‐graf (tager Map<String,double> luxPerDay)
-//   3) Månedlig lys‐bar‐graf (tager List<LightData> rawData)
-//
-// Vi modtager én samlet liste af [LightData] fra parent, og
-// laver kun om på data til uge‐grafen, før vi kalder de tre child‐widgets.
+/// En “slide‐widget” (PageView) med tre sider:
+///   1) Daglig lys‐bar‐graf (tager List<LightData> rawData og rmeqScore)
+///   2) Ugentlig lys‐bar‐graf (tager Map<String,double> luxPerDay og rmeqScore)
+///   3) Månedlig lys‐bar‐graf (tager List<LightData> rawData og rmeqScore)
+///
+/// Vi modtager én samlet liste af [LightData] og en [rmeqScore] fra parent.
+/// Ugentlig‐grafen laver selv et Map<String,double> vha. LightUtils.groupByWeekday().
 class LightSlideBarChart extends StatefulWidget {
-  // Rå liste af lysmålinger (én LightData pr. timestamp).
+  /// Rå liste af lysmålinger (én LightData pr. timestamp).
   final List<LightData> rawData;
+
+  /// rMEQ‐score (bruges, når vi beder de enkelte grafer om anbefalet boost‐tid).
+  final int rmeqScore;
 
   const LightSlideBarChart({
     Key? key,
     required this.rawData,
+    required this.rmeqScore,
   }) : super(key: key);
 
   @override
@@ -43,14 +47,15 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
   @override
   Widget build(BuildContext context) {
     // -----------------------------------------------
-    // 1) DAGLIG GRAF: sender rawData direkte videre
+    // 1) DAGLIG GRAF: sender rawData + rmeqScore videre
     // -----------------------------------------------
     final Widget dailyPage = LightDailyBarChart(
       rawData: widget.rawData,
+      rmeqScore: widget.rmeqScore,
     );
 
     // -----------------------------------------------
-    // 2) UGENTLIG GRAF: skal bruge Map<String,double>
+    // 2) UGENTLIG GRAF: skal bruge Map<String,double> + rmeqScore
     //    Først kalder vi LightUtils.groupByWeekday(rawData),
     //    som returnerer Map<int,double> (1 = mandag … 7 = søndag).
     //    Dernæst omsætter vi nøglerne 1..7 → 'Man','Tir',…'Søn'.
@@ -75,12 +80,13 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
     );
 
     // -----------------------------------------------
-    // 3) MÅNEDLIG GRAF: sender rawData direkte videre
+    // 3) MÅNEDLIG GRAF: sender rawData + rmeqScore videre
     //    Fordi: LightMonthlyBarChart i din kode tager List<LightData> rawData
-    //    og selv kalder LightUtils.groupByDayOfMonth(rawData).
+    //    og rmeqScore til at beregne DLMO og boost.
     // -----------------------------------------------
     final Widget monthlyPage = LightMonthlyBarChart(
       rawData: widget.rawData,
+      rmeqScore: widget.rmeqScore,
     );
 
     // -----------------------------------------------

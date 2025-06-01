@@ -6,27 +6,85 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
+import '../../../controller/chronotype_controller.dart';
 
-/// En “Day‐Light” bar‐graf, der grupperer lysdata per time (0–23).
-/// Versionen her er skrevet til fl_chart v1.0.0+ (se pubspec.yaml).
+/// Daglig søjlegraf, der farver timer i boost‐interval orange/gul (god) eller lys blå (ikke‐god),
+/// og prikker de andre timer (uden for vinduet) som medium grå.
 class LightDailyBarChart extends StatelessWidget {
-  /// Listen af rå lysmålinger (én LightData per timestamp).
+  /// Rå liste af lysmålinger (én LightData pr. timestamp).
   final List<LightData> rawData;
+
+  /// rMEQ‐score (bruges til at finde det anbefalede boost‐vindue).
+  final int rmeqScore;
 
   const LightDailyBarChart({
     Key? key,
     required this.rawData,
+    required this.rmeqScore,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // 1) Vi antager, at LightUtils.groupByHourOfDay er deklareret som:
-    //
-    //    static List<double> groupByHourOfDay(List<LightData> data) { … }
-    //
-    // Hvis ikke, vil du få en fejl om, at metoden ikke findes.
-    final List<double> hourlyAverages = LightUtils.groupByHourOfDay(rawData);
+    // 1) Beregn gennemsnit per time (0..23).
+    List<double> hourlyAverages = LightUtils.groupByHourOfDay(rawData);
+    if (hourlyAverages.length < 24) {
+      // Fyld op til 24 elementer med 0.0, hvis gruppen er kortere
+      List<double> filled = List<double>.filled(24, 0.0);
+      for (int i = 0; i < hourlyAverages.length && i < 24; i++) {
+        filled[i] = hourlyAverages[i];
+      }
+      hourlyAverages = filled;
+    }
 
+    // 2) Hent anbefalet “light boost” vindue via ChronotypeManager
+    final chrono = ChronotypeManager(rmeqScore);
+    final double startBoostHour = chrono.lightboostStartHour; // fx 5.3
+    final double endBoostHour   = chrono.lightboostEndHour;   // fx 6.8
+
+    // 3) Farver og tærskel
+    const double threshold = 50.0;             // Procent‐grænse i boost‐vindue
+    const Color goodColor = Color(0xFFFFAB00);  // Orange/gul = optimal
+    const Color badColor  = Color(0xFF5DADE2);  // Lys blå = under threshold
+    final Color outsideColor = Colors.grey.shade600; // Medium grå = uden for vindue
+
+    // 4) Byg BarChartGroupData for hver time (0..23)
+    final List<BarChartGroupData> barGroups = List.generate(24, (int hour) {
+      final double rawValue = hourlyAverages[hour].clamp(0.0, 100.0);
+
+      final bool isInBoostWindow = (hour + 0.0 >= startBoostHour && hour + 0.0 < endBoostHour);
+      if (!isInBoostWindow) {
+        // uden for boostvindue = medium grå
+        return BarChartGroupData(
+          x: hour,
+          barRods: [
+            BarChartRodData(
+              toY: rawValue,
+              width: 12.w,
+              color: outsideColor,
+              borderRadius: BorderRadius.zero,
+            ),
+          ],
+        );
+      }
+
+      // i boostvindue → tjek threshold
+      final bool meetsThreshold = rawValue >= threshold;
+      final Color barColor = meetsThreshold ? goodColor : badColor;
+
+      return BarChartGroupData(
+        x: hour,
+        barRods: [
+          BarChartRodData(
+            toY: rawValue,
+            width: 12.w,
+            color: barColor,
+            borderRadius: BorderRadius.zero,
+          ),
+        ],
+      );
+    });
+
+    // 5) Returnér BarChart‐widget’en
     return Card(
       color: Colors.grey.shade900,
       shape: RoundedRectangleBorder(
@@ -38,9 +96,7 @@ class LightDailyBarChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ---------------------------------------------------
-            // 2) Titel
-            // ---------------------------------------------------
+            // Titel
             Text(
               'Dagligt lys (⌛)',
               style: TextStyle(
@@ -51,46 +107,50 @@ class LightDailyBarChart extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
 
-            // ---------------------------------------------------
-            // 3) Selve BarChart‐widget’en (pakket ind i et AspectRatio
-            //    for at få et fornuftigt format)
-            // ---------------------------------------------------
+            // Grafsnit i et AspectRatio for pæn visning
             AspectRatio(
               aspectRatio: 1.7,
               child: BarChart(
                 BarChartData(
-                  // ---------------------------------------------------
-                  // 4) Definer Y‐aksens range
-                  // ---------------------------------------------------
                   minY: 0,
                   maxY: 100,
-
-                  // ---------------------------------------------------
-                  // 5) (Valgfrit) Touch‐funktionalitet
-                  // ---------------------------------------------------
+                  // Tap‐/hover‐funktion
                   barTouchData: BarTouchData(enabled: true),
 
-                  // ---------------------------------------------------
-                  // 6) Slå grid‐linjer og graf‐border fra
-                  // ---------------------------------------------------
-                  gridData: FlGridData(show: false),
+                  // Tegn både horisontale og lodrette gridlinjer
+                  gridData: FlGridData(
+                    show: true,
+                    horizontalInterval: 20,
+                    drawVerticalLine: true,
+                    verticalInterval: 1,
+                    getDrawingHorizontalLine: (y) {
+                      return FlLine(
+                        color: Colors.grey.withOpacity(0.3),
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (x) {
+                      return FlLine(
+                        color: Colors.grey.withOpacity(0.15),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+
+                  // Fjern kantlinjer omkring grafen
                   borderData: FlBorderData(show: false),
 
-                  // ---------------------------------------------------
-                  // 7) TITLER i fl_chart v1.0.0+: AxisTitles → SideTitles
-                  // ---------------------------------------------------
+                  // Titler/labels på akserne
                   titlesData: FlTitlesData(
                     show: true,
 
-                    // 7a) VENSTRE (Y‐aksen) titler
+                    // VENSTRE (Y‐aksen)
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        interval: 20,      // 0%, 20%, 40% … 100%
-                        reservedSize: 32,  // Plads til f.eks. “20%”
-                        getTitlesWidget:
-                            (double value, TitleMeta meta) // Positional
-                        {
+                        interval: 20,
+                        reservedSize: 32,
+                        getTitlesWidget: (double value, TitleMeta meta) {
                           return Text(
                             "${value.toInt()}%",
                             style: TextStyle(
@@ -102,23 +162,16 @@ class LightDailyBarChart extends StatelessWidget {
                       ),
                     ),
 
-                    // 7b) BUND (X‐aksen) titler – én label pr. 4. time
+                    // BUND (X‐aksen): vis kun hver 3. time (interval:3)
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        interval: 4,       // Vis “00:00”, “04:00”, “08:00” osv.
-                        reservedSize: 32,  // Plads til teksten
-                        getTitlesWidget:
-                            (double value, TitleMeta meta) // NB: meta skal med
-                        {
+                        interval: 3,
+                        reservedSize: 32,
+                        getTitlesWidget: (double value, TitleMeta meta) {
                           final int hour = value.toInt();
-                          final String label =
-                          (hour < 24) ? "${hour.toString().padLeft(2, '0')}:00" : "24:00";
-
-                          // VIGTIGT: I fl_chart v1.0.0+ er konstruktøren:
-                          //    SideTitleWidget({ required Widget child, required TitleMeta meta, … })
-                          //
-                          // *Ikke* `axisSide:` eller `side:`. Du skal altid give `meta: meta`.
+                          if (hour < 0 || hour > 23) return const SizedBox.shrink();
+                          final String label = "${hour.toString().padLeft(2, '0')}:00";
                           return SideTitleWidget(
                             meta: meta,
                             child: Text(
@@ -133,44 +186,12 @@ class LightDailyBarChart extends StatelessWidget {
                       ),
                     ),
 
-                    // 7c) SKJUL “top” og “right” titler
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
+                    // SKJUL top og right
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
 
-                  // ---------------------------------------------------
-                  // 8) Selve BAR‐data: én gruppe (BarChartGroupData) pr. time 0..23
-                  // ---------------------------------------------------
-                  barGroups: List.generate(24, (int hour) {
-                    // Hent “hourlyAverages[hour]” og clamp til [0..100]
-                    final double rawValue = hourlyAverages[hour];
-                    final double yValue = rawValue.clamp(0.0, 100.0);
-
-                    // Bestem farven: ≥75% → grøn, ellers orange
-                    final Color barColor = (yValue >= 75.0)
-                        ? const Color(0xFF00C853)
-                        : const Color(0xFFFF6D00);
-
-                    return BarChartGroupData(
-                      x: hour,
-                      barRods: [
-                        BarChartRodData(
-                          toY: yValue,
-                          width: 12.w,
-                          color: barColor,
-                          borderRadius: BorderRadius.zero,
-                        ),
-                      ],
-                    );
-                  }),
-
-                  // ---------------------------------------------------
-                  // 9) Mellemrum (spacing) mellem hver søjle
-                  // ---------------------------------------------------
+                  barGroups: barGroups,
                   groupsSpace: 2.w,
                 ),
               ),

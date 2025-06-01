@@ -15,12 +15,11 @@ import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_pa
 
 // We import our three “Light…” widgets here:
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_data_card.dart';
-import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_latest_events_list.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatelessWidget {
   final String patientId;
-  const PatientDetailScreen({Key? key, required this.patientId}) : super(key: key);
+  const PatientDetailScreen({super.key, required this.patientId});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class PatientDetailScreen extends StatelessWidget {
 }
 
 class PatientDetailView extends StatelessWidget {
-  const PatientDetailView({Key? key}) : super(key: key);
+  const PatientDetailView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -177,11 +176,7 @@ class PatientDetailView extends StatelessWidget {
                     LightDataCard(lightData: rawData),
                     SizedBox(height: 16.h),
 
-                    // 2) LightLatestEventsList: “10 seneste målinger”
-                    LightLatestEventsList(lightData: rawData),
-                    SizedBox(height: 16.h),
-
-                    // 3) LightSummarySection: grafer + ML + anbefalinger
+                    // 2) LightSummarySection: grafer + ML + anbefalinger
                     LightSummarySection(
                       data: rawData,
                       rmeqScore: rmeq.toInt(),

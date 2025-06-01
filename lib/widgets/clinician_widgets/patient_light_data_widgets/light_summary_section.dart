@@ -1,12 +1,10 @@
 // lib/widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart
 
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // Til at formatere DateTime → "HH:mm"
 
-import '../../../../theme/colors.dart';
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';             // Til groupBy…-hjælpemetoder
@@ -42,34 +40,33 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // 1) Ugesammensætning (kun hvis du vil bruge weekMap til noget andet)
-    final Map<String, double> weekMap = LightUtils.groupLuxByWeekdayName(data);
+    // … evt. andre beregninger (weekMap, spots osv.) men de er ikke nødvendige, hvis du kun bruger LightSlideBarChart …
 
-    // 2) FlSpot-liste til daglig graf (hvis LightDailyBarChart internt bruger den)
-    final List<FlSpot> spots = data.map((e) {
-      final double x = e.timestamp.hour + (e.timestamp.minute / 60.0);
-      final double y = e.ediLux; // EDI ligger 0..1, multipliseres med 100 i grafen
-      return FlSpot(x, (y * 100).clamp(0.0, 100.0));
-    }).toList();
+    // ────────────────────────────────────────────────────────────────
+    // 4) Generér anbefalinger via ChronotypeManager (ud fra rMEQ‐score)
+    //    HER bruger vi bang‐operator (!), fordi vi antager, at timeMap['dlmo'] ALDRIG er null.
 
-    // 3) Mini-bars til daglig graf (hvis LightDailyBarChart internt bruger dem)
-    final List<BarChartGroupData> weeklyBars = _generateWeeklyBars(data);
-    final List<BarChartGroupData> monthlyBars = _generateMonthlyBars(data);
-
-    // 4) Generer anbefalinger via ChronotypeManager (ud fra rMEQ‐score)
     final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
     final String chronoLabel = chrono.getChronotypeLabel();
     final Map<String, DateTime> timeMap = chrono.getRecommendedTimes();
     final DateFormat fmt = DateFormat('HH:mm');
 
+    // Vi aflæser “dlmo” og de andre tidspunkter med “!”
+    final DateTime dlmoDt          = timeMap['dlmo']!;          // Assert: key “dlmo” findes
+    final DateTime sleepStartDt    = timeMap['sleep_start']!;   // Assert: key “sleep_start” findes
+    final DateTime wakeTimeDt      = timeMap['wake_time']!;     // Assert: key “wake_time” findes
+    final DateTime lightBoostStart = timeMap['lightboost_start']!; // Assert: key “lightboost_start” findes
+    final DateTime lightBoostEnd   = timeMap['lightboost_end']!;   // Assert: key “lightboost_end” findes
+
     final List<String> recs = [
       "Kronotype: $chronoLabel",
-      "DLMO (Dim Light Melatonin Onset): ${fmt.format(timeMap['dlmo']!)}",
-      "Sengetid (DLMO + 2 timer): ${fmt.format(timeMap['sleep_start']!)}",
-      "Opvågning (DLMO + 10 timer): ${fmt.format(timeMap['wake_time']!)}",
-      "Light‐boost start: ${fmt.format(timeMap['lightboost_start']!)}",
-      "Light‐boost slut: ${fmt.format(timeMap['lightboost_end']!)}",
+      "DLMO (Dim Light Melatonin Onset): ${fmt.format(dlmoDt)}",
+      "Sengetid (DLMO + 2 timer): ${fmt.format(sleepStartDt)}",
+      "Opvågning (DLMO + 10 timer): ${fmt.format(wakeTimeDt)}",
+      "Light‐boost start: ${fmt.format(lightBoostStart)}",
+      "Light‐boost slut: ${fmt.format(lightBoostEnd)}",
     ];
+    // ────────────────────────────────────────────────────────────────
 
     // 5) Hent processedResult fra ViewModel for at afgøre visning af recommendations
     final processedResult =
@@ -94,79 +91,15 @@ class LightSummarySection extends StatelessWidget {
         SizedBox(height: 24.h),
 
         // ─────── 3) Én samlet “slide”-graf: Dag / Uge / Måned ───────
-        LightSlideBarChart(rawData: data),
+        LightSlideBarChart(
+          rawData: data,
+          rmeqScore: rmeqScore,
+        ),
         SizedBox(height: 24.h),
 
         // ─────── 4) Seneste events liste ──────────────────────────
         LightLatestEventsList(lightData: data),
       ],
     );
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  /// Gruppen for “daglige minigrafer” – bruges internt i LightDailyBarChart
-  List<BarChartGroupData> _generateWeeklyBars(List<LightData> entries) {
-    final Map<int, List<double>> grouped = {};
-    for (final e in entries) {
-      final int wd = e.timestamp.weekday; // 1 = mandag … 7 = søndag
-      final double scorePct = e.calculatedScore * 100.0;
-      grouped.putIfAbsent(wd, () => []).add(scorePct);
-    }
-
-    return grouped.entries.map((entry) {
-      final int weekday = entry.key;            // 1..7
-      final List<double> allScores = entry.value;
-      final double avg = allScores.reduce((a, b) => a + b) / allScores.length;
-      return BarChartGroupData(
-        x: weekday, // placér søjlen ved x = 1..7
-        barRods: [
-          BarChartRodData(
-            toY: avg.clamp(0.0, 100.0),
-            color: avg >= 75.0 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
-            width: 12.w,
-            borderRadius: BorderRadius.circular(4.r),
-            backDrawRodData: BackgroundBarChartRodData(
-              show: true,
-              toY: 100,
-              color: Colors.grey.withOpacity(0.2),
-            ),
-          ),
-        ],
-      );
-    }).toList();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  /// Gruppér for “månedlige minigrafer” – bruges internt i LightDailyBarChart
-  List<BarChartGroupData> _generateMonthlyBars(List<LightData> entries) {
-    final Map<int, List<double>> grouped = {};
-    for (final e in entries) {
-      final int dom = e.timestamp.day; // 1..31
-      final double scorePct = e.calculatedScore * 100.0;
-      grouped.putIfAbsent(dom, () => []).add(scorePct);
-    }
-
-    final List<int> sortedKeys = grouped.keys.toList()..sort();
-    int idx = 0;
-    return sortedKeys.map((day) {
-      final List<double> allScores = grouped[day]!;
-      final double avg = allScores.reduce((a, b) => a + b) / allScores.length;
-      return BarChartGroupData(
-        x: idx++,
-        barRods: [
-          BarChartRodData(
-            toY: avg.clamp(0.0, 100.0),
-            color: avg >= 75.0 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
-            width: 12.w,
-            borderRadius: BorderRadius.circular(4.r),
-            backDrawRodData: BackgroundBarChartRodData(
-              show: true,
-              toY: 100,
-              color: Colors.grey.withOpacity(0.2),
-            ),
-          ),
-        ],
-      );
-    }).toList();
   }
 }

@@ -3,10 +3,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../theme/colors.dart';
 
 class LightWeeklyBarChart extends StatelessWidget {
-  /// Vi modtager en map “dagLabel → procent”, f.eks. { 'Man': 20.5, 'Tir': 45.0, … }
+  /// Ugedags-værdier (nøgler = "Man","Tir",…”Søn”; værdier = procent 0..100).
   final Map<String, double> luxPerDay;
 
   const LightWeeklyBarChart({
@@ -16,24 +15,21 @@ class LightWeeklyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1) Definér en fast, korrekt rækkefølge af ugedag‐labels:
-    const List<String> weekdayKeys = [
-      'Man',
-      'Tir',
-      'Ons',
-      'Tor',
-      'Fre',
-      'Lør',
-      'Søn',
-    ];
+    // 1) Kendte ugedage i fast rækkefølge
+    const List<String> weekdayKeys = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
 
-    // 2) Byg en liste af værdier i nøjagtig samme rækkefølge:
-    final List<double> values = weekdayKeys
-        .map((label) => (luxPerDay[label] ?? 0.0).clamp(0.0, 100.0))
-        .toList();
+    // 2) Hent procentværdier for hver dag. Hvis en dag mangler, sæt 0.0
+    final List<double> values = weekdayKeys.map((k) => luxPerDay[k] ?? 0.0).toList();
+
+    // 3) Farver: Orange/gul for "god dag" (>=50%), lys blå for "dårlig dag" (<50%)
+    //    Hvis du vil ændre tærsklen, justér `threshold`-variablen.
+    const double threshold = 50.0;
+    const Color goodColor = Color(0xFFFFAB00);  // Orange/gul
+    const Color badColor  = Color(0xFF5DADE2);  // Lys blå
 
     return Card(
-      color: generalBox,
+      color: const Color(0xFF2A2A2A), // eksempel på baggrundsfarve, kan udskiftes
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -50,43 +46,35 @@ class LightWeeklyBarChart extends StatelessWidget {
                 BarChartData(
                   minY: 0,
                   maxY: 100,
-                  backgroundColor: generalBox,
+                  backgroundColor: const Color(0xFF2A2A2A),
                   borderData: FlBorderData(show: false),
-                  gridData: FlGridData(show: true, horizontalInterval: 20),
-
-                  // ---------------- TITLER (NY API v1.x) ----------------
+                  gridData: FlGridData(show: true, horizontalInterval: 20, getDrawingHorizontalLine: (y) {
+                    return FlLine(
+                      color: Colors.grey.withOpacity(0.3),
+                      strokeWidth: 1,
+                    );
+                  }),
                   titlesData: FlTitlesData(
-                    show: true,
-
-                    // BUND (X‐aksen) TITLER
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        interval: 1,       // Én søjle = én titel
-                        reservedSize: 32,  // Plads til “Lør” osv.
-                        getTitlesWidget:
-                            (double value, TitleMeta meta) { // Husk begge parametre
+                        interval: 1,
+                        reservedSize: 32,
+                        getTitlesWidget: (double value, TitleMeta meta) {
                           final int idx = value.toInt();
-                          // Tjek at idx er inden for 0..6
-                          final String label =
-                          (idx >= 0 && idx < weekdayKeys.length)
+                          final String label = (idx >= 0 && idx < weekdayKeys.length)
                               ? weekdayKeys[idx]
                               : '';
                           return SideTitleWidget(
                             meta: meta,
                             child: Text(
                               label,
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12.sp,
-                              ),
+                              style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                             ),
                           );
                         },
                       ),
                     ),
-
-                    // VENSTRE (Y‐aksen) TITLER
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -95,27 +83,20 @@ class LightWeeklyBarChart extends StatelessWidget {
                         getTitlesWidget: (double value, TitleMeta meta) {
                           return Text(
                             "${value.toInt()}%",
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              color: Colors.white54,
-                            ),
+                            style: TextStyle(fontSize: 10.sp, color: Colors.white54),
                           );
                         },
                       ),
                     ),
-
-                    // SKJUL top‐ og right‐titler
-                    topTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                    AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
-
-                  // ---------------- BAR‐DATA ----------------
                   barGroups: List.generate(weekdayKeys.length, (int i) {
-                    final double yVal = values[i];
-                    final Color barColor =
-                    (yVal >= 75.0) ? const Color(0xFF00C853) : const Color(0xFFFFAB00);
+                    final double yVal = values[i].clamp(0.0, 100.0);
+
+                    // Hvis yVal >= threshold → orange/gul (goodColor), ellers blå (badColor)
+                    final Color barColor = (yVal >= threshold) ? goodColor : badColor;
+
                     return BarChartGroupData(
                       x: i,
                       barRods: [
