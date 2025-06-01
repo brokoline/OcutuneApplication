@@ -178,7 +178,7 @@ class PatientDetailView extends StatelessWidget {
 
                     // 2) LightSummarySection: grafer + ML + anbefalinger
                     LightSummarySection(
-                      data: rawData,
+                      patientId: vm.patient!.id,
                       rmeqScore: rmeq.toInt(),
                       meqScore: meq,
                     ),

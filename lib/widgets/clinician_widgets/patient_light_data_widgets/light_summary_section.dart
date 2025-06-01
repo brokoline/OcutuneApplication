@@ -16,20 +16,51 @@ import 'light_score_card.dart';
 import 'light_latest_events_list.dart';
 
 class LightSummarySection extends StatelessWidget {
-  final List<LightData> data;
+  /// Patient‐ID, så vi kan videregive det til LightSlideBarChart
+  final String patientId;
+
+  /// rMEQ‐score (bruges til at beregne chronotype osv.)
   final int rmeqScore;
+
+  /// Valgfri MEQ‐score (kun til ScoreCard)
   final int? meqScore;
 
   const LightSummarySection({
     Key? key,
-    required this.data,
+    required this.patientId,
     required this.rmeqScore,
     this.meqScore,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (data.isEmpty) {
+    // Hent viewmodel’en
+    final vm = Provider.of<PatientDetailViewModel>(context, listen: true);
+
+    // 1) Hvis vi stadig henter _rawLightData, vis loading
+    if (vm.isFetchingRaw && vm.rawLightData.isEmpty) {
+      return SizedBox(
+        height: 200.h,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // 2) Hvis der er fejl under hentning, vis fejltekst
+    if (vm.rawFetchError != null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 16.h),
+        child: Center(
+          child: Text(
+            'Fejl ved hentning af lysdata: ${vm.rawFetchError}',
+            style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    // 3) Hvis vi har hentet, men listen stadig er tom => ingen lysdata endnu
+    if (!vm.isFetchingRaw && vm.rawLightData.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Text(
@@ -40,23 +71,22 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // … evt. andre beregninger (weekMap, spots osv.) men de er ikke nødvendige, hvis du kun bruger LightSlideBarChart …
+    // Her har vi _rawLightData til rådighed
+    final List<LightData> allLightData = vm.rawLightData;
 
     // ────────────────────────────────────────────────────────────────
     // 4) Generér anbefalinger via ChronotypeManager (ud fra rMEQ‐score)
-    //    HER bruger vi bang‐operator (!), fordi vi antager, at timeMap['dlmo'] ALDRIG er null.
-
     final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
     final String chronoLabel = chrono.getChronotypeLabel();
     final Map<String, DateTime> timeMap = chrono.getRecommendedTimes();
     final DateFormat fmt = DateFormat('HH:mm');
 
-    // Vi aflæser “dlmo” og de andre tidspunkter med “!”
-    final DateTime dlmoDt          = timeMap['dlmo']!;          // Assert: key “dlmo” findes
-    final DateTime sleepStartDt    = timeMap['sleep_start']!;   // Assert: key “sleep_start” findes
-    final DateTime wakeTimeDt      = timeMap['wake_time']!;     // Assert: key “wake_time” findes
-    final DateTime lightBoostStart = timeMap['lightboost_start']!; // Assert: key “lightboost_start” findes
-    final DateTime lightBoostEnd   = timeMap['lightboost_end']!;   // Assert: key “lightboost_end” findes
+    // Aflæs tidspunkter (bang-operator, da vi antager, at nøglerne findes)
+    final DateTime dlmoDt          = timeMap['dlmo']!;
+    final DateTime sleepStartDt    = timeMap['sleep_start']!;
+    final DateTime wakeTimeDt      = timeMap['wake_time']!;
+    final DateTime lightBoostStart = timeMap['lightboost_start']!;
+    final DateTime lightBoostEnd   = timeMap['lightboost_end']!;
 
     final List<String> recs = [
       "Kronotype: $chronoLabel",
@@ -68,17 +98,13 @@ class LightSummarySection extends StatelessWidget {
     ];
     // ────────────────────────────────────────────────────────────────
 
-    // 5) Hent processedResult fra ViewModel for at afgøre visning af recommendations
-    final processedResult =
-        Provider.of<PatientDetailViewModel>(context, listen: false).processedLightData;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // ─────── 1) Recommendations card ─────────────────────────
-        if (processedResult != null ||
-            Provider.of<PatientDetailViewModel>(context).isProcessing ||
-            Provider.of<PatientDetailViewModel>(context).error != null) ...[
+        if (vm.processedLightData != null ||
+            vm.isProcessing ||
+            vm.error != null) ...[
           LightRecommendationsCard(recommendations: recs),
           SizedBox(height: 16.h),
         ],
@@ -91,14 +117,16 @@ class LightSummarySection extends StatelessWidget {
         SizedBox(height: 24.h),
 
         // ─────── 3) Én samlet “slide”-graf: Dag / Uge / Måned ───────
+        // Send patientId + rmeqScore til LightSlideBarChart
         LightSlideBarChart(
-          rawData: data,
+          patientId: patientId,
           rmeqScore: rmeqScore,
         ),
         SizedBox(height: 24.h),
 
         // ─────── 4) Seneste events liste ──────────────────────────
-        LightLatestEventsList(lightData: data),
+        // Her bruger vi “allLightData”, som hentet i viewmodel’en
+        LightLatestEventsList(lightData: allLightData),
       ],
     );
   }

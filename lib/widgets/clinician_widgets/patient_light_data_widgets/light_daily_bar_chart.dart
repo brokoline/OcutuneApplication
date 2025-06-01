@@ -1,6 +1,4 @@
-// lib/widgets/clinician_widgets/patient_light_data_widgets/light_daily_bar_chart.dart
-
-import 'dart:math'; // For min() og max()
+import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,65 +6,127 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
 import '../../../controller/chronotype_controller.dart';
+import '../../../services/services/api_services.dart';
 
-class LightDailyBarChart extends StatelessWidget {
-  /// Hele listen af lysmålinger (UTC), men Dart parser dem som isUtc=false.
-  final List<LightData> rawData;
-
-  /// rMEQ‐score (bruges til at beregne boost‐vindue i timer).
+class LightDailyBarChart extends StatefulWidget {
+  final String patientId;
   final int rmeqScore;
 
   const LightDailyBarChart({
-    super.key,
-    required this.rawData,
+    Key? key,
+    required this.patientId,
     required this.rmeqScore,
-  });
+  }) : super(key: key);
+
+  @override
+  State<LightDailyBarChart> createState() => _LightDailyBarChartState();
+}
+
+class _LightDailyBarChartState extends State<LightDailyBarChart> {
+  List<LightData>? _todayData;
+  String? _errorMessage;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTodayLightData();
+  }
+
+  Future<void> _fetchTodayLightData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final List<LightData> fetched =
+      await ApiService.fetchDailyLightData(patientId: widget.patientId);
+      setState(() => _todayData = fetched);
+
+    } catch (e) {
+      setState(() => _errorMessage = 'Kunne ikke hente dagsdata: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Vi regner i “rene” UTC (DateTime.toUtc()), så vi fanger alle målinger, selvom
-    // d.capturedAt er parsed med isUtc=false.
-    final DateTime nowUtc   = DateTime.now().toUtc();
-    final int todayYear     = nowUtc.year;
-    final int todayMonth    = nowUtc.month;
-    final int todayDay      = nowUtc.day;
+    if (_isLoading) {
+      return SizedBox(
+        height: 200.h,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 1) Udskriv antal rå‐målinger:
+    if (_errorMessage != null) {
+      return SizedBox(
+        height: 200.h,
+        child: Center(
+          child: Text(
+            _errorMessage!,
+            style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (_todayData != null && _todayData!.isEmpty) {
+      return SizedBox(
+        height: 200.h,
+        child: Center(
+          child: Text(
+            'Ingen lysmålinger i dag (UTC).',
+            style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    final rawData = _todayData ?? [];
+
+    // Beregn “i dag” i UTC
+    final nowUtc = DateTime.now().toUtc();
+    final todayYear = nowUtc.year;
+    final todayMonth = nowUtc.month;
+    final todayDay = nowUtc.day;
+
+    // 1) Debug: vis antal rå målinger og eksempler på timestamps
     debugPrint("‼️ DAGLIG: total rawData‐antal = ${rawData.length}");
-
-    // 2) Udskriv kun de første og de sidste 5 timestamps, hvis der er flere end 5:
     if (rawData.isNotEmpty) {
-      final int n = rawData.length;
+      final n = rawData.length;
       debugPrint("   → Første 5 timestamps:");
       for (var i = 0; i < min(5, n); i++) {
         final d = rawData[i];
-        debugPrint("       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
+        debugPrint(
+            "       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
       }
       if (n > 5) {
         debugPrint("   → …");
         for (var i = max(5, n - 5); i < n; i++) {
           final d = rawData[i];
-          debugPrint("       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
+          debugPrint(
+              "       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
         }
       }
     }
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 3) Filtrér “i dag” (UTC) og udskriv, hvor mange der er:
-    final List<LightData> todayData = rawData.where((d) {
-      final DateTime tsUtc = d.capturedAt.toUtc();
-      return tsUtc.year  == todayYear &&
+    // 2) Filtrér “i dag” (UTC)
+    final todayData = rawData.where((d) {
+      final tsUtc = d.capturedAt.toUtc();
+      return tsUtc.year == todayYear &&
           tsUtc.month == todayMonth &&
-          tsUtc.day   == todayDay;
+          tsUtc.day == todayDay;
     }).toList();
 
     debugPrint("‼️ DAGLIG: TODAYDATA‐antal = ${todayData.length}");
     if (todayData.isNotEmpty) {
-      // 3a) Udskriv fordelingen pr. time (UTC), uden at printe hver eneste række:
       final buckets = List<int>.filled(24, 0);
       for (var d in todayData) {
-        final int h = d.capturedAt.toUtc().hour;
+        final h = d.capturedAt.toUtc().hour;
         buckets[h]++;
       }
       debugPrint("   → Antal målinger pr. time (UTC):");
@@ -79,40 +139,29 @@ class LightDailyBarChart extends StatelessWidget {
       debugPrint("   → Ingen målinger registreret i dag (UTC).");
     }
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 4) Beregn hourly averages (LightUtils.groupByHourOfDay)
-    final List<double> hourlyAverages = LightUtils.groupByHourOfDay(todayData);
+    // 3) Beregn hourly averages
+    final hourlyAverages = LightUtils.groupByHourOfDay(todayData);
     debugPrint("‼️ DAGLIG: hourlyAverages = $hourlyAverages");
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 5) Beregn boost‐vindue (eksempelvis til brug for farve‐skifte):
-    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
-    final double startBoostHour = chrono.lightboostStartHour;
-    final double endBoostHour   = chrono.lightboostEndHour;
-    debugPrint("‼️ DAGLIG: Boost window hours -> startBoost: $startBoostHour, endBoost: $endBoostHour");
+    // 4) Beregn boost-vindue (til farvelogik)
+    final chrono = ChronotypeManager(widget.rmeqScore);
+    final startBoostHour = chrono.lightboostStartHour;
+    final endBoostHour = chrono.lightboostEndHour;
+    debugPrint(
+        "‼️ DAGLIG: Boost window hours -> startBoost: $startBoostHour, endBoost: $endBoostHour");
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 6) Byg selve BarChart‐gruppen:
-    final List<BarChartGroupData> groups = List.generate(24, (int i) {
-      final double yVal = hourlyAverages[i].clamp(0.0, 100.0);
-
-      // Eksempel på at tjekke “boost‐vindue”: Hvis vi ville farve y‐værdier i boost‐timen:
-      // final bool inBoostWindow = (i >= startBoostHour && i < endBoostHour);
-      // final Color barColor = inBoostWindow
-      //     ? const Color(0xFFFFAB00) // GUL, hvis i ligger i boost‐timen
-      //     : const Color(0xFF5DADE2); // BLÅ ellers
-      //
-      // Men her vælger vi farve ud fra procent‐threshold:
-      final Color barColor = (yVal >= 50.0)
+    // 5) Konstruer BarChartGroupData for 24 timer
+    final groups = List<BarChartGroupData>.generate(24, (i) {
+      final yVal = hourlyAverages[i].clamp(0.0, 100.0);
+      final color = (yVal >= 50.0)
           ? const Color(0xFFFFAB00)
           : const Color(0xFF5DADE2);
-
       return BarChartGroupData(
         x: i,
         barRods: [
           BarChartRodData(
             toY: yVal,
-            color: barColor,
+            color: color,
             width: 12.w,
             borderRadius: BorderRadius.circular(4.r),
             backDrawRodData: BackgroundBarChartRodData(
@@ -125,8 +174,6 @@ class LightDailyBarChart extends StatelessWidget {
       );
     });
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 7) Tegn Card + BarChart:
     return Card(
       color: const Color(0xFF2A2A2A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -151,7 +198,7 @@ class LightDailyBarChart extends StatelessWidget {
                   gridData: FlGridData(
                     show: true,
                     horizontalInterval: 20,
-                    getDrawingHorizontalLine: (double y) {
+                    getDrawingHorizontalLine: (y) {
                       return FlLine(
                         color: Colors.grey.withOpacity(0.3),
                         strokeWidth: 1,
@@ -164,19 +211,15 @@ class LightDailyBarChart extends StatelessWidget {
                         showTitles: true,
                         interval: 1,
                         reservedSize: 32,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          final int idx = value.toInt();
-                          if (idx < 0 || idx >= 24) {
-                            return const SizedBox.shrink();
-                          }
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx < 0 || idx >= 24) return const SizedBox.shrink();
                           return SideTitleWidget(
                             meta: meta,
                             child: Text(
                               "${idx.toString().padLeft(2, '0')}:00",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 10.sp,
-                              ),
+                              style:
+                              TextStyle(color: Colors.white70, fontSize: 10.sp),
                             ),
                           );
                         },
@@ -187,19 +230,18 @@ class LightDailyBarChart extends StatelessWidget {
                         showTitles: true,
                         interval: 20,
                         reservedSize: 32,
-                        getTitlesWidget: (double value, TitleMeta meta) {
+                        getTitlesWidget: (value, meta) {
                           return Text(
                             "${value.toInt()}%",
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              color: Colors.white54,
-                            ),
+                            style: TextStyle(fontSize: 10.sp, color: Colors.white54),
                           );
                         },
                       ),
                     ),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false)),
                   ),
                   barGroups: groups,
                 ),

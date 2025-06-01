@@ -1,18 +1,31 @@
+// lib/services/services/api_services.dart
+
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../models/customer_register_answers_model.dart';
+import '../../models/light_data_model.dart';
 import '../../models/patient_model.dart';
 
+/// Base URL for all API calls. Adjust to your server’s address (no trailing slash).
+const String _baseUrl = "https://ocutune2025.ddns.net";
 
-
+/// A central class for all API calls.
+///
+/// Contains helper methods (_get, _post, _authHeaders, etc.) as well as:
+///  • fetchDailyLightData
+///  • fetchWeeklyLightData
+///  • fetchMonthlyLightData
+///
+/// You can merge any existing methods (e.g. authentication, battery, messages, etc.)
+/// into this same class. Below is the minimal working example for the light‐data endpoints.
 class ApiService {
   static const String baseUrl = 'https://ocutune2025.ddns.net';
 
-
-
+  //-------------------------------------------------------------------
+  // 1) PRIVATE HELPER: Return a map of headers, including your JWT token
+  //-------------------------------------------------------------------
   // 🔐 TOKEN MANAGEMENT
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -28,12 +41,17 @@ class ApiService {
     };
   }
 
-  // 🌐 GENERIC HTTP METHODS
+  //-------------------------------------------------------------------
+  // 2) PRIVATE HELPER: HTTP GET wrapper
+  //-------------------------------------------------------------------
   static Future<http.Response> _get(String endpoint) async {
     final headers = await _authHeaders();
     return http.get(Uri.parse('$baseUrl$endpoint'), headers: headers);
   }
 
+  //-------------------------------------------------------------------
+  // 3) PRIVATE HELPER: HTTP POST wrapper
+  //-------------------------------------------------------------------
   static Future<http.Response> _post(String endpoint, Map<String, dynamic> body) async {
     final headers = await _authHeaders();
     return http.post(
@@ -42,6 +60,7 @@ class ApiService {
       body: jsonEncode(body),
     );
   }
+
 
   static Future<http.Response> _delete(String endpoint) async {
     final headers = await _authHeaders();
@@ -56,11 +75,108 @@ class ApiService {
       body: jsonEncode(body),
     );
   }
+  //-------------------------------------------------------------------
+  // 4) PRIVATE HELPER: PROCESS “LIST” RESPONSES
+  //    Expects a JSON‐array OR a JSON‐object containing a key that points to a list.
+  //-------------------------------------------------------------------
+  static List<Map<String, dynamic>> _handleListResponse(
+      http.Response response, {
+        String? key,
+      }) {
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (key != null && data is Map<String, dynamic> && data.containsKey(key)) {
+        return List<Map<String, dynamic>>.from(data[key]);
+      }
+      if (data is List) {
+        return List<Map<String, dynamic>>.from(data);
+      }
+      // If it’s neither a List nor a Map with the given key, we’ll throw:
+      throw Exception("For a list response, expected JSON List or an object containing '$key'");
+    } else {
+      throw Exception("HTTP ${response.statusCode} – ${response.reasonPhrase}");
+    }
+  }
 
+  //-------------------------------------------------------------------
+  // 5) EXISTING METHODS (example stubs). Merge yours here if needed.
+  //-------------------------------------------------------------------
+  // e.g. static Future<List<Map<String, dynamic>>> fetchClinicianPatients() async { ... }
+  // e.g. static Future<List<Map<String, dynamic>>> fetchActivities(String patientId) async { ... }
+  // …
 
+  //-------------------------------------------------------------------
+  // 6) NEW: Fetch “daily” light data for one patient (UTC‐day),
+  //    convert JSON → LightData
+  // -------------------------------------------------------------------
+  static Future<List<LightData>> fetchDailyLightData({
+    required String patientId,
+  }) async {
+    final response = await _get("/patients/$patientId/lightdata/daily");
+    final List<Map<String, dynamic>> rawList = _handleListResponse(response);
 
+    // Convert each JSON map into a LightData object:
+    final List<LightData> result = rawList
+        .map((jsonMap) => LightData.fromJson(jsonMap))
+        .toList();
 
-  // 👤 AUTHENTICATION
+    return result;
+  }
+
+  // -------------------------------------------------------------------
+  // 7) NEW: Fetch “weekly” light data for one patient (UTC‐week),
+  //    convert JSON → LightData
+  // -------------------------------------------------------------------
+  static Future<List<LightData>> fetchWeeklyLightData({
+    required String patientId,
+  }) async {
+    final response = await _get("/patients/$patientId/lightdata/weekly");
+    final List<Map<String, dynamic>> rawList = _handleListResponse(response);
+
+    final List<LightData> result = rawList
+        .map((jsonMap) => LightData.fromJson(jsonMap))
+        .toList();
+
+    return result;
+  }
+
+  // -------------------------------------------------------------------
+  // 8) NEW: Fetch “monthly” light data for one patient (UTC‐month),
+  //    convert JSON → LightData
+  // -------------------------------------------------------------------
+  static Future<List<LightData>> fetchMonthlyLightData({
+    required String patientId,
+  }) async {
+    final response = await _get("/patients/$patientId/lightdata/monthly");
+    final List<Map<String, dynamic>> rawList = _handleListResponse(response);
+
+    final List<LightData> result = rawList
+        .map((jsonMap) => LightData.fromJson(jsonMap))
+        .toList();
+
+    return result;
+  }
+//-------------------------------------------------------------------
+// 9) (Optionally) If you want to POST new light‐data to the server, you could add:
+//-------------------------------------------------------------------
+// static Future<bool> sendLightData({
+//   required String patientId,
+//   required List<Map<String, dynamic>> payload,
+// }) async {
+//   final response = await _post(
+//     "/patients/$patientId/lightdata",
+//     <String, dynamic>{ "data": payload },
+//   );
+//   return response.statusCode == 200;
+// }
+
+//-------------------------------------------------------------------
+// 10) If you already have other endpoints such as “messages”, “battery”, etc.,
+//     simply copy them into this class below, using the same pattern:
+//     static Future<List<Map<String, dynamic>>> fetchInbox() async { … }
+//     static Future<Map<String, dynamic>> fetchThread(String threadId) async { … }
+//-------------------------------------------------------------------
+// 👤 AUTHENTICATION
   static Future<Map<String, dynamic>> simulatedLogin(String userId, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/sim-login'),
@@ -574,15 +690,6 @@ class ApiService {
     }
   }
 
-  static List<Map<String, dynamic>> _handleListResponse(http.Response response, {String? key}) {
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return List<Map<String, dynamic>>.from(key != null ? data[key] : data);
-    } else {
-      throw Exception('Fejl: ${response.statusCode}');
-    }
-  }
-
   static List<dynamic> _handleDynamicListResponse(http.Response response) {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -610,5 +717,7 @@ class ApiService {
   static void handleVoidResponse(http.Response response, {required int successCode}) =>
       _handleVoidResponse(response, successCode: successCode);
 
-}
 
+
+
+}
