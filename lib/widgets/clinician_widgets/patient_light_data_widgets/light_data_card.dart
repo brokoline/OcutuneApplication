@@ -2,22 +2,22 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../theme/colors.dart';
 import '../../../../models/light_data_model.dart';
-import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 
 class LightDataCard extends StatelessWidget {
-  const LightDataCard({Key? key}) : super(key: key);
+  /// Vi modtager nu data som parameter (ikke længere via Provider direkte)
+  final List<LightData> lightData;
+
+  const LightDataCard({
+    super.key,
+    required this.lightData,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // 1) Hent PatientDetailViewModel via Provider
-    final vm = context.watch<PatientDetailViewModel>();
-
-    // 2) Hent rå lysdata‐listen (kan være tom)
-    final List<LightData> lightData = vm.rawLightData;
+    final List<LightData> data = lightData;
 
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
@@ -37,8 +37,7 @@ class LightDataCard extends StatelessWidget {
           ),
         ),
         children: [
-          // 3) Hvis listen er tom, vis en “ingen data”–tekst
-          if (lightData.isEmpty)
+          if (data.isEmpty)
             Padding(
               padding: EdgeInsets.all(16.w),
               child: Text(
@@ -46,19 +45,15 @@ class LightDataCard extends StatelessWidget {
                 style: TextStyle(color: Colors.white70, fontSize: 14.sp),
               ),
             )
-          // 4) Ellers: Gennemløb alle LightData‐poster og vis dem i en kolonne
           else
             Padding(
               padding: EdgeInsets.all(16.w),
               child: Column(
-                children: lightData.map((d) {
-                  // Skift ikon‐farve hvis der kræves handling (actionRequired)
+                children: data.map((d) {
                   final iconColor = d.actionRequired ? Colors.redAccent : Colors.white;
-
-                  // Formater “HH:mm”
-                  final timeString = d.capturedAt.hour.toString().padLeft(2, '0') +
-                      ':' +
-                      d.capturedAt.minute.toString().padLeft(2, '0');
+                  final hours = d.capturedAt.hour.toString().padLeft(2, '0');
+                  final mins  = d.capturedAt.minute.toString().padLeft(2, '0');
+                  final timeString = '$hours:$mins';
 
                   return Padding(
                     padding: EdgeInsets.only(bottom: 8.h),

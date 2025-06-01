@@ -15,20 +15,7 @@ import '../../services/processing/data_processing_manager.dart';
 ///  2) Hent af rå lysdata fra backend via API (getPatientLightData).
 ///  3) ML‐bearbejdning af gårsdagens lysdata (DataProcessingManager).
 ///
-/// UI‐laget kan lytte på:
-///  * patientFuture (Future<Patient>)
-///  * diagnosisFuture (Future<List<Diagnosis>>)
-///  * patientEventsFuture (Future<List<PatientEvent>>)
-///  * lightDataFuture (Future<void>) – til en eventuel FutureBuilder‐spinner.
-///  * rawLightData (List<LightData>) – til grafer.
-///  * processedLightData (ProcessedLightData?) – til MEDI, f‐threshold osv.
-///  * isFetchingRaw (bool) – angiver at lysdata skrabes.
-///  * rawFetchError (String?) – evt. fejl ved rå lysdatahent.
-///  * isProcessing (bool) – angiver, at ML‐bearbejdning kører.
-///  * error (String?) – evt. fejl ved ML eller “ingen data fra i går”.
-///  * rmeqScore (double) – rMEQ‐score hentet fra Patient‐objektet.
-///  * storedMeqScore (int?) – MEQ‐score hentet fra Patient‐objektet, hvis den findes, ellers null.
-///
+
 class PatientDetailViewModel extends ChangeNotifier {
   // -------------------------------------------------------
   // 1) API‐futures for patient‐detaljer, diagnoser og aktiviteter
@@ -130,8 +117,8 @@ class PatientDetailViewModel extends ChangeNotifier {
         .then((list) => list.map((e) => PatientEvent.fromJson(e)).toList());
   }
 
-  /// Internt kald til at hente alle LightData for denne patient fra backend.
-  /// Returnerer en Future<void>, så UI kan bruge en FutureBuilder på [lightDataFuture].
+  // Internt kald til at hente alle LightData for denne patient fra backend.
+  // Returnerer en Future void, så UI kan bruge en FutureBuilder på [lightDataFuture].
   Future<void> _fetchRawLightData() async {
     _isFetchingRaw = true;
     _rawFetchError = null;

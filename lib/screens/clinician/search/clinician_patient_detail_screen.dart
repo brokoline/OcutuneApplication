@@ -13,14 +13,15 @@ import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_combined_patient_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_activity_card.dart';
 
-// Nu kalder vi kun uden parametre:
+// Importér de tre lys‐widgets:
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_data_card.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_latest_events_list.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatelessWidget {
   final String patientId;
-  const PatientDetailScreen({super.key, required this.patientId});
+  const PatientDetailScreen({Key? key, required this.patientId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +33,11 @@ class PatientDetailScreen extends StatelessWidget {
 }
 
 class PatientDetailView extends StatelessWidget {
-  const PatientDetailView({super.key});
+  const PatientDetailView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Hent viewmodel’en
     final vm = Provider.of<PatientDetailViewModel>(context);
 
     return FutureBuilder<Patient>(
@@ -87,7 +89,7 @@ class PatientDetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─ Header ───────────────────────────────────────────
+            // ─ Header: patient‐overskrift ─────────────────────────────────
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -97,10 +99,7 @@ class PatientDetailView extends StatelessWidget {
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
-                        ?.copyWith(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
-                    ),
+                        ?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
                   ),
                   Text(
                     fullName,
@@ -111,7 +110,7 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
 
-            // ─ Diagnoser ────────────────────────────────────────
+            // ─ Diagnoser ────────────────────────────────────────────────────
             FutureBuilder<List<Diagnosis>>(
               future: vm.diagnosisFuture,
               builder: (context, diagSnap) {
@@ -124,14 +123,12 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
 
-            // ─ Aktiviteter ──────────────────────────────────────
+            // ─ Aktiviteter ─────────────────────────────────────────────────
             FutureBuilder<List<PatientEvent>>(
               future: vm.patientEventsFuture,
               builder: (context, evtSnap) {
                 if (evtSnap.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  );
+                  return const Center(child: CircularProgressIndicator(color: Colors.white));
                 }
                 if (evtSnap.hasError) {
                   return Text(
@@ -151,15 +148,15 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 16.h),
 
-            // ─ Lysdata (samlet oversigt) ─────────────────────────
+            // ─ Lysdata (samlet oversigt) ────────────────────────────────────
             FutureBuilder<void>(
               future: vm.getLightDataFuture,
               builder: (context, lightSnap) {
-                // a) Hvis vi stadig henter rå‐lysdata
+                // a) Hvis vi stadig henter rå lysdata, vis spinner
                 if (vm.isFetchingRaw) {
                   return const Center(child: CircularProgressIndicator(color: Colors.white));
                 }
-                // b) Hvis fejl ved rå data‐kald:
+                // b) Hvis der var fejl ved rå‐lysdata, vis fejlbesked
                 if (vm.rawFetchError != null) {
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -170,20 +167,24 @@ class PatientDetailView extends StatelessWidget {
                   );
                 }
 
-                // c) Ellers: vi har nu både råData OG ML‐bearbejdning færdiggjort
+                // c) Ellers: vi har både råData + ML‐bearbejdning færdig
+                final rawData = vm.rawLightData;         // List<LightData>
+                final rmeq    = vm.rmeqScore.toInt();    // int
+                //    Bemærk: Gemt MEQ‐score = vm.storedMeqScore, men bruges kun i LightScoreCard
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 1) Antal + seneste
-                    const LightDataCard(),
+                    // 1) Antal + seneste data (LysDataCard)
+                    LightDataCard(lightData: rawData),
                     SizedBox(height: 16.h),
 
-                    // 2) De 10 seneste målinger
-                    const LightLatestEventsList(),
+                    // 2) De 10 seneste målinger (LightLatestEventsList)
+                    LightLatestEventsList(lightData: rawData),
                     SizedBox(height: 16.h),
 
-                    // 3) Hele oversigten: grafer, ML‐metrikker og anbefalinger
-                    const LightSummarySection(),
+                    // 3) Hele oversigten: grafer, ML‐metrikker, anbefalinger
+                    LightSummarySection(),
                   ],
                 );
               },
