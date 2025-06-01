@@ -82,7 +82,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       final patientId = await AuthStorage.getUserId();
 
       if (patientId == null) return;
-      await ApiService.addActivity(
+      await ApiService.addActivityEvent(
         patientId: patientId,
         eventType: label,
         note: 'Manuelt registreret',

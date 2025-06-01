@@ -10,11 +10,7 @@ import 'package:ocutune_light_logger/services/auth_storage.dart' as auth;
 
 class SimulatedLoginScreen extends StatefulWidget {
   final String title;
-
-  const SimulatedLoginScreen({
-    super.key,
-    required this.title,
-  });
+  const SimulatedLoginScreen({ super.key, required this.title });
 
   @override
   State<SimulatedLoginScreen> createState() => _SimulatedLoginScreenState();
@@ -23,19 +19,17 @@ class SimulatedLoginScreen extends StatefulWidget {
 class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
   final TextEditingController userIdController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   bool isLoading = false;
   String? loginError;
 
   Future<void> _attemptLogin(String userId, String password) async {
     if (userId.isEmpty || password.isEmpty) {
-      print('📛 Manglende input');
-      setState(() => loginError = 'Udfyld både bruger-ID og adgangskode');
+      setState(() => loginError = 'Udfyld både bruger‐ID og adgangskode');
       return;
     }
 
-    print('🔁 Sender POST til: ${ApiService.baseUrl}/sim-login');
-    print('📨 Payload: $userId / $password');
+    print('🔁 Sender POST til: ${ApiService.baseUrl}/api/login');
+    print('📨 Payload: sim_userid=$userId, sim_password=$password');
 
     setState(() {
       isLoading = true;
@@ -44,11 +38,11 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/sim-login'),
+        Uri.parse('${ApiService.baseUrl}/api/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'sim_userid': userId,
-          'password': password,
+          'sim_password': password,
         }),
       );
 
@@ -58,7 +52,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Gem logininfo
+        // Gem login‐info (id, rolle, token, sim_userid)
         await auth.AuthStorage.saveLogin(
           id: data['id'],
           role: data['role'],
@@ -66,7 +60,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           simUserId: data['sim_userid'],
         );
 
-        // TILFØJET: Gem klinikerens navn baseret på rolle
+        // Gem navn, afhængigt af om det er clinician eller patient
         if (data['role'] == 'clinician') {
           await auth.AuthStorage.saveClinicianProfile(
             firstName: data['first_name'],
@@ -83,7 +77,11 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
         // Navigér baseret på rolle
         if (data['role'] == 'patient') {
-          Navigator.pushReplacementNamed(context, '/patient/dashboard', arguments: data['id']);
+          Navigator.pushReplacementNamed(
+            context,
+            '/patient/dashboard',
+            arguments: data['id'],
+          );
         } else if (data['role'] == 'clinician') {
           Navigator.pushReplacementNamed(context, '/clinician');
         } else {
@@ -102,7 +100,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: generalBackground,
       resizeToAvoidBottomInset: true,
@@ -130,22 +127,18 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SimulatedMitIDBox(
                 title: widget.title,
                 controller: userIdController,
                 errorMessage: loginError,
-                onContinue: (user, password) => _attemptLogin(
-                  user.trim(),
-                  password.trim(),
-                ),
+                onContinue: (user, password) =>
+                    _attemptLogin(user.trim(), password.trim()),
               ),
             ],
           ),
         ),
       ),
-      // Loader-overlay
       floatingActionButton: isLoading
           ? Container(
         color: const Color.fromRGBO(0, 0, 0, 0.3),
