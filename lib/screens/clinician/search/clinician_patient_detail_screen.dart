@@ -13,15 +13,14 @@ import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_combined_patient_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_activity_card.dart';
 
-// Importér de tre lys‐widgets:
+// We import our three “Light…” widgets here:
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_data_card.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_latest_events_list.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatelessWidget {
   final String patientId;
-  const PatientDetailScreen({Key? key, required this.patientId})
-      : super(key: key);
+  const PatientDetailScreen({Key? key, required this.patientId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,6 @@ class PatientDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Hent viewmodel’en
     final vm = Provider.of<PatientDetailViewModel>(context);
 
     return FutureBuilder<Patient>(
@@ -89,17 +87,17 @@ class PatientDetailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ─ Header: patient‐overskrift ─────────────────────────────────
+            // ─── Header ────────────────────────────────────
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Patient detaljer',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     fullName,
@@ -110,7 +108,7 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
 
-            // ─ Diagnoser ────────────────────────────────────────────────────
+            // ─── Diagnoser ─────────────────────────────────
             FutureBuilder<List<Diagnosis>>(
               future: vm.diagnosisFuture,
               builder: (context, diagSnap) {
@@ -123,7 +121,7 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
 
-            // ─ Aktiviteter ─────────────────────────────────────────────────
+            // ─── Aktiviteter ───────────────────────────────
             FutureBuilder<List<PatientEvent>>(
               future: vm.patientEventsFuture,
               builder: (context, evtSnap) {
@@ -148,15 +146,15 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 16.h),
 
-            // ─ Lysdata (samlet oversigt) ────────────────────────────────────
+            // ─── Lysdata (samlet oversigt) ─────────────────
             FutureBuilder<void>(
               future: vm.getLightDataFuture,
               builder: (context, lightSnap) {
-                // a) Hvis vi stadig henter rå lysdata, vis spinner
+                // a) If we’re still fetching raw data:
                 if (vm.isFetchingRaw) {
                   return const Center(child: CircularProgressIndicator(color: Colors.white));
                 }
-                // b) Hvis der var fejl ved rå‐lysdata, vis fejlbesked
+                // b) If there was an error fetching raw data:
                 if (vm.rawFetchError != null) {
                   return Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -167,29 +165,34 @@ class PatientDetailView extends StatelessWidget {
                   );
                 }
 
-                // c) Ellers: vi har både råData + ML‐bearbejdning færdig
-                final rawData = vm.rawLightData;         // List<LightData>
-                final rmeq    = vm.rmeqScore.toInt();    // int
-                //    Bemærk: Gemt MEQ‐score = vm.storedMeqScore, men bruges kun i LightScoreCard
+                // c) Otherwise, we have both rawData AND ML‐processing done:
+                final rawData = vm.rawLightData;     // List<LightData>
+                final rmeq    = vm.rmeqScore;        // int
+                final meq     = vm.storedMeqScore;   // int? (may be null)
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 1) Antal + seneste data (LysDataCard)
+                    // 1) LightDataCard: “antal + seneste”
                     LightDataCard(lightData: rawData),
                     SizedBox(height: 16.h),
 
-                    // 2) De 10 seneste målinger (LightLatestEventsList)
+                    // 2) LightLatestEventsList: “10 seneste målinger”
                     LightLatestEventsList(lightData: rawData),
                     SizedBox(height: 16.h),
 
-                    // 3) Hele oversigten: grafer, ML‐metrikker, anbefalinger
-                    LightSummarySection(),
+                    // 3) LightSummarySection: grafer + ML + anbefalinger
+                    LightSummarySection(
+                      data: rawData,
+                      rmeqScore: rmeq.toInt(),
+                      meqScore: meq,
+                    ),
+
+                    SizedBox(height: 16.h),
                   ],
                 );
               },
             ),
-            SizedBox(height: 16.h),
           ],
         ),
       ),

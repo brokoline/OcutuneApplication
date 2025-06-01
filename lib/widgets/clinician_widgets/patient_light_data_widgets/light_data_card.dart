@@ -7,13 +7,13 @@ import '../../../../theme/colors.dart';
 import '../../../../models/light_data_model.dart';
 
 class LightDataCard extends StatelessWidget {
-  /// Vi modtager nu data som parameter (ikke længere via Provider direkte)
+  /// We now accept a List<LightData> from the parent.
   final List<LightData> lightData;
 
   const LightDataCard({
-    super.key,
+    Key? key,
     required this.lightData,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +51,9 @@ class LightDataCard extends StatelessWidget {
               child: Column(
                 children: data.map((d) {
                   final iconColor = d.actionRequired ? Colors.redAccent : Colors.white;
-                  final hours = d.capturedAt.hour.toString().padLeft(2, '0');
-                  final mins  = d.capturedAt.minute.toString().padLeft(2, '0');
-                  final timeString = '$hours:$mins';
+                  final hour = d.capturedAt.hour.toString().padLeft(2, '0');
+                  final minute = d.capturedAt.minute.toString().padLeft(2, '0');
+                  final timeString = '$hour:$minute';
 
                   return Padding(
                     padding: EdgeInsets.only(bottom: 8.h),
