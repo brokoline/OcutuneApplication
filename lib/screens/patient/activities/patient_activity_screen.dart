@@ -27,7 +27,11 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> loadActivityLabels() async {
     try {
-      final labels = await ApiService.fetchActivityLabels();
+      final rawId = await AuthStorage.getUserId();
+      if (rawId == null) return;
+      final patientId = rawId.toString();
+
+      final labels = await ApiService.fetchActivityLabels(patientId);
       if (!mounted) return;
       setState(() {
         activities = labels;
@@ -45,6 +49,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
       final activitiesFromDb = await ApiService.fetchActivities(patientId);
 
+      if (!mounted) return;
       setState(() {
         recent = activitiesFromDb.map((a) {
           final start = DateTime.tryParse(a['start_time'] ?? '') ?? DateTime.now();
@@ -79,9 +84,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
     final duration = endTime.difference(startTime).inMinutes;
 
     try {
-      final patientId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getUserId();
+      if (rawId == null) return;
+      final patientId = rawId.toString();
 
-      if (patientId == null) return;
       await ApiService.addActivityEvent(
         patientId: patientId,
         eventType: label,
@@ -90,7 +96,6 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
         endTime: endTime.toIso8601String(),
         durationMinutes: duration,
       );
-
 
       await loadActivities();
       await loadActivityLabels();
@@ -110,10 +115,11 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> deleteActivity(int id) async {
     try {
-      final userId = await AuthStorage.getUserId();
-      if (userId == null) return;
+      final rawId = await AuthStorage.getUserId();
+      if (rawId == null) return;
+      final userId = rawId.toString();
 
-      await ApiService.deleteActivity(id, userId: userId.toString());
+      await ApiService.deleteActivity(id, userId: userId);
       await loadActivities();
 
       if (!mounted) return;
@@ -173,7 +179,14 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   onPressed: () async {
                     if (newLabel.trim().isEmpty) return;
                     try {
-                      await ApiService.addActivityLabel(newLabel.trim());
+                      final rawId = await AuthStorage.getUserId();
+                      if (rawId == null) return;
+                      final patientId = rawId.toString();
+
+                      await ApiService.addActivityLabel(
+                        patientId: patientId,
+                        label: newLabel.trim(),
+                      );
                       await loadActivityLabels();
                       if (!mounted) return;
                       Navigator.pop(context);
@@ -313,7 +326,11 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
         centerTitle: true,
         title: const Text(
           'Registrér aktivitet',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white70),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
+          ),
         ),
         iconTheme: const IconThemeData(color: Colors.white70),
       ),
@@ -391,7 +408,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   child: TextButton.icon(
                     onPressed: openNewActivityDialog,
                     icon: const Icon(Icons.add, color: Colors.white70),
-                    label: const Text('Opret ny aktivitet', style: TextStyle(color: Colors.white70)),
+                    label: const Text(
+                      'Opret ny aktivitet',
+                      style: TextStyle(color: Colors.white70),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -405,7 +425,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                 if (recent.isNotEmpty) ...[
                   const Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Seneste registreringer', style: TextStyle(color: Colors.white70)),
+                    child: Text(
+                      'Seneste registreringer',
+                      style: TextStyle(color: Colors.white70),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ...recent.take(5).map(buildRecentCard),

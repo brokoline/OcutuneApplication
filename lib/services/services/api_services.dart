@@ -400,11 +400,44 @@ class ApiService {
   //     • Opret ny:             POST /api/activity-labels
   //     • Slet eller andet kan udvides
   //─────────────────────────────────────────────────────────────────────────────
+  static Future<List<String>> fetchActivityLabels(String patientId) async {
+    final response = await _get("/activity-labels/activity-labels?patient_id=$patientId");
+    if (response.statusCode == 200) {
+      return (jsonDecode(response.body) as List).cast<String>();
+    } else {
+      throw Exception("HTTP ${response.statusCode} – ${response.reasonPhrase}");
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Opretter et nyt activity‐label for patienten
+  // POST /api/activity-labels/activity-labels
+  // ──────────────────────────────────────────────────────────────────────────────
+  static Future<void> addActivityLabel({
+    required String patientId,
+    required String label,
+  }) async {
+    final payload = {
+      'patient_id': patientId,
+      'label': label,
+    };
+    final response = await _post("/activity-labels/activity-labels", payload);
+    _handleVoidResponse(response, successCode: 201);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Henter alle patient‐events (activities) for en given patient
+  // GET  /api/activities/activities?patient_id=<id>
+  // ──────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchActivities(String patientId) async {
-    final response = await _get('/activities?patient_id=$patientId');
+    final response = await _get("/activities/activities?patient_id=$patientId");
     return _handleListResponse(response);
   }
 
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Opretter et nyt patient‐event (activity)
+  // POST /api/activities/activities
+  // ──────────────────────────────────────────────────────────────────────────────
   static Future<void> addActivityEvent({
     required String patientId,
     required String eventType,
@@ -421,27 +454,18 @@ class ApiService {
       'end_time': endTime,
       'duration_minutes': durationMinutes,
     };
-    final response = await _post('/activities', payload);
+    final response = await _post("/activities/activities", payload);
+    _handleVoidResponse(response, successCode: 201);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  // Sletter et patient‐event (activity) med det ID
+  // DELETE /api/activities/activities/<activityId>?user_id=<id>
+  // ──────────────────────────────────────────────────────────────────────────────
+  static Future<void> deleteActivity(int activityId, { required String userId }) async {
+    final response = await _delete("/activities/activities/$activityId?user_id=$userId");
     _handleVoidResponse(response, successCode: 200);
   }
-
-  static Future<void> deleteActivity(int activityId,
-      {required String userId}) async {
-    final response = await _delete('/activity-labels/$activityId?user_id=$userId');
-    _handleVoidResponse(response, successCode: 200);
-  }
-
-  static Future<void> addActivityLabel(String label) async {
-    final payload = {'label': label};
-    final response = await _post('/activity-labels', payload);
-    _handleVoidResponse(response, successCode: 200);
-  }
-
-  static Future<List<String>> fetchActivityLabels() async {
-    final response = await _get('/activity-labels');
-    return List<String>.from(jsonDecode(response.body));
-  }
-
   //─────────────────────────────────────────────────────────────────────────────
   // 17) 🌐 Offline‐synkronisering & fejl‐log (Error Logs)
   //     POST /api/error-logs
