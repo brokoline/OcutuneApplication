@@ -202,15 +202,24 @@ class ApiService {
   //     GET /api/patients/search?q=<søgetekst>
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
+    // 1) Trim og returnér tom liste, hvis query er tom eller kun whitespace
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      return [];
+    }
+
     try {
-      // Hent token fra SharedPreferences
+      // 2) Hent JWT‐token
       final token = await AuthStorage.getToken();
       if (token == null) {
         throw Exception('Ingen token fundet – log ind først');
       }
 
-      // GET mod korrekt endpoint: /api/patients/search?q=<query>
-      final url = Uri.parse('$baseUrl/api/patients/search?q=$query');
+      // 3) URL‐encode søgetermen, så fx mellemrum osv. bliver korrekte i URL'en
+      final encoded = Uri.encodeQueryComponent(trimmed);
+      final url = Uri.parse('$baseUrl/api/patients/search?q=$encoded');
+
+      // 4) Send GET med Authorization‐header
       final response = await http.get(
         url,
         headers: {
@@ -219,19 +228,31 @@ class ApiService {
         },
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as List;
-        return data.cast<Map<String, dynamic>>();
-      } else {
-        // Ekstra debug-output, hvis F.eks. autorisation fejler (401/403) eller andre fejl (404, 500…)
-        throw Exception(
-          'Fejl ved søgning: ${response.statusCode} ${response.reasonPhrase} ${response.body}',
-        );
+      // 5) Håndter forskellige HTTP‐koder
+      switch (response.statusCode) {
+        case 200:
+        // Forvent en liste af JSON‐objekter
+          final data = jsonDecode(response.body) as List;
+          return data.cast<Map<String, dynamic>>();
+
+        case 403:
+          throw Exception('Du har ikke adgang til at søge patienter (403)');
+
+        case 422:
+        // “q” var måske kun whitespace (men vi filtrerede den selv ud), eller
+        // server betragter den stadig som ugyldig – returnér bare tom liste
+          return [];
+
+        default:
+          throw Exception(
+            'Fejl ved søgning: ${response.statusCode} ${response.reasonPhrase} ${response.body}',
+          );
       }
     } catch (e) {
       rethrow;
     }
   }
+
 
   //─────────────────────────────────────────────────────────────────────────────
   // 14) Patient‐detaljer & relaterede kald
@@ -379,9 +400,8 @@ class ApiService {
   //     • Opret ny:             POST /api/activity-labels
   //     • Slet eller andet kan udvides
   //─────────────────────────────────────────────────────────────────────────────
-  static Future<List<Map<String, dynamic>>> fetchActivities(
-      String patientId) async {
-    final response = await _get('/activity-labels?patient_id=$patientId');
+  static Future<List<Map<String, dynamic>>> fetchActivities(String patientId) async {
+    final response = await _get('/activities?patient_id=$patientId');
     return _handleListResponse(response);
   }
 

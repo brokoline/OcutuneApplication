@@ -59,7 +59,7 @@ class LightWeeklyBarChart extends StatelessWidget {
             nowUtc.year,
             nowUtc.month,
             nowUtc.day,
-          ).subtract(Duration(days: currentWeekday - 1));
+          ).subtract(Duration(days: currentWeekday - 3));
           final endOfWeek = startOfWeek.add(
             const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
           );
