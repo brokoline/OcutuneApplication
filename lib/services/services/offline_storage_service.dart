@@ -153,6 +153,34 @@ class OfflineStorageService {
     // ───────────────────────────────────────────────────────────────────────────
   }
 
+  /// NY MEtODE: Rens batteri‐tabellen, så rækker med ugyldigt sensor_id/patient_id fjernes
+  static Future<void> deleteInvalidBatteryData() async {
+    if (_db == null) return;
+
+    // Slet poster hvor sensor_id = -1
+    await _db!.delete(
+      'client_battery_status',
+      where: 'sensor_id = ?',
+      whereArgs: [-1],
+    );
+
+    // Slet poster hvor sensor_id IS NULL
+    await _db!.delete(
+      'client_battery_status',
+      where: 'sensor_id IS NULL',
+    );
+
+    // Evt. slet poster hvor patient_id = -1 (valgfrit, hvis du også vil renses her)
+    await _db!.delete(
+      'client_battery_status',
+      where: 'patient_id = ?',
+      whereArgs: ['-1'],
+    );
+
+    print('🗑️ Ugyldige batteri‐poster (klient) er slettet');
+  }
+
+
   static Future<void> deleteInvalidLightData() async {
     await _db!.delete(
       'unsynced_data',

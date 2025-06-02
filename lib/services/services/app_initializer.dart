@@ -10,29 +10,33 @@ import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 class AppInitializer {
   static Future<void> initialize() async {
     try {
-      // 1) Sæt lokal dato‐formatering (dansksprogede datoer)
+      // 1) Lokalt datoformat (da_DK)
       await initializeDateFormatting('da_DK', null);
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // 2) Initialiser OfflineStorageService (opretter db og tabeller)
+      // 2) Initialiser SQLite (opretter unsynced_data og patient_sensor_log og dine batteri‐tabeller)
       await OfflineStorageService.init();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // 3) Rens alle “light”‐poster, der mangler eller har ugyldig sensor_id
+      // 3) Rens “light”‐tabellen for poster uden gyldigt sensor_id
       await OfflineStorageService.deleteInvalidSensorData();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // 4) Udfør synkronisering af alle usynkroniserede rækker
+      // 4) Rens “batteri”‐tabellen for poster uden gyldigt sensor_id eller patient_id
+      await OfflineStorageService.deleteInvalidBatteryData();
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      // 5) Synkroniser alle resterende usynkroniserede data (både batteri og light)
       await SyncUseCase.syncAll();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // 5) Start periodisk synkroniserings‐scheduler (hver 10. minut)
+      // 6) Start periodisk baggrunds‐scheduler
       SyncScheduler.start(interval: const Duration(minutes: 10));
 
-      // 6) Start at lytte på netværksændringer (så vi kan synkronisere ved genopkobling)
+      // 7) Start netværks‐listener
       NetworkListenerService.start();
 
-      // 7) Initialisér foreground‐task (bruges til at holde bg‐service kørende)
+      // 8) Initialiser foreground‐task (Android/iOS)
       FlutterForegroundTask.init(
         androidNotificationOptions: AndroidNotificationOptions(
           channelId: 'foreground_service_channel',
