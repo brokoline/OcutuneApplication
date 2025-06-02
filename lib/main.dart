@@ -5,13 +5,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:provider/provider.dart';
 
 // 🧩 Skærme
 import 'screens/splash_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/login/choose_access_screen.dart';
-import 'screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
+import 'screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 import 'screens/customer/register/customer_registration_information/customer_register_screen.dart';
 import 'screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
@@ -45,6 +46,8 @@ import 'services/processing/data_processing.dart';
 import 'services/processing/data_processing_manager.dart';
 import 'viewmodel/clinician/patient_detail_viewmodel.dart';
 
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -66,6 +69,9 @@ void main() async {
       ),
     );
   };
+
+  // ➕ Kald AppInitializer.initialize() før runApp
+  await AppInitializer.initialize();
 
   runApp(const OcutuneApp());
 }

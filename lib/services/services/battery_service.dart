@@ -50,7 +50,7 @@ class BatteryService {
         return false;
       }
 
-      final uri = Uri.parse('${ApiService.baseUrl}/patient-battery-status');
+      final uri = Uri.parse('${ApiService.baseUrl}/api/sensor/patient-battery-status');
       final payload = {
         "patient_id": patientId,
         "sensor_id": sensorId,
@@ -69,7 +69,7 @@ class BatteryService {
         body: jsonEncode(payload),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         _lastSent = now;
         print("✅ Batteriniveau sendt");
         return true;
@@ -81,7 +81,7 @@ class BatteryService {
       print("⚠️ Fejl i batteri-upload: $e");
 
       final rawId = await AuthStorage.getUserId();
-      final patientId = rawId?.toString(); // ✅ samme her
+      final patientId = rawId?.toString();
 
       await OfflineStorageService.saveLocally(
         type: 'battery',

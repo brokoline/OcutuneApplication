@@ -28,7 +28,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       return;
     }
 
-    print('🔁 Sender POST til: ${ApiService.baseUrl}/api/login');
+    print('🔁 Sender POST til: ${ApiService.baseUrl}/api/auth/mitid/login');
     print('📨 Payload: sim_userid=$userId, sim_password=$password');
 
     setState(() {
@@ -38,7 +38,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/api/login'),
+        Uri.parse('${ApiService.baseUrl}/api/auth/mitid/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'sim_userid': userId,
@@ -59,6 +59,9 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           token: data['token'],
           simUserId: data['sim_userid'],
         );
+        // DEBUG: Bekræft at token blev gemt korrekt
+        final savedToken = await auth.AuthStorage.getToken();
+        print('>>> DEBUG: Gemt token i AuthStorage = $savedToken');
 
         // Gem navn, afhængigt af om det er clinician eller patient
         if (data['role'] == 'clinician') {
@@ -66,11 +69,15 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
             firstName: data['first_name'],
             lastName: data['last_name'],
           );
+          final name = await auth.AuthStorage.getClinicianName();
+          print('>>> DEBUG: Gemt kliniker navn = $name');
         } else {
           await auth.AuthStorage.savePatientProfile(
             firstName: data['first_name'],
             lastName: data['last_name'],
           );
+          final fname = await auth.AuthStorage.getName();
+          print('>>> DEBUG: Gemt patient navn = $fname');
         }
 
         if (!mounted) return;

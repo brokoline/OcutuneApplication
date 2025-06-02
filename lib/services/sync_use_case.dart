@@ -7,20 +7,26 @@ import 'package:ocutune_light_logger/services/services/offline_storage_service.d
 
 class SyncUseCase {
   static Future<void> syncAll() async {
+    // 1) Purge: slet alt, der har "sensor_id": -1 eller "sensor_id": null
+    await OfflineStorageService.deleteInvalidSensorData();
+
+    // 2) Hent resten af rækkerne
     final rows = await OfflineStorageService.getUnsyncedData();
 
     for (final row in rows) {
-      final id = row['id'] as int;
-      final type = row['type'] as String;
-      final json = jsonDecode(row['json']);
+      final int    id   = row['id'] as int;
+      final String type = row['type'] as String;
+      final Map<String, dynamic> json = jsonDecode(row['json']);
 
       try {
         if (type == 'battery') {
+          // Bemærk: hvis dine “battery”-poster også indeholder sensor_id,
+          // kan du evt. tilføje en tilsvarende purge check her.
           await BatteryService.sendToBackend(
             batteryLevel: json['battery_level'],
           );
         } else if (type == 'light') {
-          final uri = Uri.parse('${ApiService.baseUrl}/patient-light-data');
+          final uri = Uri.parse('${ApiService.baseUrl}/api/sensor/patient-light-data');
 
           final payload = {
             "patient_id": json['patient_id'],
@@ -47,10 +53,13 @@ class SyncUseCase {
           }
         }
 
+        // 3) Hvis vi når hertil uden fejl, slet posten lokalt
         await OfflineStorageService.deleteById(id);
         final now = DateTime.now().toIso8601String();
         print("✅ [$now] Synkroniseret: $type $id");
+
       } catch (e) {
+        // 4) Ved fejl: log til din “remote error logger” og slet posten
         print("❌ Fejl ved synkronisering af $type $id: $e");
 
         await RemoteErrorLogger.log(
@@ -58,6 +67,13 @@ class SyncUseCase {
           type: type,
           message: e.toString(),
         );
+
+        // Her sletter vi alligevel posten, fordi vi regner med
+        // at “fejl i sensor_id” aldrig vil rette sig.
+        //
+        // Hvis du vil beholde andre typer fejl (fx midlertidige netværksfejl),
+        // kan du i stedet checke e.toString() og kun slette, hvis det er 'invalid sensor_id'.
+        await OfflineStorageService.deleteById(id);
       }
     }
   }

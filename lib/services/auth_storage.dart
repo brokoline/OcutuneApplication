@@ -31,7 +31,7 @@ class AuthStorage {
       final payloadString = utf8.decode(base64.decode(payloadBase64));
       final Map<String, dynamic> payload = json.decode(payloadString);
 
-      print('📦 JWT Payload: $payload');
+      print("✅ Login info gemt i SharedPreferences");
       return payload;
     } catch (e) {
       print('❌ Kunne ikke parse JWT payload: $e');
@@ -131,6 +131,7 @@ static Future<int?> getPatientId() async {
       return false;
     }
   }
+
 
 
   static Future<void> logout() async {

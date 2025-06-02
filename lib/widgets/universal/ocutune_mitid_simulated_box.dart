@@ -39,7 +39,7 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
     print('🔍 Tjekker bruger‐ID: $userId');
     try {
       final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}/api/sim-check-userid'),
+        Uri.parse('${ApiService.baseUrl}/api/auth/sim-check-userid'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'sim_userid': userId}),
       );

@@ -1,30 +1,33 @@
 // lib/services/services/api_services.dart
 
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/customer_register_answers_model.dart';
+
 import '../../models/light_data_model.dart';
 import '../../models/patient_model.dart';
 import '../auth_storage.dart';
 
-/// Base URL for all API calls. (Ingen trailing slash i _baseUrl)
+
+/// Base URL for alle API‐kald. (Ingen trailing slash i _baseUrl)
 const String _baseUrl = "https://ocutune2025.ddns.net";
 
 class ApiService {
   static const String baseUrl = _baseUrl;
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 1) Helper: Returner headers med JWT‐token
+  // 1) Helper: Returner JWT‐token fra SharedPreferences
   //─────────────────────────────────────────────────────────────────────────────
-  static Future<String?> getToken() async {
+  static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
   }
 
+  //─────────────────────────────────────────────────────────────────────────────
+  // 2) Helper: Returner headers med JWT‐token
+  //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, String>> _authHeaders() async {
-    final token = await getToken();
+    final token = await _getToken();
     if (token == null) throw Exception('Mangler token');
     return {
       'Content-Type': 'application/json',
@@ -33,17 +36,21 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 2) Helper: HTTP GET (indsætter "/api" foran endpointet)
+  // 3) Helper: HTTP GET (indsætter "/api" foran endpointet)
   //─────────────────────────────────────────────────────────────────────────────
   static Future<http.Response> _get(String endpoint) async {
     final headers = await _authHeaders();
-    return http.get(Uri.parse('$baseUrl/api$endpoint'), headers: headers);
+    return http.get(
+      Uri.parse('$baseUrl/api$endpoint'),
+      headers: headers,
+    );
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 3) Helper: HTTP POST (indsætter "/api" foran endpointet)
+  // 4) Helper: HTTP POST (indsætter "/api" foran endpointet)
   //─────────────────────────────────────────────────────────────────────────────
-  static Future<http.Response> _post(String endpoint, Map<String, dynamic> body) async {
+  static Future<http.Response> _post(
+      String endpoint, Map<String, dynamic> body) async {
     final headers = await _authHeaders();
     return http.post(
       Uri.parse('$baseUrl/api$endpoint'),
@@ -52,12 +59,19 @@ class ApiService {
     );
   }
 
+  //─────────────────────────────────────────────────────────────────────────────
+  // 5) Helper: HTTP DELETE (indsætter "/api" foran endpointet)
+  //─────────────────────────────────────────────────────────────────────────────
   static Future<http.Response> _delete(String endpoint) async {
     final headers = await _authHeaders();
     return http.delete(Uri.parse('$baseUrl/api$endpoint'), headers: headers);
   }
 
-  static Future<http.Response> _patch(String endpoint, Map<String, dynamic> body) async {
+  //─────────────────────────────────────────────────────────────────────────────
+  // 6) Helper: HTTP PATCH (indsætter "/api" foran endpointet)
+  //─────────────────────────────────────────────────────────────────────────────
+  static Future<http.Response> _patch(
+      String endpoint, Map<String, dynamic> body) async {
     final headers = await _authHeaders();
     return http.patch(
       Uri.parse('$baseUrl/api$endpoint'),
@@ -67,7 +81,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 4) Helper: Behandl “list”‐response
+  // 7) Helper: Behandl “list”‐response
   //─────────────────────────────────────────────────────────────────────────────
   static List<Map<String, dynamic>> _handleListResponse(
       http.Response response, {
@@ -75,7 +89,9 @@ class ApiService {
       }) {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (key != null && data is Map<String, dynamic> && data.containsKey(key)) {
+      if (key != null &&
+          data is Map<String, dynamic> &&
+          data.containsKey(key)) {
         return List<Map<String, dynamic>>.from(data[key]);
       }
       if (data is List) {
@@ -88,9 +104,33 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 5) Al lysdata for én patient, og daglige, ugentlige og månedlige lysdata
+  // 8) Helper: Håndter “single”‐response (ikke list)
   //─────────────────────────────────────────────────────────────────────────────
+  static Map<String, dynamic> _handleResponse(http.Response response) {
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 404) {
+      throw Exception('Ressource ikke fundet');
+    } else {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+  }
 
+  //─────────────────────────────────────────────────────────────────────────────
+  // 9) Helper: Håndter “void”‐operation (POST/DELETE/PATCH uden JSON‐body)
+  //─────────────────────────────────────────────────────────────────────────────
+  static void _handleVoidResponse(
+      http.Response response, {
+        required int successCode,
+      }) {
+    if (response.statusCode != successCode) {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+  }
+
+  //─────────────────────────────────────────────────────────────────────────────
+  // 10) Al lysdata for én patient, og daglige, ugentlige og månedlige lysdata
+  //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> getPatientLightData(
       String patientId) async {
     final response = await _get('/patients/$patientId/lightdata');
@@ -122,12 +162,12 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 6) Authentication (Login) – gemmer JWT i SharedPreferences
+  // 11) Authentication (Login) – gemmer JWT i SharedPreferences
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> simulatedLogin(
       String userId, String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/api/auth/login'),
+      Uri.parse('$baseUrl/api/auth/mitid/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'sim_userid': userId, 'sim_password': password}),
     );
@@ -135,16 +175,16 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final prefs = await SharedPreferences.getInstance();
+      // Gemmer token under nøglen 'jwt_token'
       await prefs.setString('jwt_token', data['token']);
       return data;
     } else {
       throw Exception('Login fejlede: ${response.statusCode}');
     }
   }
-
   //─────────────────────────────────────────────────────────────────────────────
-  // 7) Kliniker: Hent liste over patienter
-  //    GET /api/clinician/patients
+  // 12) Kliniker: Hent liste over patienter
+  //     GET /api/clinician/patients
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> getClinicianPatients() async {
     final response = await _get('/clinician/patients');
@@ -158,43 +198,43 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 8) Søg patienter for kliniker
-  //    GET /api/search-patients?q=<søgetekst>
+  // 13) Søg patienter for kliniker
+  //     GET /api/patients/search?q=<søgetekst>
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
     try {
-      // Hent token (hvis du gemmer det via fx SharedPreferences eller lignende)
+      // Hent token fra SharedPreferences
       final token = await AuthStorage.getToken();
       if (token == null) {
         throw Exception('Ingen token fundet – log ind først');
       }
 
-      // Lav GET‐anmodningen til /api/patients/search?q=…
+      // GET mod korrekt endpoint: /api/patients/search?q=<query>
       final url = Uri.parse('$baseUrl/api/patients/search?q=$query');
       final response = await http.get(
         url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',  // VIGTIGT: vedhæfter din JWT her
+          'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as List;
         return data.cast<Map<String, dynamic>>();
-      } else if (response.statusCode == 401) {
-        throw Exception('Ikke autoriseret - log venligst ind igen');
       } else {
-        throw Exception('Fejl ved søgning: ${response.statusCode}');
+        // Ekstra debug-output, hvis F.eks. autorisation fejler (401/403) eller andre fejl (404, 500…)
+        throw Exception(
+          'Fejl ved søgning: ${response.statusCode} ${response.reasonPhrase} ${response.body}',
+        );
       }
     } catch (e) {
-      throw Exception('Netværksfejl: ${e.toString()}');
+      rethrow;
     }
   }
 
-
   //─────────────────────────────────────────────────────────────────────────────
-  // 9) Patient‐detaljer & relaterede kald
+  // 14) Patient‐detaljer & relaterede kald
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Patient> getPatientDetails(String patientId) async {
     final response = await _get('/patients/$patientId');
@@ -210,7 +250,7 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> getPatientSensors(
       String patientId) async {
-    final response = await _get('/patients/$patientId/sensors');
+    final response = await _get('/sensor/patients/$patientId/sensors');
     return _handleListResponse(response);
   }
 
@@ -222,12 +262,59 @@ class ApiService {
 
   static Future<List<Map<String, dynamic>>> getBatteryStatus(
       String patientId) async {
-    final response = await _get('/patients/$patientId/battery');
+    final response = await _get('/sensor/patients/$patientId/battery');
     return _handleListResponse(response);
   }
 
+  static Future<bool> reportBatteryStatus(
+      String patientId,
+      int batteryLevel, {
+        String? sensorId,
+      }) async {
+    // 1) Sammensæt payload
+    final Map<String, dynamic> payload = {
+      'patient_id': patientId,
+      'sensor_id': sensorId,
+      'battery_level': batteryLevel,
+    };
+    payload.removeWhere((_, v) => v == null);
+
+    // 2) Byg headers (indkluder eventuel JWT, hvis du bruger det)
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      // Hvis du har JWT-autentifikation, tilføj fx:
+      // 'Authorization': 'Bearer $jwtToken',
+    };
+
+    // 3) Læg mærke til den præcise sti: '/api/sensor/patient-battery-status'
+    final Uri uri = Uri.parse('$_baseUrl/api/sensor/patient-battery-status');
+
+    // 4) Send POST‐anmodningen
+    final http.Response response = await http.post(
+      uri,
+      headers: headers,
+      body: jsonEncode(payload),
+    );
+
+    // 5) Hvis serveren returnerer andet end 200 eller 400, kast en Exception
+    if (response.statusCode != 200 && response.statusCode != 400) {
+      throw Exception(
+          'Uventet statuskode: ${response.statusCode}. Body: ${response.body}');
+    }
+
+    // 6) Parse JSON‐svaret
+    final Map<String, dynamic> jsonBody = jsonDecode(response.body);
+
+    // 7) Tjek om "success" findes og er en bool
+    if (jsonBody.containsKey('success') && jsonBody['success'] is bool) {
+      return jsonBody['success'] as bool;
+    } else {
+      throw Exception('Ugyldigt JSON‐svar fra server: ${response.body}');
+    }
+  }
+
   //─────────────────────────────────────────────────────────────────────────────
-  // 10) Beskeder (Messages)
+  // 15) Beskeder (Messages)
   //     • Hent indbakke: GET /api/messages/inbox
   //     • Hent tråd:    GET /api/messages/thread-by-id/<threadId>
   //     • Send besked:  POST /api/messages
@@ -252,7 +339,8 @@ class ApiService {
     String subject = '',
     dynamic replyTo,
   }) async {
-    final cleanSubject = subject.trim().isNotEmpty ? subject.trim() : 'Uden emne';
+    final cleanSubject =
+    subject.trim().isNotEmpty ? subject.trim() : 'Uden emne';
     final cleanMessage = message.trim();
 
     if (cleanMessage.isEmpty) {
@@ -261,7 +349,7 @@ class ApiService {
 
     final payload = {
       'receiver_id': receiverId,
-      'body': cleanMessage,     // “body” i stedet for “message”
+      'body': cleanMessage, // “body” i stedet for “message”
       'subject': cleanSubject,
       if (replyTo != null) 'reply_to': int.tryParse(replyTo.toString()),
     };
@@ -286,15 +374,14 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 11) Aktiviteter (Activity Labels)
+  // 16) Aktiviteter (Activity Labels)
   //     • Hent alle (eller filtreret): GET /api/activity-labels?patient_id=<id>
   //     • Opret ny:             POST /api/activity-labels
   //     • Slet eller andet kan udvides
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchActivities(
       String patientId) async {
-    final response =
-    await _get('/activity-labels?patient_id=$patientId');
+    final response = await _get('/activity-labels?patient_id=$patientId');
     return _handleListResponse(response);
   }
 
@@ -315,21 +402,19 @@ class ApiService {
       'duration_minutes': durationMinutes,
     };
     final response = await _post('/activities', payload);
-    _handleVoidResponse(response, successCode: 201);
+    _handleVoidResponse(response, successCode: 200);
   }
 
   static Future<void> deleteActivity(int activityId,
       {required String userId}) async {
-    final response = await _delete(
-        '/activity-labels/$activityId?user_id=$userId');
+    final response = await _delete('/activity-labels/$activityId?user_id=$userId');
     _handleVoidResponse(response, successCode: 200);
   }
 
   static Future<void> addActivityLabel(String label) async {
-    // Opretter egen aktivitetstype (uden patient‐id)
     final payload = {'label': label};
     final response = await _post('/activity-labels', payload);
-    _handleVoidResponse(response, successCode: 201);
+    _handleVoidResponse(response, successCode: 200);
   }
 
   static Future<List<String>> fetchActivityLabels() async {
@@ -337,13 +422,11 @@ class ApiService {
     return List<String>.from(jsonDecode(response.body));
   }
 
-
   //─────────────────────────────────────────────────────────────────────────────
-  // 12) 🌐 Offline‐synkronisering & fejl‐log (Error Logs)
+  // 17) 🌐 Offline‐synkronisering & fejl‐log (Error Logs)
   //     POST /api/error-logs
   //─────────────────────────────────────────────────────────────────────────────
-  static Future<void> postSyncErrorLog(
-      Map<String, dynamic> data) async {
+  static Future<void> postSyncErrorLog(Map<String, dynamic> data) async {
     final headers = await _authHeaders();
     await http.post(
       Uri.parse('$baseUrl/api/error-logs'),
@@ -353,7 +436,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 13) Sensor‐relaterede POST‐endpoints
+  // 18) Sensor‐relaterede POST‐endpoints
   //     • Opret batteristatus: POST /api/patient-battery-status
   //     • Opret lysdata:       POST /api/patient-light-data
   //     • Opslag af sensor‐id:  GET  /api/get-sensor-id?device_serial=<serial>
@@ -365,7 +448,7 @@ class ApiService {
     required String deviceSerial,
     required String jwt,
   }) async {
-    final url = Uri.parse('$baseUrl/api/register-sensor-use');
+    final url = Uri.parse('$baseUrl/api/sensor/register-sensor-use');
 
     final response = await http.post(
       url,
@@ -383,18 +466,19 @@ class ApiService {
       final body = jsonDecode(response.body);
       return body["sensor_id"].toString();
     } else {
-      print("❌ Fejl ved sensor‐registrering: ${response.statusCode} ${response.body}");
+      print(
+          "❌ Fejl ved sensor‐registrering: ${response.statusCode} ${response.body}");
       return null;
     }
   }
 
-  static Future<void> sendBatteryStatus({
+  static Future<bool> sendBatteryStatus({
     required String patientId,
     required int sensorId,
     required int batteryLevel,
     required String jwt,
   }) async {
-    final url = Uri.parse("$baseUrl/api/patient-battery-status");
+    final url = Uri.parse("$baseUrl/api/sensor/patient-battery-status");
 
     final response = await http.post(
       url,
@@ -409,20 +493,28 @@ class ApiService {
       }),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       print("✅ Batteriniveau sendt til backend");
+      return true;
     } else {
       print("❌ Fejl ved batteri-API: ${response.body}");
+      return false;
     }
   }
+
 
   static Future<int?> getSensorIdFromDevice(
       String deviceSerial, String jwt) async {
     final url = Uri.parse(
-        '$baseUrl/api/get-sensor-id?device_serial=$deviceSerial');
+        '$baseUrl/api/sensor/get-sensor-id?device_serial=$deviceSerial');
 
-    final response = await http
-        .get(url, headers: {'Authorization': 'Bearer $jwt', 'Content-Type': 'application/json'});
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwt',
+      },
+    );
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
@@ -434,8 +526,10 @@ class ApiService {
   }
 
   static Future<bool> sendLightData(
-      Map<String, dynamic> data, String jwt) async {
-    final url = Uri.parse("$baseUrl/api/patient-light-data");
+      Map<String, dynamic> data,
+      String jwt,
+      ) async {
+    final url = Uri.parse("$baseUrl/api/sensor/patient-light-data");
 
     final response = await http.post(
       url,
@@ -446,15 +540,16 @@ class ApiService {
       body: jsonEncode(data),
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
       print("✅ Lys data sendt succesfuldt");
       return true;
     } else {
-      print(
-          "❌ Fejl ved sendLightData: ${response.statusCode} ${response.body}");
+      print("❌ Fejl ved sendLightData: ${response.statusCode} ${response.body}");
       return false;
     }
   }
+
+
 
   static Future<void> endSensorUse({
     required String patientId,
@@ -462,7 +557,7 @@ class ApiService {
     required String jwt,
     String status = "manual",
   }) async {
-    final url = Uri.parse('$baseUrl/api/end-sensor-use');
+    final url = Uri.parse('$baseUrl/api/sensor/end-sensor-use');
 
     final response = await http.post(
       url,
@@ -484,23 +579,74 @@ class ApiService {
     }
   }
 
+  static Future<bool> sendSensorLog(
+      Map<String, dynamic> data,
+      String jwt,
+      ) async {
+    // Hvis der IKKE er et 'ended_at', så antager vi, at du vil åbne en ny log
+    if (!data.containsKey('ended_at') || data['ended_at'] == null) {
+      final url = Uri.parse('$baseUrl/api/sensor/register-sensor-use');
+      final body = {
+        'patient_id': data['patient_id'],
+        'device_serial': data['device_serial'],
+      };
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $jwt',
+        },
+        body: jsonEncode(body),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        print('❌ sendSensorLog (register) fejlede: ${response.statusCode} ${response.body}');
+        return false;
+      }
+    }
+    // Ellers lukker vi den eksisterende log
+    else {
+      final url = Uri.parse('$baseUrl/api/sensor/end-sensor-use');
+      final body = {
+        'patient_id': data['patient_id'],
+        'sensor_id': data['sensor_id'],
+        'status': data['status'] ?? 'manual',
+      };
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $jwt',
+        },
+        body: jsonEncode(body),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        print('❌ sendSensorLog (end) fejlede: ${response.statusCode} ${response.body}');
+        return false;
+      }
+    }
+  }
+
   //─────────────────────────────────────────────────────────────────────────────
-  // 14) Chore‐type & beregninger
+  // 19) Chore‐type & beregninger
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
-    final response = await _get('/chronotypes');
+    final response = await _get('api/chronotypes');
     return _handleListResponse(response);
   }
 
   static Future<Map<String, dynamic>> fetchChronotype(
       String typeKey) async {
-    final response = await _get('/chronotypes/$typeKey');
+    final response = await _get('api/chronotypes/$typeKey');
     return _handleResponse(response);
   }
 
   static Future<Map<String, dynamic>> fetchChronotypeByScore(
       int score) async {
-    final response = await _get('/chronotypes/by-score/$score');
+    final response = await _get('api/chronotypes/by-score/$score');
     return _handleResponse(response);
   }
 
@@ -518,7 +664,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 15) Kunderegistrering
+  // 20) Kunderegistrering
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> checkEmailAvailability(
       String email) async {
@@ -554,29 +700,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 16) Helper: Håndter enkelt‐response (ikke‐list)
-  //─────────────────────────────────────────────────────────────────────────────
-  static Map<String, dynamic> _handleResponse(http.Response response) {
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
-    } else if (response.statusCode == 404) {
-      throw Exception('Ressource ikke fundet');
-    } else {
-      throw Exception('Fejl: ${response.statusCode}');
-    }
-  }
-
-  static void _handleVoidResponse(http.Response response,
-      {required int successCode}) {
-    if (response.statusCode != successCode) {
-      throw Exception('Fejl: ${response.statusCode}');
-    }
-  }
-
-
-
-  //─────────────────────────────────────────────────────────────────────────────
-  // 17) Gør GET/POST‐metoder tilgængelige uden auth ved behov
+  // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov
   //─────────────────────────────────────────────────────────────────────────────
   static Future<http.Response> post(
       String endpoint, Map<String, dynamic> body) =>
@@ -587,7 +711,12 @@ class ApiService {
       _patch(endpoint, body);
 
   static Future<http.Response> del(String endpoint) => _delete(endpoint);
-  static void handleVoidResponse(http.Response response,
-      {required int successCode}) =>
+
+  /// Når man har brug for at håndtere en “void”‐kode (f.eks. DELETE 204),
+  /// kan man kalde denne metode med det konkrete response‐objekt:
+  static void handleVoidResponse(
+      http.Response response, {
+        required int successCode,
+      }) =>
       _handleVoidResponse(response, successCode: successCode);
 }

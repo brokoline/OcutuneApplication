@@ -125,6 +125,34 @@ class OfflineStorageService {
     );
   }
 
+  static Future<void> deleteInvalidSensorData() async {
+    if (_db == null) return;
+
+    // Eksempel 1: hvis “ugyldig” = json: ..."sensor_id":-1...
+    await _db!.delete(
+      'unsynced_data',
+      where: 'json LIKE ?',
+      whereArgs: ['%"sensor_id":-1%'],
+    );
+
+    // Eksempel 2: hvis du også vil fjerne de poster, hvor sensor_id eksplícit er null
+    await _db!.delete(
+      'unsynced_data',
+      where: 'json LIKE ?',
+      whereArgs: ['%"sensor_id":null%'],
+    );
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // NYT: Fjern alle 'light'‐poster der slet ikke indeholder "sensor_id" i JSON
+    // (dvs. rækker hvor 'sensor_id' mangler fuldstændigt)
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json NOT LIKE ?',
+      whereArgs: ['light', '%"sensor_id"%'],
+    );
+    // ───────────────────────────────────────────────────────────────────────────
+  }
+
   static Future<void> deleteInvalidLightData() async {
     await _db!.delete(
       'unsynced_data',
