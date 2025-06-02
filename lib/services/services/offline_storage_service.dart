@@ -128,60 +128,59 @@ class OfflineStorageService {
   static Future<void> deleteInvalidSensorData() async {
     if (_db == null) return;
 
-    // Eksempel 1: hvis “ugyldig” = json: ..."sensor_id":-1...
+    // Fjern alle unsynced_data hvor JSON indeholder sensor_id = -1
     await _db!.delete(
       'unsynced_data',
       where: 'json LIKE ?',
       whereArgs: ['%"sensor_id":-1%'],
     );
 
-    // Eksempel 2: hvis du også vil fjerne de poster, hvor sensor_id eksplícit er null
+    // Fjern alle unsynced_data hvor JSON indeholder sensor_id = null
     await _db!.delete(
       'unsynced_data',
       where: 'json LIKE ?',
       whereArgs: ['%"sensor_id":null%'],
     );
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // NYT: Fjern alle 'light'‐poster der slet ikke indeholder "sensor_id" i JSON
-    // (dvs. rækker hvor 'sensor_id' mangler fuldstændigt)
+    // Fjern alle 'light'-poster der slet ikke indeholder "sensor_id" i JSON
     await _db!.delete(
       'unsynced_data',
       where: 'type = ? AND json NOT LIKE ?',
       whereArgs: ['light', '%"sensor_id"%'],
     );
-    // ───────────────────────────────────────────────────────────────────────────
   }
 
-  /// NY MEtODE: Rens batteri‐tabellen, så rækker med ugyldigt sensor_id/patient_id fjernes
+  /// Rens alle 'battery'-poster i unsynced_data, der mangler eller har ugyldig sensor_id
   static Future<void> deleteInvalidBatteryData() async {
     if (_db == null) return;
 
-    // Slet poster hvor sensor_id = -1
+    // Slet poster hvor type = 'battery' og sensor_id = -1
     await _db!.delete(
-      'client_battery_status',
-      where: 'sensor_id = ?',
-      whereArgs: [-1],
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['battery', '%"sensor_id":-1%'],
     );
 
-    // Slet poster hvor sensor_id IS NULL
+    // Slet poster hvor type = 'battery' og sensor_id = null
     await _db!.delete(
-      'client_battery_status',
-      where: 'sensor_id IS NULL',
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['battery', '%"sensor_id":null%'],
     );
 
-    // Evt. slet poster hvor patient_id = -1 (valgfrit, hvis du også vil renses her)
+    // Slet poster hvor type = 'battery' og JSON ikke indeholder "sensor_id"
     await _db!.delete(
-      'client_battery_status',
-      where: 'patient_id = ?',
-      whereArgs: ['-1'],
+      'unsynced_data',
+      where: 'type = ? AND json NOT LIKE ?',
+      whereArgs: ['battery', '%"sensor_id"%'],
     );
 
-    print('🗑️ Ugyldige batteri‐poster (klient) er slettet');
+    print('🗑️ Ugyldige battery-poster i unsynced_data er slettet');
   }
 
-
   static Future<void> deleteInvalidLightData() async {
+    if (_db == null) return;
+
     await _db!.delete(
       'unsynced_data',
       where: 'type = ? AND json LIKE ?',
@@ -190,10 +189,12 @@ class OfflineStorageService {
   }
 
   static Future<List<Map<String, dynamic>>> getUnsyncedData() async {
+    if (_db == null) return [];
     return await _db!.query('unsynced_data', orderBy: 'created_at ASC');
   }
 
   static Future<void> deleteById(int id) async {
+    if (_db == null) return;
     await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
   }
 }

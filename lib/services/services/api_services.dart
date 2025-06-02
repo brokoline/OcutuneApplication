@@ -18,7 +18,7 @@ class ApiService {
   //─────────────────────────────────────────────────────────────────────────────
   // 1) Helper: Returner JWT‐token fra SharedPreferences
   //─────────────────────────────────────────────────────────────────────────────
-  static Future<String?> _getToken() async {
+  static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
   }
@@ -27,7 +27,7 @@ class ApiService {
   // 2) Helper: Returner headers med JWT‐token
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, String>> _authHeaders() async {
-    final token = await _getToken();
+    final token = await getToken();
     if (token == null) throw Exception('Mangler token');
     return {
       'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ class ApiService {
   static Future<bool> reportBatteryStatus(
       String patientId,
       int batteryLevel, {
-        String? sensorId,
+        int? sensorId,
       }) async {
     // 1) Sammensæt payload
     final Map<String, dynamic> payload = {
@@ -427,7 +427,7 @@ class ApiService {
   //     POST /api/error-logs
   //─────────────────────────────────────────────────────────────────────────────
   static Future<void> postSyncErrorLog(Map<String, dynamic> data) async {
-    final headers = await _authHeaders();
+    final headers = await _authHeaders(); // Hvis du vil bruge auth, ellers bare Content-Type
     await http.post(
       Uri.parse('$baseUrl/api/error-logs'),
       headers: headers,

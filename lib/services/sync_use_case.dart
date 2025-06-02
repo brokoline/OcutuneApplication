@@ -1,101 +1,84 @@
+// lib/services/sync_use_case.dart
+
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:ocutune_light_logger/services/remote_error_logger.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
-import 'package:ocutune_light_logger/services/services/battery_service.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 
+/// SyncUseCase tager lokale, u‐synkroniserede rækker fra OfflineStorageService
+/// og forsøger at sende dem til serveren via ApiService. Hvis en enkelt række
+/// ikke kan synkroniseres, fanges fejlen per‐post, og vi prøver igen næste runde.
 class SyncUseCase {
+  /// Hent alle rækker, der ligger i den lokale SQLite‐tabel 'unsynced_data',
+  /// og send dem til serveren. Hvis det lykkes, slettes den pågældende række.
   static Future<void> syncAll() async {
-    // 1) Purge: slet alt, der har "sensor_id": -1 eller "sensor_id": null
-    await OfflineStorageService.deleteInvalidSensorData();
-
-    // 2) Hent resten af rækkerne
     final rows = await OfflineStorageService.getUnsyncedData();
 
+    if (rows.isEmpty) {
+      print("[SyncUseCase] Ingen offline‐poster at synkronisere.");
+      return;
+    }
+
+    print("[SyncUseCase] Starter synkronisering af ${rows.length} offline‐poster...");
+
+    // Loop over hver række fra unsynced_data
     for (final row in rows) {
-      final int    id   = row['id'] as int;
+      final int id = row['id'] as int;
       final String type = row['type'] as String;
-      final Map<String, dynamic> json = jsonDecode(row['json']);
+      final Map<String, dynamic> payload = jsonDecode(row['json'] as String);
 
       try {
         if (type == 'battery') {
-          // Bemærk: hvis dine “battery”-poster også indeholder sensor_id,
-          // kan du evt. tilføje en tilsvarende purge check her.
-          await BatteryService.sendToBackend(
-            batteryLevel: json['battery_level'],
-          );
-        } else if (type == 'light') {
-          final uri = Uri.parse('${ApiService.baseUrl}/api/sensor/patient-light-data');
+          // Eksempel: batteri‐type
+          final String patientId = payload['patient_id'] as String;
+          final int batteryLevel = payload['battery_level'] as int;
+          final int? sensorId = (payload['sensor_id'] is int)
+              ? payload['sensor_id'] as int
+              : int.tryParse(payload['sensor_id'].toString());
 
-          final payload = {
-            "patient_id": json['patient_id'],
-            "sensor_id": json['sensor_id'],
-            "lux_level": json['lux_level'],
-            "captured_at": json['timestamp'],
-            "melanopic_edi": json['melanopic_edi'],
-            "der": json['der'],
-            "illuminance": json['illuminance'],
-            "spectrum": json['spectrum'],
-            "light_type": lightTypeFromCode(json['light_type']),
-            "exposure_score": json['exposure_score'],
-            "action_required": json['action_required'],
-          };
+          print("[SyncUseCase] Forsøger at sende battery id=$id til server…");
 
-          final response = await http.post(
-            uri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(payload),
+          final bool success = await ApiService.reportBatteryStatus(
+            patientId,
+            batteryLevel,
+            sensorId: sensorId,
           );
 
-          if (response.statusCode != 201) {
-            throw Exception("⚠️ Fejl ved upload: ${response.statusCode} - ${response.body}");
+          if (success) {
+            await OfflineStorageService.deleteById(id);
+            print("[SyncUseCase] Slettede battery‐post id=$id fra offline‐kø.");
+          } else {
+            print("[SyncUseCase] reportBatteryStatus returnerede false for id=$id, beholder posten.");
           }
+        } else if (type == 'light') {
+          // Eksempel: lysdata‐type
+          print("[SyncUseCase] Forsøger at sende light id=$id til server…");
+
+          // sendLightData forventer to argumenter: data‐map og jwt‐token (hvis du bruger token)
+          // Hvis ApiService.sendLightData kræver JWT, hent det først: final jwt = await AuthStorage.getToken();
+          final String? jwt = await ApiService.getToken(); // eller AuthStorage.getToken() alt efter din implementering
+
+          final bool success = await ApiService.sendLightData(
+            payload,
+            jwt ?? '',
+          );
+
+          if (success) {
+            await OfflineStorageService.deleteById(id);
+            print("[SyncUseCase] Slettede light‐post id=$id fra offline‐kø.");
+          } else {
+            print("[SyncUseCase] sendLightData returnerede false for id=$id, beholder posten.");
+          }
+        } else {
+          print("[SyncUseCase] Ukendt type '$type' for id=$id; sletter alligevel for at undgå endeløs loop.");
+          await OfflineStorageService.deleteById(id);
         }
-
-        // 3) Hvis vi når hertil uden fejl, slet posten lokalt
-        await OfflineStorageService.deleteById(id);
-        final now = DateTime.now().toIso8601String();
-        print("✅ [$now] Synkroniseret: $type $id");
-
       } catch (e) {
-        // 4) Ved fejl: log til din “remote error logger” og slet posten
-        print("❌ Fejl ved synkronisering af $type $id: $e");
-
-        await RemoteErrorLogger.log(
-          patientId: json['patient_id'] ?? -1,
-          type: type,
-          message: e.toString(),
-        );
-
-        // Her sletter vi alligevel posten, fordi vi regner med
-        // at “fejl i sensor_id” aldrig vil rette sig.
-        //
-        // Hvis du vil beholde andre typer fejl (fx midlertidige netværksfejl),
-        // kan du i stedet checke e.toString() og kun slette, hvis det er 'invalid sensor_id'.
-        await OfflineStorageService.deleteById(id);
+        // Fanger exception pr. post (fx netværkstimeout, server‐fejl, JSON‐fejl osv.)
+        print("[SyncUseCase] FEJL under synkronisering af id=$id, type='$type': $e");
+        // Vi vælger ikke at slette posten her, så den bliver forsøgt igen næste runde.
       }
     }
-  }
 
-  static String lightTypeFromCode(dynamic code) {
-    switch (code) {
-      case 0:
-        return "Daylight";
-      case 1:
-        return "LED";
-      case 2:
-        return "Mixed";
-      case 3:
-        return "Halogen";
-      case 4:
-        return "Fluorescent";
-      case 5:
-        return "Fluorescent daylight";
-      case 6:
-        return "Screen";
-      default:
-        return "Unknown";
-    }
+    print("[SyncUseCase] Synkroniseringsrunde færdig.");
   }
 }
