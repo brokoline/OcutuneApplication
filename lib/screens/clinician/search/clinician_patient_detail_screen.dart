@@ -13,8 +13,6 @@ import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_combined_patient_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_activity_card.dart';
 
-// We import our three “Light…” widgets here:
-import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_data_card.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatelessWidget {
@@ -172,9 +170,6 @@ class PatientDetailView extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 1) LightDataCard: “antal + seneste”
-                    LightDataCard(lightData: rawData),
-                    SizedBox(height: 16.h),
 
                     // 2) LightSummarySection: grafer + ML + anbefalinger
                     LightSummarySection(
