@@ -1,3 +1,5 @@
+// lib/widgets/clinician_widgets/patient_light_data_widgets/light_daily_bar_chart.dart
+
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +7,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
-import '../../../controller/chronotype_controller.dart';
 import '../../../services/services/api_services.dart';
+
 
 class LightDailyBarChart extends StatefulWidget {
   final String patientId;
@@ -40,10 +42,9 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
     });
 
     try {
-      final List<LightData> fetched =
+      final fetched =
       await ApiService.fetchDailyLightData(patientId: widget.patientId);
       setState(() => _todayData = fetched);
-
     } catch (e) {
       setState(() => _errorMessage = 'Kunne ikke hente dagsdata: $e');
     } finally {
@@ -53,6 +54,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
 
   @override
   Widget build(BuildContext context) {
+    // 1) Loader
     if (_isLoading) {
       return SizedBox(
         height: 200.h,
@@ -60,6 +62,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     }
 
+    // 2) Fejl
     if (_errorMessage != null) {
       return SizedBox(
         height: 200.h,
@@ -73,12 +76,13 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     }
 
+    // 3) Ingen data
     if (_todayData != null && _todayData!.isEmpty) {
       return SizedBox(
         height: 200.h,
         child: Center(
           child: Text(
-            'Ingen lysmålinger i dag (UTC).',
+            'Ingen lysmålinger i dag (lokal tid).',
             style: TextStyle(color: Colors.white70, fontSize: 14.sp),
             textAlign: TextAlign.center,
           ),
@@ -86,83 +90,50 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     }
 
-    final rawData = _todayData ?? [];
+    // 4) Rå data
+    final rawData = _todayData!;
 
-    // Beregn “i dag” i UTC
-    final nowUtc = DateTime.now().toUtc();
-    final todayYear = nowUtc.year;
-    final todayMonth = nowUtc.month;
-    final todayDay = nowUtc.day;
+    // 5) Filtrer “i dag” i lokal tid
+    final nowLocal = DateTime.now();
+    final todayYear = nowLocal.year;
+    final todayMonth = nowLocal.month;
+    final todayDay = nowLocal.day;
 
-    // 1) Debug: vis antal rå målinger og eksempler på timestamps
-    debugPrint("‼️ DAGLIG: total rawData‐antal = ${rawData.length}");
-    if (rawData.isNotEmpty) {
-      final n = rawData.length;
-      debugPrint("   → Første 5 timestamps:");
-      for (var i = 0; i < min(5, n); i++) {
-        final d = rawData[i];
-        debugPrint(
-            "       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
-      }
-      if (n > 5) {
-        debugPrint("   → …");
-        for (var i = max(5, n - 5); i < n; i++) {
-          final d = rawData[i];
-          debugPrint(
-              "       [${i.toString().padLeft(3)}] ${d.capturedAt.toUtc().toIso8601String()}");
-        }
-      }
-    }
-
-    // 2) Filtrér “i dag” (UTC)
     final todayData = rawData.where((d) {
-      final tsUtc = d.capturedAt.toUtc();
-      return tsUtc.year == todayYear &&
-          tsUtc.month == todayMonth &&
-          tsUtc.day == todayDay;
+      final tsLocal = d.capturedAt.toLocal();
+      return tsLocal.year == todayYear &&
+          tsLocal.month == todayMonth &&
+          tsLocal.day == todayDay;
     }).toList();
 
-    debugPrint("‼️ DAGLIG: TODAYDATA‐antal = ${todayData.length}");
-    if (todayData.isNotEmpty) {
-      final buckets = List<int>.filled(24, 0);
-      for (var d in todayData) {
-        final h = d.capturedAt.toUtc().hour;
-        buckets[h]++;
-      }
-      debugPrint("   → Antal målinger pr. time (UTC):");
-      for (int h = 0; h < 24; h++) {
-        if (buckets[h] > 0) {
-          debugPrint("       Time $h:00 – $h:59  =>  ${buckets[h]} rækker");
-        }
-      }
-    } else {
-      debugPrint("   → Ingen målinger registreret i dag (UTC).");
+    // 6) Rå luks pr. time
+    final hourlyLux = LightUtils.groupByHourOfDay(todayData);
+
+    // 7) Find dagens makslux
+    double maxLux = 0.0;
+    for (final lux in hourlyLux) {
+      if (lux > maxLux) maxLux = lux;
     }
+    if (maxLux == 0.0) maxLux = 1.0; // undgå division med nul
 
-    // 3) Beregn hourly averages
-    final hourlyAverages = LightUtils.groupByHourOfDay(todayData);
-    debugPrint("‼️ DAGLIG: hourlyAverages = $hourlyAverages");
-
-    // 4) Beregn boost-vindue (til farvelogik)
-    final chrono = ChronotypeManager(widget.rmeqScore);
-    final startBoostHour = chrono.lightboostStartHour;
-    final endBoostHour = chrono.lightboostEndHour;
-    debugPrint(
-        "‼️ DAGLIG: Boost window hours -> startBoost: $startBoostHour, endBoost: $endBoostHour");
-
-    // 5) Konstruer BarChartGroupData for 24 timer
+    // 8) Byg bar‐grupperne
     final groups = List<BarChartGroupData>.generate(24, (i) {
-      final yVal = hourlyAverages[i].clamp(0.0, 100.0);
-      final color = (yVal >= 50.0)
-          ? const Color(0xFFFFAB00)
-          : const Color(0xFF5DADE2);
+      final avgLux = hourlyLux[i];
+      double pct = (avgLux / maxLux) * 100.0;
+      pct = pct.clamp(0.0, 100.0);
+
+      // Blå hvis pct >= 50, ellers orange
+      final isCloseEnough = pct >= 50.0;
+      final barColor =
+      isCloseEnough ? const Color(0xFF5DADE2) : const Color(0xFFFFAB00);
+
       return BarChartGroupData(
         x: i,
         barRods: [
           BarChartRodData(
-            toY: yVal,
-            color: color,
-            width: 12.w,
+            toY: pct,
+            color: barColor,
+            width: 8.w,
             borderRadius: BorderRadius.circular(4.r),
             backDrawRodData: BackgroundBarChartRodData(
               show: true,
@@ -174,26 +145,36 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     });
 
+    // 9) Tegn Card + graf + legend
     return Card(
       color: const Color(0xFF2A2A2A),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Titel
             Text(
               "Dagligt lys (⌛)",
-              style: TextStyle(color: Colors.white70, fontSize: 16.sp),
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16.sp,
+              ),
             ),
             SizedBox(height: 12.h),
+
+            // Graf (nu lavere højde)
             SizedBox(
-              height: 180.h,
+              height: 150.h,
               child: BarChart(
                 BarChartData(
                   minY: 0,
                   maxY: 100,
-                  backgroundColor: const Color(0xFF2A2A2A),
+                  backgroundColor: Colors.transparent,
                   borderData: FlBorderData(show: false),
                   gridData: FlGridData(
                     show: true,
@@ -210,18 +191,37 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         interval: 1,
-                        reservedSize: 32,
+                        reservedSize: 28,
                         getTitlesWidget: (value, meta) {
                           final idx = value.toInt();
-                          if (idx < 0 || idx >= 24) return const SizedBox.shrink();
-                          return SideTitleWidget(
-                            meta: meta,
-                            child: Text(
-                              "${idx.toString().padLeft(2, '0')}:00",
-                              style:
-                              TextStyle(color: Colors.white70, fontSize: 10.sp),
-                            ),
-                          );
+                          // Hvis time = 0,4,8,12,16,20 → vis “HH:00”
+                          if (idx % 4 == 0 && idx < 24) {
+                            final label = idx.toString().padLeft(2, '0') + ":00";
+                            return SideTitleWidget(
+                              meta: meta,
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10.sp,
+                                ),
+                              ),
+                            );
+                          }
+                          // Hvis sidst i døgnet → vis “23:59”
+                          if (idx == 23) {
+                            return SideTitleWidget(
+                              meta: meta,
+                              child: Text(
+                                "23:59",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10.sp,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),
@@ -233,20 +233,98 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             "${value.toInt()}%",
-                            style: TextStyle(fontSize: 10.sp, color: Colors.white54),
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.white54,
+                            ),
                           );
                         },
                       ),
                     ),
                     topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false)),
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
+                  alignment: BarChartAlignment.spaceAround,
+                  groupsSpace: 4.w,
                   barGroups: groups,
                 ),
               ),
             ),
+
+            SizedBox(height: 10.h),
+
+            // Legend‐boks (ingen overflow)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFF353535),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Blå legend‐linje
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 12.w,
+                        height: 12.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF5DADE2),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          "Du ramte tæt på den anbefalede lyseksponering på dette tidspunkt.",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11.5.sp,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  // Orange legend‐linje
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 12.w,
+                        height: 12.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFAB00),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          "Mængden af lys på dette tidspunkt var ikke optimal.",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11.5.sp,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Ekstra bund‐margin
+            SizedBox(height: 4.h),
           ],
         ),
       ),

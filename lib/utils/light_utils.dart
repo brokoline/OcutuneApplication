@@ -1,86 +1,147 @@
 // lib/utils/light_utils.dart
 
+import 'package:flutter/material.dart';
+
 import '../models/light_data_model.dart';
 
 /// En utility‐klasse til at gruppere rå LightData i time‐, uge‐ og
-/// måned‐buckets. Alle dato/tid‐operationer sker i UTC‐regi, da selve
-/// timestamps fra serveren gemmes uden isUtc=true.
+/// måned‐buckets. Alle gruppering sker i lokal tid (dvs. .toLocal()).
+///
+/// Metoderne returnerer RÅ gennemsnits‐lux (ikke procenter).
 class LightUtils {
   LightUtils._(); // Privat constructor – må ikke instantieres
 
   // --------------------------------------------------------------------------------
-  // 1) DAILY BUCKETING: groupByHourOfDay
+  // DAILY BUCKETING: groupByHourOfDay
   //
-  // Input: Liste af LightData, hvor d.capturedAt er en DateTime uden isUtc=true,
-  //        men reelt repræsenterer et UTC‐timestamp.
-  // Vi laver 24 buckets (0..23), læser hour‐feltet fra d.capturedAt.toUtc().hour,
-  // konverterer d.ediLux → procent (0..100) og gennemsnit i hver time.
-  //
-  // Output: List<double> med længde 24, hvor index=h repræsenterer gennemsnitlig
-  //         EDI% i timen [h:00–h:59] i UTC.
+  // Input:  Liste af LightData, hvor d.capturedAt er en DateTime (oprindeligt UTC).
+  // Handling: Vi kalder d.capturedAt.toLocal().hour for at hente den lokale time (0..23).
+  //           Vi samler alle ediLux‐værdier i time‐buckets.
+  // Output: List<double> med længde 24, hvor index = lokal time (0=00:00–00:59, …).
+  //         Hver værdi er gennemsnitlig lux i den time. Hvis ingen målinger i time, returneres 0.0.
   static List<double> groupByHourOfDay(List<LightData> data) {
-    // 1) Forbered 24 tomme lister (én for hver UTC‐time 0..23)
-    final Map<int, List<double>> hourlyBuckets = {
-      for (int i = 0; i < 24; i++) i: <double>[]
-    };
+    // 1) Opret 24 tomme lister (én for hver lokal time 0..23)
+    List<List<double>> buckets = List.generate(24, (_) => <double>[]);
 
-    // 2) Loop over alle målinger og put dem i korrekt hour‐bucket baseret på UTC
+    // 2) Loop alle målinger og fordel dem i buckets baseret på lokal time
     for (final d in data) {
-      final DateTime tsUtc = d.capturedAt.toUtc();
-      final int hour = tsUtc.hour; // 0..23 i UTC
-      final double pct = (d.ediLux * 100.0).clamp(0.0, 100.0);
-      hourlyBuckets[hour]!.add(pct);
+      final lokalTid = d.capturedAt.toLocal();
+      final int hour = lokalTid.hour; // 0..23 i lokal tid
+      buckets[hour].add(d.ediLux);    // her antager vi, at ediLux er i lux‐skala
     }
 
-    // 3) Beregn gennemsnit pr. time (eller 0.0 hvis ingen målinger i den time)
-    final List<double> averages = List<double>.filled(24, 0.0);
-    for (int h = 0; h < 24; h++) {
-      final List<double> bucket = hourlyBuckets[h]!;
-      if (bucket.isEmpty) {
-        averages[h] = 0.0;
-      } else {
-        final double sum = bucket.reduce((a, b) => a + b);
-        averages[h] = (sum / bucket.length).clamp(0.0, 100.0);
-      }
-    }
-
-    return averages;
+    // 3) Beregn gennemsnit pr. bucket (hvis tom, returnér 0.0)
+    return List<double>.generate(24, (i) {
+      final bucket = buckets[i];
+      if (bucket.isEmpty) return 0.0;
+      final double sumLux = bucket.reduce((a, b) => a + b);
+      final double avgLux = sumLux / bucket.length;
+      return avgLux;
+    });
   }
 
   // --------------------------------------------------------------------------------
-  // 2) WEEKLY BUCKETING: groupByWeekday
+  // WEEKLY BUCKETING: groupByWeekdayLux
   //
-  // Input: Liste af LightData (UTC‐timestamps). Vi henter .toUtc().weekday,
-  //        som giver 1=mandag … 7=søndag. Konverterer d.ediLux → procent og
-  //        gennemsnit i hver ugedag.
-  //
-  // Output: Map<int,double> med nøgler 0=mandag … 6=søndag, og værdier 0..100 %
-  //         for gennemsnitlig EDI i denne ugedag i data.
-  static Map<int, double> groupByWeekday(List<LightData> data) {
-    // 1) Forbered map: 1..7 (mandag..søndag) → liste af procents
-    final Map<int, List<double>> weekdayBuckets = {
-      for (int wd = 1; wd <= 7; wd++) wd: <double>[]
+  // Vis kun for at have mulighed for ugentligt/monthly – ikke nødvendig for dagligt.
+  static Map<int, double> groupByWeekdayLux(List<LightData> data) {
+    final Map<int, List<double>> buckets = {
+      for (var i = 0; i < 7; i++) i: <double>[]
     };
 
-    // 2) Loop over data og tildel til bucket baseret på UTC‐ugedag
     for (final d in data) {
-      final DateTime tsUtc = d.capturedAt.toUtc();
-      final int wd = tsUtc.weekday; // 1..7 i UTC
-      final double pct = (d.ediLux * 100.0).clamp(0.0, 100.0);
-      weekdayBuckets[wd]!.add(pct);
+      final lokalTid = d.capturedAt.toLocal();
+      final int weekdayIndex = lokalTid.weekday - 1; // 1=Mandag→0 … 7=Søndag→6
+      buckets[weekdayIndex]!.add(d.ediLux);
     }
 
-    // 3) Omsæt til result: keys 0..6 (mandag..søndag) med gennemsnitlig procent
     final Map<int, double> result = {};
-    weekdayBuckets.forEach((weekday, bucket) {
-      final int index = weekday - 1; // 0=mandag .. 6=søndag
+    for (var i = 0; i < 7; i++) {
+      final bucket = buckets[i]!;
       if (bucket.isEmpty) {
-        result[index] = 0.0;
+        result[i] = 0.0;
       } else {
-        final double sum = bucket.reduce((a, b) => a + b);
-        result[index] = (sum / bucket.length).clamp(0.0, 100.0);
+        final double sumLux = bucket.reduce((a, b) => a + b);
+        final double avgLux = sumLux / bucket.length;
+        result[i] = avgLux;
+      }
+    }
+    return result;
+  }
+
+  // --------------------------------------------------------------------------------
+  // MONTHLY BUCKETING: groupByDayOfMonthLux
+  //
+  // Samme princip: dag 1..31 i lokal tid → gennemsnitlig lux.
+  static Map<int, double> groupByDayOfMonthLux(List<LightData> data) {
+    final Map<int, List<double>> buckets = {};
+
+    for (final d in data) {
+      final lokalTid = d.capturedAt.toLocal();
+      final int day = lokalTid.day; // 1..31 i lokal tid
+      buckets.putIfAbsent(day, () => <double>[]).add(d.ediLux);
+    }
+
+    final Map<int, double> result = {};
+    buckets.forEach((day, bucket) {
+      if (bucket.isEmpty) {
+        result[day] = 0.0;
+      } else {
+        final double sumLux = bucket.reduce((a, b) => a + b);
+        final double avgLux = sumLux / bucket.length;
+        result[day] = avgLux;
       }
     });
+    return result;
+  }
+
+  // --------------------------------------------------------------------------------
+  // OPTIONAL: Hjælpemetoder til at konvertere Map → List, hvis man ønsker det
+  static List<double> groupByWeekdayListLux(List<LightData> data) {
+    final weekdayMap = groupByWeekdayLux(data);
+    return List<double>.generate(7, (i) => weekdayMap[i] ?? 0.0);
+  }
+
+  static List<double> groupByDayOfMonthListLux(List<LightData> data) {
+    final nowLocal = DateTime.now().toLocal();
+    final daysInMonth =
+    DateUtils.getDaysInMonth(nowLocal.year, nowLocal.month);
+    final dayMap = groupByDayOfMonthLux(data);
+    return List<double>.generate(daysInMonth, (i) => dayMap[i + 1] ?? 0.0);
+  }
+
+
+
+// --------------------------------------------------------------------------------
+  // 2) WEEKLY BUCKETING: groupByWeekday
+  //
+  // Input:  Liste af LightData (timestamps som UTC bag kulisserne).
+  // Handling: Vi kalder d.capturedAt.toLocal().weekday, som giver 1=Mandag..7=Søndag
+  //         i dansk tidszone. Vi konverterer d.ediLux til procent (0..100) og gennemsnit.
+  // Output: Map<int,double> med nøgler 0=Mandag..6=Søndag, hvor værdien er gennemsnitlig procent‐lux.
+  static Map<int, double> groupByWeekday(List<LightData> data) {
+    // 1) Forbered midlertidige buckets for ugedage 0..6
+    Map<int, List<double>> buckets = { for (var i = 0; i < 7; i++) i: <double>[] };
+
+    // 2) Loop over data og tilføj til korrekt bucket baseret på lokal ugedag
+    for (final d in data) {
+      final lokalTid = d.capturedAt.toLocal();
+      final int weekdayIndex = lokalTid.weekday - 1; // Mandag=1→0, … Søndag=7→6
+      final double pct = (d.ediLux * 100.0).clamp(0.0, 100.0);
+      buckets[weekdayIndex]!.add(pct);
+    }
+
+    // 3) Beregn gennemsnit pr. ugedag (hvis tom, 0.0)
+    Map<int, double> result = {};
+    for (var i = 0; i < 7; i++) {
+      final bucket = buckets[i]!;
+      if (bucket.isEmpty) {
+        result[i] = 0.0;
+      } else {
+        final sum = bucket.reduce((a, b) => a + b);
+        result[i] = (sum / bucket.length).clamp(0.0, 100.0);
+      }
+    }
 
     return result;
   }
@@ -88,59 +149,28 @@ class LightUtils {
   // --------------------------------------------------------------------------------
   // 3) MONTHLY BUCKETING: groupByDayOfMonth
   //
-  // Input: Liste af LightData (UTC‐timestamps). Vi henter .toUtc().day,
-  //        som giver dag‐i‐måned (1..31). Konverter d.ediLux → procent og
-  //        gennemsnit pr. dag‐i‐måned.
-  //
-  // Output: Map<int,double> hvor nøglerne er de dage‐i‐måned (1..31) der rent faktisk
-  //         forekommer i data, og værdier er gennemsnitlig EDI% for den dag.
+  // Input:  Liste af LightData (timestamps i UTC-format).
+  // Handling: Vi kalder d.capturedAt.toLocal().day, som giver dag i måneden (1..31)
+  //         i dansk lokal tid. Vi konverterer d.ediLux→procent (0..100) og gennemsnit.
+  // Output: Map<int,double> med nøglerne = dag i måneden (1..max31), og værdien = gennemsnitlig procent‐lux.
   static Map<int, double> groupByDayOfMonth(List<LightData> data) {
-    final Map<int, List<double>> domBuckets = {};
+    // 1) Brug et midlertidigt map, hvor nøglen er dag‐i‐måned (1..31)
+    final Map<int, List<double>> buckets = {};
 
-    // 1) Loop og put i buckets baseret på UTC‐dag
     for (final d in data) {
-      final DateTime tsUtc = d.capturedAt.toUtc();
-      final int dom = tsUtc.day; // 1..31 i UTC
+      final lokalTid = d.capturedAt.toLocal();
+      final int day = lokalTid.day; // 1..31 i lokal tid
       final double pct = (d.ediLux * 100.0).clamp(0.0, 100.0);
-      domBuckets.putIfAbsent(dom, () => <double>[]).add(pct);
+      buckets.putIfAbsent(day, () => <double>[]).add(pct);
     }
 
-    // 2) Byg result med gennemsnit for hver dag
+    // 2) Beregn gennemsnit for hver dag og returnér som Map<int,double>
     final Map<int, double> result = {};
-    domBuckets.forEach((day, bucket) {
-      final double sum = bucket.reduce((a, b) => a + b);
+    buckets.forEach((day, bucket) {
+      final sum = bucket.reduce((a, b) => a + b);
       result[day] = (sum / bucket.length).clamp(0.0, 100.0);
     });
 
     return result;
-  }
-
-  // --------------------------------------------------------------------------------
-  // 4) OPTIONAL: Hvis du vil lave x‐aksen med tekstlige ugedagsnavne (“Man, Tir,…”),
-  // kan du kalde denne (men den bruger ikke procent – den summerer bare lux):
-  //
-  // Input: Liste af LightData (UTC). Vi henter .toUtc().weekday, og
-  //        summerer d.illuminance for hver hverdag. Output: Map<String,double>
-  //        med keys “Man”..“Søn” og summeret illuminans.
-  static Map<String, double> groupLuxByWeekdayName(List<LightData> data) {
-    final Map<String, double> luxPerDay = {
-      'Man': 0.0,
-      'Tir': 0.0,
-      'Ons': 0.0,
-      'Tor': 0.0,
-      'Fre': 0.0,
-      'Lør': 0.0,
-      'Søn': 0.0,
-    };
-    const List<String> names = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
-
-    for (final d in data) {
-      final DateTime tsUtc = d.capturedAt.toUtc();
-      final int wd = tsUtc.weekday; // 1..7 i UTC
-      final String name = names[wd - 1];
-      luxPerDay[name] = luxPerDay[name]! + d.illuminance;
-    }
-
-    return luxPerDay;
   }
 }
