@@ -7,13 +7,11 @@ import 'package:intl/intl.dart'; // Til at formatere DateTime → "HH:mm"
 
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
-import '../../../utils/light_utils.dart';             // Til groupBy…-hjælpemetoder
 import '../../../controller/chronotype_controller.dart'; // Til ChronotypeManager
 
 import 'light_slide_bar_chart.dart';
 import 'light_recommendations_card.dart';
 import 'light_score_card.dart';
-import 'light_latest_events_list.dart';
 
 class LightSummarySection extends StatelessWidget {
   /// Patient‐ID, så vi kan videregive det til LightSlideBarChart
@@ -71,7 +69,6 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // Her har vi _rawLightData til rådighed
     final List<LightData> allLightData = vm.rawLightData;
 
     // ────────────────────────────────────────────────────────────────
@@ -101,32 +98,26 @@ class LightSummarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ─────── 1) Recommendations card ─────────────────────────
-        if (vm.processedLightData != null ||
-            vm.isProcessing ||
-            vm.error != null) ...[
-          LightRecommendationsCard(recommendations: recs),
-          SizedBox(height: 16.h),
-        ],
+        // ─────── 1) VIS altid Recommendations card ─────────────────────────
+        LightRecommendationsCard(
+          recommendations: recs,
+        ),
+        SizedBox(height: 16.h),
 
-        // ─────── 2) Score card (rMEQ + MEQ) ──────────────────────
+        // ─────── 2) Score card (rMEQ + MEQ) ─────────────────────────────
         LightScoreCard(
           rmeqScore: rmeqScore,
           meqScore: meqScore ?? 0,
         ),
         SizedBox(height: 24.h),
 
-        // ─────── 3) Én samlet “slide”-graf: Dag / Uge / Måned ───────
+        // ─────── 3) Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
         // Send patientId + rmeqScore til LightSlideBarChart
         LightSlideBarChart(
           patientId: patientId,
           rmeqScore: rmeqScore,
         ),
         SizedBox(height: 24.h),
-
-        // ─────── 4) Seneste events liste ──────────────────────────
-        // Her bruger vi “allLightData”, som hentet i viewmodel’en
-        LightLatestEventsList(lightData: allLightData),
       ],
     );
   }

@@ -9,7 +9,6 @@ import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
 import '../../../services/services/api_services.dart';
 
-
 class LightDailyBarChart extends StatefulWidget {
   final String patientId;
   final int rmeqScore;
@@ -116,16 +115,17 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
     }
     if (maxLux == 0.0) maxLux = 1.0; // undgå division med nul
 
-    // 8) Byg bar‐grupperne
+    // 8) Byg bar‐grupperne (nu med omvendt farvelogik)
     final groups = List<BarChartGroupData>.generate(24, (i) {
       final avgLux = hourlyLux[i];
       double pct = (avgLux / maxLux) * 100.0;
       pct = pct.clamp(0.0, 100.0);
 
-      // Blå hvis pct >= 50, ellers orange
-      final isCloseEnough = pct >= 50.0;
-      final barColor =
-      isCloseEnough ? const Color(0xFF5DADE2) : const Color(0xFFFFAB00);
+      // NU: orange hvis pct >= 50 (nok lys), ellers blå (mangler lys)
+      final bool hasEnoughLight = pct >= 50.0;
+      final Color barColor = hasEnoughLight
+          ? const Color(0xFFFFAB00) // orange for “nok lys”
+          : const Color(0xFF5DADE2); // blå for “mangler lys”
 
       return BarChartGroupData(
         x: i,
@@ -145,7 +145,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     });
 
-    // 9) Tegn Card + graf + legend
+    // 9) Tegn Card + graf + legend (med byttede farver)
     return Card(
       color: const Color(0xFF2A2A2A),
       shape: RoundedRectangleBorder(
@@ -167,7 +167,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
             ),
             SizedBox(height: 12.h),
 
-            // Graf (nu lavere højde)
+            // Graf (lavere højde)
             SizedBox(
               height: 150.h,
               child: BarChart(
@@ -257,7 +257,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
 
             SizedBox(height: 10.h),
 
-            // Legend‐boks (ingen overflow)
+            // Legend‐boks (farver byttet)
             Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
@@ -268,33 +268,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Blå legend‐linje
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 12.w,
-                        height: 12.w,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5DADE2),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          "Du ramte tæt på den anbefalede lyseksponering på dette tidspunkt.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11.5.sp,
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6.h),
-                  // Orange legend‐linje
+                  // Orange legend‐linje (nok lys)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -309,7 +283,33 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(
-                          "Mængden af lys på dette tidspunkt var ikke optimal.",
+                          "Du har fået nok lys på dette tidspunkt.",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11.5.sp,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  // Blå legend‐linje (ikke nok lys)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 12.w,
+                        height: 12.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF5DADE2),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          "Du har ikke fået nok lys på dette tidspunkt.",
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 11.5.sp,

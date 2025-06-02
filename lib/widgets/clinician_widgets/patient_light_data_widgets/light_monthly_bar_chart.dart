@@ -106,7 +106,7 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
 
     // ─────────────────────────────────────────────────────────────────
     // 5) GroupBy dag‐i‐måneden → Map<int, double> (1..31)
-    final Map<int, double> domMap = LightUtils.groupByDayOfMonth(thisMonthData);
+    final Map<int, double> domMap = LightUtils.groupByWeekdayLux(thisMonthData);
     final List<int> sortedDays = domMap.keys.toList()..sort();
 
     // ─────────────────────────────────────────────────────────────────
