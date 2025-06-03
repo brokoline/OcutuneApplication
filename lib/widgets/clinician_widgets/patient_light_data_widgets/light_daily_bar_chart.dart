@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import '/theme/colors.dart';
 import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
 import '../../../services/services/api_services.dart';
@@ -14,10 +14,10 @@ class LightDailyBarChart extends StatefulWidget {
   final int rmeqScore;
 
   const LightDailyBarChart({
-    Key? key,
+    super.key,
     required this.patientId,
     required this.rmeqScore,
-  }) : super(key: key);
+  });
 
   @override
   State<LightDailyBarChart> createState() => _LightDailyBarChartState();
@@ -41,8 +41,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
     });
 
     try {
-      final fetched =
-      await ApiService.fetchDailyLightData(patientId: widget.patientId);
+      final fetched = await ApiService.fetchDailyLightData(patientId: widget.patientId);
       setState(() => _todayData = fetched);
     } catch (e) {
       setState(() => _errorMessage = 'Kunne ikke hente dagsdata: $e');
@@ -53,18 +52,16 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
 
   @override
   Widget build(BuildContext context) {
-    // 1) Loader
     if (_isLoading) {
       return SizedBox(
-        height: 200.h,
+        height: 160.h,
         child: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // 2) Fejl
     if (_errorMessage != null) {
       return SizedBox(
-        height: 200.h,
+        height: 160.h,
         child: Center(
           child: Text(
             _errorMessage!,
@@ -75,10 +72,9 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     }
 
-    // 3) Ingen data
     if (_todayData != null && _todayData!.isEmpty) {
       return SizedBox(
-        height: 200.h,
+        height: 160.h,
         child: Center(
           child: Text(
             'Ingen lysmålinger i dag (lokal tid).',
@@ -89,43 +85,27 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     }
 
-    // 4) Rå data
     final rawData = _todayData!;
-
-    // 5) Filtrer “i dag” i lokal tid
     final nowLocal = DateTime.now();
-    final todayYear = nowLocal.year;
-    final todayMonth = nowLocal.month;
-    final todayDay = nowLocal.day;
-
     final todayData = rawData.where((d) {
       final tsLocal = d.capturedAt.toLocal();
-      return tsLocal.year == todayYear &&
-          tsLocal.month == todayMonth &&
-          tsLocal.day == todayDay;
+      return tsLocal.year == nowLocal.year &&
+          tsLocal.month == nowLocal.month &&
+          tsLocal.day == nowLocal.day;
     }).toList();
 
-    // 6) Rå luks pr. time
     final hourlyLux = LightUtils.groupByHourOfDay(todayData);
+    double maxLux = hourlyLux.reduce(max).clamp(1.0, double.infinity);
 
-    // 7) Find dagens makslux
-    double maxLux = 0.0;
-    for (final lux in hourlyLux) {
-      if (lux > maxLux) maxLux = lux;
-    }
-    if (maxLux == 0.0) maxLux = 1.0; // undgå division med nul
-
-    // 8) Byg bar‐grupperne (nu med omvendt farvelogik)
     final groups = List<BarChartGroupData>.generate(24, (i) {
       final avgLux = hourlyLux[i];
       double pct = (avgLux / maxLux) * 100.0;
       pct = pct.clamp(0.0, 100.0);
 
-      // NU: orange hvis pct >= 50 (nok lys), ellers blå (mangler lys)
       final bool hasEnoughLight = pct >= 50.0;
       final Color barColor = hasEnoughLight
-          ? const Color(0xFFFFAB00) // orange for “nok lys”
-          : const Color(0xFF5DADE2); // blå for “mangler lys”
+          ? const Color(0xFFFFAB00)
+          : const Color(0xFF5DADE2);
 
       return BarChartGroupData(
         x: i,
@@ -145,186 +125,159 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     });
 
-    // 9) Tegn Card + graf + legend (med byttede farver)
     return Card(
-      color: const Color(0xFF2A2A2A),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      color: generalBox,
+      margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Titel
             Text(
-              "Dagligt lys (⌛)",
+              "Dagligt lys (✗)",
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
               ),
             ),
             SizedBox(height: 12.h),
 
-            // Graf (lavere højde)
+            // Percentage labels and chart
             SizedBox(
               height: 150.h,
-              child: BarChart(
-                BarChartData(
-                  minY: 0,
-                  maxY: 100,
-                  backgroundColor: Colors.transparent,
-                  borderData: FlBorderData(show: false),
-                  gridData: FlGridData(
-                    show: true,
-                    horizontalInterval: 20,
-                    getDrawingHorizontalLine: (y) {
-                      return FlLine(
-                        color: Colors.grey.withOpacity(0.3),
-                        strokeWidth: 1,
-                      );
-                    },
-                  ),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 1,
-                        reservedSize: 28,
-                        getTitlesWidget: (value, meta) {
-                          final idx = value.toInt();
-                          // Hvis time = 0,4,8,12,16,20 → vis “HH:00”
-                          if (idx % 4 == 0 && idx < 24) {
-                            final label = idx.toString().padLeft(2, '0') + ":00";
-                            return SideTitleWidget(
-                              meta: meta,
-                              child: Text(
-                                label,
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10.sp,
-                                ),
-                              ),
-                            );
-                          }
-                          // Hvis sidst i døgnet → vis “23:59”
-                          if (idx == 23) {
-                            return SideTitleWidget(
-                              meta: meta,
-                              child: Text(
-                                "23:59",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10.sp,
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 20,
-                        reservedSize: 32,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            "${value.toInt()}%",
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              color: Colors.white54,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  alignment: BarChartAlignment.spaceAround,
-                  groupsSpace: 4.w,
-                  barGroups: groups,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 10.h),
-
-            // Legend‐boks (farver byttet)
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFF353535),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Orange legend‐linje (nok lys)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Y-axis labels
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        width: 12.w,
-                        height: 12.w,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFAB00),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          "Du har fået nok lys på dette tidspunkt.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11.5.sp,
-                            height: 1.3,
-                          ),
-                        ),
-                      ),
+                      Text("100%", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                      Text("80%", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                      Text("60%", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                      Text("40%", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                      Text("20%", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                      Text("0%", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
                     ],
                   ),
-                  SizedBox(height: 6.h),
-                  // Blå legend‐linje (ikke nok lys)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 12.w,
-                        height: 12.w,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5DADE2),
-                          shape: BoxShape.circle,
+                  SizedBox(width: 8.w),
+
+                  // Expanded chart area
+                  Expanded(
+                    child: BarChart(
+                      BarChartData(
+                        minY: 0,
+                        maxY: 100,
+                        backgroundColor: Colors.transparent,
+                        borderData: FlBorderData(show: false),
+                        gridData: FlGridData(
+                          show: true,
+                          horizontalInterval: 20,
+                          getDrawingHorizontalLine: (y) {
+                            return FlLine(
+                              color: Colors.grey.withOpacity(0.3),
+                              strokeWidth: 1,
+                            );
+                          },
                         ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          "Du har ikke fået nok lys på dette tidspunkt.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11.5.sp,
-                            height: 1.3,
+                        titlesData: FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 1,
+                              reservedSize: 24,
+                              getTitlesWidget: (value, meta) {
+                                final idx = value.toInt();
+                                if (idx % 4 == 0 || idx == 23) {
+                                  final label = idx == 23 ? "23:59" : "${idx.toString().padLeft(2, '0')}:00";
+                                  return Text(
+                                    label,
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 10.sp,
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
                           ),
+                          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
+                        alignment: BarChartAlignment.spaceAround,
+                        groupsSpace: 4.w,
+                        barGroups: groups,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // Ekstra bund‐margin
-            SizedBox(height: 4.h),
+            // Time labels at bottom
+            Padding(
+              padding: EdgeInsets.only(left: 28.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("00:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                  Text("04:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                  Text("08:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                  Text("12:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                  Text("16:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                  Text("20:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                  Text("23:59", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 12.h),
+
+            // Legend
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      color: const Color(0xFFFFAB00),
+                      size: 12.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      "Tidspunkt med optimal lyseksponering",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4.h),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      color: const Color(0xFF5DADE2),
+                      size: 12.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      "Tidspunkt med uoptimal lyseksponering",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),

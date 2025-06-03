@@ -22,16 +22,17 @@ class Chronotype {
   });
 
   factory Chronotype.fromJson(Map<String, dynamic> json) => Chronotype(
-    id: json["id"],
-    typeKey: json["type_key"],
-    title: json["title"],
-    shortDescription: json["short_description"],
-    longDescription: json["long_description"],
-    facts: json["facts"],
-    imageUrl: json["image_url"],
-    iconUrl: json["icon_url"],
-    language: json["language"],
+    id: json["id"] as int,
+    typeKey: json["type_key"] as String,
+    title: json["title"] as String,
+    shortDescription: json["short_description"] as String,
+    longDescription: json["long_description"] as String?,
+    facts: json["facts"] as String?,
+    imageUrl: json["image_url"] as String?,  // kun filnavn
+    iconUrl: json["icon_url"] as String?,
+    language: json["language"] as String?,
   );
+
 
   Map<String, dynamic> toJson() => {
     "id": id,
@@ -44,4 +45,20 @@ class Chronotype {
     "icon_url": iconUrl,
     "language": language,
   };
+
+
+  String get fullImageUrl {
+    if (imageUrl == null || imageUrl!.isEmpty) {
+      return "";
+    }
+    return "https://ocutune2025.ddns.net/images/$imageUrl";
+  }
+
+
+  String get fullIconUrl {
+    if (iconUrl == null || iconUrl!.isEmpty) {
+      return "";
+    }
+    return "https://ocutune2025.ddns.net/images/$iconUrl";
+  }
 }

@@ -10,17 +10,17 @@ import '../../../controller/chronotype_controller.dart';
 import '../../../services/services/api_services.dart';
 
 class LightMonthlyBarChart extends StatefulWidget {
-  /// Patient-ID som vi henter data for
+  /// Patient-ID, som vi henter data for
   final String patientId;
 
   /// rMEQ-score (bruges til at beregne DLMO og boost-vindue)
   final int rmeqScore;
 
   const LightMonthlyBarChart({
-    Key? key,
+    super.key,
     required this.patientId,
     required this.rmeqScore,
-  }) : super(key: key);
+  });
 
   @override
   State<LightMonthlyBarChart> createState() => _LightMonthlyBarChartState();
@@ -44,20 +44,26 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
     });
 
     try {
-      // Hent alle lysmålinger for denne patient (API’en returnerer rå JSON som List<LightData>)
-      final List<LightData> fetched =
-      await ApiService.fetchMonthlyLightData(patientId: widget.patientId);
-      setState(() => _monthData = fetched);
+      final List<LightData> fetched = await ApiService.fetchMonthlyLightData(
+        patientId: widget.patientId,
+      );
+      setState(() {
+        _monthData = fetched;
+      });
     } catch (e) {
-      setState(() => _errorMessage = 'Kunne ikke hente månedsdata: $e');
+      setState(() {
+        _errorMessage = 'Kunne ikke hente månedsdata: $e';
+      });
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // 1) Loading‐indikator
+    // 1) Vis loading‐indikator mens vi henter
     if (_isLoading) {
       return SizedBox(
         height: 200.h,
@@ -65,7 +71,7 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
       );
     }
 
-    // 2) Fejlbesked, hvis hentning mislykkedes
+    // 2) Vis fejlbesked hvis hentning fejlede
     if (_errorMessage != null) {
       return SizedBox(
         height: 200.h,
@@ -79,7 +85,7 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
       );
     }
 
-    // 3) Hvis vi har hentet data (eller intet), tjek om listen er tom
+    // 3) Hvis vi har hentet, men datalisten er tom
     final rawData = _monthData ?? [];
     if (rawData.isEmpty) {
       return SizedBox(
@@ -94,45 +100,63 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
       );
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // 4) Filtrér “denne måned” i UTC (for en sikkerheds skyld, selv om API'en skulle returnere kun denne måned)
+    // ───────────────────────────────────────────────────────────────────────────
+    // 4) Filtrer “denne måned” udfra UTC-tid (selvom API burde returnere præcis den måned)
     final nowUtc = DateTime.now().toUtc();
-    final year = nowUtc.year;
-    final month = nowUtc.month;
-    final thisMonthData = rawData.where((e) {
-      final tsUtc = e.capturedAt.toUtc();
-      return tsUtc.year == year && tsUtc.month == month;
+    final int year = nowUtc.year;
+    final int month = nowUtc.month;
+    final List<LightData> thisMonthData = rawData.where((d) {
+      final ts = d.capturedAt.toUtc();
+      return ts.year == year && ts.month == month;
     }).toList();
 
-    // ─────────────────────────────────────────────────────────────────
-    // 5) GroupBy dag‐i‐måneden → Map<int, double> (1..31)
-    final Map<int, double> domMap = LightUtils.groupByWeekdayLux(thisMonthData);
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5) Gruppen: dag‐i‐måneden → Map<int, double> med gennemsnitlig ediLux per dag
+    //    Brug den KORREKTE metode: groupByDayOfMonthLux
+    final Map<int, double> domMap = LightUtils.groupByDayOfMonthLux(thisMonthData);
+
+    //    Sortér dagene (1,2,3,…). Nu indeholder domMap nøglerne (1..31) for dem, der rent faktisk findes i data.
     final List<int> sortedDays = domMap.keys.toList()..sort();
 
-    // ─────────────────────────────────────────────────────────────────
-    // 6) Beregn DLMO-dag & boost-vindue vha. ChronotypeManager
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6) Identificér DLMO-dagen og boost-vinduet vha. ChronotypeManager
     final ChronotypeManager chrono = ChronotypeManager(widget.rmeqScore);
-    final int recommendedDay = chrono.getRecommendedTimes()['dlmo']!.toUtc().day;
+
+    //    a) DLMO-tidspunkt som DateTime (UTC). Her tager vi blot “day”-delen
+    final DateTime dlmoUtc = chrono.getRecommendedTimes()['dlmo']!.toUtc();
+    final int recommendedDay = dlmoUtc.day;
+
+    //    b) Boost‐vindue i antal timer fra midnat (eksempel: 7.5 = kl. 07:30 UTC)
     final double startBoostHour = chrono.lightboostStartHour;
     final double endBoostHour = chrono.lightboostEndHour;
 
-    // ─────────────────────────────────────────────────────────────────
-    // 7) Definér farver & tærskel
-    const double threshold = 50.0;
-    const Color goodColor = Color(0xFFFFAB00);   // Orange/gul = “opfyldt”
-    const Color badColor = Color(0xFF5DADE2);    // Lys blå = “under”
-    final Color neutralColor = Colors.grey.shade600; // Grå = “ikke DLMO‐dag”
+    // ───────────────────────────────────────────────────────────────────────────
+    // 7) Find månedens maksimale gennemsnitlige ediLux (for normalisering til procent)
+    final double maxAvgLux = domMap.values.reduce((a, b) => a > b ? a : b);
 
-    // ─────────────────────────────────────────────────────────────────
-    // 8) Byg BarChartGroupData for hver dag i sortedDays
-    final List<BarChartGroupData> groups = [];
+    // ───────────────────────────────────────────────────────────────────────────
+    // 8) Opsæt farve‐ og tærskel‐konstanter
+    const double thresholdPct = 50.0;            // ≥ 50 % giver orange
+    const Color goodColor = Color(0xFFFFAB00);    // Orange = “opfyldt”
+    const Color badColor = Color(0xFF5DADE2);     // Blå = “under”
+    final Color neutralColor = Colors.grey.shade600; // Grå = ikke‐DLMO‐dag
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 9) Byg BarChartGroupData ‐ én søjle pr. dag i sortedDays
+    final List<BarChartGroupData> barGroups = [];
+
     for (int idx = 0; idx < sortedDays.length; idx++) {
       final int day = sortedDays[idx];
-      final double avgY = domMap[day]!.clamp(0.0, 100.0);
+      final double avgLuxForDay = domMap[day]!; // fx 150.3 (lux)
 
-      // A) Hvis dag != recommendedDay → tegn neutral grå
+      // 9a) Beregn hvilken procent af månedens maksimale dags‐gennemsnit, denne dags‐værdi udgør:
+      final double avgY = (maxAvgLux > 0)
+          ? ((avgLuxForDay / maxAvgLux) * 100.0).clamp(0.0, 100.0)
+          : 0.0;
+
+      // 9b) Hvis Dagen IKKE er DLMO‐dagen → neutral grå-søjle
       if (day != recommendedDay) {
-        groups.add(
+        barGroups.add(
           BarChartGroupData(
             x: idx,
             barRods: [
@@ -153,32 +177,36 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
         continue;
       }
 
-      // B) Hvis dag == recommendedDay → filtrér målinger for netop denne dag
-      final List<LightData> onlyThatDay = thisMonthData.where((e) {
-        return e.capturedAt.toUtc().day == day;
+      // 9c) Hvis Dagen ER DLMO‐dagen → tjek, om “boost‐vindues‐gennemsnittet” når tærskel
+      //     Step 1: Filtrér udelukkende data fra DLMO‐dagen
+      final List<LightData> onlyThatDay = thisMonthData.where((d) {
+        return d.capturedAt.toUtc().day == day;
       }).toList();
 
-      // Filtrér data inden for boost-vinduet (UTC-tid)
-      final List<LightData> inWindow = onlyThatDay.where((e) {
-        final DateTime tsUtc = e.capturedAt.toUtc();
-        final double hourValue = tsUtc.hour + (tsUtc.minute / 60.0);
-        return hourValue >= startBoostHour && hourValue < endBoostHour;
+      //     Step 2: Filtrér data inden for boost-vinduet (UTC-ti)
+      final List<LightData> inWindow = onlyThatDay.where((d) {
+        final DateTime tsUtc = d.capturedAt.toUtc();
+        final double hourFraction = tsUtc.hour + (tsUtc.minute / 60.0);
+        return hourFraction >= startBoostHour && hourFraction < endBoostHour;
       }).toList();
 
-      // Beregn gennemsnitlig EDI% * 100 i boost-vinduet
-      double avgInWindow = 0.0;
+      //     Step 3: Beregn gennemsnitlig “EDI%” i boost-vinduet:
+      //       – Vi regner med, at ediLux allerede er "EDI i lux" og ønsker at udtrykke det som procent (0..100).
+      //       – Her tager vi (ediLux * 100).clamp(0..100) for hver måling, lægger sammen og dividerer med antal målinger.
+      double avgInWindowPct = 0.0;
       if (inWindow.isNotEmpty) {
-        final double sum = inWindow
-            .map((e) => (e.ediLux * 100.0).clamp(0.0, 100.0))
+        final double sumPct = inWindow
+            .map((d) => (d.ediLux * 100.0).clamp(0.0, 100.0))
             .reduce((a, b) => a + b);
-        avgInWindow = (sum / inWindow.length).clamp(0.0, 100.0);
+        avgInWindowPct = (sumPct / inWindow.length).clamp(0.0, 100.0);
       }
 
-      // Vælg farve: ≥ threshold → goodColor, ellers badColor
-      final bool meetsThreshold = avgInWindow >= threshold;
+      //     Step 4: Vælg farve udfra tærskel:
+      final bool meetsThreshold = avgInWindowPct >= thresholdPct;
       final Color barColor = meetsThreshold ? goodColor : badColor;
 
-      groups.add(
+      //     Step 5: Tilføj stakit (baseret på avgY, men farvelagt orange/blå):
+      barGroups.add(
         BarChartGroupData(
           x: idx,
           barRods: [
@@ -198,18 +226,20 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
       );
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // 9) Tegn selve grafen med dag‐i‐måneden på x‐aksen
+    // ───────────────────────────────────────────────────────────────────────────
+    // 10) Tegn selve grafen med dag‐i‐måneden på x‐aksen
     return Card(
       color: Colors.grey.shade900,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
       elevation: 4,
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // – Titel
+            // Titel
             Text(
               'Månedlig lysmængde',
               style: TextStyle(
@@ -220,7 +250,7 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
             ),
             SizedBox(height: 12.h),
 
-            // – Grafen
+            // Graf‐widget
             SizedBox(
               height: 200.h,
               child: BarChart(
@@ -247,7 +277,7 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
                   titlesData: FlTitlesData(
                     show: true,
 
-                    // BUND (X‐aksen): Vis “dag i måneden” (1,2,3,…)
+                    // BUND (X‐aksen): Vis “dag i måneden”
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -262,14 +292,17 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
                             meta: meta,
                             child: Text(
                               sortedDays[idx].toString(),
-                              style: TextStyle(color: Colors.white70, fontSize: 10.sp),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10.sp,
+                              ),
                             ),
                           );
                         },
                       ),
                     ),
 
-                    // VENSTRE (Y‐aksen): “0%, 20%, 40%…100%”
+                    // VENSTRE (Y‐aksen): “0%, 20%, 40% … 100%”
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -278,7 +311,10 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
                         getTitlesWidget: (double value, TitleMeta meta) {
                           return Text(
                             "${value.toInt()}%",
-                            style: TextStyle(color: Colors.white54, fontSize: 10.sp),
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10.sp,
+                            ),
                           );
                         },
                       ),
@@ -289,7 +325,7 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
                   ),
 
                   // Bar‐grupperne
-                  barGroups: groups,
+                  barGroups: barGroups,
 
                   // Afstand mellem grupperne
                   groupsSpace: 4.w,

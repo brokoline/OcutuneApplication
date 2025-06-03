@@ -41,12 +41,10 @@ import 'screens/clinician/root/clinician_root_controller.dart';
 // 🎨 Tema
 import 'theme/colors.dart';
 
-// ❤️ Nyttige imports til ML‐flowet:
+//  Nyttige imports til ML‐flowet:
 import 'services/processing/data_processing.dart';
 import 'services/processing/data_processing_manager.dart';
 import 'viewmodel/clinician/patient_detail_viewmodel.dart';
-
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -213,6 +211,15 @@ class _LoggingHttpClient implements HttpClient {
   final HttpClient _inner;
 
   _LoggingHttpClient(this._inner);
+
+  // Tilføj setter og getter for autoUncompress, så NetworkImage ikke fejler:
+  @override
+  set autoUncompress(bool value) {
+    _inner.autoUncompress = value;
+  }
+
+  @override
+  bool get autoUncompress => _inner.autoUncompress;
 
   @override
   Future<HttpClientRequest> getUrl(Uri url) {

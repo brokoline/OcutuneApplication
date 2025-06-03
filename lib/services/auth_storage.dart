@@ -114,16 +114,17 @@ static Future<int?> getPatientId() async {
 
 
   static Future<bool> emailExists(String email) async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/check-email');
+    final url = Uri.parse('https://ocutune2025.ddns.net/api/auth/check-email');
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': email}),
       );
+
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);
-        return jsonBody['exists'] == true;
+        return jsonBody['available'] == false;
       } else {
         return false;
       }
@@ -131,6 +132,7 @@ static Future<int?> getPatientId() async {
       return false;
     }
   }
+
 
 
 

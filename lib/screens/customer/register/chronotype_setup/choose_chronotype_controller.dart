@@ -8,20 +8,20 @@ import '/models/customer_response_model.dart';
 import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
 
 class ChooseChronotypeController {
-  static const _endpoint = 'https://ocutune2025.ddns.net/chronotypes';
+  static const String _baseUrl = 'https://ocutune2025.ddns.net';
 
-  /// Henter alle kronotyper fra backend
+  static const String _path = '/api/chronotypes/chronotypes';
   static Future<List<Chronotype>> fetchChronotypes() async {
-    final uri = Uri.parse(_endpoint);
+    final uri = Uri.parse('$_baseUrl$_path');
     final resp = await http.get(uri);
+
     if (resp.statusCode == 200) {
       final List<dynamic> data = json.decode(resp.body);
       return data.map((j) => Chronotype.fromJson(j)).toList();
     } else {
-      throw Exception('Failed to load chronotypes');
+      throw Exception('Failed to load chronotypes (HTTP ${resp.statusCode})');
     }
   }
-
   /// Vis fejl-snackbar
   static void showError(BuildContext ctx, String msg) {
     ScaffoldMessenger.of(ctx).showSnackBar(

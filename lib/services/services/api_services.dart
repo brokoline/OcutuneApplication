@@ -24,7 +24,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 2) Helper: Returner headers med JWT‐token
+  // 2) Helper: Returner headers med JWT‐token og uden auth
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, String>> _authHeaders() async {
     final token = await getToken();
@@ -33,6 +33,16 @@ class ApiService {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
+  }
+
+  /// GET UDEN Authorization‐header – kun Content‐Type
+  static Future<http.Response> _getNoAuth(String endpoint) {
+    return http.get(
+      Uri.parse('$baseUrl/api$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -47,7 +57,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 4) Helper: HTTP POST (indsætter "/api" foran endpointet)
+  // 4) Helper: HTTP POST (indsætter "/api" foran endpointet) og uden headers
   //─────────────────────────────────────────────────────────────────────────────
   static Future<http.Response> _post(
       String endpoint, Map<String, dynamic> body) async {
@@ -55,6 +65,18 @@ class ApiService {
     return http.post(
       Uri.parse('$baseUrl/api$endpoint'),
       headers: headers,
+      body: jsonEncode(body),
+    );
+  }
+
+  // POST UDEN Authorization‐header – kun Content-Type
+  static Future<http.Response> _postNoAuth(
+      String endpoint, Map<String, dynamic> body) {
+    return http.post(
+      Uri.parse('$baseUrl/api$endpoint'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: jsonEncode(body),
     );
   }
@@ -343,13 +365,13 @@ class ApiService {
   //     • Slet tråd:      DELETE /api/messages/thread/<threadId>
   //     • Hent modtagere: GET /api/messages/recipients
   //─────────────────────────────────────────────────────────────────────────────
+
   static Future<List<Map<String, dynamic>>> fetchInbox() async {
     final response = await _get('/messages/inbox');
     return _handleListResponse(response, key: 'messages');
   }
 
-  static Future<List<Map<String, dynamic>>> fetchThread(
-      String threadId) async {
+  static Future<List<Map<String, dynamic>>> fetchThread(String threadId) async {
     final response = await _get('/messages/thread-by-id/$threadId');
     return _handleListResponse(response);
   }
@@ -360,6 +382,7 @@ class ApiService {
     String subject = '',
     dynamic replyTo,
   }) async {
+
     final cleanSubject =
     subject.trim().isNotEmpty ? subject.trim() : 'Uden emne';
     final cleanMessage = message.trim();
@@ -368,30 +391,61 @@ class ApiService {
       throw Exception('Besked kan ikke være tom');
     }
 
-    final payload = {
+    // Bemærk: Vi skal kalde POST /api/messages/send (ikke blot /api/messages)
+    final payload = <String, dynamic>{
       'receiver_id': receiverId,
-      'body': cleanMessage, // “body” i stedet for “message”
+      'message': cleanMessage,    // her hedder feltet “message” i backend
       'subject': cleanSubject,
       if (replyTo != null) 'reply_to': int.tryParse(replyTo.toString()),
     };
 
-    final response = await _post('/messages', payload);
+    final response = await _post('/messages/send', payload);
+    // Flask returnerer 200 + { "status": "Besked sendt" }, så vi kan bare håndtere som “void”
     _handleVoidResponse(response, successCode: 200);
   }
 
-  static Future<void> markThreadAsRead(String threadId) async {
-    final response = await _patch('/messages/thread/$threadId/read', {});
-    _handleVoidResponse(response, successCode: 204);
+  /// Marker en enkelt besked som læst/ulæst. (PATCH på besked‐ID)
+  /// Hvis du i stedet vil markere hele tråden som læst, skal du lave en tilsvarende
+  /// PATCH‐endpoint på backend. Her viser jeg, hvordan du rammer PATCH /api/messages/<messageId>.
+  static Future<void> updateSingleMessage({
+    required String messageId,
+    bool? read,
+    String? newSubject,
+    String? newMessageText,
+  }) async {
+
+    final data = <String, dynamic>{};
+    if (read != null) data['read'] = read;
+    if (newSubject != null) data['subject'] = newSubject.trim();
+    if (newMessageText != null) data['message'] = newMessageText.trim();
+
+    if (data.isEmpty) {
+      throw Exception('Ingen felter angivet til opdatering');
+    }
+
+    final response = await _patch('/messages/$messageId', data);
+    _handleVoidResponse(response, successCode: 200);
   }
 
+  /// Sletter hele tråden (flytter til deleted_messages og sletter fra messages)
   static Future<void> deleteThread(String threadId) async {
     final response = await _delete('/messages/thread/$threadId');
     _handleVoidResponse(response, successCode: 204);
   }
 
+  /// Henter mulige modtagere (kliniker → patienter, patient → klinikere)
   static Future<List<Map<String, dynamic>>> fetchRecipients() async {
     final response = await _get('/messages/recipients');
     return _handleListResponse(response);
+  }
+
+  /// (Ekstra) Hvis du vil markere hele en tråd som læst på backend, kan du lægge
+  /// et nyt endpoint ind i Flask som PATCH /api/messages/thread/<threadId>/read,
+  /// og så ramme det her. Jeg viser eksemplet, men husk at tilsvarende tilføje
+  /// koden i `message_routes.py` for at opdatere alle beskeder i tråden.
+  static Future<void> markThreadAsRead(String threadId) async {
+    final response = await _patch('/messages/thread/$threadId/read', {});
+    _handleVoidResponse(response, successCode: 204);
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -678,41 +732,86 @@ class ApiService {
   // 19) Chore‐type & beregninger
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
-    final response = await _get('api/chronotypes');
-    return _handleListResponse(response);
+    try {
+      final response = await _getNoAuth('/chronotypes/chronotypes');
+      print('[fetchChronotypes] status: ${response.statusCode}');
+      print('[fetchChronotypes] body:   ${response.body}');
+
+      return _handleListResponse(response);
+    } catch (e) {
+      print('[fetchChronotypes] FEJL: $e');
+      rethrow;
+    }
   }
 
-  static Future<Map<String, dynamic>> fetchChronotype(
-      String typeKey) async {
-    final response = await _get('api/chronotypes/$typeKey');
-    return _handleResponse(response);
+
+  static Future<Map<String, dynamic>> fetchChronotype(String typeKey) async {
+    try {
+      final response = await _getNoAuth('/chronotypes/chronotypes/$typeKey');
+
+      print('[fetchChronotype] status: ${response.statusCode}');
+      print('[fetchChronotype] body:   ${response.body}');
+
+      return _handleResponse(response);
+    } catch (e) {
+      print('[fetchChronotype] FEJL: $e');
+      rethrow;
+    }
   }
 
-  static Future<Map<String, dynamic>> fetchChronotypeByScore(
-      int score) async {
-    final response = await _get('api/chronotypes/by-score/$score');
-    return _handleResponse(response);
+
+  static Future<Map<String, dynamic>> fetchChronotypeByScore(int score) async {
+    try {
+      final response =
+      await _getNoAuth('/chronotypes/chronotypes/by-score/$score');
+
+      print('[fetchByScore] status: ${response.statusCode}');
+      print('[fetchByScore] body:   ${response.body}');
+
+      return _handleResponse(response);
+    } catch (e) {
+      print('[fetchByScore] FEJL: $e');
+      rethrow;
+    }
   }
+
 
   static Future<Map<String, dynamic>> fetchChronotypeByScoreFromBackend(
       int customerId) async {
-    final response = await _get('/customers/$customerId');
-    final customer = _handleResponse(response);
+    try {
+      // 4a) Kald POST /api/chronotypes/calculate-score/<customerId>
+      final calcResponse =
+      await _postNoAuth('/chronotypes/calculate-score/$customerId', {});
 
-    final score = customer['rmeq_score'];
-    if (score == null) {
-      throw Exception('rMEQ‐score mangler for bruger $customerId');
+      print('[calcScore] status: ${calcResponse.statusCode}');
+      print('[calcScore] body:   ${calcResponse.body}');
+
+      if (calcResponse.statusCode != 200) {
+        // Kasser hvis vi får 404/500/…
+        throw Exception(
+            "HTTP ${calcResponse.statusCode}: ${calcResponse.reasonPhrase} → ${calcResponse.body}");
+      }
+
+      final calcData = jsonDecode(calcResponse.body) as Map<String, dynamic>;
+      final score = calcData['remq_score'];
+      if (score == null) {
+        throw Exception('Ingen remq_score i svar fra server (BODY: ${calcResponse.body})');
+      }
+
+      // 4b) Hent cronotype ud fra den beregnede score (igen uden token):
+      return await fetchChronotypeByScore(score as int);
+    } catch (e) {
+      print('[fetchChronotypeByScoreFromBackend] FEJL: $e');
+      rethrow;
     }
-
-    return fetchChronotypeByScore(score);
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 20) Kunderegistrering
+  // 20) Kunderegistrering + choices/answers
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> checkEmailAvailability(
       String email) async {
-    final response = await _post('/check-email', {'email': email});
+    final response = await _post('/auth/check-email', {'email': email});
     return _handleResponse(response);
   }
 
@@ -741,6 +840,96 @@ class ApiService {
 
     final response = await _post('/customers', payload);
     return _handleResponse(response);
+  }
+
+
+  Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
+    const baseUrl = 'https://ocutune2025.ddns.net/api';
+    final questionsUrl = Uri.parse('$baseUrl/questions?question_id=$questionId');
+    final choicesUrl   = Uri.parse('$baseUrl/choices?question_id=$questionId');
+
+    // 1) Hent både spørgsmål og choices parallelt
+    final responses = await Future.wait([
+      http.get(questionsUrl),
+      http.get(choicesUrl),
+    ]);
+
+    final qResponse = responses[0];
+    final cResponse = responses[1];
+
+    // 2) Tjek begge status‐koder
+    if (qResponse.statusCode == 200 && cResponse.statusCode == 200) {
+      // 3) Pars det enkelte spørgsmål som Map<String, dynamic>
+      final questionJson = jsonDecode(qResponse.body) as Map<String, dynamic>;
+
+      // 4) Pars alle choices som List<Map<String, dynamic>>
+      final rawChoices = jsonDecode(cResponse.body) as List<dynamic>;
+      final choicesList =
+      rawChoices.cast<Map<String, dynamic>>();
+
+      // 5) Byg en scoreMap fra choice_text -> score
+      final scoreMap = <String, int>{
+        for (var c in choicesList)
+          c['choice_text'] as String: c['score'] as int,
+      };
+
+      // 6) Returnér netop det, UI’et forventer:
+      return {
+        'text': questionJson['question_text'] as String,
+        'choices': scoreMap.keys.toList(),
+        'scores': scoreMap,
+      };
+    } else {
+      // Hvis mindst ét kald fejlede, smid exception
+      throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder. '
+          'StatusQ=${qResponse.statusCode}, StatusC=${cResponse.statusCode}');
+    }
+  }
+
+
+  static Future<List<Map<String, dynamic>>> fetchChoices({int? questionId}) async {
+    // 1) Byg endpoint‐strengen
+    String endpoint = '/choices';
+    if (questionId != null) {
+      endpoint += '?question_id=$questionId';
+    }
+
+    final response = await _getNoAuth(endpoint);
+
+
+    print('[fetchChoices] GET https://ocutune2025.ddns.net/api$endpoint → ${response.statusCode}');
+    print('[fetchChoices] body: ${response.body}');
+
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception('Kunne ikke hente choices: ${response.statusCode}');
+    }
+  }
+
+  static Future<Map<String, dynamic>> submitAnswer({
+    required int customerId,
+    required int questionId,
+    required int choiceId,
+    required String answerText,
+    required String questionTextSnap,
+  }) async {
+    final payload = {
+      'customer_id': customerId,
+      'question_id': questionId,
+      'choice_id': choiceId,
+      'answer_text': answerText,
+      'question_text_snap': questionTextSnap,
+    };
+    final response = await _postNoAuth('/submit_answer', payload);
+    print('[submitAnswer] status: ${response.statusCode}, body: ${response.body}');
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Kunne ikke indsende svar: ${response.statusCode}');
+    }
   }
 
   //─────────────────────────────────────────────────────────────────────────────
