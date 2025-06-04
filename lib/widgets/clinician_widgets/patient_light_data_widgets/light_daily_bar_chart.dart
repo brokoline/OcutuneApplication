@@ -43,6 +43,14 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
     try {
       final fetched = await ApiService.fetchDailyLightData(patientId: widget.patientId);
       setState(() => _todayData = fetched);
+
+      // Debug output for timezone verification
+      if (fetched.isNotEmpty) {
+        debugPrint('Første datapunkt UTC: ${fetched.first.capturedAt}');
+        debugPrint('Første datapunkt lokal tid: ${fetched.first.capturedAt.toLocal()}');
+        debugPrint('Nuværende lokal tid: ${DateTime.now()}');
+        debugPrint('Enhedstidszone: ${DateTime.now().timeZoneName} (${DateTime.now().timeZoneOffset})');
+      }
     } catch (e) {
       setState(() => _errorMessage = 'Kunne ikke hente dagsdata: $e');
     } finally {
@@ -87,6 +95,8 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
 
     final rawData = _todayData!;
     final nowLocal = DateTime.now();
+
+    // Filtrer dagens data med eksplicit tidszonehåndtering
     final todayData = rawData.where((d) {
       final tsLocal = d.capturedAt.toLocal();
       return tsLocal.year == nowLocal.year &&
@@ -94,11 +104,22 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
           tsLocal.day == nowLocal.day;
     }).toList();
 
+    // Debug output for datavalidering
+    if (todayData.isNotEmpty) {
+      debugPrint('Antal datapunkter i dag: ${todayData.length}');
+      debugPrint('Første datapunkt i dag - UTC: ${todayData.first.capturedAt}');
+      debugPrint('Første datapunkt i dag - Lokal: ${todayData.first.capturedAt.toLocal()}');
+      debugPrint('Sidste datapunkt i dag - UTC: ${todayData.last.capturedAt}');
+      debugPrint('Sidste datapunkt i dag - Lokal: ${todayData.last.capturedAt.toLocal()}');
+    }
+
+    // Gruppér efter lokal tid (0-23)
     final hourlyLux = LightUtils.groupByHourOfDay(todayData);
     double maxLux = hourlyLux.reduce(max).clamp(1.0, double.infinity);
 
-    final groups = List<BarChartGroupData>.generate(24, (i) {
-      final avgLux = hourlyLux[i];
+    // Generer diagramgrupper - timeindeks er lokal tid
+    final groups = List<BarChartGroupData>.generate(24, (hourIndex) {
+      final avgLux = hourlyLux[hourIndex];
       double pct = (avgLux / maxLux) * 100.0;
       pct = pct.clamp(0.0, 100.0);
 
@@ -108,19 +129,19 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
           : const Color(0xFF5DADE2);
 
       return BarChartGroupData(
-        x: i,
+        x: hourIndex, // Repræsenterer lokal time 0-23
         barRods: [
-          BarChartRodData(
-            toY: pct,
-            color: barColor,
-            width: 8.w,
-            borderRadius: BorderRadius.circular(4.r),
-            backDrawRodData: BackgroundBarChartRodData(
-              show: true,
-              toY: 100,
-              color: Colors.grey.withOpacity(0.15),
-            ),
-          ),
+        BarChartRodData(
+        toY: pct,
+        color: barColor,
+        width: 8.w,
+        borderRadius: BorderRadius.circular(4.r),
+        backDrawRodData: BackgroundBarChartRodData(
+          show: true,
+          toY: 100,
+          color: Colors.grey.withOpacity(0.15),
+        ),
+        )
         ],
       );
     });
@@ -144,13 +165,13 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
             ),
             SizedBox(height: 12.h),
 
-            // Percentage labels and chart
+            // Procentetiketter og diagram
             SizedBox(
               height: 150.h,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Y-axis labels
+                  // Y-akse etiketter
                   Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -164,7 +185,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                   ),
                   SizedBox(width: 8.w),
 
-                  // Expanded chart area
+                  // Udvidet diagramområde
                   Expanded(
                     child: BarChart(
                       BarChartData(
@@ -189,9 +210,9 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                               interval: 1,
                               reservedSize: 24,
                               getTitlesWidget: (value, meta) {
-                                final idx = value.toInt();
-                                if (idx % 4 == 0 || idx == 23) {
-                                  final label = idx == 23 ? "23:59" : "${idx.toString().padLeft(2, '0')}:00";
+                                final hour = value.toInt(); // Lokal time
+                                if (hour % 4 == 0 || hour == 23) {
+                                  final label = hour == 23 ? "23:59" : "${hour.toString().padLeft(2, '0')}:00";
                                   return Text(
                                     label,
                                     style: TextStyle(
@@ -220,7 +241,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
 
             SizedBox(height: 12.h),
 
-            // Legend
+            // Forklaring
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

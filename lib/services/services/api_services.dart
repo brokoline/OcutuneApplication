@@ -151,7 +151,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 10) Al lysdata for én patient, og daglige, ugentlige og månedlige lysdata
+  // 10) Al lysdata for én patient (og mock for alle kunder), og daglige, ugentlige og månedlige lysdata
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> getPatientLightData(
       String patientId) async {
@@ -182,6 +182,61 @@ class ApiService {
     final rawList = _handleListResponse(response);
     return rawList.map((jsonMap) => LightData.fromJson(jsonMap)).toList();
   }
+   // Kunde mock data af Patient data
+
+  static Future<List<LightData>> fetchCustomerDailyLightData({
+    required String customerToken,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/api/customer/lightdata/daily'),
+      headers: {
+        'Authorization': 'Bearer $customerToken',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+    final List<dynamic> jsonList = json.decode(response.body)['data'];
+    return jsonList.map((e) => LightData.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  static Future<List<LightData>> fetchCustomerWeeklyLightData({
+    required String customerToken,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/api/customer/lightdata/weekly'),
+      headers: {
+        'Authorization': 'Bearer $customerToken',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+    final List<dynamic> jsonList = json.decode(response.body)['data'];
+    return jsonList.map((e) => LightData.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  static Future<List<LightData>> fetchCustomerMonthlyLightData({
+    required String customerToken,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/api/customer/lightdata/monthly'),
+      headers: {
+        'Authorization': 'Bearer $customerToken',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Fejl: ${response.statusCode}');
+    }
+    final List<dynamic> jsonList = json.decode(response.body)['data'];
+    return jsonList.map((e) => LightData.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+
+
 
   //─────────────────────────────────────────────────────────────────────────────
   // 11) Authentication (Login) – gemmer JWT i SharedPreferences
@@ -233,6 +288,39 @@ class ApiService {
       };
     } else {
       // Login fejlede
+      return {
+        "success": false,
+        "message": decoded["message"] ?? "Ukendt fejl ved login.",
+      };
+    }
+  }
+
+
+  static Future<Map<String, dynamic>> customerLogin(
+      String email,
+      String password,
+      ) async {
+    final url = Uri.parse("$_baseUrl/api/auth/customer/login");
+    final headers = <String, String>{
+      "Content-Type": "application/json",
+    };
+    final body = jsonEncode({
+      "email": email,
+      "password": password,
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    // Prøv at parse JSON‐svar
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode == 200 && decoded["success"] == true) {
+      return {
+        "success": true,
+        "token": decoded["token"],
+        "user": decoded["user"],
+      };
+    } else {
       return {
         "success": false,
         "message": decoded["message"] ?? "Ukendt fejl ved login.",

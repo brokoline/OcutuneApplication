@@ -1,8 +1,9 @@
-// lib/screens/login_screen.dart
+// lib/screens/login/login_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_textfield.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
@@ -19,6 +20,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final _storage = const FlutterSecureStorage();
   bool _isLoading = false;
 
   @override
@@ -34,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Udfyld både e-mail og adgangskode')),
+        const SnackBar(content: Text('Udfyld både e‐mail og adgangskode')),
       );
       return;
     }
@@ -44,7 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final result = await ApiService.login(email, password);
+      // Her bruger vi nu customerLogin i stedet for en generisk login
+      final result = await ApiService.customerLogin(email, password);
+
       setState(() {
         _isLoading = false;
       });
@@ -52,13 +56,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result["success"] == true) {
         final token = result["token"] as String;
         final user = result["user"] as Map<String, dynamic>;
-        // TODO: Gem token i SecureStorage, hvis du skal bruge den senere:
-        // await SecureStorage.write(key: "jwt_token", value: token);
 
-        // Naviger videre til “customer”-root-skærmen. Husk at den er defineret i main.dart
+        // Gem JWT‐token i SecureStorage
+        await _storage.write(key: "jwt_token", value: token);
+
+        // Navigér til CustomerDashboard
         Navigator.of(context).pushReplacementNamed(
-          '/customer',
-          arguments: user,
+          '/customerDashboard',
+          arguments: user, // hvis du vil sende brugerdata med
         );
       } else {
         final msg = result["message"] as String;
@@ -103,14 +108,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.white70,
                       ),
                       SizedBox(height: 32.h),
-                      // E-mail-felt
+                      // E‐mail‐felt
                       OcutuneTextField(
-                        label: 'E-mail',
+                        label: 'E‐mail',
                         controller: emailController,
                         labelStyle: TextStyle(fontSize: 16.sp),
                       ),
                       SizedBox(height: 16.h),
-                      // Adgangskode-felt
+                      // Adgangskode‐felt
                       OcutuneTextField(
                         label: 'Adgangskode',
                         isPassword: true,
@@ -119,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 24.h),
 
-                      // Login-knap
+                      // Login‐knap
                       OcutuneButton(
                         text: _isLoading ? 'Logger ind…' : 'Log ind',
                         onPressed: () {

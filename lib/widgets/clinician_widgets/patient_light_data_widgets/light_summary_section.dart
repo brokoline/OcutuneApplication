@@ -1,14 +1,13 @@
-// lib/widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Til at formatere DateTime → "HH:mm"
+import 'package:intl/intl.dart';
 
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
-import '../../../controller/chronotype_controller.dart'; // Til ChronotypeManager
-import '../../../../utils/light_data_processing.dart';      // Til kliniker-anbefalinger
+import '../../../controller/chronotype_controller.dart';
+import '../../../../utils/light_data_processing.dart';
 
 import 'clinician_recommandation_card.dart';
 import 'light_slide_bar_chart.dart';
@@ -16,10 +15,7 @@ import 'light_recommendations_card.dart';
 import 'light_score_card.dart';
 
 class LightSummarySection extends StatelessWidget {
-  /// Patient‐ID, så vi kan videregive det til LightSlideBarChart
   final String patientId;
-
-  /// rMEQ‐score (bruges til at beregne anbefalinger osv.)
   final int rmeqScore;
 
   /// Valgfri MEQ‐score (kun til ScoreCard)

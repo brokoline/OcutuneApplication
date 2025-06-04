@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_controller.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +28,9 @@ import 'screens/customer/register/registration_steps/chronotype_survey/customer_
 import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
 import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart';
 import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_5_screen.dart';
+
+
+// 📂 Customer Dashboard (root) screens & controller
 import 'screens/patient/patient_dashboard_screen.dart';
 import 'screens/patient/activities/patient_activity_screen.dart';
 import 'screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -188,6 +193,12 @@ class OcutuneApp extends StatelessWidget {
               return PatientSensorSettingsScreen(patientId: patientId);
             },
             '/patient/activities': (_) => PatientActivityScreen(),
+
+            // 🔷 Customer Dashboard (root) med egen route
+            '/customerDashboard': (_) => ChangeNotifierProvider<CustomerRootController>(
+              create: (_) => CustomerRootController(),
+              child: const CustomerRootScreen(),
+            ),
           },
         ),
       ),
