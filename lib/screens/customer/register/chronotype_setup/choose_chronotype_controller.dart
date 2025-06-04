@@ -63,7 +63,7 @@ class ChooseChronotypeController {
       questionScores: Map.from(resp.questionScores),
       rmeqScore:     resp.rmeqScore,
       meqScore:      resp.meqScore,
-      chronotypeKey: selectedChronotype,
+      chronotype: selectedChronotype,
       password:      resp.password,
     );
 

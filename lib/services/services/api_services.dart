@@ -972,8 +972,6 @@ class ApiService {
   // 22) Kunderuter
   //─────────────────────────────────────────────────────────────────────────────
 
-// lib/api_services.dart
-
   static Future<Map<String, dynamic>> register({
     required String firstName,
     required String lastName,
@@ -984,29 +982,37 @@ class ApiService {
     String? chronotype,
     int? rmeqScore,
     int? meqScore,
+    List<String>? answers,       // Liste af rene strenge
+    Map<String,int>? questionScores,
   }) async {
     final url = Uri.parse("$_baseUrl/auth/register");
     final headers = {"Content-Type": "application/json"};
-    final body = jsonEncode({
-      "first_name": firstName,
-      "last_name": lastName,
-      "email": email,
-      "password": password,
-      "birth_year": birthYear,
-      "gender": gender,
-      "chronotype": chronotype,
-      "rmeq_score": rmeqScore,
-      "meq_score": meqScore,
-    });
 
+    final bodyMap = <String, dynamic>{
+      "first_name":    firstName,
+      "last_name":     lastName,
+      "email":         email,
+      "password":      password,
+      "birth_year":    birthYear,
+      "gender":        gender,
+      "chronotype":    chronotype,
+      "rmeq_score":    rmeqScore,
+      "meq_score":     meqScore,
+    };
+
+    if (answers != null) {
+      bodyMap["answers"] = answers;               // f.eks. ["Kl. 6:30 – 7:45", …]
+    }
+    if (questionScores != null) {
+      bodyMap["question_scores"] = questionScores;
+    }
+
+    final body = jsonEncode(bodyMap);
     final response = await http.post(url, headers: headers, body: body);
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
 
     if (response.statusCode == 201 && decoded["success"] == true) {
-      return {
-        "success": true,
-        "user": decoded["user"],
-      };
+      return {"success": true, "user": decoded["user"]};
     } else {
       return {
         "success": false,
@@ -1014,8 +1020,6 @@ class ApiService {
       };
     }
   }
-
-
 
   //─────────────────────────────────────────────────────────────────────────────
   // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov

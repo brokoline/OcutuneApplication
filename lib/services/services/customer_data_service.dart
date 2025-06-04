@@ -27,7 +27,7 @@ void updateBasicInfo({
     questionScores:<String,int>{},
     rmeqScore:     null,
     meqScore:      null,
-    chronotypeKey: null,
+    chronotype: null,
     password:      null,
   );
 }
@@ -73,7 +73,7 @@ void setChronotypeKey(String key) {
   if (resp == null) return;
 
   currentCustomerResponse = resp.copyWith(
-    chronotypeKey: key,
+    chronotype: key,
   );
 }
 
@@ -82,7 +82,7 @@ Future<void> submitCustomerResponse() async {
   final resp = currentCustomerResponse;
   if (resp == null) return;
 
-  final url      = Uri.parse('https://ocutune2025.ddns.net/api/customers');
+  final url      = Uri.parse('https://ocutune2025.ddns.net/api/auth/register');
   final jsonBody = json.encode(resp.toJson());
 
   print("📤 Upload data til $url");

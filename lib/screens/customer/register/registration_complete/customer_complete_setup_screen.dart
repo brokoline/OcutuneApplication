@@ -86,7 +86,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
         final resp = currentCustomerResponse;
         if (resp != null) {
           currentCustomerResponse = resp.copyWith(
-            chronotypeKey: data['type_key'] as String?,
+            chronotype: data['type_key'] as String?,
           );
         }
 
@@ -126,7 +126,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
           final resp = currentCustomerResponse;
           if (resp != null) {
             currentCustomerResponse = resp.copyWith(
-              chronotypeKey: match['type_key'] as String?,
+              chronotype: match['type_key'] as String?,
             );
           }
           setState(() {
