@@ -74,7 +74,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> fetchChronotypeFromServer(int score) async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes/by-score/$score');
+    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes/rmeq-by-score/$score');
     debugPrint("🌐 Henter chronotype med score: $score → $url");
     try {
       final response = await http.get(url);
@@ -111,7 +111,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> fetchChronotypeByTitle(String title) async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
+    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes');
     debugPrint("🌐 Henter chronotype via titel: $title → $url");
     try {
       final response = await http.get(url);

@@ -135,7 +135,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Dagligt lys (✗)",
+              "Daglig lyseksponering",
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16.sp,
@@ -214,23 +214,6 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Time labels at bottom
-            Padding(
-              padding: EdgeInsets.only(left: 28.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("00:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
-                  Text("04:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
-                  Text("08:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
-                  Text("12:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
-                  Text("16:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
-                  Text("20:00", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
-                  Text("23:59", style: TextStyle(color: Colors.white70, fontSize: 10.sp)),
                 ],
               ),
             ),

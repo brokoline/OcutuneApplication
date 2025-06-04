@@ -24,7 +24,7 @@ void updateBasicInfo({
     gender:        gender,
     birthYear:     birthYear,
     answers:       <String>[],
-    questionScores:<String,int>{},   // ← renamed here
+    questionScores:<String,int>{},
     rmeqScore:     null,
     meqScore:      null,
     chronotypeKey: null,
@@ -46,7 +46,7 @@ void saveAnswer(String answer, int score) {
   }
 
   // 2) score‐map
-  final qs = resp.questionScores;  // ← renamed here
+  final qs = resp.questionScores;
   final key = 'q$currentQuestion';
   qs[key] = score;
 
@@ -82,7 +82,7 @@ Future<void> submitCustomerResponse() async {
   final resp = currentCustomerResponse;
   if (resp == null) return;
 
-  final url      = Uri.parse('https://ocutune2025.ddns.net/customers');
+  final url      = Uri.parse('https://ocutune2025.ddns.net/api/customers');
   final jsonBody = json.encode(resp.toJson());
 
   print("📤 Upload data til $url");

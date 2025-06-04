@@ -10,7 +10,7 @@ import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
 class ChooseChronotypeController {
   static const String _baseUrl = 'https://ocutune2025.ddns.net';
 
-  static const String _path = '/api/chronotypes/chronotypes';
+  static const String _path = '/api/chronotypes';
   static Future<List<Chronotype>> fetchChronotypes() async {
     final uri = Uri.parse('$_baseUrl$_path');
     final resp = await http.get(uri);

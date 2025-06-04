@@ -105,20 +105,17 @@ class LightWeeklyBarChart extends StatelessWidget {
         }
         */
 
-        // 7) Byg BarChartGroupData med stacked rods. Vi vil tegne uge‐søjler i rækkefølge
-        //    TOR→FRE→LØR→SØN→MAN→TIR→ONS. Derfor omrokeres vores (Man..Søn)-data til netop den rækkefølge.
+        // 7) Byg BarChartGroupData med stacked rods. Vi vil nu tegne uge-søjler i rækkefølge Man→Tir→Ons→Tor→Fre→Lør→Søn
         List<BarChartGroupData> barGroups = [];
-        final List<int> reorder = [3, 4, 5, 6, 0, 1, 2]; // Tor, Fre, Lør, Søn, Man, Tir, Ons
-
-        for (int idx = 0; idx < 7; idx++) {
-          final int dayIndex = reorder[idx];       // 0..6 (Man..Søn), men i TOR→FRE→…
+// Fjern reorder-listen og brug i stedet den naturlige rækkefølge (0=Man, 1=Tir, ..., 6=Søn)
+        for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
           final double pctBelow = pctBelowList[dayIndex].clamp(0.0, 100.0);
 
           // Hvis ingen data (countTotalPerDay[dayIndex]==0), kan vi farve hele søjlen som grå
           if (countTotalPerDay[dayIndex] == 0) {
             barGroups.add(
               BarChartGroupData(
-                x: idx,
+                x: dayIndex,  // Brug dayIndex direkte som x-værdi
                 barRods: [
                   BarChartRodData(
                     toY: 100.0,
@@ -130,10 +127,10 @@ class LightWeeklyBarChart extends StatelessWidget {
               ),
             );
           } else {
-            // Byg en rod med to stack‐items:
+            // Byg en rod med to stack-items:
             barGroups.add(
               BarChartGroupData(
-                x: idx,
+                x: dayIndex,  // Brug dayIndex direkte som x-værdi
                 barRods: [
                   BarChartRodData(
                     toY: 100.0,
@@ -165,9 +162,9 @@ class LightWeeklyBarChart extends StatelessWidget {
           }
         }
 
-        // 8) Danske labels i korrekt rækkefølge (TOR→FRE→LØR→SØN→MAN→TIR→ONS)
+// 8) Danske labels i rækkefølge Man→Tir→Ons→Tor→Fre→Lør→Søn
         const List<String> weekdayLabels = [
-          'Tor', 'Fre', 'Lør', 'Søn', 'Man', 'Tir', 'Ons'
+          'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'
         ];
 
         // 9) Tegn selve grafen

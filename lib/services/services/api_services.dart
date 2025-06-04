@@ -204,6 +204,42 @@ class ApiService {
       throw Exception('Login fejlede: ${response.statusCode}');
     }
   }
+
+  static Future<Map<String, dynamic>> login(
+      String email,
+      String password,
+      ) async {
+    final url = Uri.parse("$_baseUrl/api/auth/login");
+    final headers = <String, String>{
+      "Content-Type": "application/json",
+    };
+    final body = jsonEncode({
+      "email": email,
+      "password": password,
+    });
+
+    // Send POST-request til Flask
+    final response = await http.post(url, headers: headers, body: body);
+
+    // Prøv at parse JSON-svar
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode == 200 && decoded["success"] == true) {
+      // Login lykkedes
+      return {
+        "success": true,
+        "token": decoded["token"],  // JWT, som Flask har udstedt
+        "user": decoded["user"],    // Map med brugerdata (uden password)
+      };
+    } else {
+      // Login fejlede
+      return {
+        "success": false,
+        "message": decoded["message"] ?? "Ukendt fejl ved login.",
+      };
+    }
+  }
+
   //─────────────────────────────────────────────────────────────────────────────
   // 12) Kliniker: Hent liste over patienter
   //     GET /api/clinician/patients
@@ -733,7 +769,7 @@ class ApiService {
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
     try {
-      final response = await _getNoAuth('/chronotypes/chronotypes');
+      final response = await _getNoAuth('/api/chronotypes');
       print('[fetchChronotypes] status: ${response.statusCode}');
       print('[fetchChronotypes] body:   ${response.body}');
 
@@ -747,7 +783,7 @@ class ApiService {
 
   static Future<Map<String, dynamic>> fetchChronotype(String typeKey) async {
     try {
-      final response = await _getNoAuth('/chronotypes/chronotypes/$typeKey');
+      final response = await _getNoAuth('/api/chronotypes/$typeKey');
 
       print('[fetchChronotype] status: ${response.statusCode}');
       print('[fetchChronotype] body:   ${response.body}');
@@ -763,7 +799,7 @@ class ApiService {
   static Future<Map<String, dynamic>> fetchChronotypeByScore(int score) async {
     try {
       final response =
-      await _getNoAuth('/chronotypes/chronotypes/by-score/$score');
+      await _getNoAuth('/api/chronotypes/rmeq-by-score/$score');
 
       print('[fetchByScore] status: ${response.statusCode}');
       print('[fetchByScore] body:   ${response.body}');
@@ -779,9 +815,8 @@ class ApiService {
   static Future<Map<String, dynamic>> fetchChronotypeByScoreFromBackend(
       int customerId) async {
     try {
-      // 4a) Kald POST /api/chronotypes/calculate-score/<customerId>
       final calcResponse =
-      await _postNoAuth('/chronotypes/calculate-score/$customerId', {});
+      await _postNoAuth('/api/chronotypes/calculate-rmeq-score/$customerId', {});
 
       print('[calcScore] status: ${calcResponse.statusCode}');
       print('[calcScore] body:   ${calcResponse.body}');
@@ -931,6 +966,56 @@ class ApiService {
       throw Exception('Kunne ikke indsende svar: ${response.statusCode}');
     }
   }
+
+
+  //─────────────────────────────────────────────────────────────────────────────
+  // 22) Kunderuter
+  //─────────────────────────────────────────────────────────────────────────────
+
+// lib/api_services.dart
+
+  static Future<Map<String, dynamic>> register({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    int? birthYear,
+    String? gender,
+    String? chronotype,
+    int? rmeqScore,
+    int? meqScore,
+  }) async {
+    final url = Uri.parse("$_baseUrl/auth/register");
+    final headers = {"Content-Type": "application/json"};
+    final body = jsonEncode({
+      "first_name": firstName,
+      "last_name": lastName,
+      "email": email,
+      "password": password,
+      "birth_year": birthYear,
+      "gender": gender,
+      "chronotype": chronotype,
+      "rmeq_score": rmeqScore,
+      "meq_score": meqScore,
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+
+    if (response.statusCode == 201 && decoded["success"] == true) {
+      return {
+        "success": true,
+        "user": decoded["user"],
+      };
+    } else {
+      return {
+        "success": false,
+        "message": decoded["message"] ?? "Registrering mislykkedes.",
+      };
+    }
+  }
+
+
 
   //─────────────────────────────────────────────────────────────────────────────
   // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov
