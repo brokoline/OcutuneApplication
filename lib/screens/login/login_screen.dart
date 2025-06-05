@@ -9,6 +9,7 @@ import 'package:ocutune_light_logger/widgets/universal/ocutune_textfield.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_card.dart';
 import '../../services/services/api_services.dart';
+import '../../services/auth_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,9 +19,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController emailController    = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final _storage = const FlutterSecureStorage();
   bool _isLoading = false;
 
   @override
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    final String email = emailController.text.trim();
+    final String email    = emailController.text.trim();
     final String password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Her bruger vi nu customerLogin i stedet for en generisk login
+      // Kalder customerLogin på ApiService
       final result = await ApiService.customerLogin(email, password);
 
       setState(() {
@@ -54,19 +54,22 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       if (result["success"] == true) {
-        final token = result["token"] as String;
-        final user = result["user"] as Map<String, dynamic>;
+        final String token = result["token"] as String;
+        final Map<String, dynamic> user = result["user"] as Map<String, dynamic>;
+        final String userId = user["id"].toString();
 
-        // Gem JWT‐token i SecureStorage
-        await _storage.write(key: "jwt_token", value: token);
-
-        // Navigér til CustomerDashboard
-        Navigator.of(context).pushReplacementNamed(
-          '/customerDashboard',
-          arguments: user, // hvis du vil sende brugerdata med
+        // Gem token + bruger‐id i SharedPreferences (via AuthStorage)
+        await AuthStorage.saveLogin(
+          id: userId,
+          role: "",       // Kunden har ikke en “role”‐værdi (vi kan lade den stå tom)
+          simUserId: "",  // Kunden har heller ikke et simUserId
+          token: token,
         );
+
+        // Naviger til CustomerDashboard
+        Navigator.of(context).pushReplacementNamed('/customerDashboard');
       } else {
-        final msg = result["message"] as String;
+        final String msg = result["message"] as String;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),
         );
@@ -108,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.white70,
                       ),
                       SizedBox(height: 32.h),
+
                       // E‐mail‐felt
                       OcutuneTextField(
                         label: 'E‐mail',
@@ -115,6 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelStyle: TextStyle(fontSize: 16.sp),
                       ),
                       SizedBox(height: 16.h),
+
                       // Adgangskode‐felt
                       OcutuneTextField(
                         label: 'Adgangskode',
@@ -137,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: 1.h),
                       TextButton(
                         onPressed: () {
-                          // TODO: “Glemt adgangskode” logik
+                          // TODO: Glemt adgangskode‐logik
                         },
                         child: Text(
                           'Glemt adgangskode?',
@@ -162,6 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
+
                 SizedBox(height: 10.h),
                 TextButton(
                   onPressed: () {

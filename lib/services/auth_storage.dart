@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'package:ocutune_light_logger/services/services/api_services.dart';
+import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -88,7 +91,7 @@ static Future<int?> getPatientId() async {
 
   static Future<String?> getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_id'); // ✅ matcher dine token-data
+    return prefs.getString('user_id');
   }
 
 
@@ -132,6 +135,8 @@ static Future<int?> getPatientId() async {
       return false;
     }
   }
+
+
 
 
 

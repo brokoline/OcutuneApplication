@@ -15,7 +15,4 @@ class CustomerRootController extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-// You can expand this controller with additional customer-related state,
-// such as fetching user data, handling notifications, etc.
 }

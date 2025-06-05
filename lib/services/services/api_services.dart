@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:ocutune_light_logger/models/customer_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/light_data_model.dart';
@@ -273,14 +274,12 @@ class ApiService {
       "password": password,
     });
 
-    // Send POST-request til Flask
-    final response = await http.post(url, headers: headers, body: body);
 
-    // Prøv at parse JSON-svar
+    final response = await http.post(url, headers: headers, body: body);
     final decoded = jsonDecode(response.body) as Map<String, dynamic>;
 
     if (response.statusCode == 200 && decoded["success"] == true) {
-      // Login lykkedes
+
       return {
         "success": true,
         "token": decoded["token"],  // JWT, som Flask har udstedt
@@ -327,6 +326,28 @@ class ApiService {
       };
     }
   }
+
+  static Future<Customer> fetchCustomerProfile() async {
+    final headers = await _authHeaders();
+
+    final url = Uri.parse("$_baseUrl/api/customer/profile");
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> decoded = jsonDecode(response.body);
+      if (decoded["success"] == true) {
+        final data = decoded["data"] as Map<String, dynamic>;
+        return Customer.fromJson(data);
+      } else {
+        throw Exception(decoded["message"] ?? "Uventet fejl ved hent af profil");
+      }
+    } else if (response.statusCode == 401) {
+      throw Exception("Mangler token");
+    } else {
+      throw Exception("Serverfejl ved hentning af profil: ${response.statusCode}");
+    }
+  }
+
 
   //─────────────────────────────────────────────────────────────────────────────
   // 12) Kliniker: Hent liste over patienter
@@ -528,9 +549,9 @@ class ApiService {
     _handleVoidResponse(response, successCode: 200);
   }
 
-  /// Marker en enkelt besked som læst/ulæst. (PATCH på besked‐ID)
-  /// Hvis du i stedet vil markere hele tråden som læst, skal du lave en tilsvarende
-  /// PATCH‐endpoint på backend. Her viser jeg, hvordan du rammer PATCH /api/messages/<messageId>.
+  // Marker en enkelt besked som læst/ulæst. (PATCH på besked‐ID)
+  // Hvis du i stedet vil markere hele tråden som læst, skal du lave en tilsvarende
+  // PATCH‐endpoint på backend. Her viser jeg, hvordan du rammer PATCH /api/messages/<messageId>.
   static Future<void> updateSingleMessage({
     required String messageId,
     bool? read,
@@ -564,9 +585,9 @@ class ApiService {
   }
 
   /// (Ekstra) Hvis du vil markere hele en tråd som læst på backend, kan du lægge
-  /// et nyt endpoint ind i Flask som PATCH /api/messages/thread/<threadId>/read,
-  /// og så ramme det her. Jeg viser eksemplet, men husk at tilsvarende tilføje
-  /// koden i `message_routes.py` for at opdatere alle beskeder i tråden.
+  // et nyt endpoint ind i Flask som PATCH /api/messages/thread/<threadId>/read,
+  // og så ramme det her. Jeg viser eksemplet, men husk at tilsvarende tilføje
+  // koden i `message_routes.py` for at opdatere alle beskeder i tråden.
   static Future<void> markThreadAsRead(String threadId) async {
     final response = await _patch('/messages/thread/$threadId/read', {});
     _handleVoidResponse(response, successCode: 204);
@@ -1122,8 +1143,8 @@ class ApiService {
 
   static Future<http.Response> del(String endpoint) => _delete(endpoint);
 
-  /// Når man har brug for at håndtere en “void”‐kode (f.eks. DELETE 204),
-  /// kan man kalde denne metode med det konkrete response‐objekt:
+  // Når man har brug for at håndtere en “void”‐kode (f.eks. DELETE 204),
+  // kan man kalde denne metode med det konkrete response‐objekt:
   static void handleVoidResponse(
       http.Response response, {
         required int successCode,
