@@ -3,13 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/models/light_data_model.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
+import 'package:ocutune_light_logger/models/daily_light_summary_model.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../../../services/auth_storage.dart';
 
-/// En “customer”-version af uge‐diagrammet.
+
+/// En “customer”-version af uge-diagrammet.
 /// Henter altid data for patient “P3”. Hvis ingen JWT findes, vis en “Log ind”-prompt.
 class CustomerLightWeeklyBarChart extends StatefulWidget {
   const CustomerLightWeeklyBarChart({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class CustomerLightWeeklyBarChart extends StatefulWidget {
 
 class _CustomerLightWeeklyBarChartState
     extends State<CustomerLightWeeklyBarChart> {
-  List<LightData>? _weekData;
+  List<DailyLightSummary>? _weekData;
   String? _errorMessage;
   bool _isLoading = false;
   late Future<String?> _tokenFuture;
@@ -29,25 +30,24 @@ class _CustomerLightWeeklyBarChartState
   @override
   void initState() {
     super.initState();
-    // Hent JWT‐token én gang
+    // Hent JWT/token én gang
     _tokenFuture = AuthStorage.getToken();
   }
 
-  /// Kaldes, når vi ved, at token findes
-  Future<void> _fetchWeekLightData() async {
+  /// Henter 7 daglige summeringer for patient 'P3'
+  Future<void> _fetchWeekLightData(String token) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      // Hardcodet patientId = 'P3'
-      final fetched = await ApiService.fetchWeeklyLightData(
-        patientId: 'P3',
-      );
+      // Brug metoden, der automatisk sætter Authorization-header
+      final fetched = await ApiService.fetchWeeklyLightData(patientId: 'P3');
       setState(() => _weekData = fetched);
     } catch (e) {
-      setState(() => _errorMessage = 'Fejl ved hentning af ugentlige data: $e');
+      setState(() =>
+      _errorMessage = 'Fejl ved hentning af ugentlige data: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -72,7 +72,7 @@ class _CustomerLightWeeklyBarChartState
             height: 200.h,
             child: Center(
               child: Text(
-                'Fejl ved hentning af login‐status: ${snapshot.error}',
+                'Fejl ved hentning af login-status: ${snapshot.error}',
                 style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
                 textAlign: TextAlign.center,
               ),
@@ -81,7 +81,7 @@ class _CustomerLightWeeklyBarChartState
         }
 
         final token = snapshot.data;
-        // 3) Ingen token → vis login‐prompt
+        // 3) Ingen token → vis login-prompt
         if (token == null) {
           return SizedBox(
             height: 200.h,
@@ -119,7 +119,7 @@ class _CustomerLightWeeklyBarChartState
         // 4) Token findes → hent data, hvis ikke allerede hentet
         if (_weekData == null && _errorMessage == null && !_isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _fetchWeekLightData();
+            _fetchWeekLightData(token);
           });
         }
 
@@ -145,9 +145,9 @@ class _CustomerLightWeeklyBarChartState
           );
         }
 
-        // 7) Hvis liste er hentet, men tom
-        final rawData = _weekData ?? [];
-        if (rawData.isEmpty) {
+        // 7) Hent de 7 daglige summeringer
+        final weeklyData = _weekData ?? [];
+        if (weeklyData.isEmpty) {
           return SizedBox(
             height: 200.h,
             child: Center(
@@ -161,36 +161,35 @@ class _CustomerLightWeeklyBarChartState
         }
 
         // ──────────────────────────────────────────────────────────────
-        // 8) Byg diagram baseret på rådata
-        const double luxThreshold = 150.0;
+        // 8) Byg diagram baseret på de 7 dags-summeringer
+        // Sortér (hvis ikke serveren sender i korrekt rækkefølge)
+        weeklyData.sort((a, b) => a.day.compareTo(b.day));
 
-        final List<int> countTotalPerDay = List.filled(7, 0);
-        final List<int> countAbovePerDay = List.filled(7, 0);
-
-        for (final d in rawData) {
-          final lokalWeekday = d.capturedAt.toLocal().weekday - 1; // 0=Man..6=Søn
-          countTotalPerDay[lokalWeekday]++;
-          if (d.ediLux >= luxThreshold) {
-            countAbovePerDay[lokalWeekday]++;
-          }
-        }
-
+        // Beregn procentsats: pctAbove = (countHighLight / totalMeasurements) * 100
+        // pctBelow = 100 – pctAbove (eller 0.0, hvis totalMeasurements == 0)
         final List<double> pctAboveList = List<double>.generate(7, (i) {
-          if (countTotalPerDay[i] == 0) return 0.0;
-          return (countAbovePerDay[i] / countTotalPerDay[i]) * 100.0;
+          final summary = weeklyData[i];
+          if (summary.totalMeasurements == 0) return 0.0;
+          return (summary.countHighLight / summary.totalMeasurements) * 100.0;
         });
 
         final List<double> pctBelowList = List<double>.generate(7, (i) {
-          if (countTotalPerDay[i] == 0) return 0.0;
-          final double above = pctAboveList[i];
-          return (100.0 - above);
+          final summary = weeklyData[i];
+          if (summary.totalMeasurements == 0) return 0.0;
+          return 100.0 - pctAboveList[i];
         });
 
+        // Byg BarChartGroupData med to lag: blå = pctBelow, orange = pctAbove
         List<BarChartGroupData> barGroups = [];
         for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
-          final double pctBelow = pctBelowList[dayIndex].clamp(0.0, 100.0);
-          if (countTotalPerDay[dayIndex] == 0) {
-            // Hvis ingen data: grå kolonne fyldt til 100%
+          final double below = pctBelowList[dayIndex].clamp(0.0, 100.0);
+          final double above = pctAboveList[dayIndex].clamp(0.0, 100.0);
+
+          final summary = weeklyData[dayIndex];
+          final bool hasData = summary.totalMeasurements > 0;
+
+          if (!hasData) {
+            // Hvis ingen data: vis en hel grå søjle op til 100%
             barGroups.add(
               BarChartGroupData(
                 x: dayIndex,
@@ -205,7 +204,7 @@ class _CustomerLightWeeklyBarChartState
               ),
             );
           } else {
-            // Hvis data: en rod med stack af “blå under” og “orange over”
+            // Ellers: blå nederst (pctBelow), orange øverst (pctAbove)
             barGroups.add(
               BarChartGroupData(
                 x: dayIndex,
@@ -217,13 +216,13 @@ class _CustomerLightWeeklyBarChartState
                     rodStackItems: [
                       BarChartRodStackItem(
                         0,
-                        pctBelow,
-                        const Color(0xFF5DADE2),
+                        below,
+                        const Color(0xFF5DADE2), // blå
                       ),
                       BarChartRodStackItem(
-                        pctBelow,
-                        100.0,
-                        const Color(0xFFFFAB00),
+                        below,
+                        below + above, // = 100.0
+                        const Color(0xFFFFAB00), // orange
                       ),
                     ],
                     backDrawRodData: BackgroundBarChartRodData(
@@ -238,11 +237,12 @@ class _CustomerLightWeeklyBarChartState
           }
         }
 
+        // Danske labels Man→Tir→Ons→Tor→Fre→Lør→Søn
         const List<String> weekdayLabels = [
           'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'
         ];
 
-        // 9) Tegn selve kortet
+        // 9) Tegn kortet
         return Card(
           color: const Color(0xFF2A2A2A),
           shape: RoundedRectangleBorder(
@@ -303,9 +303,7 @@ class _CustomerLightWeeklyBarChartState
                             reservedSize: 32,
                             getTitlesWidget: (value, meta) {
                               final idx = value.toInt();
-                              if (idx < 0 || idx > 6) {
-                                return const SizedBox.shrink();
-                              }
+                              if (idx < 0 || idx > 6) return const SizedBox.shrink();
                               return SideTitleWidget(
                                 meta: meta,
                                 child: Text(
@@ -319,10 +317,8 @@ class _CustomerLightWeeklyBarChartState
                             },
                           ),
                         ),
-                        topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
                       alignment: BarChartAlignment.spaceAround,
                       groupsSpace: 8.w,

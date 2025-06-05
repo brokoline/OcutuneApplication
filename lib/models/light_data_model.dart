@@ -75,26 +75,50 @@ class LightData {
 
   /// JSON‐parser som sikrer, at “captured_at” altid bliver tolket som UTC.
   factory LightData.fromJson(Map<String, dynamic> json) {
-    // 1) Hent den rå streng, fx: "Tue, 02 Jun 2025 08:15:00 GMT"
+    // 1) Hent den rå streng, fx: "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
     final rawDate = json['captured_at'] as String;
 
-    // 2) Fjern " GMT" (hvis serveren inkluderer det – ellers kan du udelade denne linje)
-    final cleaned = rawDate.replaceAll(' GMT', '');
+    // 2) Parse den ISO‐8601‐streng som UTC; DateTime.parse håndterer 'Z' automatisk.
+    final DateTime parsedUtc = DateTime.parse(rawDate);
 
-    // 3) Opsæt formatter, der matcher "Tue, 02 Jun 2025 08:15:00"
-    final formatter = DateFormat('EEE, dd MMM yyyy HH:mm:ss', 'en_US');
+    // 3) Konverter fragten fra UTC ind i lokal tid (Copenhagen),
+    //    hvis rette tidszone er sat på enheden.
+    final DateTime local = parsedUtc.toLocal();
 
-    // 4) Parse streng som UTC ved at sætte `isUtc=true`.
-    //    Dette sikrer, at den streng, vi får, bliver et DateTime med isUtc==true.
-    final DateTime parsedUtc = formatter.parse(cleaned, true);
+    // 4) Melanopic EDI (kan være num eller null)
+    final dynamic ediRaw = json['melanopic_edi'];
+    final int melanopicEdi = (ediRaw is num) ? ediRaw.toInt() : 0;
+
+    // 5) Illuminance (kan være num eller null)
+    final dynamic illumRaw = json['illuminance'];
+    final int illuminance = (illumRaw is num) ? illumRaw.toInt() : 0;
+
+    // 6) Exposure score (kan være num eller null)
+    final dynamic exposureRaw = json['exposure_score'];
+    final double exposureScore =
+    (exposureRaw is num) ? exposureRaw.toDouble() : 0.0;
+
+    // 7) Action required (kan nu være bool eller num (0/1))
+    final dynamic actionRaw = json['action_required'];
+    bool actionRequired;
+    if (actionRaw is bool) {
+      actionRequired = actionRaw;
+    } else if (actionRaw is num) {
+      actionRequired = (actionRaw.toInt() == 1);
+    } else {
+      actionRequired = false;
+    }
+
+    // 8) Light type (kan være null eller streng)
+    final String lightType = (json['light_type'] as String?) ?? 'Ukendt';
 
     return LightData(
-      capturedAt: parsedUtc,
-      melanopicEdi: (json['melanopic_edi'] as num).toInt(),
-      illuminance: (json['illuminance'] as num).toInt(),
-      lightType: json['light_type'] as String? ?? 'Ukendt',
-      exposureScore: (json['exposure_score'] as num? ?? 0).toDouble(),
-      actionRequired: (json['action_required'] as num? ?? 0) == 1,
+      capturedAt: local,
+      melanopicEdi: melanopicEdi,
+      illuminance: illuminance,
+      lightType: lightType,
+      exposureScore: exposureScore,
+      actionRequired: actionRequired,
     );
   }
 }

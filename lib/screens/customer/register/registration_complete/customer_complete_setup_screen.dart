@@ -151,8 +151,8 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   void _goToHome(BuildContext context) {
-    debugPrint("➡️ Går til /home");
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    debugPrint("➡️ Går til kundedashboard");
+    Navigator.pushNamedAndRemoveUntil(context, '/customerDashboard', (route) => false);
   }
 
   Widget _orbitingStar({

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:ocutune_light_logger/models/customer_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../models/daily_light_summary_model.dart';
 import '../../models/light_data_model.dart';
 import '../../models/patient_model.dart';
 import '../auth_storage.dart';
@@ -151,9 +152,16 @@ class ApiService {
     }
   }
 
+
+
+
+
   //─────────────────────────────────────────────────────────────────────────────
   // 10) Al lysdata for én patient (og mock for alle kunder), og daglige, ugentlige og månedlige lysdata
   //─────────────────────────────────────────────────────────────────────────────
+
+
+
   static Future<List<Map<String, dynamic>>> getPatientLightData(
       String patientId) async {
     final response = await _get('/patients/$patientId/lightdata');
@@ -168,13 +176,26 @@ class ApiService {
     return rawList.map((jsonMap) => LightData.fromJson(jsonMap)).toList();
   }
 
-  static Future<List<LightData>> fetchWeeklyLightData({
+
+  static Future<List<DailyLightSummary>> fetchWeeklyLightData({
     required String patientId,
   }) async {
-    final response = await _get("/patients/$patientId/lightdata/weekly");
-    final rawList = _handleListResponse(response);
-    return rawList.map((jsonMap) => LightData.fromJson(jsonMap)).toList();
+    final response = await _get('/patients/$patientId/lightdata/weekly');
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = json.decode(response.body) as List<dynamic>;
+      return jsonList
+          .map((item) => DailyLightSummary.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } else if (response.statusCode == 404) {
+      return <DailyLightSummary>[];
+    } else if (response.statusCode == 401) {
+      throw Exception("Unauthorized: Manglende eller ugyldig token");
+    } else {
+      throw Exception("Serverfejl: ${response.statusCode}");
+    }
   }
+
 
   static Future<List<LightData>> fetchMonthlyLightData({
     required String patientId,
@@ -183,17 +204,14 @@ class ApiService {
     final rawList = _handleListResponse(response);
     return rawList.map((jsonMap) => LightData.fromJson(jsonMap)).toList();
   }
-   // Kunde mock data af Patient data
 
+
+  // Kunde mock data af Patient data
   static Future<List<LightData>> fetchCustomerDailyLightData({
     required String customerToken,
   }) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/customer/lightdata/daily'),
-      headers: {
-        'Authorization': 'Bearer $customerToken',
-        'Content-Type': 'application/json',
-      },
     );
     if (response.statusCode != 200) {
       throw Exception('Fejl: ${response.statusCode}');
@@ -202,15 +220,12 @@ class ApiService {
     return jsonList.map((e) => LightData.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+
   static Future<List<LightData>> fetchCustomerWeeklyLightData({
     required String customerToken,
   }) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/customer/lightdata/weekly'),
-      headers: {
-        'Authorization': 'Bearer $customerToken',
-        'Content-Type': 'application/json',
-      },
     );
     if (response.statusCode != 200) {
       throw Exception('Fejl: ${response.statusCode}');
@@ -224,10 +239,6 @@ class ApiService {
   }) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/customer/lightdata/monthly'),
-      headers: {
-        'Authorization': 'Bearer $customerToken',
-        'Content-Type': 'application/json',
-      },
     );
     if (response.statusCode != 200) {
       throw Exception('Fejl: ${response.statusCode}');
@@ -243,7 +254,9 @@ class ApiService {
   // 11) Authentication (Login) – gemmer JWT i SharedPreferences
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> simulatedLogin(
-      String userId, String password) async {
+      String userId,
+      String password,
+      ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/auth/mitid/login'),
       headers: {'Content-Type': 'application/json'},
@@ -251,46 +264,24 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       final prefs = await SharedPreferences.getInstance();
-      // Gemmer token under nøglen 'jwt_token'
-      await prefs.setString('jwt_token', data['token']);
+
+      // 1) Gem token
+      await prefs.setString('jwt_token', data['token'] as String);
+
+      // 2) Gem rolle (bør være enten "clinician" eller "patient")
+      final String role = data['role'] as String;
+      await prefs.setString('user_role', role);
+
+      // 3) Gem bruger-ID (identity), som vi senere kan bruge til permission-checks
+      //    Bemærk: data['id'] kan være en int eller en streng; konverter altid til streng.
+      final String idString = data['id'].toString();
+      await prefs.setString('user_id', idString);
+
       return data;
     } else {
-      throw Exception('Login fejlede: ${response.statusCode}');
-    }
-  }
-
-  static Future<Map<String, dynamic>> login(
-      String email,
-      String password,
-      ) async {
-    final url = Uri.parse("$_baseUrl/api/auth/login");
-    final headers = <String, String>{
-      "Content-Type": "application/json",
-    };
-    final body = jsonEncode({
-      "email": email,
-      "password": password,
-    });
-
-
-    final response = await http.post(url, headers: headers, body: body);
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-
-    if (response.statusCode == 200 && decoded["success"] == true) {
-
-      return {
-        "success": true,
-        "token": decoded["token"],  // JWT, som Flask har udstedt
-        "user": decoded["user"],    // Map med brugerdata (uden password)
-      };
-    } else {
-      // Login fejlede
-      return {
-        "success": false,
-        "message": decoded["message"] ?? "Ukendt fejl ved login.",
-      };
+      throw Exception('Login fejlede: HTTP ${response.statusCode}');
     }
   }
 

@@ -14,9 +14,9 @@ class CustomerLightDailyBarChart extends StatefulWidget {
   final int rmeqScore;
 
   const CustomerLightDailyBarChart({
-    Key? key,
+    super.key,
     required this.rmeqScore,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomerLightDailyBarChart> createState() =>

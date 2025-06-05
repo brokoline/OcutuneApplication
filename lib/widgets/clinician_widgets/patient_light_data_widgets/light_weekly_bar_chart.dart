@@ -3,8 +3,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../../models/light_data_model.dart';
+import '../../../models/daily_light_summary_model.dart';
 import '../../../services/services/api_services.dart';
 
 class LightWeeklyBarChart extends StatelessWidget {
@@ -17,10 +16,11 @@ class LightWeeklyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<LightData>>(
+    return FutureBuilder<List<DailyLightSummary>>(
+      // 2) FutureBuilder forventer nu List<DailyLightSummary>, ikke List<LightData>
       future: ApiService.fetchWeeklyLightData(patientId: patientId),
       builder: (context, snapshot) {
-        // 1) Loader‐tilstand
+        // Loader‐tilstand
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(
             height: 200.h,
@@ -28,7 +28,7 @@ class LightWeeklyBarChart extends StatelessWidget {
           );
         }
 
-        // 2) Fejl‐tilstand
+        // Fejl‐tilstand
         if (snapshot.hasError) {
           return SizedBox(
             height: 200.h,
@@ -42,9 +42,9 @@ class LightWeeklyBarChart extends StatelessWidget {
           );
         }
 
-        // 3) Hent rådata
-        final rawData = snapshot.data ?? [];
-        if (rawData.isEmpty) {
+        // Hent de 7 daglige aggregater
+        final weeklyData = snapshot.data ?? [];
+        if (weeklyData.isEmpty) {
           return SizedBox(
             height: 200.h,
             child: Center(
@@ -57,65 +57,35 @@ class LightWeeklyBarChart extends StatelessWidget {
           );
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // 4) Vi vil opdele hver dag i to portioner: “optimalt lys” vs. “ikke-optimalt lys”.
-        //    Definer en fast tærskel i ediLux (melanopicEdi), f.eks. 150.
-        const double luxThreshold = 150.0;
+        // Sortér data (i princippet skal serveren allerede returnere mandag→søndag)
+        weeklyData.sort((a, b) => a.day.compareTo(b.day));
 
-        // 5) Filtrer råData per lokal ugedag (1=Mandag..7=Søndag). Byg to lister:
-        //    - countTotalPerDay[weekdayIndex]: hvor mange målinger der er på netop den dag.
-        //    - countAbovePerDay[weekdayIndex]: hvor mange af målingerne den dag der er ≥ luxThreshold.
-        final List<int> countTotalPerDay = List.filled(7, 0);
-        final List<int> countAbovePerDay = List.filled(7, 0);
-
-        for (final d in rawData) {
-          final lokalWeekday = d.capturedAt.toLocal().weekday - 1; // 0=Man..6=Søn
-          countTotalPerDay[lokalWeekday]++;
-
-          if (d.ediLux >= luxThreshold) {
-            countAbovePerDay[lokalWeekday]++;
-          }
-        }
-
-        // 6) Beregn procent for hver dag i rækkefølgen 0=Man..6=Søn:
-        //    pctAbove = (countAbove / countTotal) * 100
-        //    pctBelow = 100.0 - pctAbove (hvis countTotal>0, ellers sat til 0)
+        // Beregn procentsatser for hver dag (0=Man..6=Søn)
         final List<double> pctAboveList = List<double>.generate(7, (i) {
-          if (countTotalPerDay[i] == 0) return 0.0;
-          return (countAbovePerDay[i] / countTotalPerDay[i]) * 100.0;
+          final summary = weeklyData[i];
+          if (summary.totalMeasurements == 0) return 0.0;
+          return (summary.countHighLight / summary.totalMeasurements) * 100.0;
         });
-
         final List<double> pctBelowList = List<double>.generate(7, (i) {
-          // Hvis ingen data, sæt til 0.0
-          if (countTotalPerDay[i] == 0) return 0.0;
-          final double above = pctAboveList[i];
-          return (100.0 - above);
+          final summary = weeklyData[i];
+          if (summary.totalMeasurements == 0) return 0.0;
+          return 100.0 - pctAboveList[i];
         });
 
-        // DEBUG: kan udskrives i konsol, hvis man vil se tallet for hver dag:
-        /*
-        for (int i = 0; i < 7; i++) {
-          final navn = ["Man", "Tir", "Ons", "Tor", "Fre", "Lør", "Søn"][i];
-          debugPrint(
-            "ℹ️ $navn: total=${countTotalPerDay[i]}, "
-            "above=${countAbovePerDay[i]}, "
-            "pctAbove=${pctAboveList[i].toStringAsFixed(1)}, "
-            "pctBelow=${pctBelowList[i].toStringAsFixed(1)}"
-          );
-        }
-        */
-
-        // 7) Byg BarChartGroupData med stacked rods. Vi vil nu tegne uge-søjler i rækkefølge Man→Tir→Ons→Tor→Fre→Lør→Søn
+        // Byg de 7 stak‐søjler
         List<BarChartGroupData> barGroups = [];
-// Fjern reorder-listen og brug i stedet den naturlige rækkefølge (0=Man, 1=Tir, ..., 6=Søn)
         for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
-          final double pctBelow = pctBelowList[dayIndex].clamp(0.0, 100.0);
+          final double below = pctBelowList[dayIndex].clamp(0.0, 100.0);
+          final double above = pctAboveList[dayIndex].clamp(0.0, 100.0);
 
-          // Hvis ingen data (countTotalPerDay[dayIndex]==0), kan vi farve hele søjlen som grå
-          if (countTotalPerDay[dayIndex] == 0) {
+          final summary = weeklyData[dayIndex];
+          final bool hasData = summary.totalMeasurements > 0;
+
+          if (!hasData) {
+            // Hele søjlen grå, hvis ingen målinger
             barGroups.add(
               BarChartGroupData(
-                x: dayIndex,  // Brug dayIndex direkte som x-værdi
+                x: dayIndex,
                 barRods: [
                   BarChartRodData(
                     toY: 100.0,
@@ -127,26 +97,24 @@ class LightWeeklyBarChart extends StatelessWidget {
               ),
             );
           } else {
-            // Byg en rod med to stack-items:
+            // Stak‐søjle: blå = pctBelow, orange = pctAbove
             barGroups.add(
               BarChartGroupData(
-                x: dayIndex,  // Brug dayIndex direkte som x-værdi
+                x: dayIndex,
                 barRods: [
                   BarChartRodData(
                     toY: 100.0,
                     width: 14.w,
                     borderRadius: BorderRadius.circular(4.r),
                     rodStackItems: [
-                      // Nederste del: pctBelow (blå)
                       BarChartRodStackItem(
                         0,
-                        pctBelow,
+                        below,
                         const Color(0xFF5DADE2),
                       ),
-                      // Øverste del: pctBelow→100 (orange)
                       BarChartRodStackItem(
-                        pctBelow,
-                        100.0,
+                        below,
+                        below + above, // = 100
                         const Color(0xFFFFAB00),
                       ),
                     ],
@@ -162,12 +130,10 @@ class LightWeeklyBarChart extends StatelessWidget {
           }
         }
 
-// 8) Danske labels i rækkefølge Man→Tir→Ons→Tor→Fre→Lør→Søn
         const List<String> weekdayLabels = [
           'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'
         ];
 
-        // 9) Tegn selve grafen
         return Card(
           color: const Color(0xFF2A2A2A),
           shape: RoundedRectangleBorder(
@@ -178,7 +144,6 @@ class LightWeeklyBarChart extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Titel
                 Text(
                   'Ugentlig lysmængde',
                   style: TextStyle(
@@ -187,8 +152,6 @@ class LightWeeklyBarChart extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 12.h),
-
-                // Graf‐området
                 SizedBox(
                   height: 180.h,
                   child: BarChart(
