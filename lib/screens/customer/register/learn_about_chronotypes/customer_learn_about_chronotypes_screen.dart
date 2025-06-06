@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
 import '/widgets/universal/ocutune_icon_button.dart';
-import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
+import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class LearnAboutChronotypesScreen extends StatefulWidget {
   const LearnAboutChronotypesScreen({super.key});

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../../widgets/universal/ocutune_next_step_button.dart';
-import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
+import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 import 'choose_chronotype_controller.dart';
 
 class ChooseChronotypeForm extends StatefulWidget {
