@@ -15,34 +15,38 @@ class CustomerNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: navBar)),
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: onTap,
         backgroundColor: navBar,
-        selectedItemColor: white,
-        unselectedItemColor: white.withAlpha(153),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
         items: const [
+
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: 'Dashboard',
+            label: 'Oversigt',
           ),
+
           BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Søg',
+            icon: Icon(Icons.wb_sunny_outlined),
+            activeIcon: Icon(Icons.wb_sunny),
+            label: 'Lysdetalje',
           ),
+
           BottomNavigationBarItem(
-            icon: Icon(Icons.mail_outlined),
-            activeIcon: Icon(Icons.mail),
-            label: 'Indbakke',
+            icon: Icon(Icons.info_outline),
+            activeIcon: Icon(Icons.info),
+            label: 'Chrono-info',
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),

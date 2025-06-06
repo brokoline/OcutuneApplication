@@ -11,21 +11,15 @@ import 'dart:math';
 ///   final label = chrono.getChronotypeLabel();
 ///   final times = chrono.getRecommendedTimes();
 ///
-/// Hvis du kun har rMEQ (fem‐spørgsmåls‐score), estimeres en 
+/// Hvis der kun er rMEQ (fem‐spørgsmåls‐score), estimeres en
 /// tilsvarende MEQ (19‐spørgsmåls‐score) internt i `_estimateMEQ()`.
+///
 class ChronotypeManager {
   final int totalScore;
 
-  /// Den estimerede MEQ (langversion).
   late final double meqScore;
-
-  /// DLMO‐tid i timer (= “Dim Light Melatonin Onset”).
   late final double dlmoHour;
-
-  /// Døgnlængde (tau) udledt fra meqScore.
   late final double tau;
-
-  /// Beregnede start‐ og slut‐tidspunkter for “light boost” i timer.
   late final double lightboostStartHour;
   late final double lightboostEndHour;
 

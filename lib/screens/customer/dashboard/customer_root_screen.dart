@@ -1,36 +1,70 @@
 // lib/screens/customer/dashboard/customer_root_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_chrono_insight_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_app_bar.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_nav_bar.dart';
 import '../../../models/customer_model.dart';
-import '../../../widgets/customer_widgets/light_widgets/customer_light_summary_section.dart';
+import '../customer_root_controller.dart';
+import 'customer_light_detail_screen.dart';
+import 'customer_overview_screen.dart';
+import 'customer_profile_screen.dart';
+
+
+// Importér de fire underside‐widgets
+
 
 class CustomerRootScreen extends StatelessWidget {
   const CustomerRootScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: const CustomerAppBar(
-        title: 'Kunde Lys-Dashboard',
-      ),
-      body: FutureBuilder<Customer>(
-        future: ApiService.fetchCustomerProfile(),
-        builder: (context, snapshot) {
-          // 1) Loader, mens vi venter på profildata
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+    // 1) Opret controller via Provider
+    return ChangeNotifierProvider<CustomerRootController>(
+      create: (_) => CustomerRootController(),
+      child: const CustomerRootView(),
+    );
+  }
+}
 
-          // 2) Hvis fejl ved hentning af profil
-          if (snapshot.hasError) {
-            return Center(
+class CustomerRootView extends StatelessWidget {
+  const CustomerRootView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<CustomerRootController>();
+
+    return FutureBuilder<Customer>(
+      future: ApiService.fetchCustomerProfile(),
+      builder: (context, snapshot) {
+        // ====== Loader ======
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            backgroundColor: generalBackground,
+            appBar: const PreferredSize(
+              preferredSize: Size.fromHeight(80),
+              child: CustomerAppBar(title: ''),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+            bottomNavigationBar: CustomerNavBar(
+              currentIndex: controller.currentIndex,
+              onTap: (idx) => controller.setIndex(idx),
+            ),
+          );
+        }
+
+        // ====== Fejl ======
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: generalBackground,
+            appBar: const PreferredSize(
+              preferredSize: Size.fromHeight(80),
+              child: CustomerAppBar(title: ''),
+            ),
+            body: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
@@ -42,12 +76,23 @@ class CustomerRootScreen extends StatelessWidget {
                   ),
                 ),
               ),
-            );
-          }
+            ),
+            bottomNavigationBar: CustomerNavBar(
+              currentIndex: controller.currentIndex,
+              onTap: (idx) => controller.setIndex(idx),
+            ),
+          );
+        }
 
-          // 3) Hvis ingen data (bør ikke ske, hvis token er gyldigt)
-          if (!snapshot.hasData) {
-            return const Center(
+        // ====== Ingen data ======
+        if (!snapshot.hasData) {
+          return Scaffold(
+            backgroundColor: generalBackground,
+            appBar: const PreferredSize(
+              preferredSize: Size.fromHeight(80),
+              child: CustomerAppBar(title: ''),
+            ),
+            body: const Center(
               child: Text(
                 'Ingen brugerdata fundet.',
                 style: TextStyle(
@@ -55,61 +100,70 @@ class CustomerRootScreen extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
-            );
-          }
-
-          // 4) Vi har kundens profil
-          final Customer profile = snapshot.data!;
-          final int rmeq       = profile.rmeqScore;
-          final int meq        = profile.meqScore ?? 0;
-          final String chrono  = profile.chronotype.name;
-          final String name    = '${profile.firstName} ${profile.lastName}';
-
-          // 5) Eksempel-anbefalinger (kan erstattes af dynamisk logik)
-          final List<String> recommendations = [
-            '08:00 – Gå en morgentur i dagslys',
-            '21:00 – Undgå skærmlys før sengetid',
-          ];
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 8),
-
-                // Vis kundens navn
-                Text(
-                  'Velkommen, $name',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Én samlet “summary”-sektion (anbefalinger, score og swipebar-graf)
-                CustomerLightSummarySection(
-                  rmeqScore:       rmeq,
-                  meqScore:        meq,
-                  chronotype:      chrono,
-                  recommendations: recommendations,
-                ),
-
-                const SizedBox(height: 40),
-              ],
+            ),
+            bottomNavigationBar: CustomerNavBar(
+              currentIndex: controller.currentIndex,
+              onTap: (idx) => controller.setIndex(idx),
             ),
           );
-        },
-      ),
-      bottomNavigationBar: CustomerNavBar(
-        currentIndex: 0,
-        onTap: (_) {
-          // Fremtidig navigation, hvis der kommer flere faner
-        },
-      ),
+        }
+
+        // ====== Profil-data er hentet ======
+        final profile = snapshot.data!;
+        final List<String> recommendations = [
+          '08:00 – Gå en morgentur i dagslys',
+          '21:00 – Undgå skærmlys før sengetid',
+        ];
+        final String name = '${profile.firstName} ${profile.lastName}';
+
+        // Fire separate undersider, lagt i en liste:
+        final pages = [
+          // 0: Oversigt
+          CustomerOverviewScreen(
+            profile: profile,
+            recommendations: recommendations,
+          ),
+
+          // 1: Lysdetalje
+          const CustomerLightDetailScreen(),
+
+          // 2: Nørdeside
+          const CustomerChronoInsightScreen(),
+
+          // 3: Profil
+          CustomerProfileScreen(profile: profile),
+        ];
+
+        // Hvis du vil have AppBar-titlen til at skifte afhængigt af fanen,
+        // kan du lave en liste af titler:
+        final titles = [
+          "$name’s oversigt",
+          'Lysdetalje',
+          'Nørdeside',
+          'Profil',
+        ];
+
+        return Scaffold(
+          backgroundColor: generalBackground,
+
+          // Dynamisk AppBar-titel
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(80),
+            child: CustomerAppBar(
+              title: titles[controller.currentIndex],
+            ),
+          ),
+
+          // Vis den relevante underside
+          body: pages[controller.currentIndex],
+
+          // Bottom NavBar, som kalder controller.setIndex(index)
+          bottomNavigationBar: CustomerNavBar(
+            currentIndex: controller.currentIndex,
+            onTap: (idx) => controller.setIndex(idx),
+          ),
+        );
+      },
     );
   }
 }

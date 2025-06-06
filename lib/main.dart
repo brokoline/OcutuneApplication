@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_controller.dart';
+import 'package:ocutune_light_logger/screens/customer/customer_root_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:provider/provider.dart';
