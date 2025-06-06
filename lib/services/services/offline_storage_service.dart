@@ -125,7 +125,62 @@ class OfflineStorageService {
     );
   }
 
+  static Future<void> deleteInvalidSensorData() async {
+    if (_db == null) return;
+
+    // Fjern alle unsynced_data hvor JSON indeholder sensor_id = -1
+    await _db!.delete(
+      'unsynced_data',
+      where: 'json LIKE ?',
+      whereArgs: ['%"sensor_id":-1%'],
+    );
+
+    // Fjern alle unsynced_data hvor JSON indeholder sensor_id = null
+    await _db!.delete(
+      'unsynced_data',
+      where: 'json LIKE ?',
+      whereArgs: ['%"sensor_id":null%'],
+    );
+
+    // Fjern alle 'light'-poster der slet ikke indeholder "sensor_id" i JSON
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json NOT LIKE ?',
+      whereArgs: ['light', '%"sensor_id"%'],
+    );
+  }
+
+  /// Rens alle 'battery'-poster i unsynced_data, der mangler eller har ugyldig sensor_id
+  static Future<void> deleteInvalidBatteryData() async {
+    if (_db == null) return;
+
+    // Slet poster hvor type = 'battery' og sensor_id = -1
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['battery', '%"sensor_id":-1%'],
+    );
+
+    // Slet poster hvor type = 'battery' og sensor_id = null
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['battery', '%"sensor_id":null%'],
+    );
+
+    // Slet poster hvor type = 'battery' og JSON ikke indeholder "sensor_id"
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json NOT LIKE ?',
+      whereArgs: ['battery', '%"sensor_id"%'],
+    );
+
+    print('🗑️ Ugyldige battery-poster i unsynced_data er slettet');
+  }
+
   static Future<void> deleteInvalidLightData() async {
+    if (_db == null) return;
+
     await _db!.delete(
       'unsynced_data',
       where: 'type = ? AND json LIKE ?',
@@ -134,10 +189,12 @@ class OfflineStorageService {
   }
 
   static Future<List<Map<String, dynamic>>> getUnsyncedData() async {
+    if (_db == null) return [];
     return await _db!.query('unsynced_data', orderBy: 'created_at ASC');
   }
 
   static Future<void> deleteById(int id) async {
+    if (_db == null) return;
     await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
   }
 }

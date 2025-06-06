@@ -18,7 +18,7 @@ class CustomerResponse {
   final int? meqScore;
 
   /// Kronotype-nøgle, når kunden vælger kronotype / testen er færdig
-  final String? chronotypeKey;
+  final String? chronotype;
 
   /// Indregistreret kodeord
   final String? password;
@@ -33,7 +33,7 @@ class CustomerResponse {
     required this.questionScores,
     this.rmeqScore,
     this.meqScore,
-    this.chronotypeKey,
+    this.chronotype,
     this.password,
   });
 
@@ -48,7 +48,7 @@ class CustomerResponse {
       questionScores:Map<String, int>.from(json['question_scores'] as Map),
       rmeqScore:     (json['rmeq_score']       as num?)?.toInt(),
       meqScore:      (json['meq_score']        as num?)?.toInt(),
-      chronotypeKey: json['chronotype_key']    as String?,
+      chronotype: json['chronotype']    as String?,
       password:      json['password']          as String?,
     );
   }
@@ -64,7 +64,7 @@ class CustomerResponse {
     'question_scores': questionScores,
     'rmeq_score':      rmeqScore,
     'meq_score':       meqScore,
-    'chronotype_key':  chronotypeKey,
+    'chronotype':  chronotype,
   };
 
   CustomerResponse copyWith({
@@ -74,7 +74,7 @@ class CustomerResponse {
     Map<String, int>? questionScores,
     int? rmeqScore,
     int? meqScore,
-    String? chronotypeKey,
+    String? chronotype,
     String? password,
   }) {
     return CustomerResponse(
@@ -87,7 +87,7 @@ class CustomerResponse {
       questionScores:questionScores?? this.questionScores,
       rmeqScore:     rmeqScore     ?? this.rmeqScore,
       meqScore:      meqScore      ?? this.meqScore,
-      chronotypeKey: chronotypeKey ?? this.chronotypeKey,
+      chronotype:  chronotype      ?? this.chronotype,
       password:      password      ?? this.password,
     );
   }

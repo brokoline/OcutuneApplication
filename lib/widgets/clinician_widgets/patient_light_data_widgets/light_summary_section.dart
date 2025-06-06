@@ -1,31 +1,62 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
+import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
-import '../../../../utils/light_utils.dart';
+import '../../../controller/chronotype_controller.dart';
+import '../../../../utils/light_data_processing.dart';
 
-import '../patient_light_data_widgets/light_recommendations_card.dart';
+import 'clinician_recommandation_card.dart';
+import 'light_slide_bar_chart.dart';
+import 'light_recommendations_card.dart';
 import 'light_score_card.dart';
-import 'light_daily_line_chart.dart';
-import 'light_weekly_bar_chart.dart';
-import 'light_latest_events_list.dart';
 
 class LightSummarySection extends StatelessWidget {
-  final List<LightData> data;
+  final String patientId;
   final int rmeqScore;
-  final int? meqScore; // nu valgfri
+
+  /// Valgfri MEQ‐score (kun til ScoreCard)
+  final int? meqScore;
 
   const LightSummarySection({
-    Key? key,
-    required this.data,
+    super.key,
+    required this.patientId,
     required this.rmeqScore,
     this.meqScore,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (data.isEmpty) {
+    // Hent viewmodel’en
+    final vm = Provider.of<PatientDetailViewModel>(context, listen: true);
+
+    // 1) Hvis vi stadig henter _rawLightData, vis loading
+    if (vm.isFetchingRaw && vm.rawLightData.isEmpty) {
+      return SizedBox(
+        height: 200.h,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // 2) Hvis der er fejl under hentning, vis fejltekst
+    if (vm.rawFetchError != null) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 16.h),
+        child: Center(
+          child: Text(
+            'Fejl ved hentning af lysdata: ${vm.rawFetchError}',
+            style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    // 3) Hvis vi har hentet, men listen stadig er tom => ingen lysdata endnu
+    if (!vm.isFetchingRaw && vm.rawLightData.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Text(
@@ -36,77 +67,68 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    final processor = LightDataProcessing(rMEQ: rmeqScore);
+    final List<LightData> allLightData = vm.rawLightData;
 
-    final weeklyBars    = _generateWeeklyBars(data);
-    final monthlyBars   = _generateMonthlyBars(data);
-    final weekMap       = processor.groupLuxByWeekdayName(data);
-    final recs          = processor.generateAdvancedRecommendations(data: data, rMEQ: rmeqScore);
-    final spots         = data.map((e) {
-      final x = e.timestamp.hour.toDouble() + e.timestamp.minute.toDouble() / 60;
-      return FlSpot(x, e.ediLux);
-    }).toList();
+    // ────────────────────────────────────────────────────────────────
+    // 4) Generér kliniker-anbefalinger vha. LightDataProcessing
+    final List<String> clinicianRecs = LightDataProcessing(rMEQ: rmeqScore)
+        .generateAdvancedRecommendations(
+      data: allLightData,
+      rMEQ: rmeqScore,
+    );
+
+    // 5) Generér “almindelige” anbefalinger via ChronotypeManager (ud fra rMEQ‐score)
+    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
+    final String chronoLabel = chrono.getChronotypeLabel();
+    final Map<String, DateTime> timeMap = chrono.getRecommendedTimes();
+    final DateFormat fmt = DateFormat('HH:mm');
+
+    // Aflæs tidspunkter (bang-operator, da vi antager, at nøglerne findes)
+    final DateTime dlmoDt          = timeMap['dlmo']!;
+    final DateTime sleepStartDt    = timeMap['sleep_start']!;
+    final DateTime wakeTimeDt      = timeMap['wake_time']!;
+    final DateTime lightBoostStart = timeMap['lightboost_start']!;
+    final DateTime lightBoostEnd   = timeMap['lightboost_end']!;
+
+    final List<String> recs = [
+      "Kronotype: $chronoLabel",
+      "DLMO (Dim Light Melatonin Onset): ${fmt.format(dlmoDt)}",
+      "Sengetid (DLMO + 2 timer): ${fmt.format(sleepStartDt)}",
+      "Opvågning (DLMO + 10 timer): ${fmt.format(wakeTimeDt)}",
+      "Light‐boost start: ${fmt.format(lightBoostStart)}",
+      "Light‐boost slut: ${fmt.format(lightBoostEnd)}",
+    ];
+    // ────────────────────────────────────────────────────────────────
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LightRecommendationsCard(recommendations: recs),
+        // ─────── 1) VIS kliniker-anbefalinger øverst ────────────────────────
+        ClinicianRecommendationCard(
+          recommendations: clinicianRecs,
+        ),
         SizedBox(height: 16.h),
+
+        // ─────── 2) VIS “almindelige” anbefalinger ─────────────────────────
+        LightRecommendationsCard(
+          recommendations: recs,
+        ),
+        SizedBox(height: 16.h),
+
+        // ─────── 3) Score card (rMEQ + MEQ) ───────────────────────────────
         LightScoreCard(
           rmeqScore: rmeqScore,
-          meqScore: meqScore ?? 0, // vis 0 hvis ikke sat
+          meqScore: meqScore ?? 0,
         ),
         SizedBox(height: 24.h),
-        LightDailyLineChart(
-          lightData: spots,
-          totalScore: rmeqScore,
-          weeklyBars: weeklyBars,
-          monthlyBars: monthlyBars,
+
+        // ─────── 4) Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
+        LightSlideBarChart(
+          patientId: patientId,
+          rmeqScore: rmeqScore,
         ),
         SizedBox(height: 24.h),
-        LightWeeklyBarChart(luxPerDay: weekMap),
-        SizedBox(height: 24.h),
-        LightLatestEventsList(lightData: data),
       ],
     );
-  }
-
-  List<BarChartGroupData> _generateWeeklyBars(List<LightData> entries) {
-    final Map<int, List<double>> grouped = {};
-    for (var e in entries) {
-      grouped.putIfAbsent(e.timestamp.weekday, () => []).add(e.calculatedScore * 100);
-    }
-    return grouped.entries.map((entry) {
-      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
-      return BarChartGroupData(
-        x: entry.key,
-        barRods: [
-          BarChartRodData(
-            toY: avg.clamp(0, 100),
-            color: avg >= 75 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
-          ),
-        ],
-      );
-    }).toList();
-  }
-
-  List<BarChartGroupData> _generateMonthlyBars(List<LightData> entries) {
-    final Map<int, List<double>> grouped = {};
-    for (var e in entries) {
-      grouped.putIfAbsent(e.timestamp.day, () => []).add(e.calculatedScore * 100);
-    }
-    int index = 0;
-    return grouped.entries.map((entry) {
-      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
-      return BarChartGroupData(
-        x: index++,
-        barRods: [
-          BarChartRodData(
-            toY: avg.clamp(0, 100),
-            color: avg >= 75 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
-          ),
-        ],
-      );
-    }).toList();
   }
 }

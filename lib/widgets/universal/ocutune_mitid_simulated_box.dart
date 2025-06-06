@@ -1,7 +1,11 @@
+// widgets/universal/simulated_mitid_box.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import '../../services/services/api_services.dart';
 
 class SimulatedMitIDBox extends StatefulWidget {
   final String title;
@@ -30,11 +34,12 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
   String? errorMessage;
   String? _validatedUserId;
 
+
   Future<bool> _validateUserId(String userId) async {
-    print('🔍 Tjekker bruger-ID: $userId');
+    print('🔍 Tjekker bruger‐ID: $userId');
     try {
       final response = await http.post(
-        Uri.parse('https://ocutune2025.ddns.net/sim-check-userid'),
+        Uri.parse('${ApiService.baseUrl}/api/auth/sim-check-userid'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'sim_userid': userId}),
       );
@@ -49,13 +54,12 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
     }
   }
 
-
   void _handlePrimaryAction() async {
     print('🟢 [_handlePrimaryAction] kaldt. isStepTwo = $isStepTwo');
     if (!isStepTwo) {
       final userId = widget.controller.text.trim();
       if (userId.isEmpty) {
-        setState(() => errorMessage = 'Udfyld Bruger-ID');
+        setState(() => errorMessage = 'Udfyld Bruger‐ID');
         return;
       }
 
@@ -74,12 +78,12 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
           errorMessage = null;
         });
       } else {
-        setState(() => errorMessage = 'Bruger-ID blev ikke fundet');
+        setState(() => errorMessage = 'Bruger‐ID blev ikke fundet');
       }
     } else {
       final password = passwordController.text.trim();
       if (_validatedUserId == null || password.isEmpty) {
-        setState(() => errorMessage = 'Udfyld både bruger-ID og adgangskode');
+        setState(() => errorMessage = 'Udfyld både bruger‐ID og adgangskode');
         return;
       }
       print('🟢 onContinue kaldt med: $_validatedUserId / $password');
@@ -102,7 +106,10 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         backgroundColor: const Color(0xFF2B2B2B),
         title: Text(title, style: TextStyle(color: Colors.white, fontSize: 16.sp)),
-        content: Text(content, style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4)),
+        content: Text(
+          content,
+          style: TextStyle(color: Colors.white70, fontSize: 14.sp, height: 1.4),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -116,7 +123,7 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
   void _showHelpDialog() {
     _showDialogBox(
       title: 'Hjælp (?!?!)',
-      content: 'Dette er et simuleret MitID-login.\n\n'
+      content: 'Dette er et simuleret MitID‐login.\n\n'
           'Vi kan desværre ikke hjælpe dig — fordi vi selv har brug for hjælp 🤯\n\n'
           'Tak til Digitaliseringsstyrelsen, eller .... noget.',
       buttonText: 'Got it 👊',
@@ -125,9 +132,9 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
 
   void _showForgotDialog() {
     _showDialogBox(
-      title: 'Glemt bruger-ID? 🤔',
-      content: 'Tror du vi har adgang til CPR-registret?\n\n'
-          'Vi husker intet her – det er trods alt bare en wannabe-simulering',
+      title: 'Glemt bruger‐ID? 🤔',
+      content: 'Tror du vi har adgang til CPR‐registret?\n\n'
+          'Vi husker intet her – det er trods alt bare en wannabe‐simulering',
       buttonText: 'Faiiiiiiir nok',
     );
   }
@@ -172,8 +179,14 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(widget.title,
-                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.sp, color: Colors.black87)),
+                        child: Text(
+                          widget.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.sp,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ),
                       SizedBox(width: 12.w),
                       Image.asset('assets/icon/mitid_logo.png', height: 28.h),
@@ -181,8 +194,14 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                   ),
                   Divider(height: 32.h),
                   SizedBox(height: 8.h),
-                  Text(isStepTwo ? 'Adgangskode' : 'BRUGER-ID',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black87)),
+                  Text(
+                    isStepTwo ? 'Adgangskode' : 'BRUGER‐ID',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.sp,
+                      color: Colors.black87,
+                    ),
+                  ),
                   SizedBox(height: 8.h),
                   TextField(
                     controller: isStepTwo ? passwordController : widget.controller,
@@ -201,7 +220,8 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                   if (combinedError != null)
                     Padding(
                       padding: EdgeInsets.only(top: 8.h),
-                      child: Text(combinedError, style: TextStyle(color: Colors.red, fontSize: 13.sp)),
+                      child:
+                      Text(combinedError, style: TextStyle(color: Colors.red, fontSize: 13.sp)),
                     ),
                   SizedBox(height: 20.h),
                   SizedBox(
@@ -216,11 +236,18 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
                       ),
                       child: isLoading
-                          ? SizedBox(height: 20.h, width: 20.w, child: const CircularProgressIndicator(strokeWidth: 2))
+                          ? SizedBox(
+                        height: 20.h,
+                        width: 20.w,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      )
                           : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(isStepTwo ? 'LOG IND' : 'FORTSÆT', style: TextStyle(fontSize: 14.sp)),
+                          Text(
+                            isStepTwo ? 'LOG IND' : 'FORTSÆT',
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
                           SizedBox(width: 8.w),
                           Icon(isStepTwo ? Icons.login : Icons.arrow_forward, size: 18.sp),
                         ],
@@ -236,8 +263,10 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                         opacity: isStepTwo ? 0 : 1,
                         child: GestureDetector(
                           onTap: isStepTwo ? null : _showForgotDialog,
-                          child: Text('Glemt bruger-ID?',
-                              style: TextStyle(color: const Color(0xFF0051A4), fontSize: 14.sp)),
+                          child: Text(
+                            'Glemt bruger‐ID?',
+                            style: TextStyle(color: const Color(0xFF0051A4), fontSize: 14.sp),
+                          ),
                         ),
                       ),
                     ),
@@ -256,8 +285,10 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                           visualDensity: VisualDensity.compact,
                         ),
                         Expanded(
-                          child: Text('Husk mig på denne enhed',
-                              style: TextStyle(fontSize: 13.sp, color: Colors.black87)),
+                          child: Text(
+                            'Husk mig på denne enhed',
+                            style: TextStyle(fontSize: 13.sp, color: Colors.black87),
+                          ),
                         ),
                       ],
                     ),
@@ -268,11 +299,17 @@ class _SimulatedMitIDBoxState extends State<SimulatedMitIDBox> {
                     children: [
                       TextButton(
                         onPressed: _handleCancel,
-                        child: Text('Afbryd', style: TextStyle(color: Colors.black87, fontSize: 14.sp)),
+                        child: Text(
+                          'Afbryd',
+                          style: TextStyle(color: Colors.black87, fontSize: 14.sp),
+                        ),
                       ),
                       TextButton(
                         onPressed: _showHelpDialog,
-                        child: Text('Hjælp', style: TextStyle(color: Colors.black87, fontSize: 14.sp)),
+                        child: Text(
+                          'Hjælp',
+                          style: TextStyle(color: Colors.black87, fontSize: 14.sp),
+                        ),
                       ),
                     ],
                   ),

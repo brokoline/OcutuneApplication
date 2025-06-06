@@ -60,7 +60,6 @@ class LightClassifier {
     final maxValue = prediction.reduce(max);
     final maxIndex = prediction.indexOf(maxValue);
 
-    print("📊 Klassificering: input=$input → prediction=$prediction → class=$maxIndex");
 
     return maxIndex;
   }

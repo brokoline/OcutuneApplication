@@ -22,13 +22,14 @@ class ClinicianSearchController with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.fetchClinicianPatients();
+      final response = await ApiService.getClinicianPatients();
       _allPatients = response.map((p) => Patient.fromJson(p)).toList();
-      _filteredPatients = []; // ← tom som udgangspunkt
+      _filteredPatients = []; // tom som udgangspunkt
       _error = null;
     } catch (e) {
       _error = e.toString();
     }
+
 
     _isLoading = false;
     notifyListeners();

@@ -74,7 +74,6 @@ class BlePollingService {
 
       try {
         final result = await ble.readCharacteristic(characteristic);
-        print("📦 Rå BLE-data: $result");
         await _handleData(result);
       } catch (e) {
         print("⚠️ BLE-fejl: $e");
@@ -140,10 +139,6 @@ class BlePollingService {
       final actionRequired = _getActionRequired(exposureScore, now);
       final lightTypeName = _lightTypeFromCode(classId);
 
-      print("📊 Decode → ${values.join(', ')}");
-      print("🧠 ClassId: $classId ($lightTypeName)");
-      print("📈 EDI: ${melanopic.toStringAsFixed(1)}, Lux: ${illuminance.toStringAsFixed(1)}, DER: ${der.toStringAsFixed(4)}");
-      print("📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired");
 
       int actionCode = (actionRequired == "increase") ? 1 : (actionRequired == "decrease") ? 2 : 0;
 
@@ -161,7 +156,8 @@ class BlePollingService {
         "action_required": actionCode,
       };
 
-      print("🧾 Final data to save: ${jsonEncode(lightData)}");
+      print("▶️ Nyt BLE‐aflæsningstag kl. ${DateTime.now().toIso8601String()}");
+      //print("🧾 Final data to save: ${jsonEncode(lightData)}");
       await OfflineStorageService.saveLocally(type: 'light', data: lightData);
     } catch (e) {
       print("❌ Fejl i håndtering af BLE-data: $e");

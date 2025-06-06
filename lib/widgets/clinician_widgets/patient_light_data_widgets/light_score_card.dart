@@ -1,13 +1,13 @@
+// lib/widgets/clinician_widgets/patient_light_data_widgets/light_score_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '/theme/colors.dart';
 import '../../../controller/chronotype_controller.dart';
 
 class LightScoreCard extends StatelessWidget {
-  /// rMEQ: kort version (5 spørgsmål)
+  /// rMEQ (int) and MEQ (int)
   final int rmeqScore;
-
-  /// MEQ: lang version (19 spørgsmål)
   final int meqScore;
 
   const LightScoreCard({
@@ -38,7 +38,7 @@ class LightScoreCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Seneste målinger",
+              "Lys-score",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18.sp,
@@ -58,7 +58,7 @@ class LightScoreCard extends StatelessWidget {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // glow
+                        // Glow‐circle
                         Container(
                           width: 140.w,
                           height: 140.w,
@@ -69,7 +69,7 @@ class LightScoreCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // donut
+                        // Donut‐chart
                         ShaderMask(
                           shaderCallback: (rect) {
                             return SweepGradient(
@@ -89,7 +89,7 @@ class LightScoreCard extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // labels
+                        // Percent/label in center
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -132,11 +132,8 @@ class LightScoreCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _InfoTile(label: "Kronotype", value: chronoLabel),
-                _InfoTile(
-                  label: "MEQ",
-                  value: meqScore > 0 ? meqScore.toString() : "–", // tom hvis 0
-                ),
-                _InfoTile(label: "rMEQ", value: rmeqScore.toString()),
+                _InfoTile(label: "MEQ",       value: meqScore > 0 ? meqScore.toString() : "–"),
+                _InfoTile(label: "rMEQ",      value: rmeqScore.toString()),
               ],
             ),
           ],
@@ -153,12 +150,12 @@ class LightScoreCard extends StatelessWidget {
 
   Color _getChronotypeColor(String type) {
     switch (type) {
-      case 'Helt morgenmenneske':   return Colors.blueAccent;
-      case 'moderately_morning':   return Colors.lightBlue;
-      case 'neither':              return Colors.grey;
-      case 'moderately_evening':   return Colors.orangeAccent;
-      case 'definitely_evening':   return Colors.deepOrange;
-      default:                     return Colors.white60;
+      case 'definitely_morning':    return Colors.blueAccent;
+      case 'moderately_morning':    return Colors.lightBlue;
+      case 'neither':               return Colors.grey;
+      case 'moderately_evening':    return Colors.orangeAccent;
+      case 'definitely_evening':    return Colors.deepOrange;
+      default:                      return Colors.white60;
     }
   }
 

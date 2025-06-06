@@ -40,7 +40,7 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl     = 'https://ocutune2025.ddns.net';
+    const baseUrl     = 'https://ocutune2025.ddns.net/api';
     final questionsUrl = Uri.parse('$baseUrl/questions');
     final choicesUrl   = Uri.parse('$baseUrl/choices');
 

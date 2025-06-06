@@ -31,6 +31,11 @@ class LightDataController with ChangeNotifier {
     notifyListeners();
   }
 
+  void setData(List<LightData> newList) {
+    _data = newList;
+    notifyListeners();
+  }
+
   List<BarChartGroupData> generateWeeklyBars() {
     final Map<int, List<double>> grouped = {};
 

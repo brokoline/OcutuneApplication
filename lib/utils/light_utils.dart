@@ -1,193 +1,179 @@
-import 'dart:math';
+// lib/utils/light_utils.dart
+
+import 'package:flutter/material.dart';
 import '../models/light_data_model.dart';
 
-class LightDataProcessing {
-  final int rMEQ;
+/// En utility‐klasse til at gruppere rå LightData i time‐, uge‐ og
+/// måned‐buckets. Alle gruppering sker i lokal tid (dvs. .toLocal()).
+///
+/// Metoderne returnerer enten rå gennemsnits‐ediLux (ikke procenter),
+/// eller rå gennemsnits‐procenter baseret på ediLux*100, alt efter behov.
+class LightUtils {
+  LightUtils._(); // Privat constructor – må ikke instantieres
 
-  LightDataProcessing({required this.rMEQ});
+  // --------------------------------------------------------------------------------
+  // 1) DAILY BUCKETING: groupByHourOfDay
+  //
+  // Input:  Liste af LightData, hvor d.capturedAt er en DateTime (oprindeligt UTC).
+  // Handling: Vi kalder d.capturedAt.toLocal().hour for at hente den lokale time (0..23),
+  //           derefter samler vi alle ediLux‐værdier i time‐buckets.
+  // Output: List<double> med længde 24, hvor index = lokal time (0..23). Hver værdi
+  //         er gennemsnitlig ediLux (melanopicEdi som double) i den time. Hvis ingen
+  //         målinger i en given time, returneres 0.0.
+  static List<double> groupByHourOfDay(List<LightData> data) {
+    // 1) Opret 24 tomme lister (én per lokal time 0..23)
+    final List<List<double>> buckets = List.generate(24, (_) => <double>[]);
 
-  double convertToMEQ() {
-    if (rMEQ >= 22) return 78.0;
-    if (rMEQ >= 18) return 64.0;
-    if (rMEQ >= 12) return 50.0;
-    if (rMEQ >= 8) return 36.0;
-    return 23.0;
-  }
-
-  double estimateDLMO(double meq) {
-    return (209.023 - meq) / 7.288;
-  }
-
-  double estimateTau(double meq) {
-    return (24.97514314 - meq) / 0.01714266123;
-  }
-
-  double calculateBoostStart(double tau, double dlmo) {
-    double shift = tau - 24;
-    double boostOffset = 2.6 + 0.06666666667 * sqrt(9111 + 15000 * shift);
-    return dlmo - boostOffset;
-  }
-
-  Map<String, double> getTimeWindows() {
-    final meq = convertToMEQ();
-    final dlmo = estimateDLMO(meq);
-    final tau = estimateTau(meq);
-    final boostStart = calculateBoostStart(tau, dlmo);
-    final boostEnd = boostStart + 1.5;
-    final sleepStart = dlmo + 2.0;
-    final sleepEnd = dlmo + 10.0;
-
-    return {
-      'dlmoStart': dlmo,
-      'dlmoEnd': dlmo + 2.0,
-      'sleepStart': sleepStart,
-      'sleepEnd': sleepEnd,
-      'boostStart': boostStart,
-      'boostEnd': boostEnd
-    };
-  }
-
-  String getCurrentInterval(DateTime now) {
-    final time = now.hour + now.minute / 60.0;
-    final windows = getTimeWindows();
-
-    bool isIn(double start, double end) {
-      return start < end
-          ? time >= start && time < end
-          : time >= start || time < end;
+    // 2) Loop alle målinger og fordel dem i buckets baseret på lokal time
+    for (final d in data) {
+      final lokalTid = d.capturedAt.toLocal();
+      final int hour = lokalTid.hour; // 0..23 i lokal tid
+      buckets[hour].add(d.ediLux);
     }
 
-    if (isIn(windows['boostStart']!, windows['boostEnd']!)) return 'lightboost';
-    if (isIn(windows['dlmoStart']!, windows['dlmoEnd']!)) return 'dlmo';
-    if (isIn(windows['sleepStart']!, windows['sleepEnd']!)) return 'sleep';
-    return 'daytime';
+    // 3) Beregn gennemsnit pr. bucket (hvis tom, retur 0.0)
+    return List<double>.generate(24, (i) {
+      final bucket = buckets[i];
+      if (bucket.isEmpty) return 0.0;
+      final double sumLux = bucket.reduce((a, b) => a + b);
+      return sumLux / bucket.length;
+    });
   }
 
-  double calculateLightScore(double melanopicEDI, String interval) {
-    switch (interval) {
-      case 'lightboost':
-        return (melanopicEDI / 1316).clamp(0.0, 1.0) * 100;
-      case 'daytime':
-        return (melanopicEDI / 250).clamp(0.0, 1.0) * 100;
-      case 'dlmo':
-        if (melanopicEDI <= 0.0) return 100.0;
-        return (10 / melanopicEDI).clamp(0.0, 1.0) * 100;
-      case 'sleep':
-        if (melanopicEDI <= 0.0) return 100.0;
-        return (1 / melanopicEDI).clamp(0.0, 1.0) * 100;
-      default:
-        return 0.0;
-    }
-  }
-
-  Map<String, dynamic> evaluateLightExposure({
-    required double melanopicEDI,
-    DateTime? time
-  }) {
-    final now = time ?? DateTime.now();
-    final interval = getCurrentInterval(now);
-    final score = calculateLightScore(melanopicEDI, interval);
-
-    final String recommendation;
-    if (score == 100.0) {
-      recommendation = "Ingen handling nødvendig";
-    } else if (interval == 'dlmo' || interval == 'sleep') {
-      recommendation = "Reducer lysniveauet";
-    } else {
-      recommendation = "Øg lysniveauet";
-    }
-
-    return {
-      'score': score,
-      'interval': interval,
-      'recommendation': recommendation
-    };
-  }
-
-  List<String> generateAdvancedRecommendations({
-    required List<LightData> data,
-    required int rMEQ
-  }) {
-    final processor = LightDataProcessing(rMEQ: rMEQ);
-    final Map<String, int> counters = {
-      'lowMorning': 0,
-      'highEvening': 0,
-      'poorScore': 0
-    };
+  // --------------------------------------------------------------------------------
+  // 2) WEEKLY BUCKETING (RÅ LUX): groupByWeekdayLux
+  //
+  // Input:  Liste af LightData.
+  // Handling: Vi kalder d.capturedAt.toLocal().weekday → 1=Mandag..7=Søndag i lokal tid,
+  //           derefter samler vi alle ediLux‐værdier i buckets.
+  // Output: Map<int,double> med nøgler 0=Mandag..6=Søndag og værdier = gennemsnitlig ediLux.
+  static Map<int, double> groupByWeekdayLux(List<LightData> data) {
+    final Map<int, List<double>> buckets = { for (var i = 0; i < 7; i++) i: <double>[] };
 
     for (final d in data) {
-      final eval = processor.evaluateLightExposure(
-          melanopicEDI: d.melanopicEdi.toDouble(),
-          time: d.capturedAt
-      );
+      final lokalTid = d.capturedAt.toLocal();
+      final int weekdayIndex = lokalTid.weekday - 1; // Mandag=1→0 … Søndag=7→6
+      buckets[weekdayIndex]!.add(d.ediLux);
+    }
 
-      if (d.capturedAt.hour >= 6 &&
-          d.capturedAt.hour <= 10 &&
-          eval['score'] < 60) {
-        counters['lowMorning'] = counters['lowMorning']! + 1;
-      }
-
-      if (d.capturedAt.hour >= 20 &&
-          eval['interval'] == 'sleep' &&
-          eval['score'] < 60) {
-        counters['highEvening'] = counters['highEvening']! + 1;
-      }
-
-      if (eval['score'] < 50) {
-        counters['poorScore'] = counters['poorScore']! + 1;
+    final Map<int, double> result = {};
+    for (var i = 0; i < 7; i++) {
+      final bucket = buckets[i]!;
+      if (bucket.isEmpty) {
+        result[i] = 0.0;
+      } else {
+        final double sumLux = bucket.reduce((a, b) => a + b);
+        result[i] = sumLux / bucket.length;
       }
     }
-
-    final List<String> messages = [];
-
-    if (counters['lowMorning']! > 3) {
-      messages.add("Patienten har haft lav lys-eksponering i morgentimerne – anbefal at gå udenfor tidligere.");
-    }
-
-    if (counters['highEvening']! > 2) {
-      messages.add("Patienten har haft for meget lys om aftenen – anbefal at dæmp belysningen efter kl. 20.");
-    }
-
-    if (counters['poorScore']! > 5) {
-      messages.add("Flere målinger viser utilstrækkeligt lys – overvej en snak med patienten om at justere sine rutiner.");
-    }
-
-    if (messages.isEmpty) {
-      messages.add("Patientens lysrytme ser fin ud i denne periode");
-    }
-
-    return messages;
+    return result;
   }
 
-  Map<int, double> groupLuxByDay(List<LightData> data) {
-    final Map<int, List<double>> map = {};
+  // --------------------------------------------------------------------------------
+  // 3) MONTHLY BUCKETING (RÅ LUX): groupByDayOfMonthLux
+  //
+  // Input:  Liste af LightData.
+  // Handling: Vi kalder d.capturedAt.toLocal().day → 1..31 i lokal tid, samler
+  //           ediLux‐værdier i buckets.
+  // Output: Map<int,double> med nøgler = dag i måneden (1..31), værdier = gennemsnitlig ediLux.
+  static Map<int, double> groupByDayOfMonthLux(List<LightData> data) {
+    final Map<int, List<double>> buckets = {};
+
     for (final d in data) {
-      final weekday = d.timestamp.weekday;
-      map.putIfAbsent(weekday, () => []).add(d.ediLux);
+      final lokalTid = d.capturedAt.toLocal();
+      final int day = lokalTid.day; // 1..31
+      buckets.putIfAbsent(day, () => <double>[]).add(d.ediLux);
     }
-    return map.map((k, v) => MapEntry(k, v.reduce((a, b) => a + b) / v.length));
+
+    final Map<int, double> result = {};
+    buckets.forEach((day, bucket) {
+      if (bucket.isEmpty) {
+        result[day] = 0.0;
+      } else {
+        final double sumLux = bucket.reduce((a, b) => a + b);
+        result[day] = sumLux / bucket.length;
+      }
+    });
+
+    return result;
   }
 
-  Map<String, double> groupLuxByWeekdayName(List<LightData> data) {
-    final Map<String, double> luxPerDay = {
-      'Man': 0,
-      'Tir': 0,
-      'Ons': 0,
-      'Tor': 0,
-      'Fre': 0,
-      'Lør': 0,
-      'Søn': 0,
-    };
+  // --------------------------------------------------------------------------------
+  // 4) HJÆLPEMETODER TIL AT KONVERTERE “RÅ LUX‐MAP” → LISTER
+  //
+  // groupByWeekdayListLux(): Returnerer List<double> længde 7 i rækkefølge
+  //   [Man, Tir, Ons, Tor, Fre, Lør, Søn], med gennemsnitlig ediLux (rå).
+  static List<double> groupByWeekdayListLux(List<LightData> data) {
+    final weekdayMap = groupByWeekdayLux(data);
+    return List<double>.generate(7, (i) => weekdayMap[i] ?? 0.0);
+  }
+
+  // groupByDayOfMonthListLux(): Returnerer List<double> længde D, hvor D = antal
+  // dage i lokal måned. Indholdet er gennemsnitlig ediLux pr. dag (1..D).
+  static List<double> groupByDayOfMonthListLux(List<LightData> data) {
+    final nowLocal = DateTime.now().toLocal();
+    final daysInMonth = DateUtils.getDaysInMonth(nowLocal.year, nowLocal.month);
+    final dayMap = groupByDayOfMonthLux(data);
+    return List<double>.generate(daysInMonth, (i) => dayMap[i + 1] ?? 0.0);
+  }
+
+  // --------------------------------------------------------------------------------
+  // 5) UGEDAG‐OG‐MÅNEDSBASERET BUCKETING (PROCENT): groupByWeekdayPct
+  //
+  // Input:  Liste af LightData.
+  // Handling: Samler ediLux‐værdier i lokal ugedag og omregner hver måling til procent
+  //           via (ediLux * 100).clamp(0..100). Derefter beregnes gennemsnit pr. ugedag.
+  // Output: Map<int,double> med nøgler 0=Mandag..6=Søndag, værdier = gennemsnitlig procent (0..100).
+  static Map<int, double> groupByWeekdayPct(List<LightData> data) {
+    final Map<int, List<double>> buckets = { for (var i = 0; i < 7; i++) i: <double>[] };
 
     for (final d in data) {
-      final weekday = d.timestamp.weekday;
-      final names = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
-      final name = names[weekday - 1];
-      if (luxPerDay.containsKey(name)) {
-        luxPerDay[name] = luxPerDay[name]! + d.illuminance;
-      }
+      final lokalTid = d.capturedAt.toLocal();
+      final int weekdayIndex = lokalTid.weekday - 1; // Mandag=1→0 … Søndag=7→6
+      final double pct = (d.ediLux * 100.0).clamp(0.0, 100.0);
+      buckets[weekdayIndex]!.add(pct);
     }
 
-    return luxPerDay;
+    final Map<int, double> result = {};
+    for (var i = 0; i < 7; i++) {
+      final bucket = buckets[i]!;
+      if (bucket.isEmpty) {
+        result[i] = 0.0;
+      } else {
+        final double sumPct = bucket.reduce((a, b) => a + b);
+        // Clamp gennemsnittet til 0..100
+        result[i] = (sumPct / bucket.length).clamp(0.0, 100.0);
+      }
+    }
+    return result;
+  }
+
+  // --------------------------------------------------------------------------------
+  // 6) MÅNEDSBASERET BUCKETING (PROCENT): groupByDayOfMonthPct
+  //
+  // Input:  Liste af LightData.
+  // Handling: Samler ediLux i lokal dag i måneden, omregner hver til procent (ediLux*100,
+  //           clamp), beregner gennemsnit pr. dag.
+  // Output: Map<int,double> med nøgler = dag i måneden (1..31), værdier = gennemsnitlig procent (0..100).
+  static Map<int, double> groupByDayOfMonthPct(List<LightData> data) {
+    final Map<int, List<double>> buckets = {};
+
+    for (final d in data) {
+      final lokalTid = d.capturedAt.toLocal();
+      final int day = lokalTid.day; // 1..31
+      final double pct = (d.ediLux * 100.0).clamp(0.0, 100.0);
+      buckets.putIfAbsent(day, () => <double>[]).add(pct);
+    }
+
+    final Map<int, double> result = {};
+    buckets.forEach((day, bucket) {
+      if (bucket.isEmpty) {
+        result[day] = 0.0;
+      } else {
+        final double sumPct = bucket.reduce((a, b) => a + b);
+        result[day] = (sumPct / bucket.length).clamp(0.0, 100.0);
+      }
+    });
+    return result;
   }
 }

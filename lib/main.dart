@@ -1,15 +1,20 @@
+// lib/main.dart
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/customer_root_controller.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
+import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:provider/provider.dart';
 
 // 🧩 Skærme
 import 'screens/splash_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/login/choose_access_screen.dart';
-import 'screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
+import 'screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 import 'screens/customer/register/customer_registration_information/customer_register_screen.dart';
 import 'screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
@@ -23,6 +28,9 @@ import 'screens/customer/register/registration_steps/chronotype_survey/customer_
 import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
 import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart';
 import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_5_screen.dart';
+
+
+// 📂 Customer Dashboard (root) screens & controller
 import 'screens/patient/patient_dashboard_screen.dart';
 import 'screens/patient/activities/patient_activity_screen.dart';
 import 'screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -37,6 +45,11 @@ import 'screens/clinician/root/clinician_root_controller.dart';
 
 // 🎨 Tema
 import 'theme/colors.dart';
+
+//  Nyttige imports til ML‐flowet:
+import 'services/processing/data_processing.dart';
+import 'services/processing/data_processing_manager.dart';
+import 'viewmodel/clinician/patient_detail_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +73,9 @@ void main() async {
     );
   };
 
+  // ➕ Kald AppInitializer.initialize() før runApp
+  await AppInitializer.initialize();
+
   runApp(const OcutuneApp());
 }
 
@@ -69,12 +85,32 @@ class OcutuneApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(360, 690), // Tilpas hvis du bruger Figma/iOS mål
+      designSize: const Size(360, 690),
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) => MultiProvider(
         providers: [
+          // ✅ Eksisterende controller for Clinician‐dashboard
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
+
+          // 🔷 1) DataProcessing: wrapper for TFLite‐model
+          Provider<DataProcessing>(create: (_) => DataProcessing()),
+
+          // 🔷 2) DataProcessingManager: injicerer kun DataProcessing
+          ChangeNotifierProvider<DataProcessingManager>(
+            create: (ctx) {
+              final dp = ctx.read<DataProcessing>();
+              final manager = DataProcessingManager(dataProcessing: dp);
+              manager.initializeModel();
+              return manager;
+            },
+          ),
+
+          // 🔷 3) PatientDetailViewModel: Dummy‐instans med tom patientId
+          //     (Override i '/patient/dashboard' ruten)
+          ChangeNotifierProvider<PatientDetailViewModel>(
+            create: (_) => PatientDetailViewModel(''),
+          ),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -107,11 +143,19 @@ class OcutuneApp extends StatelessWidget {
             '/Q4': (_) => const QuestionFourScreen(),
             '/Q5': (_) => const QuestionFiveScreen(),
             '/doneSetup': (_) => const DoneSetupScreen(),
+
+            // 🔷 Patientenavn og patientId hentes fra Navigator-argumentet,
+            //     og Vi overrider Dummy‐VM med en rigtig instans:
             '/patient/dashboard': (context) {
               final patientId =
               ModalRoute.of(context)!.settings.arguments as String;
-              return PatientDashboardScreen(patientId: patientId);
+
+              return ChangeNotifierProvider<PatientDetailViewModel>(
+                create: (_) => PatientDetailViewModel(patientId),
+                child: PatientDashboardScreen(patientId: patientId),
+              );
             },
+
             '/clinician/inbox': (_) => ChangeNotifierProvider(
               create: (_) =>
                   InboxController(inboxType: InboxType.clinician),
@@ -149,6 +193,12 @@ class OcutuneApp extends StatelessWidget {
               return PatientSensorSettingsScreen(patientId: patientId);
             },
             '/patient/activities': (_) => PatientActivityScreen(),
+
+            // 🔷 Customer Dashboard (root) med egen route
+            '/customerDashboard': (_) => ChangeNotifierProvider<CustomerRootController>(
+              create: (_) => CustomerRootController(),
+              child: const CustomerRootScreen(),
+            ),
           },
         ),
       ),
@@ -173,6 +223,15 @@ class _LoggingHttpClient implements HttpClient {
 
   _LoggingHttpClient(this._inner);
 
+  // Tilføj setter og getter for autoUncompress, så NetworkImage ikke fejler:
+  @override
+  set autoUncompress(bool value) {
+    _inner.autoUncompress = value;
+  }
+
+  @override
+  bool get autoUncompress => _inner.autoUncompress;
+
   @override
   Future<HttpClientRequest> getUrl(Uri url) {
     print('🌐 [GET] $url');
@@ -193,11 +252,6 @@ class _LoggingHttpClient implements HttpClient {
 
   @override
   void close({bool force = false}) => _inner.close(force: force);
-
-  @override
-  bool get autoUncompress => _inner.autoUncompress;
-  @override
-  set autoUncompress(bool value) => _inner.autoUncompress = value;
 
   @override
   dynamic noSuchMethod(Invocation invocation) =>

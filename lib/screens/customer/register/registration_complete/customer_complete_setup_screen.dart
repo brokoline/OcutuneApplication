@@ -74,7 +74,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> fetchChronotypeFromServer(int score) async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes/by-score/$score');
+    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes/rmeq-by-score/$score');
     debugPrint("🌐 Henter chronotype med score: $score → $url");
     try {
       final response = await http.get(url);
@@ -86,7 +86,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
         final resp = currentCustomerResponse;
         if (resp != null) {
           currentCustomerResponse = resp.copyWith(
-            chronotypeKey: data['type_key'] as String?,
+            chronotype: data['type_key'] as String?,
           );
         }
 
@@ -111,7 +111,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   Future<void> fetchChronotypeByTitle(String title) async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
+    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes');
     debugPrint("🌐 Henter chronotype via titel: $title → $url");
     try {
       final response = await http.get(url);
@@ -126,7 +126,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
           final resp = currentCustomerResponse;
           if (resp != null) {
             currentCustomerResponse = resp.copyWith(
-              chronotypeKey: match['type_key'] as String?,
+              chronotype: match['type_key'] as String?,
             );
           }
           setState(() {
@@ -151,8 +151,8 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   }
 
   void _goToHome(BuildContext context) {
-    debugPrint("➡️ Går til /home");
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    debugPrint("➡️ Går til kundedashboard");
+    Navigator.pushNamedAndRemoveUntil(context, '/customerDashboard', (route) => false);
   }
 
   Widget _orbitingStar({

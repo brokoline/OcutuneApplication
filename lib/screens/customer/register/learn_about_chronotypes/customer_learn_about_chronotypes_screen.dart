@@ -26,7 +26,7 @@ class _LearnAboutChronotypesScreenState
   }
 
   Future<void> fetchChronotypes() async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/chronotypes');
+    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as List<dynamic>;

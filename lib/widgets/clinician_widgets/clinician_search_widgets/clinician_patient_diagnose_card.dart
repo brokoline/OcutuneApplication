@@ -35,7 +35,7 @@ class DiagnosisCard extends StatelessWidget {
                 children: diagnoses.map((d) => Padding(
                   padding: EdgeInsets.only(bottom: 8.h),
                   child: Text(
-                    '• ${d.diagnosis} (${d.code})',
+                    '• ${d.description} (${d.icd10})',
                     style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                   ),
                 )).toList(),

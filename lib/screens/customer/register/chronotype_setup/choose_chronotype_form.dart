@@ -145,13 +145,55 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
-              child: Image.network(
-                type.imageUrl ?? '',
-                width: 48,
-                height: 48,
-                errorBuilder: (ctx, err, st) =>
-                const Icon(Icons.broken_image, color: Colors.white),
-              ),
+              child: () {
+                final raw = type.imageUrl ?? "";
+                // Byg én enkelt korrekt URL. Hvis raw allerede er en fuld HTTP URL, bruges den direkte:
+                final displayUrl = raw.startsWith("http")
+                    ? raw
+                    : "https://ocutune2025.ddns.net/images/$raw";
+
+                if (displayUrl.isEmpty) {
+                  // Hvis der ikke er noget billede, vis et placeholder‐ikon i en boks på 48×48
+                  return const SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.white70,
+                        size: 24, // Her kan du justere ikonets størrelse
+                      ),
+                    ),
+                  );
+                }
+
+                // Ellers læg billedet i en SizedBox med faste constraints 48×48:
+                return SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Image.network(
+                    displayUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (ctx, err, st) => const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.white70,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                );
+              }(),
             ),
             Expanded(
               child: Column(
@@ -161,7 +203,7 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
                     type.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.white70,
                       fontSize: 16,
                     ),
                   ),

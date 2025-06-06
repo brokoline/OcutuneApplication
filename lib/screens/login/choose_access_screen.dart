@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_storage.dart';
 import '/theme/colors.dart';
-import 'package:ocutune_light_logger/screens/simuleret_mitID_login/simulated_mitid_login_screen.dart';
+import 'package:ocutune_light_logger/screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 
 class ChooseAccessScreen extends StatefulWidget {
   const ChooseAccessScreen({super.key});
