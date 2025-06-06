@@ -16,7 +16,7 @@ class AboutChronotypeScreen extends StatefulWidget {
 }
 
 class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
-  Chronotype? chronotype;
+  ChronotypeModel? chronotype;
   bool isLoading = true;
 
   @override
@@ -33,7 +33,7 @@ class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as Map<String, dynamic>;
       setState(() {
-        chronotype = Chronotype.fromJson(data);
+        chronotype = ChronotypeModel.fromJson(data);
         isLoading = false;
       });
     } else {

@@ -1,28 +1,27 @@
 // lib/screens/customer/dashboard/customer_root_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/screens/customer/dashboard/customer_chrono_insight_screen.dart';
 import 'package:provider/provider.dart';
+
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_app_bar.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_nav_bar.dart';
+
 import '../../../models/customer_model.dart';
+import '../../../models/rmeq_chronotype_model.dart';
 import '../customer_root_controller.dart';
-import 'customer_light_detail_screen.dart';
+
 import 'customer_overview_screen.dart';
+import 'customer_light_detail_screen.dart';
+import 'customer_chrono_insight_screen.dart';
 import 'customer_profile_screen.dart';
-
-
-// Importér de fire underside‐widgets
-
 
 class CustomerRootScreen extends StatelessWidget {
   const CustomerRootScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 1) Opret controller via Provider
     return ChangeNotifierProvider<CustomerRootController>(
       create: (_) => CustomerRootController(),
       child: const CustomerRootView(),
@@ -37,10 +36,10 @@ class CustomerRootView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<CustomerRootController>();
 
-    return FutureBuilder<Customer>(
+    return FutureBuilder<Pair<Customer, ChronotypeModel?>>(
       future: ApiService.fetchCustomerProfile(),
       builder: (context, snapshot) {
-        // ====== Loader ======
+        // ─── Loader ─────────────────────────────────────────────
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             backgroundColor: generalBackground,
@@ -56,7 +55,7 @@ class CustomerRootView extends StatelessWidget {
           );
         }
 
-        // ====== Fejl ======
+        // ─── Fejl ───────────────────────────────────────────────
         if (snapshot.hasError) {
           return Scaffold(
             backgroundColor: generalBackground,
@@ -84,7 +83,7 @@ class CustomerRootView extends StatelessWidget {
           );
         }
 
-        // ====== Ingen data ======
+        // ─── Ingen data ────────────────────────────────────────
         if (!snapshot.hasData) {
           return Scaffold(
             backgroundColor: generalBackground,
@@ -108,13 +107,15 @@ class CustomerRootView extends StatelessWidget {
           );
         }
 
-        // ====== Profil-data er hentet ======
-        final profile = snapshot.data!;
+        // ─── Profil‐data er hentet ─────────────────────────────
+        final Customer profile = snapshot.data!.first;
+        final ChronotypeModel? chronoModel = snapshot.data!.second;
+
+        final String name = '${profile.firstName} ${profile.lastName}';
         final List<String> recommendations = [
           '08:00 – Gå en morgentur i dagslys',
           '21:00 – Undgå skærmlys før sengetid',
         ];
-        final String name = '${profile.firstName} ${profile.lastName}';
 
         // Fire separate undersider, lagt i en liste:
         final pages = [
@@ -130,12 +131,13 @@ class CustomerRootView extends StatelessWidget {
           // 2: Nørdeside
           const CustomerChronoInsightScreen(),
 
-          // 3: Profil
-          CustomerProfileScreen(profile: profile),
+          // 3: Profil – her sender vi både customer + chronoModel
+          CustomerProfileScreen(
+            profile: profile,
+            chronoModel: chronoModel,
+          ),
         ];
 
-        // Hvis du vil have AppBar-titlen til at skifte afhængigt af fanen,
-        // kan du lave en liste af titler:
         final titles = [
           "$name’s oversigt",
           'Lysdetalje',
@@ -145,8 +147,6 @@ class CustomerRootView extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: generalBackground,
-
-          // Dynamisk AppBar-titel
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(80),
             child: CustomerAppBar(
@@ -154,10 +154,9 @@ class CustomerRootView extends StatelessWidget {
             ),
           ),
 
-          // Vis den relevante underside
+          // Vis valgt underside
           body: pages[controller.currentIndex],
 
-          // Bottom NavBar, som kalder controller.setIndex(index)
           bottomNavigationBar: CustomerNavBar(
             currentIndex: controller.currentIndex,
             onTap: (idx) => controller.setIndex(idx),

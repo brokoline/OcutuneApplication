@@ -11,13 +11,13 @@ class ChooseChronotypeController {
   static const String _baseUrl = 'https://ocutune2025.ddns.net';
 
   static const String _path = '/api/chronotypes';
-  static Future<List<Chronotype>> fetchChronotypes() async {
+  static Future<List<ChronotypeModel>> fetchChronotypes() async {
     final uri = Uri.parse('$_baseUrl$_path');
     final resp = await http.get(uri);
 
     if (resp.statusCode == 200) {
       final List<dynamic> data = json.decode(resp.body);
-      return data.map((j) => Chronotype.fromJson(j)).toList();
+      return data.map((j) => ChronotypeModel.fromJson(j)).toList();
     } else {
       throw Exception('Failed to load chronotypes (HTTP ${resp.statusCode})');
     }

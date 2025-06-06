@@ -10,15 +10,6 @@ class CustomerLightDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: navBar,
-        title: const Text(
-          'Lysdetalje',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
       body: const Center(
         child: Text(
           'Her kan du se dybdegående lys-data, grafer mv.',

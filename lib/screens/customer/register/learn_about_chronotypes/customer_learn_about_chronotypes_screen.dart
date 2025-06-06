@@ -16,7 +16,7 @@ class LearnAboutChronotypesScreen extends StatefulWidget {
 
 class _LearnAboutChronotypesScreenState
     extends State<LearnAboutChronotypesScreen> {
-  List<Chronotype> chronotypes = [];
+  List<ChronotypeModel> chronotypes = [];
   bool isLoading = true;
 
   @override
@@ -32,7 +32,7 @@ class _LearnAboutChronotypesScreenState
       final data = json.decode(response.body) as List<dynamic>;
       setState(() {
         chronotypes = data
-            .map((j) => Chronotype.fromJson(j as Map<String, dynamic>))
+            .map((j) => ChronotypeModel.fromJson(j as Map<String, dynamic>))
             .toList();
         isLoading = false;
       });

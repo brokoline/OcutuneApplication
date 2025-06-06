@@ -90,7 +90,7 @@ class OcutuneApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) => MultiProvider(
         providers: [
-          // ✅ Eksisterende controller for Clinician‐dashboard
+
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
 
           // 🔷 1) DataProcessing: wrapper for TFLite‐model
@@ -106,8 +106,7 @@ class OcutuneApp extends StatelessWidget {
             },
           ),
 
-          // 🔷 3) PatientDetailViewModel: Dummy‐instans med tom patientId
-          //     (Override i '/patient/dashboard' ruten)
+
           ChangeNotifierProvider<PatientDetailViewModel>(
             create: (_) => PatientDetailViewModel(''),
           ),
@@ -144,8 +143,8 @@ class OcutuneApp extends StatelessWidget {
             '/Q5': (_) => const QuestionFiveScreen(),
             '/doneSetup': (_) => const DoneSetupScreen(),
 
-            // 🔷 Patientenavn og patientId hentes fra Navigator-argumentet,
-            //     og Vi overrider Dummy‐VM med en rigtig instans:
+
+
             '/patient/dashboard': (context) {
               final patientId =
               ModalRoute.of(context)!.settings.arguments as String;

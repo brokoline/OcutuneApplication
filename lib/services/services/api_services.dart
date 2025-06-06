@@ -8,7 +8,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/daily_light_summary_model.dart';
 import '../../models/light_data_model.dart';
 import '../../models/patient_model.dart';
+import '../../models/rmeq_chronotype_model.dart';
 import '../auth_storage.dart';
+
+
+/// Simpel tuple‐klasse til at returnere både Customer og ChronotypeModel
+class Pair<A, B> {
+  final A first;
+  final B second;
+  Pair(this.first, this.second);
+}
 
 
 /// Base URL for alle API‐kald. (Ingen trailing slash i _baseUrl)
@@ -318,22 +327,56 @@ class ApiService {
     }
   }
 
-  static Future<Customer> fetchCustomerProfile() async {
-    final headers = await _authHeaders();
+  static Future<Pair<Customer, ChronotypeModel?>> fetchCustomerProfile() async {
+    // 1) Hent JWT‐token fra lokal storage
+    final token = await AuthStorage.getToken();
+    if (token == null) {
+      throw Exception("Ingen token tilgængelig – prøv at logge ind først");
+    }
+    print('DEBUG: Bruger token i header: $token');
 
-    final url = Uri.parse("$_baseUrl/api/customer/profile");
-    final response = await http.get(url, headers: headers);
+    // 2) Byg korrekt URI – blueprint prefix er '/api/customer'
+    final uri = Uri.parse('$_baseUrl/api/customer/profile');
 
+    // 3) Send GET med headeren 'Authorization: Bearer <token>'
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    print('DEBUG: GET $uri → statuscode ${response.statusCode}');
+    print('DEBUG: response body: ${response.body}');
+
+    // 4) Fejlhåndtering fra server
     if (response.statusCode == 200) {
       final Map<String, dynamic> decoded = jsonDecode(response.body);
       if (decoded["success"] == true) {
         final data = decoded["data"] as Map<String, dynamic>;
-        return Customer.fromJson(data);
+
+        // 5) Konstruér Customer fra JSON (antal gentagelser fra customer.to_dict())
+        final Customer customer = Customer.fromJson(data);
+
+        // 6) Parse chronotype_details (hvis ikke null)
+        ChronotypeModel? chronoModel;
+        if (data['chronotype_details'] != null) {
+          chronoModel = ChronotypeModel.fromJson(
+            data['chronotype_details'] as Map<String, dynamic>,
+          );
+        } else {
+          chronoModel = null;
+        }
+
+        return Pair(customer, chronoModel);
       } else {
         throw Exception(decoded["message"] ?? "Uventet fejl ved hent af profil");
       }
     } else if (response.statusCode == 401) {
-      throw Exception("Mangler token");
+      // Uautoriseret – token er enten ugyldig, udløbet eller slet ikke sendt
+      throw Exception("Uautoriseret (401) – tjek token");
+    } else if (response.statusCode == 404) {
+      throw Exception("Endpoint ikke fundet (404) – tjek URL");
     } else {
       throw Exception("Serverfejl ved hentning af profil: ${response.statusCode}");
     }

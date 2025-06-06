@@ -14,7 +14,7 @@ class ChooseChronotypeForm extends StatefulWidget {
 
 class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
   String? selectedChronotype;
-  List<Chronotype> chronotypes = [];
+  List<ChronotypeModel> chronotypes = [];
   bool isLoading = true;
 
   @override
@@ -128,7 +128,7 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
     );
   }
 
-  Widget _buildChronoCard(Chronotype type) {
+  Widget _buildChronoCard(ChronotypeModel type) {
     final isSelected = selectedChronotype == type.title;
     return GestureDetector(
       onTap: () => setState(() => selectedChronotype = type.title),
