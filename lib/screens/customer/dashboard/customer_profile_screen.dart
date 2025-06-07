@@ -104,7 +104,7 @@ class CustomerProfileScreen extends StatelessWidget {
                 _buildInfoCard(registrationFormatted, genderText),
                 SizedBox(height: 12.h),
                 _buildDeleteButton(context),
-                SizedBox(height: 8.h),  // giver lidt luft nedad
+                SizedBox(height: 8.h),
               ],
             ),
           ),

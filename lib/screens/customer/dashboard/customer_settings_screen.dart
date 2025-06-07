@@ -155,22 +155,29 @@ class CustomerSettingsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              // Log ud
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: GestureDetector(
-                  onTap: () {
-                    // TODO: Udfør logout her
+                  onTap: () async {
+                    await AuthStorage.logoutCustomer();
+                    Navigator.of(context).pushReplacementNamed('/login');
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.exit_to_app,
-                          color: Colors.white70, size: 24.sp),
+                      Icon(
+                        Icons.exit_to_app,
+                        color: Colors.white70,
+                        size: 24.sp,
+                      ),
                       SizedBox(width: 8.w),
-                      Text('Log ud',
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 16.sp)),
+                      Text(
+                        'Log ud',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16.sp,
+                        ),
+                      ),
                     ],
                   ),
                 ),

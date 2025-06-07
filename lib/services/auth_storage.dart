@@ -136,8 +136,6 @@ static Future<int?> getPatientId() async {
 
 
 
-
-
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
@@ -147,5 +145,19 @@ static Future<int?> getPatientId() async {
     await prefs.remove('patient_first_name');
     await prefs.remove('patient_last_name');
   }
+
+
+  static Future<void> logoutCustomer() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
+    await prefs.remove('user_id');
+    await prefs.remove('user_role');
+    await prefs.remove('sim_userid');
+    await prefs.remove('customer_first_name');
+    await prefs.remove('customer_last_name');
+  }
 }
+
+
+
 

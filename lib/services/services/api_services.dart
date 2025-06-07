@@ -13,7 +13,7 @@ import '../../models/rmeq_chronotype_model.dart';
 import '../auth_storage.dart';
 
 
-/// Simpel tuple‐klasse til at returnere både Customer og ChronotypeModel
+// Simpel tuple‐klasse til at returnere både Customer og ChronotypeModel
 class Pair<A, B> {
   final A first;
   final B second;
@@ -21,7 +21,7 @@ class Pair<A, B> {
 }
 
 
-/// Base URL for alle API‐kald. (Ingen trailing slash i _baseUrl)
+// Base URL for alle API‐kald
 const String _baseUrl = "https://ocutune2025.ddns.net";
 
 class ApiService {
@@ -47,7 +47,7 @@ class ApiService {
     };
   }
 
-  /// GET UDEN Authorization‐header – kun Content‐Type
+  // GET UDEN Authorization‐header – kun Content‐Type
   static Future<http.Response> _getNoAuth(String endpoint) {
     return http.get(
       Uri.parse('$baseUrl/api$endpoint'),
@@ -169,9 +169,7 @@ class ApiService {
   //─────────────────────────────────────────────────────────────────────────────
 
   static Future<void> launchUrl(String url) async {
-    // url-launcher-implementering eller WebView-kald ligger allerede her
   }
-
 
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -343,11 +341,7 @@ class ApiService {
       throw Exception("Ingen token tilgængelig – prøv at logge ind først");
     }
     print('DEBUG: Bruger token i header: $token');
-
-    // 2) Byg korrekt URI – blueprint prefix er '/api/customer'
     final uri = Uri.parse('$_baseUrl/api/customer/profile');
-
-    // 3) Send GET med headeren 'Authorization: Bearer <token>'
     final response = await http.get(
       uri,
       headers: {
@@ -358,16 +352,12 @@ class ApiService {
     print('DEBUG: GET $uri → statuscode ${response.statusCode}');
     print('DEBUG: response body: ${response.body}');
 
-    // 4) Fejlhåndtering fra server
     if (response.statusCode == 200) {
       final Map<String, dynamic> decoded = jsonDecode(response.body);
       if (decoded["success"] == true) {
         final data = decoded["data"] as Map<String, dynamic>;
-
-        // 5) Konstruér Customer fra JSON (antal gentagelser fra customer.to_dict())
         final Customer customer = Customer.fromJson(data);
 
-        // 6) Parse chronotype_details (hvis ikke null)
         ChronotypeModel? chronoModel;
         if (data['chronotype_details'] != null) {
           chronoModel = ChronotypeModel.fromJson(
@@ -382,7 +372,7 @@ class ApiService {
         throw Exception(decoded["message"] ?? "Uventet fejl ved hent af profil");
       }
     } else if (response.statusCode == 401) {
-      // Uautoriseret – token er enten ugyldig, udløbet eller slet ikke sendt
+
       throw Exception("Uautoriseret (401) – tjek token");
     } else if (response.statusCode == 404) {
       throw Exception("Endpoint ikke fundet (404) – tjek URL");
@@ -412,7 +402,6 @@ class ApiService {
   //     GET /api/patients/search?q=<søgetekst>
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
-    // 1) Trim og returnér tom liste, hvis query er tom eller kun whitespace
     final trimmed = query.trim();
     if (trimmed.isEmpty) {
       return [];
@@ -932,7 +921,6 @@ class ApiService {
     }
   }
 
-
   static Future<Map<String, dynamic>> fetchChronotype(String typeKey) async {
     try {
       final response = await _getNoAuth('/api/chronotypes/$typeKey');
@@ -994,7 +982,8 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 20) Kunderegistrering + choices/answers + skift password
+  // 20) Kunderegistrering + choices/answers + skift password + delete customer
+  // GET, POST, DELETE
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> checkEmailAvailability(
       String email) async {
