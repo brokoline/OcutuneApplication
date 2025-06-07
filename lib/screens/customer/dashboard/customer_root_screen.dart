@@ -14,7 +14,6 @@ import '../customer_root_controller.dart';
 import 'customer_overview_screen.dart';
 import 'customer_light_detail_screen.dart';
 import 'customer_chrono_insight_screen.dart';
-import 'customer_profile_screen.dart';
 import 'customer_settings_screen.dart';
 
 class CustomerRootScreen extends StatelessWidget {
@@ -136,12 +135,6 @@ class CustomerRootView extends StatelessWidget {
                 // 2: Nørdeside
                 const CustomerChronoInsightScreen(),
 
-                // 3: Profil – her sender vi både customer + chronoModel
-                CustomerProfileScreen(
-                  profile: profile,
-                  chronoModel: chronoModel,
-                ),
-
                 // 4: Indstillinger for notifikationer
                 const CustomerSettingsScreen(),
               ];
@@ -150,7 +143,6 @@ class CustomerRootView extends StatelessWidget {
                 "\$name’s oversigt",
                 'Lysdetalje',
                 'Nørdeside',
-                'Profil',
                 'Indstillinger',
               ];
 

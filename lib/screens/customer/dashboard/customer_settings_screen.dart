@@ -9,6 +9,7 @@ import 'package:ocutune_light_logger/services/auth_storage.dart';
 import '../customer_root_controller.dart';
 import 'customer_change_password_screen.dart';
 import 'customer_notification_settings_screen.dart';
+import 'customer_profile_screen.dart';
 
 class CustomerSettingsScreen extends StatelessWidget {
   const CustomerSettingsScreen({super.key});
@@ -36,6 +37,43 @@ class CustomerSettingsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12.r)),
                       child: Column(
                         children: [
+                          // Profil
+                          ListTile(
+                            leading: Icon(Icons.person_outline, color: Colors.white70, size: 24.sp),
+                            title: Text(
+                              'Profiloplysninger',
+                              style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                            ),
+                            trailing: Icon(Icons.chevron_right, color: Colors.white54, size: 24.sp),
+                            onTap: () {
+                              final rootCtrl = context.read<CustomerRootController>();
+                              final customer = rootCtrl.profile;
+                              final chrono   = rootCtrl.chronoModel;
+
+                              if (customer == null || chrono == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Profilen indlæses lige nu…')),
+                                );
+                                return;
+                              }
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider.value(
+                                    value: rootCtrl,
+                                    child: CustomerProfileScreen(
+                                      profile: customer,
+                                      chronoModel: chrono,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(color: Colors.white24, height: 1),
+
+
                           // Skift adgangskode
                           ListTile(
                             leading: Icon(Icons.lock_outline,
