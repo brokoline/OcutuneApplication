@@ -1,7 +1,5 @@
 // lib/models/customer.dart
 
-import 'package:flutter/foundation.dart';
-
 enum Gender { male, female, other }
 enum Chronotype { dove, lark, nightowl }
 

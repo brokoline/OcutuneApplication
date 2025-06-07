@@ -39,12 +39,12 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
           ),
           value: value,
           onChanged: onChanged,
-          thumbColor: MaterialStateProperty.resolveWith((states) =>
-          states.contains(MaterialState.selected)
+          thumbColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
               ? Colors.white
               : Colors.white70),
-          trackColor: MaterialStateProperty.resolveWith((states) =>
-          states.contains(MaterialState.selected)
+          trackColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected)
               ? Colors.white38
               : Colors.white24),
           contentPadding: EdgeInsets.symmetric(horizontal: 20.w),
