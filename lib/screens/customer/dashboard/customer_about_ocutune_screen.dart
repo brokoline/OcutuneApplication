@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_app_bar.dart';
@@ -18,12 +19,15 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
   Widget _sectionTitle(String text) {
     return Padding(
       padding: EdgeInsets.only(top: 24.h, bottom: 8.h),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 18.sp,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+      child: Center(
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -37,6 +41,7 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
         height: 1.4,
         color: Colors.white70,
       ),
+      textAlign: TextAlign.start,
     );
   }
 
@@ -63,34 +68,39 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
                 children: [
                   _sectionTitle('Hvem er vi?'),
                   _bodyText(
-                      'Ocutune er en dansk virksomhed dedikeret til at udvikle intelligente løsninger til præcis måling og logning af lys. Vores team kombinerer ekspertise inden for optik, sensorteknologi og softwareudvikling for at levere pålidelige data om lys til forskning, arbejdsmiljø og meget mere.'),
+                    'Ocutune er en dansk virksomhed dedikeret til at udvikle intelligente løsninger til præcis måling og logning af lys. Vores team kombinerer ekspertise inden for optik, sensorteknologi og softwareudvikling for at levere pålidelige data om lys til forskning, arbejdsmiljø og meget mere.',
+                  ),
 
                   _sectionTitle('Vores mission'),
                   _bodyText(
-                      'Vi ønsker at skabe større indsigt i, hvordan lys påvirker mennesker og miljøer. Ved at levere data om både intensitet og spektral sammensætning kan vores brugere træffe bedre beslutninger – fra optimering af kontorbelysning til forbedring af søvnhygiejne.'),
+                    'Vi ønsker at skabe større indsigt i, hvordan lys påvirker mennesker og miljøer. Ved at levere data om både intensitet og spektral sammensætning kan vores brugere træffe bedre beslutninger – fra optimering af kontorbelysning til forbedring af søvnhygiejne.',
+                  ),
 
                   _sectionTitle('Hvad er lyslogning?'),
                   _bodyText(
-                      '''Lyslogning er processen med kontinuerligt at registrere og gemme lysforhold:
+                    '''Lyslogning er processen med kontinuerligt at registrere og gemme lysforhold:
 
 • Intensitet (lux)
 • Spektral sammensætning (farver)
 • Tidsstempling af eksponering
 
-Dette giver et komplet billede af lysmiljøet over tid.'''),
+Dette giver et komplet billede af lysmiljøet over tid.''',
+                  ),
 
                   _sectionTitle('Hvorfor lyslogning?'),
                   _bodyText(
-                      '''• Søvn & velvære: Naturlig døgnrytme styres af lys, og korrekt eksponering kan forbedre søvnkvalitet.
+                    '''• Søvn & velvære: Naturlig døgnrytme styres af lys, og korrekt eksponering kan forbedre søvnkvalitet.
 • Arbejdsmiljø: Optimeret belysning øger trivsel og produktivitet.
 • Indendørs landbrug: Planters vækst afhænger af både lysintensitet og spektrum.
-• Forskning: Gyldige data til studier i lysbiologi og bæredygtigt design.'''),
+• Forskning: Gyldige data til studier i lysbiologi og bæredygtigt design.''',
+                  ),
 
                   _sectionTitle('Vores teknologi'),
                   _bodyText(
-                      '''• Sensorenhed: Kompakt hardware til bæring eller montering.
+                    '''• Sensorenhed: Kompakt hardware til bæring eller montering.
 • App & Dashboard: Realtids-visualisering og avancerede analyser.
-• API: Integrer rådata direkte i egne systemer.'''),
+• API: Integrer rådata direkte i egne systemer.''',
+                  ),
 
                   _sectionTitle('Fordele ved Ocutune'),
                   Table(
@@ -141,26 +151,18 @@ Dette giver et komplet billede af lysmiljøet over tid.'''),
 
                   _sectionTitle('Kom i gang'),
                   GestureDetector(
-                    onTap: () => _launchLink(context, 'https://ocutune.com'),
-                    child: Text('• Besøg vores hjemmeside', style: TextStyle(fontSize: 14.sp, color: Colors.blue, decoration: TextDecoration.underline)),
-                  ),
-                  GestureDetector(
-                    onTap: () => _launchLink(context, 'https://ocutune.com/app-ios'),
-                    child: Text('• Download app (iOS)', style: TextStyle(fontSize: 14.sp, color: Colors.blue, decoration: TextDecoration.underline)),
-                  ),
-                  GestureDetector(
-                    onTap: () => _launchLink(context, 'https://ocutune.com/app-android'),
-                    child: Text('• Download app (Android)', style: TextStyle(fontSize: 14.sp, color: Colors.blue, decoration: TextDecoration.underline)),
+                    onTap: () => _launchLink('https://ocutune.com'),
+                    child: Text('• Besøg vores hjemmeside', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
 
                   _sectionTitle('Kontakt os'),
                   GestureDetector(
-                    onTap: () => _launchLink(context, 'mailto:info@ocutune.com'),
-                    child: Text('• Email: info@ocutune.com', style: TextStyle(fontSize: 14.sp, color: Colors.blue, decoration: TextDecoration.underline)),
+                    onTap: () => _launchLink('mailto:info@ocutune.com'),
+                    child: Text('• Email: info@ocutune.com', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
                   GestureDetector(
-                    onTap: () => _launchLink(context, 'tel:+4512345678'),
-                    child: Text('• Telefon: +45 12 34 56 78', style: TextStyle(fontSize: 14.sp, color: Colors.blue, decoration: TextDecoration.underline)),
+                    onTap: () => _launchLink('tel:+4512345678'),
+                    child: Text('• Telefon: +45 12 34 56 78', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
                 ],
               ),
@@ -175,7 +177,13 @@ Dette giver et komplet billede af lysmiljøet over tid.'''),
     );
   }
 
-  void _launchLink(BuildContext context, String url) {
-    // TODO: Implement link handling (f.eks. ApiService.launchUrl eller webview)
+  Future<void> _launchLink(String url) async {
+    try {
+      await ApiService.launchUrl(url);
+    } catch (e) {
+      // Håndtér fejlsituationer, fx vis en snackbar
+      // Du kan også vise en SnackBar med fejlmeddelelse
+      debugPrint('Kunne ikke åbne link: $e');
+    }
   }
 }

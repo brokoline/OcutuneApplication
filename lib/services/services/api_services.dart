@@ -164,6 +164,14 @@ class ApiService {
 
 
 
+  //─────────────────────────────────────────────────────────────────────────────
+  // 11) HELPER metode til at tilgå links
+  //─────────────────────────────────────────────────────────────────────────────
+
+  static Future<void> launchUrl(String url) async {
+    // url-launcher-implementering eller WebView-kald ligger allerede her
+  }
+
 
 
   //─────────────────────────────────────────────────────────────────────────────

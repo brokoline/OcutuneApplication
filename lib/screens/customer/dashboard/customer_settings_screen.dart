@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import '../customer_root_controller.dart';
+import 'customer_about_ocutune_screen.dart';
 import 'customer_change_password_screen.dart';
 import 'customer_notification_settings_screen.dart';
 import 'customer_profile_screen.dart';
@@ -132,15 +133,20 @@ class CustomerSettingsScreen extends StatelessWidget {
                           const Divider(color: Colors.white24, height: 1),
                           // Om Ocutune
                           ListTile(
-                            leading: Icon(Icons.info_outline,
-                                color: Colors.white70, size: 24.sp),
-                            title: Text('Om Ocutune',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 16.sp)),
-                            trailing: Icon(Icons.chevron_right,
-                                color: Colors.white54, size: 24.sp),
+                            leading: Icon(Icons.info_outline, color: Colors.white70, size: 24.sp),
+                            title: Text('Om Ocutune', style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+                            trailing: Icon(Icons.chevron_right, color: Colors.white54, size: 24.sp),
                             onTap: () {
-                              // TODO: Vis About-dialog
+                              final rootCtrl = context.read<CustomerRootController>();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider.value(
+                                    value: rootCtrl,
+                                    child: const CustomerAboutOcutuneScreen(),
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         ],
