@@ -1,5 +1,3 @@
-// lib/screens/customer/dashboard/customer_profile_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Til at formattere datoer pænt
 import 'package:ocutune_light_logger/theme/colors.dart';
@@ -12,10 +10,10 @@ class CustomerProfileScreen extends StatelessWidget {
   final ChronotypeModel? chronoModel;
 
   const CustomerProfileScreen({
-    Key? key,
+    super.key,
     required this.profile,
     required this.chronoModel,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +54,7 @@ class CustomerProfileScreen extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: 40,
-              backgroundColor: Colors.white24,
+              backgroundColor: generalBox,
               backgroundImage: avatarImage,
               child: avatarImage == null
                   ? const Icon(Icons.person, size: 40, color: Colors.white)
@@ -110,7 +108,7 @@ class CustomerProfileScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
-                color: Colors.white24,
+                color: generalBox,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
                 ),

@@ -987,7 +987,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 20) Kunderegistrering + choices/answers
+  // 20) Kunderegistrering + choices/answers + skift password
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> checkEmailAvailability(
       String email) async {
@@ -1166,12 +1166,35 @@ class ApiService {
     }
   }
 
+  static Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String jwtToken,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/api/customer/profile/changepassword');
+    final response = await http.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwtToken',
+      },
+      body: jsonEncode({
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to change password: ${response.body}');
+    }
+  }
+
 
   //─────────────────────────────────────────────────────────────────────────────
   // 2?) MEQ survery relaterede ruter
   //─────────────────────────────────────────────────────────────────────────────
 
-  /// Henter spørgsmål + choices
+  // Henter spørgsmål + choices
   static Future<List<MeqQuestion>> fetchMeqQuestions() async {
     final uri = Uri.parse('$_baseUrl/questions');
     final resp = await http.get(uri);
@@ -1182,7 +1205,7 @@ class ApiService {
     return jsonList.map((e) => MeqQuestion.fromJson(e)).toList();
   }
 
-  /// Henter eksisterende svar for en deltager
+  // Henter eksisterende svar for en deltager
   static Future<List<MeqAnswer>> fetchMeqAnswers(int participantId) async {
     final uri = Uri.parse('$_baseUrl/participants/$participantId/answers');
     final resp = await http.get(uri);
@@ -1193,7 +1216,7 @@ class ApiService {
     return jsonList.map((e) => MeqAnswer.fromJson(e)).toList();
   }
 
-  /// Poster nye svar
+  // Poster nye svar
   static Future<bool> postMeqAnswers({
     required int participantId,
     required List<Map<String, dynamic>> answers,

@@ -150,7 +150,6 @@ class OfflineStorageService {
     );
   }
 
-  /// Rens alle 'battery'-poster i unsynced_data, der mangler eller har ugyldig sensor_id
   static Future<void> deleteInvalidBatteryData() async {
     if (_db == null) return;
 
@@ -174,8 +173,6 @@ class OfflineStorageService {
       where: 'type = ? AND json NOT LIKE ?',
       whereArgs: ['battery', '%"sensor_id"%'],
     );
-
-    print('🗑️ Ugyldige battery-poster i unsynced_data er slettet');
   }
 
   static Future<void> deleteInvalidLightData() async {
