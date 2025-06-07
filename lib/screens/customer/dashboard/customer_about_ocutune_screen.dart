@@ -1,3 +1,5 @@
+// lib/screens/customer/dashboard/customer_about_ocutune_screen.dart
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -18,34 +20,26 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: EdgeInsets.only(top: 24.h, bottom: 8.h),
-      child: Center(
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+  Widget _sectionTitle(String text) => Padding(
+    padding: EdgeInsets.only(top: 24.h, bottom: 8.h),
+    child: Center(
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _bodyText(String text) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 14.sp,
-        height: 1.4,
-        color: Colors.white70,
-      ),
-      textAlign: TextAlign.start,
-    );
-  }
+  Widget _bodyText(String text) => Text(
+    text,
+    style: TextStyle(fontSize: 14.sp, height: 1.4, color: Colors.white70),
+    textAlign: TextAlign.start,
+  );
 
   Future<void> _launchLink(String url) async {
     try {
@@ -58,6 +52,16 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final contentWidth = 0.85.sw;
+    const partnerLogos = [
+      'assets/partners/partner_lyhne_design.png',
+      'assets/partners/partner_eu.png',
+      'assets/partners/partner_holscher_design.png',
+      'assets/partners/partner_belid_lighting_group.png',
+      'assets/partners/partner_good_light_group.png',
+      'assets/partners/partner_vejdirektoratet.png',
+      'assets/partners/partner_dtu.png',
+      'assets/partners/partner_saga.png',
+    ];
 
     return ScreenUtilInit(
       designSize: const Size(360, 690),
@@ -127,9 +131,10 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Professionel kalibrering sikrer nøjagtighed',
-                              style:
-                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                          child: Text(
+                              'Professionel kalibrering sikrer nøjagtighed',
+                              style: TextStyle(
+                                  fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                       TableRow(children: [
@@ -141,8 +146,8 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
                           child: Text('Intuitiv data- og grafvisning',
-                              style:
-                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                              style: TextStyle(
+                                  fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                       TableRow(children: [
@@ -153,9 +158,10 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Notifikation ved for meget/få eksponering',
-                              style:
-                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                          child: Text(
+                              'Notifikation ved for meget/få eksponering',
+                              style: TextStyle(
+                                  fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                       TableRow(children: [
@@ -167,8 +173,8 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
                           child: Text('Fra enkeltbrug til store installationer',
-                              style:
-                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                              style: TextStyle(
+                                  fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                     ],
@@ -178,35 +184,32 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                   GestureDetector(
                     onTap: () => _launchLink('https://ocutune.com'),
                     child: Text('• Besøg vores hjemmeside',
-                        style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                        style:
+                        TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
 
                   _sectionTitle('Kontakt os'),
                   GestureDetector(
                     onTap: () => _launchLink('mailto:info@ocutune.com'),
                     child: Text('• Email: info@ocutune.com',
-                        style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                        style:
+                        TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
                   GestureDetector(
                     onTap: () => _launchLink('tel:+4512345678'),
                     child: Text('• Telefon: +45 12 34 56 78',
-                        style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                        style:
+                        TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
 
-                  SizedBox(height: 32.h),
+                  // ** NYT AFsnit: Samarbejdspartnere **
+                  _sectionTitle('Samarbejdspartnere'),
+                  SizedBox(height: 8.h),
 
-                  // --- Partners carousel ---
-                  PartnersCarousel(
-                    assetPaths: const [
-                      'assets/partners/partner_lyhne_design.png',
-                      'assets/partners/partner_eu.png',
-                      'assets/partners/partner_holscher_design.png',
-                      'assets/partners/partner_belid_lighting_group.png',
-                      'assets/partners/partner_good_light_group.png',
-                      'assets/partners/partner_vejdirektoratet.png',
-                      'assets/partners/partner_dtu.png',
-                      'assets/partners/partner_saga.png',
-                    ],
+                  // Én logo ad gangen, auto-scroll
+                  SizedBox(
+                    height: 200.h,
+                    child: _SingleLogoCarousel(logos: partnerLogos),
                   ),
                 ],
               ),
@@ -222,30 +225,34 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
   }
 }
 
-/// Auto-scrolling, farvefiltreret carousel på bunden
-class PartnersCarousel extends StatefulWidget {
-  final List<String> assetPaths;
-  const PartnersCarousel({Key? key, required this.assetPaths})
-      : super(key: key);
+/// Vis ét logo ad gangen med auto-scroll, original farver,
+/// filter på Belid & Good Light, DTU-logoet i 50% bredde
+class _SingleLogoCarousel extends StatefulWidget {
+  final List<String> logos;
+  const _SingleLogoCarousel({Key? key, required this.logos}) : super(key: key);
 
   @override
-  State<PartnersCarousel> createState() => _PartnersCarouselState();
+  State<_SingleLogoCarousel> createState() => _SingleLogoCarouselState();
 }
 
-class _PartnersCarouselState extends State<PartnersCarousel> {
+class _SingleLogoCarouselState extends State<_SingleLogoCarousel> {
   late final PageController _ctrl;
   late final Timer _timer;
   int _current = 0;
 
+
+  final Set<String> _filterFiles = {
+  };
+  final Map<String, double> _sizeOverrides = {
+  };
+
   @override
   void initState() {
     super.initState();
-    _ctrl = PageController(viewportFraction: 0.3);
-
-    // Auto-scroll hver 3. sekund
+    _ctrl = PageController(viewportFraction: 1.0);
     _timer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!_ctrl.hasClients) return;
-      final next = (_current + 1) % widget.assetPaths.length;
+      final next = (_current + 1) % widget.logos.length;
       _ctrl.animateToPage(
         next,
         duration: const Duration(milliseconds: 500),
@@ -263,67 +270,37 @@ class _PartnersCarouselState extends State<PartnersCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 80.h,
-          child: Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.chevron_left,
-                    size: 32.sp, color: Colors.white70),
-                onPressed: () => _ctrl.previousPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeIn,
-                ),
+    return PageView.builder(
+      controller: _ctrl,
+      itemCount: widget.logos.length,
+      onPageChanged: (i) => setState(() => _current = i),
+      itemBuilder: (_, i) {
+        final path = widget.logos[i];
+        final file = path.split('/').last;
+        final baseWidth = 0.8.sw;
+        final mul = _sizeOverrides[file] ?? 1.0;
+        final width = baseWidth * mul;
+
+        Widget img = Image.asset(
+          path,
+          width: width,
+          fit: BoxFit.contain,
+        );
+
+        if (_filterFiles.contains(file)) {
+          return Center(
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.mode(
+                Colors.white70,
+                BlendMode.srcIn,
               ),
-              Expanded(
-                child: PageView.builder(
-                  controller: _ctrl,
-                  itemCount: widget.assetPaths.length,
-                  onPageChanged: (i) => setState(() => _current = i),
-                  itemBuilder: (_, i) => Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w),
-                    child: ColorFiltered(
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white70,
-                        BlendMode.srcIn,
-                      ),
-                      child: Image.asset(
-                        widget.assetPaths[i],
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.chevron_right,
-                    size: 32.sp, color: Colors.white70),
-                onPressed: () => _ctrl.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeIn,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(widget.assetPaths.length, (i) {
-            return Container(
-              margin: EdgeInsets.symmetric(horizontal: 4.w),
-              width: _current == i ? 10.w : 6.w,
-              height: _current == i ? 10.w : 6.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _current == i ? Colors.white : Colors.white38,
-              ),
-            );
-          }),
-        ),
-      ],
+              child: img,
+            ),
+          );
+        }
+
+        return Center(child: img);
+      },
     );
   }
 }
