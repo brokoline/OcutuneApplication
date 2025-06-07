@@ -7,8 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/daily_light_summary_model.dart';
 import '../../models/light_data_model.dart';
+import '../../models/meq_survey_model.dart';
 import '../../models/patient_model.dart';
 import '../../models/rmeq_chronotype_model.dart';
+import '../../screens/customer/meq_survey/meq_survey_screen.dart';
 import '../auth_storage.dart';
 
 
@@ -704,7 +706,7 @@ class ApiService {
   //     POST /api/error-logs
   //─────────────────────────────────────────────────────────────────────────────
   static Future<void> postSyncErrorLog(Map<String, dynamic> data) async {
-    final headers = await _authHeaders(); // Hvis du vil bruge auth, ellers bare Content-Type
+    final headers = await _authHeaders();
     await http.post(
       Uri.parse('$baseUrl/api/error-logs'),
       headers: headers,
@@ -908,7 +910,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 19) Chore‐type & beregninger
+  // 19) RMEQ Chronotype & beregninger
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
     try {
@@ -1144,7 +1146,7 @@ class ApiService {
     };
 
     if (answers != null) {
-      bodyMap["answers"] = answers;               // f.eks. ["Kl. 6:30 – 7:45", …]
+      bodyMap["answers"] = answers;
     }
     if (questionScores != null) {
       bodyMap["question_scores"] = questionScores;
@@ -1163,6 +1165,56 @@ class ApiService {
       };
     }
   }
+
+
+  //─────────────────────────────────────────────────────────────────────────────
+  // 2?) MEQ survery relaterede ruter
+  //─────────────────────────────────────────────────────────────────────────────
+
+  /// Henter spørgsmål + choices
+  static Future<List<MeqQuestion>> fetchMeqQuestions() async {
+    final uri = Uri.parse('$_baseUrl/questions');
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) {
+      throw Exception('Fejl ved hentning: ${resp.statusCode}');
+    }
+    final List jsonList = jsonDecode(resp.body) as List;
+    return jsonList.map((e) => MeqQuestion.fromJson(e)).toList();
+  }
+
+  /// Henter eksisterende svar for en deltager
+  static Future<List<MeqAnswer>> fetchMeqAnswers(int participantId) async {
+    final uri = Uri.parse('$_baseUrl/participants/$participantId/answers');
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) {
+      throw Exception('Fejl ved hentning: ${resp.statusCode}');
+    }
+    final List jsonList = jsonDecode(resp.body) as List;
+    return jsonList.map((e) => MeqAnswer.fromJson(e)).toList();
+  }
+
+  /// Poster nye svar
+  static Future<bool> postMeqAnswers({
+    required int participantId,
+    required List<Map<String, dynamic>> answers,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/answers');
+    final body = jsonEncode({
+      'participant_id': participantId,
+      'answers': answers,
+    });
+    final resp = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: body,
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('Fejl ved indsending: ${resp.statusCode}');
+    }
+    final jsonResp = jsonDecode(resp.body);
+    return jsonResp['status'] == 'OK';
+  }
+
 
   //─────────────────────────────────────────────────────────────────────────────
   // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov
