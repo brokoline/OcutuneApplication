@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
+
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
+import 'package:ocutune_light_logger/widgets/customer_widgets/customer_app_bar.dart';
+import 'package:ocutune_light_logger/widgets/customer_widgets/customer_nav_bar.dart';
 
-import '../../../widgets/customer_widgets/customer_app_bar.dart';
-import '../../../widgets/customer_widgets/customer_nav_bar.dart';
+import '../customer_root_controller.dart';
 import '../../../widgets/universal/ocutune_textfield.dart';
 
 class CustomerChangePasswordScreen extends StatefulWidget {
@@ -33,7 +36,6 @@ class _CustomerChangePasswordScreenState extends State<CustomerChangePasswordScr
     final oldPw = _oldPwController.text;
     final newPw = _newPwController.text;
     final confirmPw = _confirmPwController.text;
-    print('🔍 _submit() called - oldPw=$oldPw, newPw=$newPw, confirmPw=$confirmPw');
 
     if (oldPw.isEmpty) {
       _showError('Indtast din nuværende adgangskode');
@@ -50,25 +52,20 @@ class _CustomerChangePasswordScreenState extends State<CustomerChangePasswordScr
 
     setState(() => _loading = true);
     try {
-      print('🌐 Calling ApiService.changePassword...');
-      print('▶️ Sending JWT: "${widget.jwtToken}"');
       await ApiService.changePassword(
         oldPassword: oldPw,
         newPassword: newPw,
         jwtToken: widget.jwtToken,
       );
-      print('✅ changePassword completed successfully');
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adgangskode opdateret')),
       );
+      // Luk siden efter success
       Navigator.of(context).pop();
-    } catch (e, st) {
-      print('❌ changePassword error: $e\n$st');
+    } catch (e) {
       _showError('Fejl: $e');
     } finally {
       setState(() => _loading = false);
-      print('🔧 _submit() finished, loading=$_loading');
     }
   }
 
@@ -78,94 +75,101 @@ class _CustomerChangePasswordScreenState extends State<CustomerChangePasswordScr
     );
   }
 
-  int _currentIndex = 4;
   void _onNavTap(int index) {
-    print('🔧 _onNavTap: $index');
-    // TODO: implement navigation
+    // 1) Skift fane i dashboard-controller
+    Provider.of<CustomerRootController>(context, listen: false).setIndex(index);
+    // 2) Luk alle undersider og kom tilbage til root
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
-    print('🔧 build CustomerChangePasswordScreen');
-    // width: 85% of screen
+    // content width: 85% of screen
     final double contentWidth = 0.85.sw;
 
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: CustomerAppBar(
-        title: 'Skift adgangskode',
-        showBackButton: true,
-      ),
-      body: Center(
-        child: SizedBox(
-          width: contentWidth,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Her kan du ændre din adgangskode',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14.sp,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 30.h),
-              OcutuneTextField(
-                label: 'Gammel adgangskode',
-                controller: _oldPwController,
-                obscureText: true,
-              ),
-              SizedBox(height: 20.h),
-              OcutuneTextField(
-                label: 'Ny adgangskode',
-                controller: _newPwController,
-                obscureText: true,
-              ),
-              SizedBox(height: 20.h),
-              OcutuneTextField(
-                label: 'Bekræft ny adgangskode',
-                controller: _confirmPwController,
-                obscureText: true,
-              ),
-              SizedBox(height: 40.h),
-              SizedBox(
-                width: contentWidth,
-                child: ElevatedButton(
-                  onPressed: _loading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: generalBox,
-                    foregroundColor: Colors.white70,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                  ),
-                  child: _loading
-                      ? SizedBox(
-                    height: 24.h,
-                    width: 24.h,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.white70,
-                    ),
-                  )
-                      : Text(
-                    'Opdater adgangskode',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    return ScreenUtilInit(
+      designSize: const Size(360, 690),
+      minTextAdapt: true,
+      builder: (_, __) => Scaffold(
+        backgroundColor: generalBackground,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(80.h),
+          child: CustomerAppBar(
+            title: 'Skift adgangskode',
+            showBackButton: true,
           ),
         ),
-      ),
-      bottomNavigationBar: CustomerNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
+        body: Center(
+          child: SizedBox(
+            width: contentWidth,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Her kan du ændre din adgangskode',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14.sp,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 30.h),
+                OcutuneTextField(
+                  label: 'Gammel adgangskode',
+                  controller: _oldPwController,
+                  obscureText: true,
+                ),
+                SizedBox(height: 20.h),
+                OcutuneTextField(
+                  label: 'Ny adgangskode',
+                  controller: _newPwController,
+                  obscureText: true,
+                ),
+                SizedBox(height: 20.h),
+                OcutuneTextField(
+                  label: 'Bekræft ny adgangskode',
+                  controller: _confirmPwController,
+                  obscureText: true,
+                ),
+                SizedBox(height: 40.h),
+                SizedBox(
+                  width: contentWidth,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: generalBox,
+                      foregroundColor: Colors.white70,
+                      padding: EdgeInsets.symmetric(vertical: 16.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                    child: _loading
+                        ? SizedBox(
+                      height: 24.h,
+                      width: 24.h,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white70,
+                      ),
+                    )
+                        : Text(
+                      'Opdater adgangskode',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: CustomerNavBar(
+          currentIndex: context.watch<CustomerRootController>().currentIndex,
+          onTap: _onNavTap,
+        ),
       ),
     );
   }
