@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:ocutune_light_logger/services/services/api_services.dart';
 
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_app_bar.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/customer_nav_bar.dart';
@@ -45,9 +47,17 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _launchLink(String url) async {
+    try {
+      await ApiService.launchUrl(url);
+    } catch (e) {
+      debugPrint('Kunne ikke åbne link: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double contentWidth = 0.85.sw;
+    final contentWidth = 0.85.sw;
 
     return ScreenUtilInit(
       designSize: const Size(360, 690),
@@ -62,7 +72,7 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
           child: SizedBox(
             width: contentWidth,
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 80.h),
+              padding: EdgeInsets.only(bottom: 16.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -104,46 +114,61 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
 
                   _sectionTitle('Fordele ved Ocutune'),
                   Table(
-                    columnWidths: const {0: FlexColumnWidth(2), 1: FlexColumnWidth(3)},
+                    columnWidths: const {
+                      0: FlexColumnWidth(2),
+                      1: FlexColumnWidth(3),
+                    },
                     children: [
                       TableRow(children: [
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Høj præcision', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
+                          child: Text('Høj præcision',
+                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Professionel kalibrering sikrer nøjagtighed', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
-                        ),
-                      ]),
-                      TableRow(children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Brugervenligt dashboard', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Intuitiv data- og grafvisning', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                          child: Text('Professionel kalibrering sikrer nøjagtighed',
+                              style:
+                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                       TableRow(children: [
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Skræddersyede alarmer', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
+                          child: Text('Brugervenligt dashboard',
+                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Notifikation ved for meget/få eksponering', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                          child: Text('Intuitiv data- og grafvisning',
+                              style:
+                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                       TableRow(children: [
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Skalerbar løsning', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
+                          child: Text('Skræddersyede alarmer',
+                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Fra enkeltbrug til store installationer', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                          child: Text('Notifikation ved for meget/få eksponering',
+                              style:
+                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                        ),
+                      ]),
+                      TableRow(children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
+                          child: Text('Skalerbar løsning',
+                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
+                          child: Text('Fra enkeltbrug til store installationer',
+                              style:
+                              TextStyle(fontSize: 14.sp, color: Colors.white70)),
                         ),
                       ]),
                     ],
@@ -152,17 +177,36 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                   _sectionTitle('Kom i gang'),
                   GestureDetector(
                     onTap: () => _launchLink('https://ocutune.com'),
-                    child: Text('• Besøg vores hjemmeside', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                    child: Text('• Besøg vores hjemmeside',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
 
                   _sectionTitle('Kontakt os'),
                   GestureDetector(
                     onTap: () => _launchLink('mailto:info@ocutune.com'),
-                    child: Text('• Email: info@ocutune.com', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                    child: Text('• Email: info@ocutune.com',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
                   GestureDetector(
                     onTap: () => _launchLink('tel:+4512345678'),
-                    child: Text('• Telefon: +45 12 34 56 78', style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                    child: Text('• Telefon: +45 12 34 56 78',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.white70)),
+                  ),
+
+                  SizedBox(height: 32.h),
+
+                  // --- Partners carousel ---
+                  PartnersCarousel(
+                    assetPaths: const [
+                      'assets/partners/partner_lyhne_design.png',
+                      'assets/partners/partner_eu.png',
+                      'assets/partners/partner_holscher_design.png',
+                      'assets/partners/partner_belid_lighting_group.png',
+                      'assets/partners/partner_good_light_group.png',
+                      'assets/partners/partner_vejdirektoratet.png',
+                      'assets/partners/partner_dtu.png',
+                      'assets/partners/partner_saga.png',
+                    ],
                   ),
                 ],
               ),
@@ -171,19 +215,115 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
         ),
         bottomNavigationBar: CustomerNavBar(
           currentIndex: context.watch<CustomerRootController>().currentIndex,
-          onTap: (idx) => _onNavTap(context, idx),
+          onTap: (i) => _onNavTap(context, i),
         ),
       ),
     );
   }
+}
 
-  Future<void> _launchLink(String url) async {
-    try {
-      await ApiService.launchUrl(url);
-    } catch (e) {
-      // Håndtér fejlsituationer, fx vis en snackbar
-      // Du kan også vise en SnackBar med fejlmeddelelse
-      debugPrint('Kunne ikke åbne link: $e');
-    }
+/// Auto-scrolling, farvefiltreret carousel på bunden
+class PartnersCarousel extends StatefulWidget {
+  final List<String> assetPaths;
+  const PartnersCarousel({Key? key, required this.assetPaths})
+      : super(key: key);
+
+  @override
+  State<PartnersCarousel> createState() => _PartnersCarouselState();
+}
+
+class _PartnersCarouselState extends State<PartnersCarousel> {
+  late final PageController _ctrl;
+  late final Timer _timer;
+  int _current = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = PageController(viewportFraction: 0.3);
+
+    // Auto-scroll hver 3. sekund
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!_ctrl.hasClients) return;
+      final next = (_current + 1) % widget.assetPaths.length;
+      _ctrl.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 80.h,
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.chevron_left,
+                    size: 32.sp, color: Colors.white70),
+                onPressed: () => _ctrl.previousPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeIn,
+                ),
+              ),
+              Expanded(
+                child: PageView.builder(
+                  controller: _ctrl,
+                  itemCount: widget.assetPaths.length,
+                  onPageChanged: (i) => setState(() => _current = i),
+                  itemBuilder: (_, i) => Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w),
+                    child: ColorFiltered(
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white70,
+                        BlendMode.srcIn,
+                      ),
+                      child: Image.asset(
+                        widget.assetPaths[i],
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.chevron_right,
+                    size: 32.sp, color: Colors.white70),
+                onPressed: () => _ctrl.nextPage(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeIn,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(widget.assetPaths.length, (i) {
+            return Container(
+              margin: EdgeInsets.symmetric(horizontal: 4.w),
+              width: _current == i ? 10.w : 6.w,
+              height: _current == i ? 10.w : 6.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _current == i ? Colors.white : Colors.white38,
+              ),
+            );
+          }),
+        ),
+      ],
+    );
   }
 }
