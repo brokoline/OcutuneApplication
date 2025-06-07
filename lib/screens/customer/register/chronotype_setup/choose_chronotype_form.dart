@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../../widgets/universal/ocutune_next_step_button.dart';
-import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
+import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 import 'choose_chronotype_controller.dart';
 
 class ChooseChronotypeForm extends StatefulWidget {
@@ -14,7 +14,7 @@ class ChooseChronotypeForm extends StatefulWidget {
 
 class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
   String? selectedChronotype;
-  List<Chronotype> chronotypes = [];
+  List<ChronotypeModel> chronotypes = [];
   bool isLoading = true;
 
   @override
@@ -128,7 +128,7 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
     );
   }
 
-  Widget _buildChronoCard(Chronotype type) {
+  Widget _buildChronoCard(ChronotypeModel type) {
     final isSelected = selectedChronotype == type.title;
     return GestureDetector(
       onTap: () => setState(() => selectedChronotype = type.title),

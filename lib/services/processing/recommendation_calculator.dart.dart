@@ -19,22 +19,22 @@ class RecommendationCalculator {
 
   /// Giver en tekst-label til chronotypen baseret på score
   String getChronotypeLabel() {
-    if (totalScore >= 22) return 'definitely_morning';
-    if (totalScore >= 18) return 'moderately_morning';
-    if (totalScore >= 12) return 'neither';
-    if (totalScore >= 8)  return 'moderately_evening';
-    return 'definitely_evening';
+    if (totalScore >= 22) return 'Definitivt morgen-menneske';
+    if (totalScore >= 18) return 'Moderat morgen-menneske';
+    if (totalScore >= 12) return 'Intermediate';
+    if (totalScore >= 8)  return 'Moderat aften-menneske';
+    return 'Definitivt aften-menneske';
   }
 
   /// Omregner rMEQ-score til et estimeret MEQ-score
   double _estimateMEQ(int rmeq) {
     // Lineær interpolation over kendte intervaller
     return switch (getChronotypeLabel()) {
-      'definitely_morning'   => 80,
-      'moderately_morning'   => 65,
-      'neither'              => 50,
-      'moderately_evening'   => 35,
-      'definitely_evening'   => 25,
+      'Definitivt morgen-menneske'   => 80,
+      'Moderat morgen-menneske'   => 65,
+      'Intermediate'              => 50,
+      'Moderat aften-menneske'   => 35,
+      'Definitivt aften-menneske'   => 25,
       _ => 50
     };
   }
@@ -66,6 +66,7 @@ class RecommendationCalculator {
       int m = ((hour % 1) * 60).round();
       return DateTime(now.year, now.month, now.day, h, m);
     }
+
 
     return {
       'dlmo': timeFromHour(dlmoHour),

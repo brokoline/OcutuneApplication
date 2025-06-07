@@ -163,7 +163,6 @@ class PatientDetailView extends StatelessWidget {
                 }
 
                 // c) Otherwise, we have both rawData AND ML‐processing done:
-                final rawData = vm.rawLightData;     // List<LightData>
                 final rmeq    = vm.rmeqScore;        // int
                 final meq     = vm.storedMeqScore;   // int? (may be null)
 

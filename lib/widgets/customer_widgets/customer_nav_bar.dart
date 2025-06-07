@@ -48,9 +48,8 @@ class CustomerNavBar extends StatelessWidget {
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profil',
+            icon: Icon(Icons.settings),
+            label: 'Indstillinger',
           ),
         ],
       ),

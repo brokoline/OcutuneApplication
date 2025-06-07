@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../../services/services/customer_data_service.dart'; // ← currentCustomerResponse her
 import '/models/customer_response_model.dart';
-import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
+import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class ChooseChronotypeController {
   static const String _baseUrl = 'https://ocutune2025.ddns.net';
 
   static const String _path = '/api/chronotypes';
-  static Future<List<Chronotype>> fetchChronotypes() async {
+  static Future<List<ChronotypeModel>> fetchChronotypes() async {
     final uri = Uri.parse('$_baseUrl$_path');
     final resp = await http.get(uri);
 
     if (resp.statusCode == 200) {
       final List<dynamic> data = json.decode(resp.body);
-      return data.map((j) => Chronotype.fromJson(j)).toList();
+      return data.map((j) => ChronotypeModel.fromJson(j)).toList();
     } else {
       throw Exception('Failed to load chronotypes (HTTP ${resp.statusCode})');
     }

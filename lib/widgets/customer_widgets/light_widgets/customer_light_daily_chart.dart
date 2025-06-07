@@ -202,7 +202,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Daglig lyseksponering (rMEQ: ${widget.rmeqScore})",
+                  "Daglig lyseksponering",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 16.sp,

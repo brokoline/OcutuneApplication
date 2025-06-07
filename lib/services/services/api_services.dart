@@ -7,11 +7,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/daily_light_summary_model.dart';
 import '../../models/light_data_model.dart';
+import '../../models/meq_survey_model.dart';
 import '../../models/patient_model.dart';
+import '../../models/rmeq_chronotype_model.dart';
 import '../auth_storage.dart';
 
 
-/// Base URL for alle API‐kald. (Ingen trailing slash i _baseUrl)
+// Simpel tuple‐klasse til at returnere både Customer og ChronotypeModel
+class Pair<A, B> {
+  final A first;
+  final B second;
+  Pair(this.first, this.second);
+}
+
+
+// Base URL for alle API‐kald
 const String _baseUrl = "https://ocutune2025.ddns.net";
 
 class ApiService {
@@ -37,7 +47,7 @@ class ApiService {
     };
   }
 
-  /// GET UDEN Authorization‐header – kun Content‐Type
+  // GET UDEN Authorization‐header – kun Content‐Type
   static Future<http.Response> _getNoAuth(String endpoint) {
     return http.get(
       Uri.parse('$baseUrl/api$endpoint'),
@@ -154,6 +164,12 @@ class ApiService {
 
 
 
+  //─────────────────────────────────────────────────────────────────────────────
+  // 11) HELPER metode til at tilgå links
+  //─────────────────────────────────────────────────────────────────────────────
+
+  static Future<void> launchUrl(String url) async {
+  }
 
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -318,22 +334,48 @@ class ApiService {
     }
   }
 
-  static Future<Customer> fetchCustomerProfile() async {
-    final headers = await _authHeaders();
-
-    final url = Uri.parse("$_baseUrl/api/customer/profile");
-    final response = await http.get(url, headers: headers);
+  static Future<Pair<Customer, ChronotypeModel?>> fetchCustomerProfile() async {
+    // 1) Hent JWT‐token fra lokal storage
+    final token = await AuthStorage.getToken();
+    if (token == null) {
+      throw Exception("Ingen token tilgængelig – prøv at logge ind først");
+    }
+    print('DEBUG: Bruger token i header: $token');
+    final uri = Uri.parse('$_baseUrl/api/customer/profile');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    print('DEBUG: GET $uri → statuscode ${response.statusCode}');
+    print('DEBUG: response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> decoded = jsonDecode(response.body);
       if (decoded["success"] == true) {
         final data = decoded["data"] as Map<String, dynamic>;
-        return Customer.fromJson(data);
+        final Customer customer = Customer.fromJson(data);
+
+        ChronotypeModel? chronoModel;
+        if (data['chronotype_details'] != null) {
+          chronoModel = ChronotypeModel.fromJson(
+            data['chronotype_details'] as Map<String, dynamic>,
+          );
+        } else {
+          chronoModel = null;
+        }
+
+        return Pair(customer, chronoModel);
       } else {
         throw Exception(decoded["message"] ?? "Uventet fejl ved hent af profil");
       }
     } else if (response.statusCode == 401) {
-      throw Exception("Mangler token");
+
+      throw Exception("Uautoriseret (401) – tjek token");
+    } else if (response.statusCode == 404) {
+      throw Exception("Endpoint ikke fundet (404) – tjek URL");
     } else {
       throw Exception("Serverfejl ved hentning af profil: ${response.statusCode}");
     }
@@ -360,7 +402,6 @@ class ApiService {
   //     GET /api/patients/search?q=<søgetekst>
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> searchPatients(String query) async {
-    // 1) Trim og returnér tom liste, hvis query er tom eller kun whitespace
     final trimmed = query.trim();
     if (trimmed.isEmpty) {
       return [];
@@ -661,7 +702,7 @@ class ApiService {
   //     POST /api/error-logs
   //─────────────────────────────────────────────────────────────────────────────
   static Future<void> postSyncErrorLog(Map<String, dynamic> data) async {
-    final headers = await _authHeaders(); // Hvis du vil bruge auth, ellers bare Content-Type
+    final headers = await _authHeaders();
     await http.post(
       Uri.parse('$baseUrl/api/error-logs'),
       headers: headers,
@@ -865,7 +906,7 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 19) Chore‐type & beregninger
+  // 19) RMEQ Chronotype & beregninger
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchChronotypes() async {
     try {
@@ -879,7 +920,6 @@ class ApiService {
       rethrow;
     }
   }
-
 
   static Future<Map<String, dynamic>> fetchChronotype(String typeKey) async {
     try {
@@ -942,7 +982,8 @@ class ApiService {
   }
 
   //─────────────────────────────────────────────────────────────────────────────
-  // 20) Kunderegistrering + choices/answers
+  // 20) Kunderegistrering + choices/answers + skift password + delete customer
+  // GET, POST, DELETE
   //─────────────────────────────────────────────────────────────────────────────
   static Future<Map<String, dynamic>> checkEmailAvailability(
       String email) async {
@@ -977,6 +1018,13 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<void> deleteCustomer(String id) async {
+    final response = await _delete('/customer/delete/$id');
+    final body = _handleResponse(response);
+    if (body['success'] != true) {
+      throw Exception(body['message'] ?? 'Ukendt fejl ved sletning');
+    }
+  }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
     const baseUrl = 'https://ocutune2025.ddns.net/api';
@@ -1101,7 +1149,7 @@ class ApiService {
     };
 
     if (answers != null) {
-      bodyMap["answers"] = answers;               // f.eks. ["Kl. 6:30 – 7:45", …]
+      bodyMap["answers"] = answers;
     }
     if (questionScores != null) {
       bodyMap["question_scores"] = questionScores;
@@ -1121,6 +1169,79 @@ class ApiService {
     }
   }
 
+  static Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+    required String jwtToken,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/api/customer/profile/changepassword');
+    final response = await http.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $jwtToken',
+      },
+      body: jsonEncode({
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to change password: ${response.body}');
+    }
+  }
+
+
+  //─────────────────────────────────────────────────────────────────────────────
+  // 2?) MEQ survery relaterede ruter
+  //─────────────────────────────────────────────────────────────────────────────
+
+  // Henter spørgsmål + choices
+  static Future<List<MeqQuestion>> fetchMeqQuestions() async {
+    final uri = Uri.parse('$_baseUrl/questions');
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) {
+      throw Exception('Fejl ved hentning: ${resp.statusCode}');
+    }
+    final List jsonList = jsonDecode(resp.body) as List;
+    return jsonList.map((e) => MeqQuestion.fromJson(e)).toList();
+  }
+
+  // Henter eksisterende svar for en deltager
+  static Future<List<MeqAnswer>> fetchMeqAnswers(int participantId) async {
+    final uri = Uri.parse('$_baseUrl/participants/$participantId/answers');
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) {
+      throw Exception('Fejl ved hentning: ${resp.statusCode}');
+    }
+    final List jsonList = jsonDecode(resp.body) as List;
+    return jsonList.map((e) => MeqAnswer.fromJson(e)).toList();
+  }
+
+  // Poster nye svar
+  static Future<bool> postMeqAnswers({
+    required int participantId,
+    required List<Map<String, dynamic>> answers,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/answers');
+    final body = jsonEncode({
+      'participant_id': participantId,
+      'answers': answers,
+    });
+    final resp = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: body,
+    );
+    if (resp.statusCode != 200) {
+      throw Exception('Fejl ved indsending: ${resp.statusCode}');
+    }
+    final jsonResp = jsonDecode(resp.body);
+    return jsonResp['status'] == 'OK';
+  }
+
+
   //─────────────────────────────────────────────────────────────────────────────
   // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov
   //─────────────────────────────────────────────────────────────────────────────
@@ -1133,9 +1254,6 @@ class ApiService {
       _patch(endpoint, body);
 
   static Future<http.Response> del(String endpoint) => _delete(endpoint);
-
-  // Når man har brug for at håndtere en “void”‐kode (f.eks. DELETE 204),
-  // kan man kalde denne metode med det konkrete response‐objekt:
   static void handleVoidResponse(
       http.Response response, {
         required int successCode,

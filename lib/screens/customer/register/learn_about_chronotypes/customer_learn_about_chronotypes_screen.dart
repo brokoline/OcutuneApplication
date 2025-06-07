@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '/theme/colors.dart';
 import '/widgets/universal/ocutune_icon_button.dart';
-import 'package:ocutune_light_logger/models/remq_chronotype_model.dart';
+import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class LearnAboutChronotypesScreen extends StatefulWidget {
   const LearnAboutChronotypesScreen({super.key});
@@ -16,7 +16,7 @@ class LearnAboutChronotypesScreen extends StatefulWidget {
 
 class _LearnAboutChronotypesScreenState
     extends State<LearnAboutChronotypesScreen> {
-  List<Chronotype> chronotypes = [];
+  List<ChronotypeModel> chronotypes = [];
   bool isLoading = true;
 
   @override
@@ -32,7 +32,7 @@ class _LearnAboutChronotypesScreenState
       final data = json.decode(response.body) as List<dynamic>;
       setState(() {
         chronotypes = data
-            .map((j) => Chronotype.fromJson(j as Map<String, dynamic>))
+            .map((j) => ChronotypeModel.fromJson(j as Map<String, dynamic>))
             .toList();
         isLoading = false;
       });
