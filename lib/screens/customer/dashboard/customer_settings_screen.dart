@@ -130,11 +130,11 @@ class CustomerSettingsScreen extends StatelessWidget {
                             },
                           ),
                           const Divider(color: Colors.white24, height: 1),
-                          // Om Oc utune
+                          // Om Ocutune
                           ListTile(
                             leading: Icon(Icons.info_outline,
                                 color: Colors.white70, size: 24.sp),
-                            title: Text('Om Oc utune',
+                            title: Text('Om Ocutune',
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 16.sp)),
                             trailing: Icon(Icons.chevron_right,
