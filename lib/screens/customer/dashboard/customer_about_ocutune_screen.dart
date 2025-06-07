@@ -202,13 +202,13 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                         TextStyle(fontSize: 14.sp, color: Colors.white70)),
                   ),
 
-                  // ** NYT AFsnit: Samarbejdspartnere **
+                  // Samarbejdspartnere
                   _sectionTitle('Samarbejdspartnere'),
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 2.h),
 
                   // Én logo ad gangen, auto-scroll
                   SizedBox(
-                    height: 200.h,
+                    height: 100.h,
                     child: _SingleLogoCarousel(logos: partnerLogos),
                   ),
                 ],
@@ -225,8 +225,6 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
   }
 }
 
-/// Vis ét logo ad gangen med auto-scroll, original farver,
-/// filter på Belid & Good Light, DTU-logoet i 50% bredde
 class _SingleLogoCarousel extends StatefulWidget {
   final List<String> logos;
   const _SingleLogoCarousel({Key? key, required this.logos}) : super(key: key);

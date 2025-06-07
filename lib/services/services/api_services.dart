@@ -1029,6 +1029,13 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  static Future<void> deleteCustomer(String id) async {
+    final response = await _delete('/customer/delete/$id');
+    final body = _handleResponse(response);
+    if (body['success'] != true) {
+      throw Exception(body['message'] ?? 'Ukendt fejl ved sletning');
+    }
+  }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
     const baseUrl = 'https://ocutune2025.ddns.net/api';
@@ -1258,9 +1265,6 @@ class ApiService {
       _patch(endpoint, body);
 
   static Future<http.Response> del(String endpoint) => _delete(endpoint);
-
-  // Når man har brug for at håndtere en “void”‐kode (f.eks. DELETE 204),
-  // kan man kalde denne metode med det konkrete response‐objekt:
   static void handleVoidResponse(
       http.Response response, {
         required int successCode,
