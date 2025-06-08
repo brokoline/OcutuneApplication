@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../models/customer_response_model.dart';
+import '../auth_storage.dart';
 
 CustomerResponse? currentCustomerResponse;
 
@@ -82,7 +83,7 @@ Future<void> submitCustomerResponse() async {
   final resp = currentCustomerResponse;
   if (resp == null) return;
 
-  final url      = Uri.parse('https://ocutune2025.ddns.net/api/auth/register');
+  final url      = Uri.parse('https://ocutune2025.ddns.net/api/auth/registerCustomer');
   final jsonBody = json.encode(resp.toJson());
 
   print("📤 Upload data til $url");
@@ -97,9 +98,22 @@ Future<void> submitCustomerResponse() async {
   if (response.statusCode == 409) {
     throw Exception("Denne e-mail er allerede registreret.");
   }
-  if (response.statusCode != 200 && response.statusCode != 201) {
+  if (response.statusCode != 201) {
     throw Exception("Fejl ved upload: ${response.body}");
   }
+
+  final Map<String, dynamic> body = json.decode(response.body);
+  final accessToken  = body['access_token']  as String;
+  final refreshToken = body['refresh_token'] as String;
+  final userJson     = body['user'] as Map<String, dynamic>;
+
+  await AuthStorage.saveLogin(
+    id:        userJson['id'].toString(),
+    role:      userJson['role'] as String,
+    token:     accessToken,
+    simUserId: refreshToken,
+  );
+  print('✅ Tokens og bruger gemt: access=$accessToken');
 
   print("✅ Data sendt og modtaget korrekt");
 }

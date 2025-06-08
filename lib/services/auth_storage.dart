@@ -134,8 +134,6 @@ static Future<int?> getPatientId() async {
   }
 
 
-
-
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');

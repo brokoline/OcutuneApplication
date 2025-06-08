@@ -6,7 +6,7 @@ import '/theme/colors.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class AboutChronotypeScreen extends StatefulWidget {
-  final String chronotypeId;  // STRING: lark, dove, owl
+  final String chronotypeId;
 
   const AboutChronotypeScreen({super.key, required this.chronotypeId});
 

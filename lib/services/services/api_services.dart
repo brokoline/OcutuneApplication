@@ -1006,15 +1006,30 @@ class ApiService {
       'password': password,
       'first_name': firstName,
       'last_name': lastName,
-      if (birthYear != null) 'birth_year': birthYear,
-      if (gender != null) 'gender': gender,
-      if (chronotypeKey != null) 'chronotype_key': chronotypeKey,
+      if (birthYear != null)    'birth_year': birthYear,
+      if (gender != null)       'gender': gender,
+      if (chronotypeKey != null)'chronotype': chronotypeKey,
       'answers': answers,
       'question_scores': questionScores,
     };
 
-    final response = await _post('/customers', payload);
-    return _handleResponse(response);
+    final response = await _post('/api/auth/registerCustomer', payload);
+    final body     = _handleResponse(response);
+
+    // ── NYT: gem tokens ─────────────────────────────────────
+    final accessToken  = body['access_token']  as String;
+    final refreshToken = body['refresh_token'] as String;
+    final userJson     = body['user'] as Map<String, dynamic>;
+
+    await AuthStorage.saveLogin(
+      id:        userJson['id'].toString(),
+      role:      userJson['role'] as String,
+      token:     accessToken,
+      simUserId: refreshToken,
+    );
+    print('✅ Gemte tokens: $accessToken / $refreshToken');
+
+    return body;
   }
 
   static Future<void> deleteCustomer(String id) async {
@@ -1118,55 +1133,6 @@ class ApiService {
   //─────────────────────────────────────────────────────────────────────────────
   // 22) Kunderuter
   //─────────────────────────────────────────────────────────────────────────────
-
-  static Future<Map<String, dynamic>> register({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String password,
-    int? birthYear,
-    String? gender,
-    String? chronotype,
-    int? rmeqScore,
-    int? meqScore,
-    List<String>? answers,       // Liste af rene strenge
-    Map<String,int>? questionScores,
-  }) async {
-    final url = Uri.parse("$_baseUrl/auth/register");
-    final headers = {"Content-Type": "application/json"};
-
-    final bodyMap = <String, dynamic>{
-      "first_name":    firstName,
-      "last_name":     lastName,
-      "email":         email,
-      "password":      password,
-      "birth_year":    birthYear,
-      "gender":        gender,
-      "chronotype":    chronotype,
-      "rmeq_score":    rmeqScore,
-      "meq_score":     meqScore,
-    };
-
-    if (answers != null) {
-      bodyMap["answers"] = answers;
-    }
-    if (questionScores != null) {
-      bodyMap["question_scores"] = questionScores;
-    }
-
-    final body = jsonEncode(bodyMap);
-    final response = await http.post(url, headers: headers, body: body);
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-
-    if (response.statusCode == 201 && decoded["success"] == true) {
-      return {"success": true, "user": decoded["user"]};
-    } else {
-      return {
-        "success": false,
-        "message": decoded["message"] ?? "Registrering mislykkedes.",
-      };
-    }
-  }
 
   static Future<void> changePassword({
     required String oldPassword,
