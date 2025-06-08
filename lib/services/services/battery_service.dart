@@ -11,27 +11,32 @@ class BatteryService {
   static DateTime? _lastSent;
   static const Duration minInterval = Duration(minutes: 5);
 
+  /// Sender et batteriniveau til backend (eller gemmer lokalt ved fejl).
+  /// Returnerer `true` hvis den blev sendt eller skippet pga. throttling.
   static Future<bool> sendToBackend({
     required int batteryLevel,
     bool returnSuccess = false,
   }) async {
     final now = DateTime.now();
 
+    // Hvis niveauet er 0 eller uoplyst, så drop det
     if (batteryLevel <= 0) {
       print("⏱️ Springer batteri-upload over (for nylig sendt)");
       print("⏱️ Batteriniveau er 0 eller ukendt – venter med upload.");
       return false;
     }
 
+    // Throttling: minInterval mellem uploads
     if (_lastSent != null && now.difference(_lastSent!) < minInterval) {
       print("⏱️ Springer batteri-upload over (for nylig sendt)");
       return true;
     }
 
     try {
+      // Hent auth-token og patient‐ID
       final jwt = await AuthStorage.getToken();
       final rawId = await AuthStorage.getUserId();
-      final patientId = rawId?.toString(); // ✅ konverter til String
+      final patientId = rawId?.toString();
       final deviceSerial = BleController.connectedDevice?.id ?? "unknown-device";
 
       if (jwt == null || patientId == null) {
@@ -39,17 +44,18 @@ class BatteryService {
         return false;
       }
 
+      // Registrér sensoren (får sensor_id)
       final sensorId = await ApiService.registerSensorUse(
         patientId: patientId,
         deviceSerial: deviceSerial,
         jwt: jwt,
       );
-
       if (sensorId == null) {
         print("❌ Sensor-registrering mislykkedes – batteridata springes over");
         return false;
       }
 
+      // Byg request
       final uri = Uri.parse('${ApiService.baseUrl}/api/sensor/patient-battery-status');
       final payload = {
         "patient_id": patientId,
@@ -60,6 +66,7 @@ class BatteryService {
       print("📤 Batteri-upload til $uri");
       print("🧾 Payload: $payload");
 
+      // POST til API
       final response = await http.post(
         uri,
         headers: {
@@ -76,8 +83,8 @@ class BatteryService {
       } else {
         throw Exception("Fejl i serverresponse: ${response.statusCode} ${response.body}");
       }
-
     } catch (e) {
+      // Ved fejl: gem offline og log
       print("⚠️ Fejl i batteri-upload: $e");
 
       final rawId = await AuthStorage.getUserId();

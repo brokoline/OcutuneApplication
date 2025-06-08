@@ -1,5 +1,4 @@
 // lib/services/app_initializer.dart
-
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';

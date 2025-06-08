@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -19,7 +18,7 @@ class BlePollingService {
   String? _jwt;
   String? _sensorId;
 
-  DateTime? _lastSavedTimestamp; // 🔹 Tilføjet til RAM-dubletbeskyttelse
+  DateTime? _lastSavedTimestamp;
 
   LightClassifier? _classifier;
   List<List<double>>? _regressionMatrix;
@@ -32,7 +31,6 @@ class BlePollingService {
     print("📆 Starter polling-læsning hver ${interval.inSeconds} sek.");
 
     if (_pollingTimer?.isActive ?? false) {
-      print("⛔️ Allerede aktiv polling – afbryder.");
       return;
     }
 
@@ -76,7 +74,6 @@ class BlePollingService {
         final result = await ble.readCharacteristic(characteristic);
         await _handleData(result);
       } catch (e) {
-        print("⚠️ BLE-fejl: $e");
         LocalLogService.log("⚠️ BLE-fejl: $e");
       } finally {
         _isPolling = false;
@@ -87,12 +84,10 @@ class BlePollingService {
   void stopPolling() {
     _pollingTimer?.cancel();
     _pollingTimer = null;
-    print("🛑 BLE polling stoppet");
   }
 
   Future<void> _handleData(List<int> data) async {
     if (data.length < 48 || data.length % 4 != 0) {
-      print("❌ Ugyldig BLE-data længde: ${data.length} bytes – ignorerer pakken.");
       return;
     }
 
@@ -102,7 +97,6 @@ class BlePollingService {
       // 🔹 Dubletbeskyttelse: ignorér hvis måling kom for tæt på sidste
       if (_lastSavedTimestamp != null &&
           now.difference(_lastSavedTimestamp!).inSeconds < 5) {
-        print("🛑 Ignorerer dubletmåling: ${now.toIso8601String()}");
         return;
       }
 
@@ -112,7 +106,7 @@ class BlePollingService {
       final values = List.generate(12, (i) => byteData.getInt32(i * 4, Endian.little));
 
       if (_classifier == null || _regressionMatrix == null || _melanopicCurve == null || _yBarCurve == null) {
-        throw Exception("🔧 ML-model, regression eller kurver ikke initialiseret.");
+        throw Exception("ML-model, regression eller kurver ikke initialiseret.");
       }
 
       final nowString = now.toIso8601String();
@@ -120,16 +114,20 @@ class BlePollingService {
 
       final classId = _classifier!.classify(rawInput);
       if (classId < 0 || classId >= _regressionMatrix!.length) {
-        throw Exception("❌ Ugyldigt classId: $classId – udenfor bounds for regressionMatrix");
+        throw Exception("Ugyldigt classId: $classId – udenfor bounds for regressionMatrix");
       }
+
+      // 🔹 Bestem lystypens navn
+      final lightTypeName = _lightTypeFromCode(classId);
+      print("💡 Lystype: $lightTypeName (kode $classId)");
 
       final weights = _regressionMatrix![classId];
 
-      // 🔹 Brug 1/1000.0 til melanopic-beregning
+      // 🔹 Bruger 1/1000.0 til melanopic-beregning
       final spectrum = LightClassifier.reconstructSpectrum(rawInput, weights, normalizationFactor: 1 / 1000.0);
       final melanopic = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
 
-      // 🔹 Brug 1/1_000_000.0 til illuminance-beregning
+      // 🔹 Bruger 1/1_000_000.0 til illuminance-beregning
       final spectrumLux = LightClassifier.reconstructSpectrum(rawInput, weights, normalizationFactor: 1 / 1000000.0);
       final illuminance = LightClassifier.calculateIlluminance(spectrumLux, _yBarCurve!);
 
@@ -137,9 +135,6 @@ class BlePollingService {
 
       final exposureScore = _calculateExposureScore(melanopic, now);
       final actionRequired = _getActionRequired(exposureScore, now);
-      final lightTypeName = _lightTypeFromCode(classId);
-
-
       int actionCode = (actionRequired == "increase") ? 1 : (actionRequired == "decrease") ? 2 : 0;
 
       final lightData = {
@@ -152,12 +147,12 @@ class BlePollingService {
         "illuminance": illuminance,
         "spectrum": spectrum,
         "light_type": classId,
+        "light_type_name": lightTypeName,  // 🔹 Tilføjet navn
         "exposure_score": exposureScore,
         "action_required": actionCode,
       };
 
       print("▶️ Nyt BLE‐aflæsningstag kl. ${DateTime.now().toIso8601String()}");
-      //print("🧾 Final data to save: ${jsonEncode(lightData)}");
       await OfflineStorageService.saveLocally(type: 'light', data: lightData);
     } catch (e) {
       print("❌ Fejl i håndtering af BLE-data: $e");
@@ -191,14 +186,22 @@ class BlePollingService {
 
   String _lightTypeFromCode(int code) {
     switch (code) {
-      case 0: return "Daylight";
-      case 1: return "LED";
-      case 2: return "Mixed";
-      case 3: return "Halogen";
-      case 4: return "Fluorescent";
-      case 5: return "Fluorescent daylight";
-      case 6: return "Screen";
-      default: return "Unknown";
+      case 0:
+        return "Daylight";
+      case 1:
+        return "LED";
+      case 2:
+        return "Mixed";
+      case 3:
+        return "Halogen";
+      case 4:
+        return "Fluorescent";
+      case 5:
+        return "Fluorescent daylight";
+      case 6:
+        return "Screen";
+      default:
+        return "Unknown";
     }
   }
 }

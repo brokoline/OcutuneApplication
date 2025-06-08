@@ -73,13 +73,25 @@ class BleController {
 
           // Batteri upload setup
           _batteryTimer?.cancel();
-          Future.delayed(const Duration(seconds: 20), () {
-            BatteryService.sendToBackend(batteryLevel: batteryNotifier.value);
+
+          // Første send efter 20 s (så readBatteryLevel har opdateret batteryNotifier)
+          Future.delayed(const Duration(seconds: 20), () async {
+            await readBatteryLevel();
+            await BatteryService.sendToBackend(
+              batteryLevel: batteryNotifier.value,
+            );
           });
-          _batteryTimer = Timer.periodic(Duration(minutes: 10), (_) async {
-            final level = batteryNotifier.value;
-            await BatteryService.sendToBackend(batteryLevel: level);
-          });
+
+          // Herefter hvert 5. minut: genlæs og send
+          _batteryTimer = Timer.periodic(
+            const Duration(minutes: 5),
+                (_) async {
+              await readBatteryLevel();
+              await BatteryService.sendToBackend(
+                batteryLevel: batteryNotifier.value,
+              );
+            },
+          );
 
           final lightCharacteristic = QualifiedCharacteristic(
             deviceId: device.id,
