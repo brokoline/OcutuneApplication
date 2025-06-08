@@ -34,10 +34,6 @@ class BatteryPollingService {
     await _readAndSend();
   }
 
-  // --------------------------------------------------
-  // Alt under her er uændret
-  // --------------------------------------------------
-
   Future<void> _readAndSend() async {
     try {
       final char = QualifiedCharacteristic(

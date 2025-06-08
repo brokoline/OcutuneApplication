@@ -1,161 +1,130 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/local_log_service.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
-import 'package:ocutune_light_logger/services/services/api_services.dart';
+
 import 'light_classifier_service.dart';
 
 class LightPollingService {
-  final FlutterReactiveBle ble;
-  final String deviceId;
+  final FlutterReactiveBle _ble;
+  final QualifiedCharacteristic _char;
+  final String _patientId;
+  final String _sensorId;
+
   Timer? _timer;
   bool _isPolling = false;
-  String? _patientId;
-  String? _jwt;
-  String? _sensorId;
   DateTime? _lastSavedTimestamp;
 
-  LightClassifier? _classifier;
-  List<List<double>>? _regressionMatrix;
-  List<double>? _melanopicCurve;
-  List<double>? _yBarCurve;
+  LightClassifier?        _classifier;
+  List<List<double>>?      _regressionMatrix;
+  List<double>?            _melanopicCurve;
+  List<double>?            _yBarCurve;
 
-  LightPollingService({required this.ble, required this.deviceId});
+  LightPollingService({
+    required FlutterReactiveBle ble,
+    required QualifiedCharacteristic characteristic,
+    required String patientId,
+    required String sensorId,
+  })  : _ble        = ble,
+        _char       = characteristic,
+        _patientId  = patientId,
+        _sensorId   = sensorId;
 
-  /// Starter lys-polling med default 10s interval
+  /// Kald denne én gang fra BleController efter connect
   Future<void> start({Duration interval = const Duration(seconds: 10)}) async {
-    print("📆 Starter polling-læsning hver ${interval.inSeconds} sek.");
-
     if (_timer?.isActive ?? false) return;
 
-    _jwt = await AuthStorage.getToken();
-    _patientId = (await AuthStorage.getUserId())?.toString();
-    if (_jwt == null || _patientId == null || _patientId!.isEmpty) {
-      LocalLogService.log("❌ JWT eller patient-ID mangler – kan ikke starte polling");
-      return;
-    }
-
-    _sensorId = await ApiService.registerSensorUse(
-      patientId: _patientId!,
-      deviceSerial: deviceId,
-      jwt: _jwt!,
-    );
-    if (_sensorId == null) {
-      LocalLogService.log("❌ Kunne ikke registrere sensor – polling stoppes.");
-      return;
-    }
-
-    // Initialiser ML-model og kurver én gang
-    _classifier    ??= await LightClassifier.create();
+    // Hent ML-modellen og kurver én gang
+    _classifier       ??= await LightClassifier.create();
     _regressionMatrix ??= await LightClassifier.loadRegressionMatrix();
     _melanopicCurve   ??= await LightClassifier.loadCurve('assets/melanopic_curve.csv');
     _yBarCurve        ??= await LightClassifier.loadCurve('assets/ybar_curve.csv');
 
-    _timer?.cancel();
-    _timer = Timer.periodic(interval, (_) async {
-      if (_isPolling) return;
-      _isPolling = true;
-      try {
-        final data = await ble.readCharacteristic(
-          QualifiedCharacteristic(
-            deviceId: deviceId,
-            serviceId: Uuid.parse('0000181b-0000-1000-8000-00805f9b34fb'),
-            characteristicId: Uuid.parse('834419a6-b6a4-4fed-9afb-acbb63465bf7'),
-          ),
-        );
-        await _handleData(data);
-      } catch (e) {
-        LocalLogService.log("⚠️ BLE-fejl: $e");
-      } finally {
-        _isPolling = false;
-      }
-    });
+    _timer = Timer.periodic(interval, (_) => _poll());
   }
 
-  /// Stop lys-polling
-  void stop() {
+  /// Stop polling
+  Future<void> stop() async {
     _timer?.cancel();
     _timer = null;
+  }
+
+  Future<void> _poll() async {
+    if (_isPolling) return;
+    _isPolling = true;
+    try {
+      final data = await _ble.readCharacteristic(_char);
+      await _handleData(data);
+    } catch (e) {
+      LocalLogService.log("⚠️ Lys-polling-BLE-fejl: $e");
+    } finally {
+      _isPolling = false;
+    }
   }
 
   Future<void> _handleData(List<int> data) async {
     if (data.length < 48 || data.length % 4 != 0) return;
 
+    final now = DateTime.now();
+    if (_lastSavedTimestamp != null &&
+        now.difference(_lastSavedTimestamp!).inSeconds < 5) {
+      return;
+    }
+    _lastSavedTimestamp = now;
+
     try {
-      final now = DateTime.now();
-      if (_lastSavedTimestamp != null &&
-          now.difference(_lastSavedTimestamp!).inSeconds < 5) {
-        return;
-      }
-      _lastSavedTimestamp = now;
+      final bytes = ByteData.sublistView(Uint8List.fromList(data));
+      final values = List.generate(12, (i) => bytes.getInt32(i * 4, Endian.little));
+      final raw    = values.sublist(0, 8).map((e) => e.toDouble()).toList();
 
-      final byteData = ByteData.sublistView(Uint8List.fromList(data));
-      final values = List.generate(12, (i) => byteData.getInt32(i * 4, Endian.little));
-      final rawInput = values.sublist(0, 8).map((e) => e.toDouble()).toList();
-      final classId = _classifier!.classify(rawInput);
-      final lightTypeName = _lightTypeFromCode(classId);
+      final classId = _classifier!.classify(raw);
+      final weights = _regressionMatrix![classId];
+      final spectrum   = LightClassifier.reconstructSpectrum(raw, weights, normalizationFactor: 1/1000.0);
+      final melanopic  = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
+      final specLux    = LightClassifier.reconstructSpectrum(raw, weights, normalizationFactor: 1/1000000.0);
+      final illuminance= LightClassifier.calculateIlluminance(specLux, _yBarCurve!);
+      final der        = melanopic / (illuminance > 0 ? illuminance : 1.0);
+      final score      = _calcScore(melanopic, now);
+      final action     = _calcAction(score, now);
 
-      // Debug-print
-      print("🐞 rawInput=$rawInput");
-      print("🐞 classId=$classId, lightTypeName=$lightTypeName");
-
-      // Beregninger
-      final weights     = _regressionMatrix![classId];
-      final spectrum    = LightClassifier.reconstructSpectrum(rawInput, weights, normalizationFactor: 1 / 1000.0);
-      final melanopic   = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
-      final spectrumLux = LightClassifier.reconstructSpectrum(rawInput, weights, normalizationFactor: 1 / 1000000.0);
-      final illuminance= LightClassifier.calculateIlluminance(spectrumLux, _yBarCurve!);
-      final der         = melanopic / (illuminance > 0 ? illuminance : 1.0);
-      final exposureScore  = _calculateExposureScore(melanopic, now);
-      final actionRequired = _getActionRequired(exposureScore, now);
-      int actionCode = (actionRequired == "increase") ? 1 : (actionRequired == "decrease") ? 2 : 0;
-
-      final lightData = {
+      final payload = {
         "timestamp": now.toIso8601String(),
         "patient_id": _patientId,
         "sensor_id": _sensorId,
         "light_type": classId,
-        "light_type_name": lightTypeName,
+        "light_type_name": _typeName(classId),
         "lux_level": illuminance.round(),
         "melanopic_edi": melanopic,
         "der": der,
         "illuminance": illuminance,
         "spectrum": spectrum,
-        "exposure_score": exposureScore,
-        "action_required": actionCode,
+        "exposure_score": score,
+        "action_required": action,
       };
 
-      print("💾 Gemmer lysdata med lystype=$lightTypeName og payload: $lightData");
-      await OfflineStorageService.saveLocally(type: 'light', data: lightData);
-      print("▶️ Data gemt kl. ${DateTime.now().toIso8601String()}");
+      await OfflineStorageService.saveLocally(type: 'light', data: payload);
+      print("▶️ Lysdata gemt kl. ${now.toIso8601String()}");
     } catch (e) {
-      LocalLogService.log("❌ BLE-datafejl: $e");
+      LocalLogService.log("❌ Fejl i lys-datahåndtering: $e");
     }
   }
 
-  double _calculateExposureScore(double melanopic, DateTime now) {
+  double _calcScore(double melanopic, DateTime now) {
     final h = now.hour;
-    if (h >= 7 && h <= 19) return (melanopic / 150).clamp(0.0, 1.0) * 100;
-    if (h <= 23) return (melanopic / 50).clamp(0.0, 1.0) * 100;
-    return (melanopic / 30).clamp(0.0, 1.0) * 100;
+    if (h >= 7 && h < 19) return (melanopic / 150).clamp(0,1) * 100;
+    if (h < 24)             return (melanopic /  50).clamp(0,1) * 100;
+    return                   (melanopic /  30).clamp(0,1) * 100;
   }
 
-  String _getActionRequired(double exposureScore, DateTime now) {
-    final hourFraction = now.hour + now.minute / 60.0;
-    if (hourFraction >= 7 && hourFraction < 19) {
-      final result = exposureScore < 80 ? "increase" : "none";
-      print("🕒 Time: $hourFraction → Action: $result (DAY)");
-      return result;
-    } else {
-      final result = exposureScore > 20 ? "decrease" : "none";
-      print("🌙 Time: $hourFraction → Action: $result (NIGHT)");
-      return result;
-    }
+  int _calcAction(double score, DateTime now) {
+    final frac = now.hour + now.minute/60.0;
+    if (frac >= 7 && frac < 19) return score < 80 ? 1 : 0;
+    return score > 20 ? 2 : 0;
   }
 
-  String _lightTypeFromCode(int code) {
+  String _typeName(int code) {
     switch (code) {
       case 0: return "Daylight";
       case 1: return "LED";

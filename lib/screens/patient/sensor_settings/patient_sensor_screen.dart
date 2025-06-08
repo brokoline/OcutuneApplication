@@ -190,8 +190,7 @@ class _PatientSensorSettingsScreenState
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  final connectedDevice =
-                                      BleController.connectedDevice;
+                                  final connectedDevice = BleController.connectedDeviceNotifier.value;
                                   if (connectedDevice == null ||
                                       connectedDevice.id != device.id) {
                                     _controller.connectToDevice(context, device);

@@ -182,7 +182,7 @@ class LightDataProcessing {
     return messages;
   }
 
-  /// Ekstra hjælpemetoder, hvis du ønsker at gruppere lys pr. dag/uge:
+  // Ekstra hjælpemetoder, hvis du ønsker at gruppere lys pr. dag/uge:
   Map<int, double> groupLuxByDay(List<LightData> data) {
     final Map<int, List<double>> map = {};
     for (final d in data) {

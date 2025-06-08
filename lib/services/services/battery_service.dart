@@ -37,12 +37,15 @@ class BatteryService {
       final jwt = await AuthStorage.getToken();
       final rawId = await AuthStorage.getUserId();
       final patientId = rawId?.toString();
-      final deviceSerial = BleController.connectedDevice?.id ?? "unknown-device";
+
+  // Brug den aktuelle enheds-id fra notifikatoren
+      final deviceSerial = BleController.connectedDeviceNotifier.value?.id ?? 'unknown-device';
 
       if (jwt == null || patientId == null) {
         print("❌ JWT eller patientId mangler – sender ikke batteri");
         return false;
       }
+
 
       // Registrér sensoren (får sensor_id)
       final sensorId = await ApiService.registerSensorUse(

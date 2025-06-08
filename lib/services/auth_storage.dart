@@ -156,7 +156,24 @@ static Future<int?> getPatientId() async {
     await prefs.remove('customer_first_name');
     await prefs.remove('customer_last_name');
   }
+
+  static const _lastDeviceKey = 'last_connected_device';
+
+  // Kald denne lige efter du har connected i UI-laget
+  static Future<void> setLastConnectedDeviceId(String deviceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastDeviceKey, deviceId);
+  }
+
+  // Hentes i BG-servicen når den starter
+  static Future<String?> getLastConnectedDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_lastDeviceKey);
+
+  }
 }
+
+
 
 
 
