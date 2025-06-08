@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Til ValueNotifier
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:ocutune_light_logger/services/services/battery_service.dart';
-import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
-import 'package:ocutune_light_logger/services/auth_storage.dart';
-import 'package:ocutune_light_logger/services/services/api_services.dart';
+import '../../../services/services/battery_polling_service.dart';
+import '../../../services/services/light_polling_service.dart';
 
 class BleController {
   static final BleController _instance = BleController._internal();
@@ -17,44 +15,45 @@ class BleController {
   StreamSubscription<DiscoveredDevice>? _scanStream;
   StreamSubscription<ConnectionStateUpdate>? _connectionStream;
 
+  // Callbacks
   Function(DiscoveredDevice device)? onDeviceDiscovered;
 
+  // State
   static DiscoveredDevice? connectedDevice;
   static final ValueNotifier<DiscoveredDevice?> connectedDeviceNotifier = ValueNotifier(null);
-  static final ValueNotifier<int> batteryNotifier = ValueNotifier(0);
   static final ValueNotifier<bool> isBluetoothOn = ValueNotifier(false);
+  static final ValueNotifier<int> batteryNotifier = ValueNotifier(0);
 
-  Timer? _batteryTimer;
-  BlePollingService? _lightPollingService;
+  BatteryPollingService? _batteryService;
+  LightPollingService?   _lightService;
 
+  /// Lyt på om BT er tændt
   void monitorBluetoothState() {
     _ble.statusStream.listen((status) {
       isBluetoothOn.value = status == BleStatus.ready;
     });
   }
 
+  /// Start scan
   void startScan() {
     _scanStream?.cancel();
     _scanStream = _ble.scanForDevices(withServices: []).listen(
-          (device) {
-        final name = device.name.isNotEmpty ? device.name : "Ukendt enhed";
-        print("📱 Fundet enhed: $name (${device.id})");
-        onDeviceDiscovered?.call(device);
-      },
+          (device) => onDeviceDiscovered?.call(device),
       onError: (e) => print("🚨 Scan fejl: $e"),
     );
   }
 
+  /// Stop scan
   void stopScan() {
     _scanStream?.cancel();
   }
 
+  /// Forbind til en enhed
   Future<void> connectToDevice({
     required DiscoveredDevice device,
-    required String patientId, // ✅
+    required String patientId,
   }) async {
     _connectionStream?.cancel();
-
     _connectionStream = _ble.connectToDevice(id: device.id).listen(
           (update) async {
         if (update.connectionState == DeviceConnectionState.connected) {
@@ -62,52 +61,28 @@ class BleController {
           connectedDevice = device;
           connectedDeviceNotifier.value = device;
           print("✅ Forbundet til: ${device.name}");
+
           await FlutterForegroundTask.startService(
-            notificationTitle: 'Lysmåling aktiv',
-            notificationText: 'Din sensor logger lysdata i baggrunden',
+            notificationTitle: 'Sensor aktiv',
+            notificationText: 'Logger data i baggrunden',
           );
 
-          await Future.delayed(const Duration(milliseconds: 500));
-          await discoverServices();
-          await readBatteryLevel();
-
-          // Batteri upload setup
-          _batteryTimer?.cancel();
-
-          // Første send efter 20 s (så readBatteryLevel har opdateret batteryNotifier)
-          Future.delayed(const Duration(seconds: 20), () async {
-            await readBatteryLevel();
-            await BatteryService.sendToBackend(
-              batteryLevel: batteryNotifier.value,
-            );
-          });
-
-          // Herefter hvert 5. minut: genlæs og send
-          _batteryTimer = Timer.periodic(
-            const Duration(minutes: 5),
-                (_) async {
-              await readBatteryLevel();
-              await BatteryService.sendToBackend(
-                batteryLevel: batteryNotifier.value,
-              );
-            },
-          );
-
-          final lightCharacteristic = QualifiedCharacteristic(
-            deviceId: device.id,
-            serviceId: Uuid.parse("0000181b-0000-1000-8000-00805f9b34fb"),
-            characteristicId: Uuid.parse("834419a6-b6a4-4fed-9afb-acbb63465bf7"),
-          );
-
-          _lightPollingService = BlePollingService(
+          // Start batteri‐polling
+          _batteryService = BatteryPollingService(
             ble: _ble,
-            characteristic: lightCharacteristic,
+            deviceId: device.id,
           );
-          _lightPollingService!.startPolling();
+          _batteryService!.start();
+
+          // Start lys‐polling
+          _lightService = LightPollingService(
+            ble: _ble,
+            deviceId: device.id,
+          );
+          _lightService!.start();
+
         } else if (update.connectionState == DeviceConnectionState.disconnected) {
-          disconnect();
-          await FlutterForegroundTask.stopService();
-          startScan();
+          await disconnect();
         }
       },
       onError: (error) {
@@ -117,35 +92,38 @@ class BleController {
     );
   }
 
-  void disconnect() async {
+  /// Afbryd forbindelse
+  Future<void> disconnect() async {
     _connectionStream?.cancel();
-    _lightPollingService?.stopPolling();
-    _lightPollingService = null;
+    await FlutterForegroundTask.stopService();
 
-    // Kalder til backend for at afslutte sensoren
-    try {
-      final patientId = await AuthStorage.getUserId();
-      final jwt = await AuthStorage.getToken();
-      final sensorId = await ApiService.getSensorIdFromDevice(connectedDevice!.id, jwt!);
-
-      await ApiService.endSensorUse(
-        patientId: patientId!.toString(),
-        sensorId: sensorId!,
-        jwt: jwt,
-        status: "disconnected",
-      );
-    } catch (e) {
-      print("⚠️ Kunne ikke afslutte sensorbrug: $e");
-    }
+    _batteryService?.stop();
+    _lightService?.stop();
 
     connectedDevice = null;
     connectedDeviceNotifier.value = null;
     batteryNotifier.value = 0;
-    _batteryTimer?.cancel();
-    _batteryTimer = null;
     print("🔌 Forbindelsen er afbrudt");
   }
 
+  /// Udforsk services og log UUID’er
+  Future<void> discoverServices() async {
+    if (connectedDevice == null) return;
+    try {
+      await _ble.discoverAllServices(connectedDevice!.id);
+      final services = await _ble.getDiscoveredServices(connectedDevice!.id);
+      for (final service in services) {
+        print('🟩 Service: $service');
+        for (final char in service.characteristics) {
+          print('  └─ 🔹 Char: $char');
+        }
+      }
+    } catch (e) {
+      print('❌ discoverServices-fejl: $e');
+    }
+  }
+
+  /// Læs batteriniveau (og opdater `batteryNotifier`)
   Future<void> readBatteryLevel() async {
     if (connectedDevice == null) return;
     try {
@@ -156,29 +134,15 @@ class BleController {
       );
       final result = await _ble.readCharacteristic(char);
       if (result.isNotEmpty) {
-        batteryNotifier.value = result[0];
-        print("🔋 Batteri: ${batteryNotifier.value}%");
+        final level = result[0];
+        batteryNotifier.value = level;
+        print("🔋 Batteriniveau: $level%");
       }
     } catch (e) {
       print("⚠️ Fejl ved batterilæsning: $e");
     }
   }
 
-  Future<void> discoverServices() async {
-    if (connectedDevice == null) return;
-    try {
-      await _ble.discoverAllServices(connectedDevice!.id);
-      final services = await _ble.getDiscoveredServices(connectedDevice!.id);
-      for (final service in services) {
-        print('🟩 Service UUID: $service');
-        for (final char in service.characteristics) {
-          print('  └─ 🔹 Characteristic UUID: $char');
-        }
-      }
-    } catch (e) {
-      print('❌ discoverServices-fejl: $e');
-    }
-  }
-
+  /// Public accessor til den interne BLE-instans
   FlutterReactiveBle get bleInstance => _ble;
 }

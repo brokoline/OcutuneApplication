@@ -4,21 +4,26 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../services/auth_storage.dart';
-import '../../../services/ble_lifecycle_handler.dart';
+import '../../../services/ble_lifecycle_handler.dart';   // BleLifecycleHandler uden pollingService
 import '../../../controller/ble_controller.dart';
 import '../../../services/services/api_services.dart';
 import '../../../services/services/battery_service.dart';
-import '../../../services/services/ble_polling_service.dart';
-
+import '../../../services/services/battery_polling_service.dart'; // Nyt
+import '../../../services/services/light_polling_service.dart';   // Nyt
 
 class PatientSensorController {
   final String patientId;
   final BleController bleController = BleController();
+
   final List<DiscoveredDevice> devices = [];
   final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier([]);
+
   Timer? _batterySyncTimer;
   BleLifecycleHandler? _lifecycleHandler;
-  BlePollingService? _pollingService;
+
+  // De to nye polling‐services
+  BatteryPollingService? _batteryService;
+  LightPollingService?   _lightService;
 
   PatientSensorController({required this.patientId});
 
@@ -29,24 +34,22 @@ class PatientSensorController {
         devicesNotifier.value = List.from(devices);
       }
     };
-
     bleController.monitorBluetoothState();
   }
 
   void dispose() {
     _batterySyncTimer?.cancel();
-    _pollingService?.stopPolling();
+    _batteryService?.stop();
+    _lightService?.stop();
     _lifecycleHandler?.stop();
   }
 
   Future<void> requestPermissionsAndScan(BuildContext context) async {
-    final locationStatus = await Permission.location.request();
-    final bluetoothScanStatus = await Permission.bluetoothScan.request();
-    final bluetoothConnectStatus = await Permission.bluetoothConnect.request();
+    final loc    = await Permission.location.request();
+    final scan   = await Permission.bluetoothScan.request();
+    final connect= await Permission.bluetoothConnect.request();
 
-    if (locationStatus.isGranted &&
-        bluetoothScanStatus.isGranted &&
-        bluetoothConnectStatus.isGranted) {
+    if (loc.isGranted && scan.isGranted && connect.isGranted) {
       startScanning();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,59 +67,48 @@ class PatientSensorController {
   }
 
   Future<void> connectToDevice(BuildContext context, DiscoveredDevice device) async {
+    // 1) Selve BLE-forbindelsen + services discovery
     await bleController.connectToDevice(device: device, patientId: patientId);
-
-    final jwt = await AuthStorage.getToken();
-    if (jwt != null) {
-      final sensorId = await ApiService.registerSensorUse(
-        patientId: patientId.toString(),
-        deviceSerial: device.id,
-        jwt: jwt,
-      );
-      print("✅ Sensor registreret med ID: $sensorId");
-    }
-
     await bleController.discoverServices();
 
-    _lifecycleHandler = BleLifecycleHandler(
-      bleController: bleController,
-      pollingService: _pollingService!,
+    // 2) Start BatteryPollingService (første upload efter 20s, derefter hver 5 min) :contentReference[oaicite:0]{index=0}
+    _batteryService = BatteryPollingService(
+      ble: bleController.bleInstance,
+      deviceId: device.id,
     );
-    _lifecycleHandler?.start();
-    _lifecycleHandler?.updateDevice(device: device, patientId: patientId);
+    await _batteryService!.start();
 
+    // 3) Start LightPollingService (hver 10 s) :contentReference[oaicite:1]{index=1}
+    _lightService = LightPollingService(
+      ble: bleController.bleInstance,
+      deviceId: device.id,
+    );
+    await _lightService!.start();
+
+    // 4) Lifecycle-handler til resume/reconnect :contentReference[oaicite:2]{index=2}
+    _lifecycleHandler = BleLifecycleHandler(bleController: bleController);
+    _lifecycleHandler!.start();
+    _lifecycleHandler!.updateDevice(device: device, patientId: patientId);
+
+    // 5) (Valgfri ekstra 5-min-timer til manuel battery-upload)
     _batterySyncTimer?.cancel();
-    _batterySyncTimer = Timer.periodic(Duration(minutes: 5), (_) async {
-      try {
-        final now = DateTime.now();
-        print("🕓 [BatteriTimer] Kører kl: $now");
-
-        if (BleController.connectedDevice != null) {
-          final batteryLevel = BleController.batteryNotifier.value;
-          print("🔋 [BatteriTimer] Batteriniveau målt: $batteryLevel");
-
-          final success = await BatteryService.sendToBackend(
-              batteryLevel: batteryLevel);
-
-          print("📡 [BatteriTimer] Sendte data til backend? $success");
-        } else {
-          print("⚠️ [BatteriTimer] Ingen enhed forbundet – sender ikke.");
-        }
-      } catch (e, stack) {
-        print("❌ [BatteriTimer] Fejl under batteri-upload: $e");
-        print(stack);
-      }
-    });
+    _batterySyncTimer = Timer.periodic(
+      const Duration(minutes: 5),
+          (_) => _batteryService?.readAndSend(), // kan evt. expose som public metode
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Forbundet til: ${device.name}')),
     );
   }
 
-    void disconnectFromDevice(BuildContext context) {
+  void disconnectFromDevice(BuildContext context) {
     _batterySyncTimer?.cancel();
-    _pollingService?.stopPolling();
+    _batteryService?.stop();
+    _lightService?.stop();
     bleController.disconnect();
+    _lifecycleHandler?.stop();
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Forbindelsen blev afbrudt')),
     );

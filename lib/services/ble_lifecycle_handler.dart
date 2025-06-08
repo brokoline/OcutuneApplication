@@ -1,18 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/controller/ble_controller.dart';
-import 'package:ocutune_light_logger/services/services/ble_polling_service.dart';
 
 class BleLifecycleHandler extends WidgetsBindingObserver {
   final BleController bleController;
-  final BlePollingService pollingService;
 
   DiscoveredDevice? _lastDevice;
   String? _lastPatientId;
 
   BleLifecycleHandler({
     required this.bleController,
-    required this.pollingService,
   });
 
   void start() {

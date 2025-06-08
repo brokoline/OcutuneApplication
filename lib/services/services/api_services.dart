@@ -962,7 +962,6 @@ class ApiService {
       print('[calcScore] body:   ${calcResponse.body}');
 
       if (calcResponse.statusCode != 200) {
-        // Kasser hvis vi får 404/500/…
         throw Exception(
             "HTTP ${calcResponse.statusCode}: ${calcResponse.reasonPhrase} → ${calcResponse.body}");
       }
