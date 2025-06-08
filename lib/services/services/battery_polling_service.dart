@@ -3,6 +3,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/battery_service.dart';
 
 import '../../controller/ble_controller.dart';
+import 'offline_storage_service.dart';
 
 class BatteryPollingService {
   final FlutterReactiveBle ble;
@@ -50,5 +51,17 @@ class BatteryPollingService {
     } catch (e) {
       print("⚠️ Batteri-polling fejl: $e");
     }
+  }
+
+  /// PUBLIC helper til din BG-handler
+  Future<void> handleBattery(int level, DateTime timestamp) async {
+    await OfflineStorageService.saveLocally(
+      type: 'battery',
+      data: {
+        'timestamp':     timestamp.toIso8601String(),
+        'battery_level': level,
+      },
+    );
+    print('🔋 [BG] battery saved: $level% at $timestamp');
   }
 }

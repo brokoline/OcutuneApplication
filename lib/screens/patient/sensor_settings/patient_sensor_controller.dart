@@ -6,44 +6,55 @@ import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../controller/ble_controller.dart';
-import '../../../services/ble_lifecycle_handler.dart';
+import 'package:ocutune_light_logger/controller/ble_controller.dart';
+import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 
 class PatientSensorController {
   final String patientId;
   final BleController bleController;
 
-  final List<DiscoveredDevice> devices = [];
+  /// Privat liste over fundne devices
+  final List<DiscoveredDevice> _devices = [];
+
+  /// Notifier som UI kan lytte på
   final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier([]);
+
+  /// Gør listen tilgængelig uden for klassen
+  List<DiscoveredDevice> get devices => List.unmodifiable(_devices);
 
   BleLifecycleHandler? _lifecycleHandler;
 
   PatientSensorController({ required this.patientId })
       : bleController = BleController();
 
-  /// Skal kaldes fra fx initState() i din View
+  /// Skal kaldes én gang fra fx initState()
   void init() {
+    // Når en ny device bliver fundet
     bleController.onDeviceDiscovered = (device) {
-      if (!devices.any((d) => d.id == device.id)) {
-        devices.add(device);
-        devicesNotifier.value = List.from(devices);
+      if (!_devices.any((d) => d.id == device.id)) {
+        _devices.add(device);
+        devicesNotifier.value = List.unmodifiable(_devices);
       }
     };
+    // Start overvågning af bluetooth-status
     bleController.monitorBluetoothState();
   }
 
-  /// Skal kaldes i dispose() i din View
+  /// Skal kaldes fra dispose()
   void dispose() {
     _lifecycleHandler?.stop();
+    devicesNotifier.dispose();
   }
 
-  /// Få de nødvendige tilladelser og start scan
+  /// Spørg om nødvendige tilladelser, før der scannes
   Future<void> requestPermissionsAndScan(BuildContext context) async {
-    final loc     = await Permission.location.request();
-    final scan    = await Permission.bluetoothScan.request();
-    final connect = await Permission.bluetoothConnect.request();
+    final statusLocation = await Permission.locationWhenInUse.request();
+    final statusScan     = await Permission.bluetoothScan.request();
+    final statusConnect  = await Permission.bluetoothConnect.request();
 
-    if (loc.isGranted && scan.isGranted && connect.isGranted) {
+    if (statusLocation.isGranted &&
+        statusScan.isGranted &&
+        statusConnect.isGranted) {
       startScanning();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,34 +65,45 @@ class PatientSensorController {
     }
   }
 
-  /// Start scanning (únikt sted i app’en)
+  /// Nulstil liste og start BLE-scanningen
   void startScanning() {
-    devices.clear();
+    _devices.clear();
     devicesNotifier.value = [];
     bleController.startScan();
   }
 
-  /// Forbind til en enhed (alt BLE + polling håndteres i BleController)
+  /// Forbind til en valgt device og sæt lifecycle‐handler op
   Future<void> connectToDevice(
       BuildContext context,
       DiscoveredDevice device,
       ) async {
-    await bleController.connectToDevice(
-      device: device,
-      patientId: patientId,
-    );
+    try {
+      await bleController.connectToDevice(
+        device: device,
+        patientId: patientId,
+      );
 
-    // Opsæt automatisk genopkobling ved resume
-    _lifecycleHandler = BleLifecycleHandler(bleController: bleController)
-      ..start()
-      ..updateDevice(device: device, patientId: patientId);
+      // Opsæt genopkobling ved app-lifecycle
+      _lifecycleHandler = BleLifecycleHandler(
+        bleController: bleController,
+      )
+        ..start()
+        ..updateDevice(
+          device: device,
+          patientId: patientId,
+        );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Forbundet til: ${device.name}')),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Forbundet til: ${device.name}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kunne ikke forbinde: $e')),
+      );
+    }
   }
 
-  /// Afbryd forbindelse (stop polling, background‐service m.m.)
+  /// Afbryd forbindelse og fjern lifecycle‐observer
   void disconnectFromDevice(BuildContext context) {
     _lifecycleHandler?.stop();
     bleController.disconnect();

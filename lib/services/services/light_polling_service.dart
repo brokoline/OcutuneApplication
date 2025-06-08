@@ -7,7 +7,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/light_classifier_service.dart';
 
-/// Service for polling the light sensor at fixed intervals and processing measurements.
+/// Service for polling the light sensor med faste intervaller.
 class LightPollingService {
   final FlutterReactiveBle _ble;
   final QualifiedCharacteristic _char;
@@ -16,7 +16,7 @@ class LightPollingService {
 
   Timer? _timer;
   bool _isPolling = false;
-  DateTime? _lastSavedTimestamp;
+  DateTime? _lastSavedTimestamp; // For duplicate protection
 
   late final LightClassifier _classifier;
   late final List<List<double>> _regressionMatrix;
@@ -33,19 +33,26 @@ class LightPollingService {
         _patientId = patientId,
         _sensorId = sensorId;
 
-  /// Initializes classifier and data, then starts periodic polling every [interval].
+  /// Starter classifier/data og sætter et periodic‐timer op.
+  ///
+  /// Første poll sker _med det samme_, herefter præcis hvert [interval].
   Future<void> start({Duration interval = const Duration(seconds: 10)}) async {
     if (_timer?.isActive ?? false) return;
 
-    _classifier = await LightClassifier.create();
+    // 1) Indlæs ML-model og curves
+    _classifier       = await LightClassifier.create();
     _regressionMatrix = await LightClassifier.loadRegressionMatrix();
-    _melanopicCurve = await LightClassifier.loadCurve('assets/melanopic_curve.csv');
-    _yBarCurve = await LightClassifier.loadCurve('assets/ybar_curve.csv');
+    _melanopicCurve   = await LightClassifier.loadCurve('assets/melanopic_curve.csv');
+    _yBarCurve        = await LightClassifier.loadCurve('assets/ybar_curve.csv');
 
+    // 2) Første poll _med det samme_
+    _poll();
+
+    // 3) Derefter hvert [interval]
     _timer = Timer.periodic(interval, (_) => _poll());
   }
 
-  /// Stops periodic polling.
+  /// Stopper periodic polling.
   Future<void> stop() async {
     _timer?.cancel();
     _timer = null;
@@ -67,13 +74,20 @@ class LightPollingService {
 
   Future<void> _handleData(List<int> data) async {
     // Expect 12 × 4 bytes of raw ADC data
-    if (data.length < 48 || data.length % 4 != 0) return;
+    if (data.length < 48 || data.length % 4 != 0) {
+      print('❌ Invalid BLE data length: ${data.length} bytes - ignoring packet');
+      return;
+    }
 
     final now = DateTime.now();
+
+    // Duplicate protection: ignore if measurement is too close to last one
     if (_lastSavedTimestamp != null &&
-        now.difference(_lastSavedTimestamp!).inSeconds < 10) {
-      return; // debounce duplicates within one interval
+        now.difference(_lastSavedTimestamp!).inSeconds < 5) {
+      print('🛑 Ignoring duplicate measurement: ${now.toIso8601String()}');
+      return;
     }
+
     _lastSavedTimestamp = now;
 
     try {
@@ -86,7 +100,10 @@ class LightPollingService {
 
       final classId = _classifier.classify(rawInput);
       final typeName = _typeName(classId);
-      print('💡 Light type: $typeName (code $classId)');
+
+      if (classId < 0 || classId >= _regressionMatrix.length) {
+        throw Exception('❌ Invalid classId: $classId - out of bounds for regressionMatrix');
+      }
 
       final weights = _regressionMatrix[classId];
 
@@ -112,9 +129,13 @@ class LightPollingService {
         _yBarCurve,
       );
 
+      // Calculate DER (melanopic to illuminance ratio)
       final der = melanopicEdi / (illuminance > 0 ? illuminance : 1.0);
-      final score = _calcScore(melanopicEdi, now);
-      final action = _calcAction(score, now);
+
+      // Calculate exposure score and required action
+      final exposureScore = _calculateExposureScore(melanopicEdi, now);
+      final actionRequired = _getActionRequired(exposureScore, now);
+      final actionCode = (actionRequired == "increase") ? 1 : (actionRequired == "decrease") ? 2 : 0;
 
       final payload = {
         'timestamp': now.toIso8601String(),
@@ -126,10 +147,15 @@ class LightPollingService {
         'melanopic_edi': melanopicEdi,
         'der': der,
         'illuminance': illuminance,
+        'exposure_score': exposureScore,
+        'action_required': actionCode,
         'spectrum': spectrumMel,
-        'exposure_score': score,
-        'action_required': action,
       };
+
+      print('📊 Light data:');
+      print('🧠 ClassId: $classId ($typeName)');
+      print('📈 EDI: ${melanopicEdi.toStringAsFixed(1)}, Lux: ${illuminance.toStringAsFixed(1)}, DER: ${der.toStringAsFixed(4)}');
+      print('📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired');
 
       await OfflineStorageService.saveLocally(type: 'light', data: payload);
       print('▶️ Light data saved at ${now.toIso8601String()}');
@@ -138,22 +164,28 @@ class LightPollingService {
     }
   }
 
-  double _calcScore(double melanopic, DateTime now) {
-    final h = now.hour;
-    if (h >= 7 && h < 19) {
+  double _calculateExposureScore(double melanopic, DateTime now) {
+    final hour = now.hour;
+    if (hour >= 7 && hour <= 19) {
       return (melanopic / 150).clamp(0.0, 1.0) * 100;
-    } else if (h >= 19 || h < 7) {
+    } else if (hour > 19 && hour <= 23) {
       return (melanopic / 50).clamp(0.0, 1.0) * 100;
+    } else {
+      return (melanopic / 30).clamp(0.0, 1.0) * 100;
     }
-    return (melanopic / 30).clamp(0.0, 1.0) * 100;
   }
 
-  int _calcAction(double score, DateTime now) {
-    final frac = now.hour + now.minute / 60.0;
-    if (frac >= 7 && frac < 19) {
-      return score < 80 ? 1 : 0;
+  String _getActionRequired(double exposureScore, DateTime now) {
+    final hour = now.hour + now.minute / 60.0;
+    if (hour >= 7 && hour < 19) {
+      final result = exposureScore < 80 ? "increase" : "none";
+      print("🕒 Time: $hour, Exposure: $exposureScore% → Action: $result (DAY)");
+      return result;
+    } else {
+      final result = exposureScore > 20 ? "decrease" : "none";
+      print("🌙 Time: $hour, Exposure: $exposureScore% → Action: $result (NIGHT)");
+      return result;
     }
-    return score > 20 ? 2 : 0;
   }
 
   String _typeName(int code) {
@@ -175,5 +207,9 @@ class LightPollingService {
       default:
         return 'Unknown';
     }
+  }
+
+  Future<void> handleData(List<int> data) async {
+    await _handleData(data);
   }
 }

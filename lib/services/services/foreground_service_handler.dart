@@ -1,8 +1,10 @@
 // lib/services/services/foreground_service_handler.dart
 
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+
 import '../auth_storage.dart';
 import '../services/api_services.dart';
 import 'battery_polling_service.dart';
@@ -10,89 +12,90 @@ import 'light_polling_service.dart';
 
 @pragma('vm:entry-point')
 class OcutuneForegroundHandler extends TaskHandler {
-  late FlutterReactiveBle _ble;
-  late StreamSubscription<ConnectionStateUpdate> _connectionSub;
-  late BatteryPollingService _batteryService;
-  late LightPollingService   _lightService;
-  Timer? _tickTimer;
+  late final FlutterReactiveBle    _ble;
+  late final QualifiedCharacteristic _lightChar;
+  late final QualifiedCharacteristic _batteryChar;
 
+  late final BatteryPollingService _batteryService;
+  late final LightPollingService   _lightService;
+
+  DateTime _lastBatteryTime = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Kører én gang, når servicen starter
   @override
   Future<void> onStart(DateTime timestamp) async {
-    // 1) Initialisér BLE i baggrunds-isolate
     _ble = FlutterReactiveBle();
 
-    // 2) Hent sidst forbundne deviceId + patientId + JWT
-    final deviceId  = await AuthStorage.getLastConnectedDeviceId();
-    final patientId = await AuthStorage.getUserId() ?? '';
-    final jwt       = await AuthStorage.getToken()  ?? '';
+    final deviceId  = (await AuthStorage.getLastConnectedDeviceId())!;
+    final patientId = (await AuthStorage.getUserId())!;
+    final jwt       = (await AuthStorage.getToken())!;
 
-    if (deviceId == null) {
-      print('❌ BG-service: intet deviceId gemt → afbryder');
-      return;
-    }
+    _lightChar = QualifiedCharacteristic(
+      deviceId:         deviceId,
+      serviceId:        Uuid.parse('0000181b-0000-1000-8000-00805f9b34fb'),
+      characteristicId: Uuid.parse('834419a6-b6a4-4fed-9afb-acbb63465bf7'),
+    );
+    _batteryChar = QualifiedCharacteristic(
+      deviceId:         deviceId,
+      serviceId:        Uuid.parse('180F'),
+      characteristicId: Uuid.parse('2A19'),
+    );
 
-    // 3) Opret forbindelse og hold den åben (gem subscription)
-    _connectionSub = _ble
-        .connectToDevice(id: deviceId)
-        .listen((upd) {
-      if (upd.connectionState == DeviceConnectionState.connected) {
-        print('🔗 BG-service: connected');
-      } else if (upd.connectionState == DeviceConnectionState.disconnected) {
-        print('🔌 BG-service: disconnected');
-      }
+    // Hold GATT-link åbent
+    _ble.connectToDevice(id: deviceId).listen((upd) {
+      debugPrint('🔗 BG-service state=${upd.connectionState}');
     }, onError: (e) {
-      print('⚠️ BG-service connection error: $e');
+      debugPrint('⚠️ BG-connect error: $e');
     });
 
-    // 4) Start batteri-polling
     _batteryService = BatteryPollingService(ble: _ble, deviceId: deviceId);
-    await _batteryService.start();
-
-    // 5) Registrér sensorbrug og start lys-polling
-    final sensorId = await ApiService.registerSensorUse(
-      patientId:    patientId,
-      deviceSerial: deviceId,
-      jwt:          jwt,
+    _lightService   = LightPollingService(
+      ble:            _ble,
+      characteristic: _lightChar,
+      patientId:      patientId,
+      sensorId:       (await ApiService.registerSensorUse(
+        patientId:    patientId,
+        deviceSerial: deviceId,
+        jwt:          jwt,
+      ))
+          .toString(),
     );
-    if (sensorId != null) {
-      final char = QualifiedCharacteristic(
-        deviceId:         deviceId,
-        serviceId:        Uuid.parse('0000181b-0000-1000-8000-00805f9b34fb'),
-        characteristicId: Uuid.parse('834419a6-b6a4-4fed-9afb-acbb63465bf7'),
-      );
-      _lightService = LightPollingService(
-        ble:            _ble,
-        characteristic: char,
-        patientId:      patientId,
-        sensorId:       sensorId,
-      );
-      await _lightService.start();
-    } else {
-      print('❌ BG-service: kunne ikke registrere sensor til lys');
-    }
 
-    // 6) Ekstra tick hver 10s (valgfrit)
-    _tickTimer = Timer.periodic(
-      const Duration(seconds: 10),
-          (_) => print('🕒 BG tick: ${DateTime.now()}'),
-    );
+    // første batterimåling starter efter 5 min
+    _lastBatteryTime = timestamp;
+    debugPrint('🔔 BG-service startet');
   }
 
+  /// Kører hver gang interval (10 s) udløses
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
-    // Denne kører hver interval‐ms (plugin’et står for interval)
+    // --- Lys hver 10 s ---
+    try {
+      final data = await _ble.readCharacteristic(_lightChar);
+      await _lightService.handleData(data);
+    } catch (e) {
+      debugPrint('⚠️ BG-lys polling error: $e');
+    }
+
+    // --- Batteri hver 5 min ---
+    if (timestamp.difference(_lastBatteryTime) >= const Duration(minutes: 5)) {
+      try {
+        final bytes = await _ble.readCharacteristic(_batteryChar);
+        final level = bytes.isNotEmpty ? bytes[0] : 0;
+        await _batteryService.handleBattery(level, timestamp);
+      } catch (e) {
+        debugPrint('⚠️ BG-batteri polling error: $e');
+      }
+      _lastBatteryTime = timestamp;
+    }
   }
 
+  /// Kører når servicen stoppes
   @override
   Future<void> onDestroy(DateTime timestamp) async {
-    _tickTimer?.cancel();
-    _batteryService.stop();
-    _lightService.stop();
-    await _connectionSub.cancel();
-    print('🛑 BG-service stoppet');
+    debugPrint('🛑 BG-service stoppet');
   }
 
-  @override
   void onButtonPressed(String id) {}
 
   @override
