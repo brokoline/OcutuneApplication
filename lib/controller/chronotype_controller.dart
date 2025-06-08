@@ -2,18 +2,6 @@
 
 import 'dart:math';
 
-/// ChronotypeManager tager rMEQ (kortversion) som input og
-/// estimerer en MEQ (langversion), DLMO‐tid, døgnlængde (tau)
-/// samt beregner anbefalede light‐boost‐tider. 
-///
-/// Du bruger den typisk sådan:
-///   final chrono = ChronotypeManager(rmeqScoreAsInt);
-///   final label = chrono.getChronotypeLabel();
-///   final times = chrono.getRecommendedTimes();
-///
-/// Hvis der kun er rMEQ (fem‐spørgsmåls‐score), estimeres en
-/// tilsvarende MEQ (19‐spørgsmåls‐score) internt i `_estimateMEQ()`.
-///
 class ChronotypeManager {
   final int totalScore;
 

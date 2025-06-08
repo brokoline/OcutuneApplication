@@ -11,9 +11,9 @@ import '../../../models/customer_model.dart';
 import '../../../models/rmeq_chronotype_model.dart';
 import '../customer_root_controller.dart';
 
+import 'customer_chrono_info_screen.dart';
 import 'customer_overview_screen.dart';
 import 'customer_light_detail_screen.dart';
-import 'customer_chrono_insight_screen.dart';
 import 'customer_settings_screen.dart';
 
 class CustomerRootScreen extends StatelessWidget {
@@ -132,8 +132,8 @@ class CustomerRootView extends StatelessWidget {
                 // 1: Lysdetalje
                 const CustomerLightDetailScreen(),
 
-                // 2: Nørdeside
-                const CustomerChronoInsightScreen(),
+                // 2: Kronobiologi
+                const CustomerChronotypeInfoScreen(),
 
                 // 4: Indstillinger for notifikationer
                 const CustomerSettingsScreen(),
@@ -142,7 +142,7 @@ class CustomerRootView extends StatelessWidget {
               final titles = [
                 "\$name’s oversigt",
                 'Lysdetalje',
-                'Nørdeside',
+                'Chronobiologi',
                 'Indstillinger',
               ];
 

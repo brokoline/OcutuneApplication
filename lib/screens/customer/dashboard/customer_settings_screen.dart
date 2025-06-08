@@ -40,7 +40,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                         children: [
                           // Profil
                           ListTile(
-                            leading: Icon(Icons.person_outline, color: Colors.white70, size: 24.sp),
+                            leading: Icon(Icons.manage_accounts, color: Colors.white70, size: 24.sp),
                             title: Text(
                               'Profiloplysninger',
                               style: TextStyle(color: Colors.white, fontSize: 16.sp),
@@ -110,7 +110,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                           const Divider(color: Colors.white24, height: 1),
                           // Notifikationer
                           ListTile(
-                            leading: Icon(Icons.notifications,
+                            leading: Icon(Icons.notifications_active,
                                 color: Colors.white70, size: 24.sp),
                             title: Text('Notifikationer',
                                 style: TextStyle(
@@ -133,7 +133,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                           const Divider(color: Colors.white24, height: 1),
                           // Om Ocutune
                           ListTile(
-                            leading: Icon(Icons.info_outline, color: Colors.white70, size: 24.sp),
+                            leading: Icon(Icons.list_alt, color: Colors.white70, size: 24.sp),
                             title: Text('Om Ocutune', style: TextStyle(color: Colors.white, fontSize: 16.sp)),
                             trailing: Icon(Icons.chevron_right, color: Colors.white54, size: 24.sp),
                             onTap: () {
