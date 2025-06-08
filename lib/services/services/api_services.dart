@@ -718,6 +718,27 @@ class ApiService {
   //     • Registrér sensor‐brug: POST /api/register-sensor-use
   //     • Afslut sensor‐brug:    POST /api/end-sensor-use
   //─────────────────────────────────────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> postSensorLog({
+    required String jwt,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/sensor/log'),
+        headers: {
+          'Authorization': 'Bearer $jwt',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(data),
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
   static Future<String?> registerSensorUse({
     required String patientId,
     required String deviceSerial,

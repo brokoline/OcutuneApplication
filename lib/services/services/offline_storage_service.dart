@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -58,61 +59,68 @@ class OfflineStorageService {
   }) async {
     if (_db == null) return;
 
+    // ─── Light-specific validations ────────────────────────────────────────
     if (type == 'light') {
       final patientId = data['patient_id'];
-      final sensorId = data['sensor_id'];
+      final sensorId  = data['sensor_id'];
 
-      print("💡 Kontrollér patientId/sensorId i saveLocally: $patientId / $sensorId");
+      debugPrint("💡 Kontrollér patientId/sensorId i saveLocally: $patientId / $sensorId");
 
       if (patientId == null || sensorId == null || patientId == -1 || sensorId == -1) {
-        print("⚠️ Afvist: Ugyldig patientId/sensorId: $patientId/$sensorId");
+        debugPrint("⚠️ Afvist: Ugyldig patientId/sensorId: $patientId/$sensorId");
         return;
       }
 
       final spectrum = data['spectrum'];
       if (spectrum is! List) {
-        print("⚠️ Afvist: spectrum er ikke List");
+        debugPrint("⚠️ Afvist: spectrum er ikke List");
         return;
       }
 
-      // Ensure proper types
-      data['spectrum'] = spectrum.map((e) => (e as num).toDouble()).toList();
-      data['light_type']      = data['light_type']      ?? 'Unknown';
-      data['action_required'] = data['action_required'] ?? 0;
-      data['timestamp']       = data['timestamp']       ?? DateTime.now().toIso8601String();
+      // Ensure proper types and default missing fields
+      data['spectrum']       = spectrum.map((e) => (e as num).toDouble()).toList();
+      data['light_type']     = data['light_type']      ?? 'Unknown';
+      data['action_required']= data['action_required'] ?? 0;
+      data['timestamp']      = data['timestamp']       ?? DateTime.now().toIso8601String();
+      data['der']            = data['der']            ?? 0.0;
+      data['exposure_score'] = data['exposure_score'] ?? 0.0;
+      data['lux_level']      = data['lux_level']      ?? 0;
+      data['melanopic_edi']  = data['melanopic_edi']  ?? 0.0;
+      data['illuminance']    = data['illuminance']    ?? 0.0;
 
       // Duplicate check based on timestamp
       final timestamp = data['timestamp'];
-      final jsonLike = '%"timestamp":"$timestamp"%';
+      final jsonLike  = '%"timestamp":"$timestamp"%';
       final existing = await _db!.query(
         'unsynced_data',
         where: 'type = ? AND json LIKE ?',
         whereArgs: ['light', jsonLike],
       );
       final alreadyExists = existing.any((row) {
-        final decoded = jsonDecode(row['json'] as String);
+        final decoded = jsonDecode(row['json'] as String) as Map<String, dynamic>;
         return decoded['patient_id'] == patientId && decoded['sensor_id'] == sensorId;
       });
       if (alreadyExists) {
-        print("⚠️ Dublet fundet – data ikke gemt for timestamp $timestamp");
+        debugPrint("⚠️ Dublet fundet - data ikke gemt for timestamp $timestamp");
         return;
       }
     }
 
-    if (type == 'sensor_log') {
+    // ─── Sensor-log entries ────────────────────────────────────────────────
+    if (type == 'patient_sensor_log') {
       await _db!.insert(
         'patient_sensor_log',
         {
-          'sensor_id':  data['sensor_id'],
+          'sensor_id': data['sensor_id'],
           'patient_id': data['patient_id'],
-          'started_at': data['timestamp'],
-          'ended_at':   data['ended_at'],
-          'status':     data['status'],
+          'started_at': data['started_at'],
+          if (data.containsKey('ended_at')) 'ended_at': data['ended_at'],
+          'status': data['status'] ?? 'active',
         },
       );
-      return;
     }
 
+    // ─── Generic fallback ───────────────────────────────────────────────────
     await _db!.insert(
       'unsynced_data',
       {
@@ -123,7 +131,33 @@ class OfflineStorageService {
     );
   }
 
-  /// Delete invalid entries before syncing
+  /// Update an existing log entry
+  static Future<void> updateLogEntry(
+      String startedAt,
+      Map<String, dynamic> updates,
+      ) async {
+    if (_db == null) {
+      throw Exception('Database not initialized');
+    }
+
+    try {
+      final count = await _db!.update(
+        'patient_sensor_log',
+        updates,
+        where: 'started_at = ?',
+        whereArgs: [startedAt],
+      );
+
+      if (count == 0) {
+        debugPrint('⚠️ No rows updated for started_at: $startedAt');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to update log entry: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete invalid light entries
   static Future<void> deleteInvalidLightData() async {
     if (_db == null) return;
     await _db!.delete(
@@ -140,6 +174,53 @@ class OfflineStorageService {
       'unsynced_data',
       where: 'type = ? AND json LIKE ?',
       whereArgs: ['light', '%"light_type":"Unknown"%'],
+    );
+  }
+
+  /// Purge any rows with corrupt JSON or missing required fields
+  static Future<void> purgeInvalidUnsyncedData() async {
+    if (_db == null) return;
+
+    final rows = await _db!.query('unsynced_data', columns: ['id', 'json']);
+    for (final row in rows) {
+      final id   = row['id'] as int;
+      final json = row['json'] as String;
+      try {
+        final data = jsonDecode(json) as Map<String, dynamic>;
+        const requiredFields = [
+          'patient_id',
+          'sensor_id',
+          'timestamp',
+          'lux_level',
+          'melanopic_edi',
+          'illuminance',
+          'der',
+          'exposure_score',
+          'action_required',
+        ];
+
+        final missingOrNull = requiredFields.any((key) =>
+        !data.containsKey(key) || data[key] == null
+        );
+        if (missingOrNull) {
+          await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
+          debugPrint('🗑️ Fjernet ugyldig unsynced_data id=$id');
+        }
+      } catch (e) {
+        await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
+        debugPrint('🗑️ Fjernet corrupt JSON id=$id: $e');
+      }
+    }
+  }
+
+
+
+  static Future<List<Map<String, dynamic>>> getUnsyncedLogs() async {
+    if (_db == null) return [];
+    return await _db!.query(
+      'unsynced_data',
+      where: 'type = ? AND sync_status IS NULL',
+      whereArgs: ['patient_sensor_log'],
     );
   }
 
@@ -176,6 +257,14 @@ class OfflineStorageService {
       if (data['patient_id'].toString() == patientId.toString()) {
         yield data;
       }
+    }
+  }
+
+  /// Close database connection
+  static Future<void> close() async {
+    if (_db != null) {
+      await _db!.close();
+      _db = null;
     }
   }
 }

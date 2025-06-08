@@ -7,7 +7,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/light_classifier_service.dart';
 
-/// Service for polling the light sensor med faste intervaller.
+// Service for polling the light sensor med faste intervaller.
 class LightPollingService {
   final FlutterReactiveBle _ble;
   final QualifiedCharacteristic _char;
@@ -28,7 +28,8 @@ class LightPollingService {
     required QualifiedCharacteristic characteristic,
     required String patientId,
     required String sensorId,
-  })  : _ble = ble,
+  })
+      : _ble = ble,
         _char = characteristic,
         _patientId = patientId,
         _sensorId = sensorId;
@@ -40,10 +41,11 @@ class LightPollingService {
     if (_timer?.isActive ?? false) return;
 
     // 1) Indlæs ML-model og curves
-    _classifier       = await LightClassifier.create();
+    _classifier = await LightClassifier.create();
     _regressionMatrix = await LightClassifier.loadRegressionMatrix();
-    _melanopicCurve   = await LightClassifier.loadCurve('assets/melanopic_curve.csv');
-    _yBarCurve        = await LightClassifier.loadCurve('assets/ybar_curve.csv');
+    _melanopicCurve =
+    await LightClassifier.loadCurve('assets/melanopic_curve.csv');
+    _yBarCurve = await LightClassifier.loadCurve('assets/ybar_curve.csv');
 
     // 2) Første poll _med det samme_
     _poll();
@@ -75,7 +77,8 @@ class LightPollingService {
   Future<void> _handleData(List<int> data) async {
     // Expect 12 × 4 bytes of raw ADC data
     if (data.length < 48 || data.length % 4 != 0) {
-      print('❌ Invalid BLE data length: ${data.length} bytes - ignoring packet');
+      print(
+          '❌ Invalid BLE data length: ${data.length} bytes - ignoring packet');
       return;
     }
 
@@ -83,7 +86,9 @@ class LightPollingService {
 
     // Duplicate protection: ignore if measurement is too close to last one
     if (_lastSavedTimestamp != null &&
-        now.difference(_lastSavedTimestamp!).inSeconds < 5) {
+        now
+            .difference(_lastSavedTimestamp!)
+            .inSeconds < 5) {
       print('🛑 Ignoring duplicate measurement: ${now.toIso8601String()}');
       return;
     }
@@ -102,7 +107,8 @@ class LightPollingService {
       final typeName = _typeName(classId);
 
       if (classId < 0 || classId >= _regressionMatrix.length) {
-        throw Exception('❌ Invalid classId: $classId - out of bounds for regressionMatrix');
+        throw Exception(
+            '❌ Invalid classId: $classId - out of bounds for regressionMatrix');
       }
 
       final weights = _regressionMatrix[classId];
@@ -135,7 +141,8 @@ class LightPollingService {
       // Calculate exposure score and required action
       final exposureScore = _calculateExposureScore(melanopicEdi, now);
       final actionRequired = _getActionRequired(exposureScore, now);
-      final actionCode = (actionRequired == "increase") ? 1 : (actionRequired == "decrease") ? 2 : 0;
+      final actionCode = (actionRequired == "increase") ? 1 : (actionRequired ==
+          "decrease") ? 2 : 0;
 
       final payload = {
         'timestamp': now.toIso8601String(),
@@ -154,8 +161,10 @@ class LightPollingService {
 
       print('📊 Light data:');
       print('🧠 ClassId: $classId ($typeName)');
-      print('📈 EDI: ${melanopicEdi.toStringAsFixed(1)}, Lux: ${illuminance.toStringAsFixed(1)}, DER: ${der.toStringAsFixed(4)}');
-      print('📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, action: $actionRequired');
+      print('📈 EDI: ${melanopicEdi.toStringAsFixed(1)}, Lux: ${illuminance
+          .toStringAsFixed(1)}, DER: ${der.toStringAsFixed(4)}');
+      print('📈 Exposure: ${exposureScore.toStringAsFixed(
+          1)}%, action: $actionRequired');
 
       await OfflineStorageService.saveLocally(type: 'light', data: payload);
       print('▶️ Light data saved at ${now.toIso8601String()}');
@@ -183,7 +192,8 @@ class LightPollingService {
       return result;
     } else {
       final result = exposureScore > 20 ? "decrease" : "none";
-      print("🌙 Time: $hour, Exposure: $exposureScore% → Action: $result (NIGHT)");
+      print(
+          "🌙 Time: $hour, Exposure: $exposureScore% → Action: $result (NIGHT)");
       return result;
     }
   }

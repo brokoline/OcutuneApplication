@@ -9,6 +9,7 @@ import 'package:ocutune_light_logger/screens/customer/customer_root_controller.d
 import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/services/sensor_log_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:ocutune_light_logger/services/services/foreground_service_handler.dart';
@@ -64,6 +65,8 @@ void startCallback() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await OfflineStorageService.init();
+  await SensorLogService.init();
+
 
   // Kun ét sted: self-signed certs
   if (!kReleaseMode) {
