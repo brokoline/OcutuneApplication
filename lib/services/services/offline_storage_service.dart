@@ -194,4 +194,33 @@ class OfflineStorageService {
     if (_db == null) return;
     await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
   }
+
+  static Stream<Map<String, dynamic>> streamRecords({
+    required String type,
+    required int patientId,
+  }) async* {
+    if (_db == null) {
+      yield* const Stream.empty();
+      return;
+    }
+
+    // Slå alle light-poster op for netop denne patient
+    final rows = await _db!.query(
+      'unsynced_data',
+      columns: ['json'],
+      where: 'type = ?',
+      whereArgs: [type],
+      orderBy: 'created_at ASC',
+    );
+
+    for (final row in rows) {
+      // json-feltet indeholder hele data-objektet som streng
+      final data = jsonDecode(row['json'] as String) as Map<String, dynamic>;
+      // filtrér på patient_id
+      if (data['patient_id'].toString() == patientId.toString()) {
+        yield data;
+      }
+
+    }
+  }
 }

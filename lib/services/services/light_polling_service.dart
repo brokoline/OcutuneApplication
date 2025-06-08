@@ -1,3 +1,5 @@
+// lib/services/services/light_polling_service.dart
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -17,26 +19,26 @@ class LightPollingService {
   bool _isPolling = false;
   DateTime? _lastSavedTimestamp;
 
-  LightClassifier?        _classifier;
-  List<List<double>>?      _regressionMatrix;
-  List<double>?            _melanopicCurve;
-  List<double>?            _yBarCurve;
+  LightClassifier?   _classifier;
+  List<List<double>>? _regressionMatrix;
+  List<double>?       _melanopicCurve;
+  List<double>?       _yBarCurve;
 
   LightPollingService({
     required FlutterReactiveBle ble,
     required QualifiedCharacteristic characteristic,
     required String patientId,
     required String sensorId,
-  })  : _ble        = ble,
-        _char       = characteristic,
-        _patientId  = patientId,
-        _sensorId   = sensorId;
+  })  : _ble       = ble,
+        _char      = characteristic,
+        _patientId = patientId,
+        _sensorId  = sensorId;
 
-  /// Kald denne én gang fra BleController efter connect
+  /// Start polling. Kør én gang efter du har konnectet.
   Future<void> start({Duration interval = const Duration(seconds: 10)}) async {
     if (_timer?.isActive ?? false) return;
 
-    // Hent ML-modellen og kurver én gang
+    // Load ML-model og kurver én gang
     _classifier       ??= await LightClassifier.create();
     _regressionMatrix ??= await LightClassifier.loadRegressionMatrix();
     _melanopicCurve   ??= await LightClassifier.loadCurve('assets/melanopic_curve.csv');
@@ -65,9 +67,11 @@ class LightPollingService {
   }
 
   Future<void> _handleData(List<int> data) async {
+    // Vi forventer præcis 12 × 4 bytes
     if (data.length < 48 || data.length % 4 != 0) return;
 
     final now = DateTime.now();
+    // Undgå dubletter
     if (_lastSavedTimestamp != null &&
         now.difference(_lastSavedTimestamp!).inSeconds < 5) {
       return;
@@ -75,32 +79,58 @@ class LightPollingService {
     _lastSavedTimestamp = now;
 
     try {
-      final bytes = ByteData.sublistView(Uint8List.fromList(data));
-      final values = List.generate(12, (i) => bytes.getInt32(i * 4, Endian.little));
-      final raw    = values.sublist(0, 8).map((e) => e.toDouble()).toList();
+      // 1) Decode rå ADC-værdier
+      final bytes  = ByteData.sublistView(Uint8List.fromList(data));
+      final values = List.generate(
+        12,
+            (i) => bytes.getInt32(i * 4, Endian.little),
+      );
+      final rawInput = values.sublist(0, 8).map((e) => e.toDouble()).toList();
 
-      final classId = _classifier!.classify(raw);
+      // 2) Klassificér lys-type og hent de regressions-vægte
+      final classId = _classifier!.classify(rawInput);
       final weights = _regressionMatrix![classId];
-      final spectrum   = LightClassifier.reconstructSpectrum(raw, weights, normalizationFactor: 1/1000.0);
-      final melanopic  = LightClassifier.calculateMelanopicEDI(spectrum, _melanopicCurve!);
-      final specLux    = LightClassifier.reconstructSpectrum(raw, weights, normalizationFactor: 1/1000000.0);
-      final illuminance= LightClassifier.calculateIlluminance(specLux, _yBarCurve!);
-      final der        = melanopic / (illuminance > 0 ? illuminance : 1.0);
-      final score      = _calcScore(melanopic, now);
-      final action     = _calcAction(score, now);
 
+      // 3) 🔹 Brug 1/1000.0 til melanopic-beregning
+      final spectrum = LightClassifier.reconstructSpectrum(
+        rawInput,
+        weights,
+        normalizationFactor: 1 / 1000.0,
+      );
+      final melanopic = LightClassifier.calculateMelanopicEDI(
+        spectrum,
+        _melanopicCurve!,
+      );
+
+      // 4) 🔹 Brug 1/1_000_000.0 til illuminance-beregning
+      final spectrumLux = LightClassifier.reconstructSpectrum(
+        rawInput,
+        weights,
+        normalizationFactor: 1 / 1000000.0,
+      );
+      final illuminance = LightClassifier.calculateIlluminance(
+        spectrumLux,
+        _yBarCurve!,
+      );
+
+      // 5) Beregn DER, score og action
+      final der    = melanopic / (illuminance > 0 ? illuminance : 1.0);
+      final score  = _calcScore(melanopic, now);
+      final action = _calcAction(score, now);
+
+      // 6) Sammensæt payload
       final payload = {
-        "timestamp": now.toIso8601String(),
-        "patient_id": _patientId,
-        "sensor_id": _sensorId,
-        "light_type": classId,
+        "timestamp":       now.toIso8601String(),
+        "patient_id":      _patientId,
+        "sensor_id":       _sensorId,
+        "light_type":      classId,
         "light_type_name": _typeName(classId),
-        "lux_level": illuminance.round(),
-        "melanopic_edi": melanopic,
-        "der": der,
-        "illuminance": illuminance,
-        "spectrum": spectrum,
-        "exposure_score": score,
+        "lux_level":       illuminance.round(),
+        "melanopic_edi":   melanopic,
+        "der":             der,
+        "illuminance":     illuminance,
+        "spectrum":        spectrum,     // det 400-punkt spektrum for EDI
+        "exposure_score":  score,
         "action_required": action,
       };
 
@@ -113,13 +143,13 @@ class LightPollingService {
 
   double _calcScore(double melanopic, DateTime now) {
     final h = now.hour;
-    if (h >= 7 && h < 19) return (melanopic / 150).clamp(0,1) * 100;
-    if (h < 24)             return (melanopic /  50).clamp(0,1) * 100;
-    return                   (melanopic /  30).clamp(0,1) * 100;
+    if (h >= 7 && h < 19) return (melanopic / 150).clamp(0.0, 1.0) * 100;
+    if (h < 24)             return (melanopic /  50).clamp(0.0, 1.0) * 100;
+    return                   (melanopic /  30).clamp(0.0, 1.0) * 100;
   }
 
   int _calcAction(double score, DateTime now) {
-    final frac = now.hour + now.minute/60.0;
+    final frac = now.hour + now.minute / 60.0;
     if (frac >= 7 && frac < 19) return score < 80 ? 1 : 0;
     return score > 20 ? 2 : 0;
   }

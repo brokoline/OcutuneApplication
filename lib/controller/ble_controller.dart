@@ -33,6 +33,7 @@ class BleController {
 
   BatteryPollingService? _batteryService;
   LightPollingService?   _lightService;
+  LightPollingService? get lightService => _lightService;
 
   // Begynd at lytte på Bluetooth‐status (tændt/slukket)
   void monitorBluetoothState() {
