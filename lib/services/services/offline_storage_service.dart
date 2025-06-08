@@ -5,6 +5,7 @@ import 'package:path/path.dart';
 class OfflineStorageService {
   static Database? _db;
 
+  /// Initialize the local SQLite database
   static Future<void> init() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ocutune_offline.db');
@@ -50,6 +51,7 @@ class OfflineStorageService {
     );
   }
 
+  /// Save a data payload locally in the unsynced queue
   static Future<void> saveLocally({
     required String type,
     required Map<String, dynamic> data,
@@ -57,8 +59,8 @@ class OfflineStorageService {
     if (_db == null) return;
 
     if (type == 'light') {
-      final dynamic patientId = data['patient_id'];
-      final dynamic sensorId = data['sensor_id'];
+      final patientId = data['patient_id'];
+      final sensorId = data['sensor_id'];
 
       print("💡 Kontrollér patientId/sensorId i saveLocally: $patientId / $sensorId");
 
@@ -73,30 +75,24 @@ class OfflineStorageService {
         return;
       }
 
-      // Konverter spectrum til double[]
+      // Ensure proper types
       data['spectrum'] = spectrum.map((e) => (e as num).toDouble()).toList();
-
-      // fallback værdier hvis nødvendigt
-      data['light_type'] = data['light_type'] ?? 'Unknown';
+      data['light_type']      = data['light_type']      ?? 'Unknown';
       data['action_required'] = data['action_required'] ?? 0;
-      data['timestamp'] = data['timestamp'] ?? DateTime.now().toIso8601String();
+      data['timestamp']       = data['timestamp']       ?? DateTime.now().toIso8601String();
 
-      // Dublet-tjek baseret på patient_id, sensor_id og timestamp
+      // Duplicate check based on timestamp
       final timestamp = data['timestamp'];
       final jsonLike = '%"timestamp":"$timestamp"%';
-
       final existing = await _db!.query(
         'unsynced_data',
         where: 'type = ? AND json LIKE ?',
         whereArgs: ['light', jsonLike],
       );
-
       final alreadyExists = existing.any((row) {
         final decoded = jsonDecode(row['json'] as String);
-        return decoded['patient_id'] == patientId &&
-            decoded['sensor_id'] == sensorId;
+        return decoded['patient_id'] == patientId && decoded['sensor_id'] == sensorId;
       });
-
       if (alreadyExists) {
         print("⚠️ Dublet fundet – data ikke gemt for timestamp $timestamp");
         return;
@@ -104,17 +100,19 @@ class OfflineStorageService {
     }
 
     if (type == 'sensor_log') {
-      await _db!.insert('patient_sensor_log', {
-        'sensor_id': data['sensor_id'],
-        'patient_id': data['patient_id'],
-        'started_at': data['timestamp'],
-        'ended_at': data['ended_at'],
-        'status': data['status'],
-      });
+      await _db!.insert(
+        'patient_sensor_log',
+        {
+          'sensor_id':  data['sensor_id'],
+          'patient_id': data['patient_id'],
+          'started_at': data['timestamp'],
+          'ended_at':   data['ended_at'],
+          'status':     data['status'],
+        },
+      );
       return;
     }
 
-    // 👇 Til sidst, indsæt i offline tabellen
     await _db!.insert(
       'unsynced_data',
       {
@@ -125,76 +123,39 @@ class OfflineStorageService {
     );
   }
 
-  static Future<void> deleteInvalidSensorData() async {
-    if (_db == null) return;
-
-    // Fjern alle unsynced_data hvor JSON indeholder sensor_id = -1
-    await _db!.delete(
-      'unsynced_data',
-      where: 'json LIKE ?',
-      whereArgs: ['%"sensor_id":-1%'],
-    );
-
-    // Fjern alle unsynced_data hvor JSON indeholder sensor_id = null
-    await _db!.delete(
-      'unsynced_data',
-      where: 'json LIKE ?',
-      whereArgs: ['%"sensor_id":null%'],
-    );
-
-    // Fjern alle 'light'-poster der slet ikke indeholder "sensor_id" i JSON
-    await _db!.delete(
-      'unsynced_data',
-      where: 'type = ? AND json NOT LIKE ?',
-      whereArgs: ['light', '%"sensor_id"%'],
-    );
-  }
-
-  static Future<void> deleteInvalidBatteryData() async {
-    if (_db == null) return;
-
-    // Slet poster hvor type = 'battery' og sensor_id = -1
-    await _db!.delete(
-      'unsynced_data',
-      where: 'type = ? AND json LIKE ?',
-      whereArgs: ['battery', '%"sensor_id":-1%'],
-    );
-
-    // Slet poster hvor type = 'battery' og sensor_id = null
-    await _db!.delete(
-      'unsynced_data',
-      where: 'type = ? AND json LIKE ?',
-      whereArgs: ['battery', '%"sensor_id":null%'],
-    );
-
-    // Slet poster hvor type = 'battery' og JSON ikke indeholder "sensor_id"
-    await _db!.delete(
-      'unsynced_data',
-      where: 'type = ? AND json NOT LIKE ?',
-      whereArgs: ['battery', '%"sensor_id"%'],
-    );
-  }
-
+  /// Delete invalid entries before syncing
   static Future<void> deleteInvalidLightData() async {
     if (_db == null) return;
-
     await _db!.delete(
       'unsynced_data',
       where: 'type = ? AND json LIKE ?',
-      whereArgs: ['light', '%"patient_id":-1%'],
+      whereArgs: ['light', '%"lux_level":null%'],
+    );
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['light', '%"illuminance":null%'],
+    );
+    await _db!.delete(
+      'unsynced_data',
+      where: 'type = ? AND json LIKE ?',
+      whereArgs: ['light', '%"light_type":"Unknown"%'],
     );
   }
 
+  /// Fetch all unsynced entries in order
   static Future<List<Map<String, dynamic>>> getUnsyncedData() async {
     if (_db == null) return [];
     return await _db!.query('unsynced_data', orderBy: 'created_at ASC');
   }
 
+  /// Delete a single entry by its ID
   static Future<void> deleteById(int id) async {
     if (_db == null) return;
     await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
   }
 
+  /// Stream unsynced records of a specific type for a patient
   static Stream<Map<String, dynamic>> streamRecords({
     required String type,
     required int patientId,
@@ -203,8 +164,6 @@ class OfflineStorageService {
       yield* const Stream.empty();
       return;
     }
-
-    // Slå alle light-poster op for netop denne patient
     final rows = await _db!.query(
       'unsynced_data',
       columns: ['json'],
@@ -212,15 +171,11 @@ class OfflineStorageService {
       whereArgs: [type],
       orderBy: 'created_at ASC',
     );
-
     for (final row in rows) {
-      // json-feltet indeholder hele data-objektet som streng
       final data = jsonDecode(row['json'] as String) as Map<String, dynamic>;
-      // filtrér på patient_id
       if (data['patient_id'].toString() == patientId.toString()) {
         yield data;
       }
-
     }
   }
 }

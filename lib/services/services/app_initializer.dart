@@ -17,19 +17,11 @@ class AppInitializer {
       await OfflineStorageService.init();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // 3) Rens “light”‐tabellen for poster uden gyldigt sensor_id
-      await OfflineStorageService.deleteInvalidSensorData();
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // 4) Rens “batteri”‐tabellen for poster uden gyldigt sensor_id eller patient_id
-      await OfflineStorageService.deleteInvalidBatteryData();
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      // 5) Synkroniser alle resterende usynkroniserede data (både batteri og light)
+      // 3) Synkroniser alle resterende usynkroniserede data (både batteri og light)
       await SyncUseCase.syncAll();
       await Future.delayed(const Duration(milliseconds: 50));
 
-      // 6) Start periodisk baggrunds‐scheduler
+      // 4) Start periodisk baggrunds‐scheduler
       SyncScheduler.start(interval: const Duration(minutes: 10));
 
       // 7) Start netværks‐listener
