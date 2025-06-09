@@ -2,9 +2,9 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/sync_use_case.dart';
+//import 'package:ocutune_light_logger/services/sync_use_case.dart';
 import 'package:ocutune_light_logger/services/services/network_listener_service.dart';
-import 'package:ocutune_light_logger/services/sync_scheduler.dart';
+//import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 
 class AppInitializer {
   static Future<void> initialize() async {
@@ -18,11 +18,11 @@ class AppInitializer {
       await Future.delayed(const Duration(milliseconds: 50));
 
       // 3) Synkroniser alle resterende usynkroniserede data (både batteri og light)
-      await SyncUseCase.syncAll();
+      //await SyncUseCase.syncAll();
       await Future.delayed(const Duration(milliseconds: 50));
 
       // 4) Start periodisk baggrunds‐scheduler
-      SyncScheduler.start(interval: const Duration(minutes: 10));
+      //SyncScheduler.start(interval: const Duration(minutes: 10));
 
       // 7) Start netværks‐listener
       NetworkListenerService.start();

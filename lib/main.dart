@@ -11,7 +11,8 @@ import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_sc
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/sensor_log_service.dart';
-import 'package:ocutune_light_logger/services/sync_use_case.dart';
+//import 'package:ocutune_light_logger/services/sync_scheduler.dart';
+//import 'package:ocutune_light_logger/services/sync_use_case.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:ocutune_light_logger/services/services/foreground_service_handler.dart';
@@ -71,18 +72,18 @@ Future<void> main() async {
   await OfflineStorageService.init();
   await SensorLogService.init();
 
-  // 2) Start lytning på netværks­ændringer for at trigge sync
-  Connectivity().onConnectivityChanged.listen((status) {
-    if (status != ConnectivityResult.none) {
-      // Når netværket er tilbage, synkronisér alle offline‐data
-      // Her kan du også kalde SyncUseCase.syncAll() hvis du foretrækker det
-      //OfflineStorageService.syncPendingLightData();
-      // eller:
-      // SyncUseCase.syncAll();
-    }
-  });
+  // 2) Start sync‐scheduler med 30s interval
+  //SyncScheduler.start(interval: const Duration(minutes: 10));
 
-  // 3) Certs og UI‐opsætning
+  // 3) Lyt på netværksændringer for at trigge en ekstra sync
+  //Connectivity().onConnectivityChanged.listen((status) {
+  // if (status != ConnectivityResult.none) {
+  //    // syncAll vil forsøge alle typer data (light, battery, etc.)
+  //    SyncUseCase.syncAll();
+  //  }
+  //);
+
+  // 4) Certs og UI‐opsætning
   if (!kReleaseMode) {
     HttpOverrides.global = MyHttpOverrides();
   }
@@ -96,7 +97,7 @@ Future<void> main() async {
     child: Text('🚨 FEJL: ${details.exception}', style: const TextStyle(color: Colors.red)),
   );
 
-  // 4) Foreground‐service init
+  // 5) Foreground‐service init
   FlutterForegroundTask.initCommunicationPort();
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
@@ -123,12 +124,13 @@ Future<void> main() async {
     ),
   );
 
-  // 5) Øvrig app‐init
+  // 6) Øvrig app‐init
   await AppInitializer.initialize();
 
-  // 6) Kør selve app’en
+  // 7) Kør selve app’en
   runApp(const OcutuneApp());
 }
+
 /// Én samlet HttpOverrides, der giver self-signed certs
 /// og logger alle GET/POST/opener-chatter.
 class MyHttpOverrides extends HttpOverrides {

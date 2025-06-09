@@ -7,19 +7,21 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
 import '../auth_storage.dart';
 import '../services/api_services.dart';
+import '../sync_use_case.dart';
 import 'battery_polling_service.dart';
 import 'light_polling_service.dart';
 
 @pragma('vm:entry-point')
 class OcutuneForegroundHandler extends TaskHandler {
-  late final FlutterReactiveBle    _ble;
+  late final FlutterReactiveBle _ble;
   late final QualifiedCharacteristic _lightChar;
   late final QualifiedCharacteristic _batteryChar;
 
   late final BatteryPollingService _batteryService;
-  late final LightPollingService   _lightService;
+  late final LightPollingService _lightService;
 
   DateTime _lastBatteryTime = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastSyncTime    = DateTime.fromMillisecondsSinceEpoch(0);
 
   /// Kører én gang, når servicen starter
   @override
@@ -30,6 +32,7 @@ class OcutuneForegroundHandler extends TaskHandler {
     final patientId = (await AuthStorage.getUserId())!;
     final jwt       = (await AuthStorage.getToken())!;
 
+    // Definér dine karakteristika
     _lightChar = QualifiedCharacteristic(
       deviceId:         deviceId,
       serviceId:        Uuid.parse('0000181b-0000-1000-8000-00805f9b34fb'),
@@ -43,11 +46,12 @@ class OcutuneForegroundHandler extends TaskHandler {
 
     // Hold GATT-link åbent
     _ble.connectToDevice(id: deviceId).listen((upd) {
-      debugPrint('🔗 BG-service state=${upd.connectionState}');
+      debugPrint('🔗 BG-service BLE state=${upd.connectionState}');
     }, onError: (e) {
-      debugPrint('⚠️ BG-connect error: $e');
+      debugPrint('⚠️ BG-service BLE-error: $e');
     });
 
+    // Opret polling-services
     _batteryService = BatteryPollingService(ble: _ble, deviceId: deviceId);
     _lightService   = LightPollingService(
       ble:            _ble,
@@ -61,9 +65,10 @@ class OcutuneForegroundHandler extends TaskHandler {
           .toString(),
     );
 
-    // første batterimåling starter efter 5 min
+    // Initialiser tidsstempler
     _lastBatteryTime = timestamp;
-    debugPrint('🔔 BG-service startet');
+    _lastSyncTime    = timestamp;
+    debugPrint('🔔 BG-service startet ved $timestamp');
   }
 
   /// Kører hver gang interval (10 s) udløses
@@ -88,14 +93,27 @@ class OcutuneForegroundHandler extends TaskHandler {
       }
       _lastBatteryTime = timestamp;
     }
+
+    // --- Synk offline-data hver 10 min ---
+    if (timestamp.difference(_lastSyncTime) >= const Duration(minutes: 10)) {
+      try {
+        debugPrint('⏳ Starter syncAll ved $timestamp');
+        await SyncUseCase.syncAll();
+        debugPrint('✅ syncAll færdig ved $timestamp');
+      } catch (e) {
+        debugPrint('⚠️ BG-sync error: $e');
+      }
+      _lastSyncTime = timestamp;
+    }
   }
 
   /// Kører når servicen stoppes
   @override
   Future<void> onDestroy(DateTime timestamp) async {
-    debugPrint('🛑 BG-service stoppet');
+    debugPrint('🛑 BG-service stoppet ved $timestamp');
   }
 
+  @override
   void onButtonPressed(String id) {}
 
   @override
