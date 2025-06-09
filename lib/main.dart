@@ -1,7 +1,6 @@
 // lib/main.dart
 
 import 'dart:io';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,8 +11,6 @@ import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/sensor_log_service.dart';
 import 'package:ocutune_light_logger/services/sync_scheduler.dart';
-//import 'package:ocutune_light_logger/services/sync_scheduler.dart';
-//import 'package:ocutune_light_logger/services/sync_use_case.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:ocutune_light_logger/services/services/foreground_service_handler.dart';
