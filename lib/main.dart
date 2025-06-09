@@ -11,6 +11,7 @@ import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_sc
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/sensor_log_service.dart';
+import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 //import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 //import 'package:ocutune_light_logger/services/sync_use_case.dart';
 import 'package:provider/provider.dart';
@@ -73,7 +74,7 @@ Future<void> main() async {
   await SensorLogService.init();
 
   // 2) Start sync‐scheduler med 30s interval
-  //SyncScheduler.start(interval: const Duration(minutes: 10));
+  SyncScheduler.start(interval: const Duration(minutes: 10));
 
   // 3) Lyt på netværksændringer for at trigge en ekstra sync
   //Connectivity().onConnectivityChanged.listen((status) {
