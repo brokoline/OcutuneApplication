@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:synchronized/synchronized.dart';
 
 import '../services/auth_storage.dart';
 import '../services/services/api_services.dart';
@@ -10,12 +11,23 @@ import '../services/services/light_polling_service.dart';
 
 class BleController {
   // Singleton‐instans
+  final _bleLock = Lock();
+
+
   static final BleController _instance = BleController._internal();
   factory BleController() => _instance;
   BleController._internal();
 
   // Underliggende BLE‐instans
   final FlutterReactiveBle _ble = FlutterReactiveBle();
+
+  Future<List<int>> safeReadCharacteristic(
+      QualifiedCharacteristic characteristic,
+      ) {
+    return _bleLock.synchronized(
+          () => _ble.readCharacteristic(characteristic),
+    );
+  }
 
   // Scan‐ og connection‐subscriptions
   StreamSubscription<DiscoveredDevice>?       _scanStream;

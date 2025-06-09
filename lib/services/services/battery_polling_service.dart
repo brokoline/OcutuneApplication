@@ -42,7 +42,7 @@ class BatteryPollingService {
         serviceId: Uuid.parse('180F'),
         characteristicId: Uuid.parse('2A19'),
       );
-      final data = await ble.readCharacteristic(char);
+      final data = await BleController().safeReadCharacteristic(char);
       final level = data.isNotEmpty ? data[0] : 0;
       BleController.batteryNotifier.value = level;
 
