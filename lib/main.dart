@@ -1,6 +1,7 @@
 // lib/main.dart
 
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_sc
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/services/sensor_log_service.dart';
+import 'package:ocutune_light_logger/services/sync_use_case.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:ocutune_light_logger/services/services/foreground_service_handler.dart';
@@ -62,65 +64,71 @@ void startCallback() {
   FlutterForegroundTask.setTaskHandler(OcutuneForegroundHandler());
 }
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 1) Init lokal SQLite‐buffer for offline data
   await OfflineStorageService.init();
   await SensorLogService.init();
 
+  // 2) Start lytning på netværks­ændringer for at trigge sync
+  Connectivity().onConnectivityChanged.listen((status) {
+    if (status != ConnectivityResult.none) {
+      // Når netværket er tilbage, synkronisér alle offline‐data
+      // Her kan du også kalde SyncUseCase.syncAll() hvis du foretrækker det
+      //OfflineStorageService.syncPendingLightData();
+      // eller:
+      // SyncUseCase.syncAll();
+    }
+  });
 
-  // Kun ét sted: self-signed certs
+  // 3) Certs og UI‐opsætning
   if (!kReleaseMode) {
     HttpOverrides.global = MyHttpOverrides();
   }
-
-  // Kun ét sted: statusbar + ErrorWidget
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Color(0xFF4C4C4C),
       statusBarIconBrightness: Brightness.light,
     ),
   );
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Center(
-      child: Text(
-        '🚨 FEJL: ${details.exception}',
-        style: const TextStyle(color: Colors.red),
-        textAlign: TextAlign.center,
-      ),
-    );
-  };
+  ErrorWidget.builder = (details) => Center(
+    child: Text('🚨 FEJL: ${details.exception}', style: const TextStyle(color: Colors.red)),
+  );
 
-  // ─── Foreground-service init ────────────────────────────────────────────
+  // 4) Foreground‐service init
   FlutterForegroundTask.initCommunicationPort();
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
-      channelId:          'ocutune_channel',
-      channelName:        'Ocutune Baggrunds-Service',
-      channelDescription: 'Holder BLE-logging kørende i baggrunden',
-      channelImportance:  NotificationChannelImportance.LOW,
-      priority:           NotificationPriority.LOW,
-      enableVibration:    false,
-      playSound:          false,
-      showWhen:           true,
-      visibility:         NotificationVisibility.VISIBILITY_PUBLIC,
+      channelId: 'ocutune_channel',
+      channelName: 'Ocutune Baggrunds-Service',
+      channelDescription: 'Logger i baggrunden',
+      channelImportance: NotificationChannelImportance.LOW,
+      priority: NotificationPriority.LOW,
+      enableVibration: false,
+      playSound: false,
+      showWhen: true,
+      visibility: NotificationVisibility.VISIBILITY_PUBLIC,
     ),
     iosNotificationOptions: const IOSNotificationOptions(
       showNotification: true,
-      playSound:       false,
+      playSound: false,
     ),
     foregroundTaskOptions: const ForegroundTaskOptions(
-      interval:      10000,
-      isOnceEvent:   false,
+      interval: 10000,
+      isOnceEvent: false,
       autoRunOnBoot: false,
       allowWakeLock: true,
       allowWifiLock: true,
     ),
   );
 
+  // 5) Øvrig app‐init
   await AppInitializer.initialize();
+
+  // 6) Kør selve app’en
   runApp(const OcutuneApp());
 }
-
 /// Én samlet HttpOverrides, der giver self-signed certs
 /// og logger alle GET/POST/opener-chatter.
 class MyHttpOverrides extends HttpOverrides {

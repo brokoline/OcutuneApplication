@@ -36,9 +36,12 @@ class LightPollingService {
         _patientId = patientId,
         _sensorId  = sensorId;
 
-  /// Starter et første _poll()_ med lidt jitter, og herefter helt præcist hvert [interval].
+  /// Starter et første _poll()_ med lidt jitter, og herefter præcist hvert [interval].
   Future<void> start({ Duration interval = const Duration(seconds: 10) }) async {
     if (_timer?.isActive ?? false) return;
+
+    // Sync gamle, pending poster til backend inden vi går i gang
+    //await OfflineStorageService.syncPendingLightData();
 
     // 1) Indlæs ML-model og kurver
     _classifier       = await LightClassifier.create();
@@ -130,7 +133,7 @@ class LightPollingService {
       final actionCode = actionRequired == 'increase'
           ? 1 : actionRequired == 'decrease' ? 2 : 0;
 
-      // Byg payload og gem lokalt
+      // Byg payload og gem lokalt (flagges som pending upload)
       final payload = {
         'timestamp'      : now.toIso8601String(),
         'patient_id'     : _patientId,
@@ -153,7 +156,10 @@ class LightPollingService {
           'DER: ${der.toStringAsFixed(4)}');
       print('📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, '
           'action: $actionRequired');
+
+      // Gem til senere upload (eller send nu, hvis on-line)
       await OfflineStorageService.saveLocally(type: 'light', data: payload);
+
       print('▶️ Light data saved at ${now.toIso8601String()}');
     } catch (e) {
       print('❌ Error handling light data: $e');
@@ -193,7 +199,7 @@ class LightPollingService {
     }
   }
 
-  /// Ekstern adgang, hvis du vil genbruge _handleData fra UI
+  // Ekstern adgang, hvis du vil genbruge håndtering af data fra UI
   Future<void> handleData(List<int> data) async {
     await _handleData(data);
   }
