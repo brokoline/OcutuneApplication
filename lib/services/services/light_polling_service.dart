@@ -42,6 +42,7 @@ class LightPollingService {
 
     // Sync gamle, pending poster til backend inden vi går i gang
     //await OfflineStorageService.syncPendingLightData();
+    //await OfflineStorageService.syncPendingLightData();
 
     // 1) Indlæs ML-model og kurver
     _classifier       = await LightClassifier.create();

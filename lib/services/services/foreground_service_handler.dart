@@ -65,7 +65,7 @@ class OcutuneForegroundHandler extends TaskHandler {
     );
 
     // 5) Start polling-services
-    _batteryService = BatteryPollingService(ble: _ble, deviceId: deviceId);
+    _batteryService = BatteryPollingService(ble: _ble, deviceId: deviceId, sensorId: sensorId);
     await _batteryService.start();
 
     _lightPollingInit(patientId, sensorId);

@@ -11,27 +11,31 @@ import 'battery_service.dart';
 class BatteryPollingService {
   final FlutterReactiveBle ble;
   final String deviceId;
+  final String sensorId;
   Timer? _timer;
 
   BatteryPollingService({
     required this.ble,
     required this.deviceId,
+    required this.sensorId,
   });
 
-  /// Starter polling: første læsning efter 20s, derefter hvert 5. minut.
+  /// Starter polling: første læsning efter 15s, derefter hvert 5. minut.
   Future<void> start() async {
     // Første upload efter 20 sekunder
-    Future.delayed(const Duration(seconds: 20), _readAndProcess);
+    Future.delayed(const Duration(seconds: 15), () async {
+      await _readAndProcess();
 
-    // Herefter hvert 5. minut
-    _timer = Timer.periodic(
-      const Duration(minutes: 5),
-          (_) => _readAndProcess(),
-    );
+      // Herefter præcis hvert 5. minut (forskellen til _lastSent er ≥5 min)
+      _timer = Timer.periodic(
+        const Duration(minutes: 5),
+            (_) => _readAndProcess(),
+      );
+    });
   }
 
   /// Stop polling
-  void stop() {
+  Future<void> stop() async {
     _timer?.cancel();
     _timer = null;
   }
@@ -53,26 +57,6 @@ class BatteryPollingService {
       final patientId = await AuthStorage.getUserId();
       if (jwt == null || patientId == null) {
         print("❌ Mangler JWT eller patientId – gemmer alligevel lokalt");
-        await OfflineStorageService.saveLocally(
-          type: 'battery',
-          data: {
-            'patient_id': patientId,
-            'device_serial': deviceId,
-            'battery_level': level,
-            'timestamp': DateTime.now().toIso8601String(),
-          },
-        );
-        return;
-      }
-
-      // Registrér sensor for at få sensor_id
-      final sensorId = await ApiService.registerSensorUse(
-        patientId: patientId,
-        deviceSerial: deviceId,
-        jwt: jwt,
-      );
-      if (sensorId == null) {
-        print("❌ Sensor-registrering mislykkedes – gemmer offline");
         await OfflineStorageService.saveLocally(
           type: 'battery',
           data: {
