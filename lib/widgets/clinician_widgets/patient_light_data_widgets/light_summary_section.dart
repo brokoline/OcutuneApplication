@@ -119,6 +119,9 @@ class LightSummarySection extends StatelessWidget {
         LightScoreCard(
           rmeqScore: rmeqScore,
           meqScore: meqScore ?? 0,
+          patientId: patientId,
+
+
         ),
         SizedBox(height: 24.h),
 

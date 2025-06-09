@@ -1,83 +1,87 @@
-import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
+// lib/controllers/light_data_controller.dart
 
-import '../../models/light_data_model.dart';
-import '../../services/services/api_services.dart';
+import 'dart:async';
 
-class LightDataController with ChangeNotifier {
-  List<LightData> _data = [];
-  bool _loading = false;
-  String? _error;
 
-  List<LightData> get data => _data;
-  bool get isLoading => _loading;
-  String? get error => _error;
+import '../services/processing/recommendation_calculator.dart';
+import '../services/services/api_services.dart';
+import '../utils/light_utils.dart';
 
-  Future<void> fetch(String patientId) async {
-    _loading = true;
-    notifyListeners();
+/// Controller der henter lysdata, beregner CDF‐perioder og udsender et snapshot.
+class LightDataController {
+  final String patientId;
+  final int    rmeqScore;      // Husk nu at give rMEQ‐scoren ind
+  final _rc = RecommendationCalculator();
 
-    try {
-      final raw = await ApiService.getPatientLightData(patientId);
-      _data = raw.map((e) => LightData.fromJson(e)).toList();
-      _error = null;
-    } catch (e) {
-      _error = e.toString();
-      _data = [];
-    }
+  final StreamController<LightDataSnapshot> _snapController =
+  StreamController<LightDataSnapshot>.broadcast();
+  Stream<LightDataSnapshot> get snapshotStream => _snapController.stream;
 
-    _loading = false;
-    notifyListeners();
+  Timer? _timer;
+
+  LightDataController({
+    required this.patientId,
+    required this.rmeqScore,
+  }) {
+    _fetchAndEmit();
+    _timer = Timer.periodic(Duration(minutes: 5), (_) => _fetchAndEmit());
   }
 
-  void setData(List<LightData> newList) {
-    _data = newList;
-    notifyListeners();
+  Future<void> _fetchAndEmit() async {
+    // 1) Hent rå data fra API
+    final data = await ApiService.fetchDailyLightData(patientId: patientId);
+
+    // 2) Filtrer til i dag
+    final now   = DateTime.now();
+    final today = data.where((d) =>
+    d.capturedAt.toLocal().year  == now.year  &&
+        d.capturedAt.toLocal().month == now.month &&
+        d.capturedAt.toLocal().day   == now.day
+    ).toList();
+
+    // 3) Dag‐bucketing
+    final hourlyLux = LightUtils.groupByHourOfDay(today);
+
+    // 4) CDF‐beregninger
+    final meq        = _rc.convertToMEQ(rmeqScore);
+    final dlmo       = _rc.approxDLMO(meq);
+    final tau        = _rc.approxTau(meq);
+    final boostStart = _rc.phaseShift(tau, dlmo);
+    final boostEnd   = boostStart + 1.5;   // f.eks. 1½ times boost
+    final sleepStart = dlmo + 2;           // f.eks. 2 timer efter DLMO
+    final sleepEnd   = sleepStart + 8;     // 8 timers søvn
+
+    // 5) Udlad snapshot
+    _snapController.add(LightDataSnapshot(
+      hourlyLux:  hourlyLux,
+      dlmo:       dlmo,
+      boostStart: boostStart,
+      boostEnd:   boostEnd,
+      sleepStart: sleepStart,
+      sleepEnd:   sleepEnd,
+      timestamp:  now,
+    ));
   }
 
-  List<BarChartGroupData> generateWeeklyBars() {
-    final Map<int, List<double>> grouped = {};
-
-    for (var entry in _data) {
-      final weekday = entry.timestamp.weekday;
-      grouped.putIfAbsent(weekday, () => []).add(entry.calculatedScore * 100);
-    }
-
-    return grouped.entries.map((entry) {
-      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
-      return BarChartGroupData(
-        x: entry.key,
-        barRods: [
-          BarChartRodData(
-            toY: avg.clamp(0, 100),
-            color: avg >= 75 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
-          ),
-        ],
-      );
-    }).toList();
+  void dispose() {
+    _timer?.cancel();
+    _snapController.close();
   }
+}
 
-  List<BarChartGroupData> generateMonthlyBars() {
-    final Map<String, List<double>> grouped = {};
+/// Data‐POJO til UI
+class LightDataSnapshot {
+  final List<double> hourlyLux;
+  final double dlmo, boostStart, boostEnd, sleepStart, sleepEnd;
+  final DateTime timestamp;
 
-    for (var entry in _data) {
-      final dayKey = DateFormat('dd').format(entry.timestamp);
-      grouped.putIfAbsent(dayKey, () => []).add(entry.calculatedScore * 100);
-    }
-
-    int index = 0;
-    return grouped.entries.map((entry) {
-      final avg = entry.value.reduce((a, b) => a + b) / entry.value.length;
-      return BarChartGroupData(
-        x: index++,
-        barRods: [
-          BarChartRodData(
-            toY: avg.clamp(0, 100),
-            color: avg >= 75 ? const Color(0xFF00C853) : const Color(0xFFFFAB00),
-          ),
-        ],
-      );
-    }).toList();
-  }
+  LightDataSnapshot({
+    required this.hourlyLux,
+    required this.dlmo,
+    required this.boostStart,
+    required this.boostEnd,
+    required this.sleepStart,
+    required this.sleepEnd,
+    required this.timestamp,
+  });
 }
