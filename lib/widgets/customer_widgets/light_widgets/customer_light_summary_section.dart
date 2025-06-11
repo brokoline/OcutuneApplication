@@ -10,23 +10,17 @@ import 'customer_slide_bar_chart.dart';
 class CustomerLightSummarySection extends StatelessWidget {
   /// rMEQ (int) fra kundens profil
   final int rmeqScore;
-
-  /// MEQ (int) fra kundens profil
   final int meqScore;
-
-  /// Kronotype‐label fra kundens profil
   final String chronotype;
-
-  /// Liste af lys‐anbefalinger til kunden
   final List<String> recommendations;
 
   const CustomerLightSummarySection({
-    Key? key,
+    super.key,
     required this.rmeqScore,
     required this.meqScore,
     required this.chronotype,
     required this.recommendations,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

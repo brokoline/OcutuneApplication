@@ -254,7 +254,6 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
             ),
           ),
         ),
-        SizedBox(height: 28.h),
         Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

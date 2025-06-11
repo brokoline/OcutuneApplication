@@ -65,7 +65,7 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
     return Column(
       children: [
         SizedBox(
-          height: 320.h,
+          height: 290.h,
           child: PageView(
             controller: _pageController,
             children: pages,

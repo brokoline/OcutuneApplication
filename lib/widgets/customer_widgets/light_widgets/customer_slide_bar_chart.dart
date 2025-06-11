@@ -64,13 +64,12 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
     return Column(
       children: [
         SizedBox(
-          height: 320.h, // eller hvad du ønsker
+          height: 280.h, // eller hvad du ønsker
           child: PageView(
             controller: _pageController,
             children: pages,
           ),
         ),
-        SizedBox(height: 4.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(

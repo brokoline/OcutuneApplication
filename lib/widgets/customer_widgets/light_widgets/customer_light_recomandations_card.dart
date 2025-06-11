@@ -12,15 +12,35 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     this.detailRecommendations = const [],
   });
 
+  // --------- Mapping detail recommendations to icons/colors ----------
+  Widget _detailIcon(String rec) {
+    if (rec.startsWith("Kronotype")) {
+      return Icon(Icons.account_circle, color: Colors.lightBlue[200], size: 20.sp);
+    }
+    if (rec.startsWith("DLMO")) {
+      return Icon(Icons.nightlight_round, color: Colors.purple[200], size: 20.sp);
+    }
+    if (rec.startsWith("Opvågning")) {
+      return Icon(Icons.wb_sunny, color: Colors.yellow[600], size: 22.sp);
+    }
+    if (rec.startsWith("Sengetid")) {
+      return Icon(Icons.bed, color: Colors.indigo[100], size: 20.sp);
+    }
+    if (rec.toLowerCase().contains("light-boost start")) {
+      return Icon(Icons.lightbulb, color: Colors.amberAccent[400], size: 22.sp);
+    }
+    if (rec.toLowerCase().contains("light-boost slut")) {
+      return Icon(Icons.nights_stay, color: Colors.blueAccent[200], size: 22.sp);
+    }
+    // Default:
+    return Icon(Icons.lightbulb_outline, color: Colors.white70, size: 20.sp);
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool showPersonal = personalRecommendations.isNotEmpty;
     final bool showDetail = detailRecommendations.isNotEmpty;
 
-    // Check for OK/tjek besked
-    bool isAllFineMsg = showPersonal &&
-        personalRecommendations.length == 1 &&
-        personalRecommendations.first.trim().toLowerCase().contains("fin ud i denne periode");
 
     if (!showPersonal && !showDetail) {
       return Padding(
@@ -59,16 +79,21 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   ...detailRecommendations.map((r) => Padding(
-                    padding: EdgeInsets.only(bottom: 6.h),
+                    padding: EdgeInsets.only(bottom: 8.h),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(Icons.lightbulb_outline, color: Colors.white70, size: 18.sp),
-                        SizedBox(width: 10.w),
+                        _detailIcon(r),
+                        SizedBox(width: 12.w),
                         Expanded(
                           child: Text(
                             r,
-                            style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                              height: 1.3,
+                            ),
                           ),
                         ),
                       ],
@@ -97,13 +122,12 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 8.h),
-
                 ...personalRecommendations.map((r) {
                   final bool isFine = r.trim().toLowerCase().contains("fin ud i denne periode");
                   return Padding(
                     padding: EdgeInsets.only(bottom: 6.h),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, // Centrer hele raden
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Icon(
@@ -112,7 +136,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                           size: 18.sp,
                         ),
                         SizedBox(width: 10.w),
-                        // Brug Flexible her for sikkerheds skyld, hvis teksten er lang:
                         Flexible(
                           child: Text(
                             r,
@@ -120,7 +143,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                               color: Colors.white70,
                               fontSize: 13.sp,
                             ),
-                            textAlign: TextAlign.center, // Centrér teksten
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
