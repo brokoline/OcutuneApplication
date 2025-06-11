@@ -100,7 +100,7 @@ class _CustomerSensorScreenState extends State<CustomerSensorScreen> {
                                     ? Row(
                                   children: [
                                     Text(
-                                      'Forbundet til: ${device!.name}  ',
+                                      'Forbundet til: ${device.name}  ',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15.sp,
