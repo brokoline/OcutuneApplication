@@ -212,12 +212,14 @@ class _CustomerLightMonthlyBarChartState
           children: [
             Padding(
               padding: EdgeInsets.only(bottom: 10.h),
-              child: Text(
-                "Månedlig lysmængde",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
+              child: Center(
+                child: Text(
+                  'Månedlig lyseksponering',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),

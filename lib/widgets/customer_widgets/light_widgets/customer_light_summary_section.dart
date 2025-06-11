@@ -6,15 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'customer_slide_bar_chart.dart';
 
 /// En samlet “Customer”‐summary‐sektion, der viser:
-///   1) Lys‐anbefalinger
-///   2) Lys‐score (rMEQ, MEQ og kronotype)
-///   3) Lys‐eksponering som swipebar (Dag / Uge / Måned)
-///
-/// Forudsætter, at du sender ind:
-///   - rmeqScore (int)
-///   - meqScore (int)
-///   - chronotype (String)
-///   - recommendations (List<String>)
+
 class CustomerLightSummarySection extends StatelessWidget {
   /// rMEQ (int) fra kundens profil
   final int rmeqScore;
@@ -42,12 +34,14 @@ class CustomerLightSummarySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // 1) Lys‐eksponering: Dag / Uge / Måned swipebar
-        const Text(
-          'Oversigt over din lyseksponering',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+        Center(
+          child: Text(
+            'Oversigt over din lyseksponering',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         SizedBox(height: 10.h),

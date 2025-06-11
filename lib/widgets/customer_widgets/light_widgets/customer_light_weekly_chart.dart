@@ -221,15 +221,18 @@ class _CustomerLightWeeklyBarChartState
           children: [
             Padding(
               padding: EdgeInsets.only(bottom: 10.h),
-              child: Text(
-                'Ugentlig lysmængde',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
+              child: Center(
+                child: Text(
+                  'Ugentlig lyseksponering',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
+
             SizedBox(
               height: 180.h,
               child: Padding(

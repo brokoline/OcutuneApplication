@@ -180,14 +180,6 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                     ],
                   ),
 
-                  _sectionTitle('Kom i gang'),
-                  GestureDetector(
-                    onTap: () => _launchLink('https://ocutune.com'),
-                    child: Text('• Besøg vores hjemmeside',
-                        style:
-                        TextStyle(fontSize: 14.sp, color: Colors.white70)),
-                  ),
-
                   _sectionTitle('Kontakt os'),
                   GestureDetector(
                     onTap: () => _launchLink('mailto:info@ocutune.com'),

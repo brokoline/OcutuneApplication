@@ -45,6 +45,7 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
     // 1) DAGLIG GRAF → bruger rmeqScore + chronotype
     final dailyPage = CustomerLightDailyBarChart(
       rmeqScore: widget.rmeqScore,
+      title: "Daglig lysmængde",
     );
 
     // 2) UGENTLIG GRAF → ingen ekstra parametre
@@ -63,13 +64,13 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
     return Column(
       children: [
         SizedBox(
-          height: 320.h,
+          height: 320.h, // eller hvad du ønsker
           child: PageView(
             controller: _pageController,
             children: pages,
           ),
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 4.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
@@ -80,16 +81,16 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
                 builder: (context, child) {
                   double currentPage = 0;
                   if (_pageController.hasClients) {
-                    currentPage =
-                        _pageController.page ?? _pageController.initialPage.toDouble();
+                    currentPage = _pageController.page ??
+                        _pageController.initialPage.toDouble();
                   }
                   final isSelected = currentPage.round() == index;
                   return Container(
-                    margin: EdgeInsets.symmetric(horizontal: 4.w),
+                    margin: EdgeInsets.symmetric(horizontal: 2.w),
                     width: isSelected ? 12.w : 8.w,
                     height: isSelected ? 12.w : 8.w,
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : Colors.white54,
+                      color: isSelected ? Colors.white70 : Colors.white38,
                       shape: BoxShape.circle,
                     ),
                   );

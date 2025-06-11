@@ -43,20 +43,20 @@ class LightData {
     }
   }
 
-  /// Beregner gennemsnits‐score over en liste af LightData‐objekter.
+  // Beregner gennemsnits‐score over en liste af LightData‐objekter.
   static double averageScore(List<LightData> data) {
     if (data.isEmpty) return 0.0;
     final total = data.map((d) => d.calculatedScore).reduce((a, b) => a + b);
     return total / data.length;
   }
 
-  /// Gennemsnitlig score for en given ugedag (1=mandag .. 7=søndag).
+  // Gennemsnitlig score for en given ugedag (1=mandag .. 7=søndag).
   static double weekdayAverage(List<LightData> data, int weekday) {
     final filtered = data.where((d) => d.timestamp.weekday == weekday).toList();
     return averageScore(filtered);
   }
 
-  /// Gennemsnitlig score for en given dag i måneden (baseret på 'dd').
+  // Gennemsnitlig score for en given dag i måneden (baseret på 'dd').
   static double dayAverage(List<LightData> data, String dayKey) {
     final filtered = data
         .where((d) => DateFormat('dd').format(d.timestamp) == dayKey)
@@ -73,7 +73,7 @@ class LightData {
     required this.actionRequired,
   });
 
-  /// JSON‐parser som sikrer, at “captured_at” altid bliver tolket som UTC.
+  // JSON‐parser som sikrer, at “captured_at” altid bliver tolket som UTC.
   factory LightData.fromJson(Map<String, dynamic> json) {
     // 1) Hent den rå streng, fx: "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
     final rawDate = json['captured_at'] as String;

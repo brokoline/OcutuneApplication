@@ -10,10 +10,13 @@ import '../../../services/services/api_services.dart';
 
 class CustomerLightDailyBarChart extends StatefulWidget {
   final int rmeqScore;
+  final String? title;
 
   const CustomerLightDailyBarChart({
     super.key,
     required this.rmeqScore,
+    this.title,
+
   });
 
   @override
@@ -186,15 +189,18 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
           children: [
             Padding(
               padding: EdgeInsets.only(bottom: 10.h),
-              child: Text(
-                "Din daglige lyseksponering",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 17.sp,
-                  fontWeight: FontWeight.w700,
+              child: Center(
+                child: Text(
+                  widget.title ?? "Din daglige lyseksponering",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
+
             SizedBox(
               height: 180.h,
               child: BarChart(

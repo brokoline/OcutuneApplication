@@ -113,24 +113,21 @@ class CustomerRootView extends StatelessWidget {
 
               // ─── Profil‐data er hentet ─────────────────────────────
               final Customer profile = snapshot.data!.first;
-              final ChronotypeModel? chronoModel = snapshot.data!.second;
+
 
               final String name = '${profile.firstName} ${profile.lastName}';
-              final List<String> recommendations = [
-                '08:00 – Gå en morgentur i dagslys',
-                '21:00 – Undgå skærmlys før sengetid',
-              ];
-
               // Fire separate undersider, lagt i en liste:
               final pages = [
                 // 0: Oversigt
                 CustomerOverviewScreen(
                   profile: profile,
-                  recommendations: recommendations,
+                  lightDataList: [],
                 ),
 
                 // 1: Lysdetalje
-                const CustomerLightDetailScreen(),
+                CustomerLightDetailScreen(
+                  profile: profile,
+                ),
 
                 // 2: Kronobiologi
                 const CustomerChronotypeInfoScreen(),

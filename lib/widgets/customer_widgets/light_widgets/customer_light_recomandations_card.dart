@@ -4,17 +4,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
+import '../../../models/light_data_model.dart';
+import '../../../services/processing/light_data_processing.dart';
+
 class CustomerLightRecommendationsCard extends StatelessWidget {
-  final List<String> recommendations;
+  final List<String>? recommendations;
+  final List<LightData>? lightData;
+  final int? rMEQ;
+  final bool useCustomerText; // true = du-form, false = patient
 
   const CustomerLightRecommendationsCard({
     super.key,
-    required this.recommendations,
+    this.recommendations,
+    this.lightData,
+    this.rMEQ,
+    this.useCustomerText = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (recommendations.isEmpty) {
+    // Hvis recommendations er givet direkte, brug dem
+    final recs = recommendations ??
+        (lightData != null && rMEQ != null
+            ? (useCustomerText
+            ? generateAdvancedRecommendationsForCustomer(
+          data: lightData!,
+          rMEQ: rMEQ!,
+        )
+            : generateAdvancedRecommendationsForPatient(
+          data: lightData!,
+          rMEQ: rMEQ!,
+        ))
+            : []);
+
+    if (recs.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Text(
@@ -28,7 +51,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 0),
       child: Container(
-        // Fjern color: generalBox, så den er transparent
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,7 +64,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
               ),
             ),
             SizedBox(height: 8.h),
-            ...recommendations.map((r) => Padding(
+            ...recs.map((r) => Padding(
               padding: EdgeInsets.only(bottom: 6.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
