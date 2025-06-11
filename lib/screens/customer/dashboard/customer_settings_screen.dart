@@ -11,6 +11,7 @@ import 'customer_about_ocutune_screen.dart';
 import 'customer_change_password_screen.dart';
 import 'customer_notification_settings_screen.dart';
 import 'customer_profile_screen.dart';
+import 'customer_report_issue_screen.dart';
 
 class CustomerSettingsScreen extends StatelessWidget {
   const CustomerSettingsScreen({super.key});
@@ -126,6 +127,25 @@ class CustomerSettingsScreen extends StatelessWidget {
                                   builder: (_) => ChangeNotifierProvider.value(
                                     value: rootCtrl,
                                     child: const NotificationSettingsScreen(),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(color: Colors.white24, height: 1),
+                          // Indrapporter problem
+                          ListTile(
+                            leading: Icon(Icons.report_problem, color: Colors.white70, size: 24.sp),
+                            title: Text('Indrapporter problem', style: TextStyle(color: Colors.white70, fontSize: 16.sp)),
+                            trailing: Icon(Icons.chevron_right, color: Colors.white54, size: 24.sp),
+                            onTap: () {
+                              final rootCtrl = context.read<CustomerRootController>();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider.value(
+                                    value: rootCtrl,
+                                    child: const CustomerReportIssueScreen(),
                                   ),
                                 ),
                               );
