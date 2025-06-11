@@ -1,7 +1,7 @@
 // lib/utils/light_data_processing.dart
 
 import 'dart:math';
-import '../models/light_data_model.dart';
+import '../../models/light_data_model.dart';
 
 /// Klasse til at konvertere R‐MEQ til MEQ, estimere DLMO/Tau,
 /// beregne lysscore, og generere avancerede anbefalinger baseret på LightData.

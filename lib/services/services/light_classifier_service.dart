@@ -176,7 +176,7 @@ class LightClassifier {
     return lux;
   }
 
-  /// Y-bar CSV-læsning og lux-beregning fra spektrum som map
+  // Y-bar CSV-læsning og lux-beregning fra spektrum som map
   Future<void> _loadYBarData() async {
     final csvString = await rootBundle.loadString('assets/ybar_curve.csv');
     final lines = LineSplitter().convert(csvString);

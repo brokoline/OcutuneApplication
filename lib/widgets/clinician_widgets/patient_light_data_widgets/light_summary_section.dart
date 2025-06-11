@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
 import '../../../controller/chronotype_controller.dart';
-import '../../../../utils/light_data_processing.dart';
+import '../../../services/processing/light_data_processing.dart';
 
 import 'clinician_recommandation_card.dart';
 import 'light_slide_bar_chart.dart';

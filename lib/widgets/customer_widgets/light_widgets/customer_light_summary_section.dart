@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'customer_light_recomandations_card.dart';
+
 import 'customer_slide_bar_chart.dart';
 
 /// En samlet “Customer”‐summary‐sektion, der viser:
@@ -43,7 +43,7 @@ class CustomerLightSummarySection extends StatelessWidget {
       children: [
         // 1) Lys‐eksponering: Dag / Uge / Måned swipebar
         const Text(
-          'Lys‐eksponering',
+          'Oversigt over din lyseksponering',
           style: TextStyle(
             color: Colors.white70,
             fontSize: 18,
@@ -55,12 +55,6 @@ class CustomerLightSummarySection extends StatelessWidget {
           rmeqScore: rmeqScore,
           chronotype: chronotype,
         ),
-
-        // 2) Lys‐anbefalinger
-        CustomerLightRecommendationsCard(
-          recommendations: recommendations,
-        ),
-        SizedBox(height: 20.h),
       ],
     );
   }

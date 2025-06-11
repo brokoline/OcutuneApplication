@@ -53,7 +53,7 @@ class DataProcessingManager extends ChangeNotifier {
     required DataProcessing dataProcessing,
   }) : _dataProcessing = dataProcessing;
 
-  /// Initialiserer og loade TFLite-modellen fra assets (kalds f.eks. i ViewModel/konstruktør).
+  // Initialiserer og loade TFLite-modellen fra assets (kalds i ViewModel/konstruktør).
   Future<void> initializeModel() async {
     const modelAssetPath = 'assets/classifier.tflite';
     try {
@@ -65,15 +65,14 @@ class DataProcessingManager extends ChangeNotifier {
     }
   }
 
-  /// Lukker og frigiver ressourcer for TFLite-interpreteren (kalds i ViewModel.dispose()).
+  // Lukker og frigiver ressourcer for TFLite-interpreteren (kalds i ViewModel.dispose()).
   void disposeModel() {
     _dataProcessing.close();
   }
 
-  /// Kør ML-inference på [inputVector] (liste af double-værdier) og returner et [ProcessedLightData].
-  ///
-  /// [inputVector] bør være én dags worth af målte lysværdier (fx ediLux fra i går).
-  /// Vi sætter _isProcessing true, sætter eventuelt _error til null, og notiferer lyttere.
+  // Kør ML-inference på [inputVector] (liste af double-værdier) og returner et [ProcessedLightData].
+  // [inputVector] bør være én dags worth af målte lysværdier (fx ediLux fra i går).
+  // Vi sætter _isProcessing true, sætter eventuelt _error til null, og notiferer lyttere.
   Future<ProcessedLightData?> runProcessData(List<double> inputVector) async {
     _isProcessing = true;
     _error = null;

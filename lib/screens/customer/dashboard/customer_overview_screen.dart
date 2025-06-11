@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/widgets/customer_widgets/light_widgets/customer_light_daily_chart.dart';
+import '../../../widgets/customer_widgets/light_widgets/customer_light_recomandations_card.dart';
 import '../../../widgets/customer_widgets/light_widgets/customer_light_summary_section.dart';
 import '../../../models/customer_model.dart';
 
@@ -25,20 +27,22 @@ class CustomerOverviewScreen extends StatelessWidget {
 
         return SingleChildScrollView(
           padding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 20.h,
+            horizontal: 12.w,
+            vertical: 6.h,
           ),
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CustomerLightSummarySection(
-                rmeqScore: rmeq,
-                meqScore: meq,
-                chronotype: chrono,
+              CustomerLightRecommendationsCard(
                 recommendations: recommendations,
               ),
-              SizedBox(height: 40.h),
+              SizedBox(height: 10.h), // Mindre afstand!
+              CustomerLightDailyBarChart(
+                rmeqScore: rmeq,
+              ),
+              // Fjern evt. sidste spacing helt
+              // SizedBox(height: 10.h),
             ],
           ),
         );

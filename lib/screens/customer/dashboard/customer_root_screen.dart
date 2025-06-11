@@ -140,7 +140,8 @@ class CustomerRootView extends StatelessWidget {
               ];
 
               final titles = [
-                "\$name’s oversigt",
+                "$name’s oversigt",
+
                 'Lysdetalje',
                 'Chronobiologi',
                 'Indstillinger',

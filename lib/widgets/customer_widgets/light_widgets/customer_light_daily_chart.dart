@@ -187,7 +187,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
             Padding(
               padding: EdgeInsets.only(bottom: 10.h),
               child: Text(
-                "Daglig lyseksponering",
+                "Din daglige lyseksponering",
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 17.sp,
