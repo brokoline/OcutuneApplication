@@ -302,30 +302,31 @@ class _CustomerLightWeeklyBarChartState
                 ),
               ),
             ),
-            SizedBox(height: 22.h),
+
             Center(
-              child: Row(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Icon(Icons.circle, color: const Color(0xFFFFAB00), size: 16.sp),
-                      SizedBox(height: 14.h),
-                      Icon(Icons.circle, color: const Color(0xFF5DADE2), size: 16.sp),
-                    ],
-                  ),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+                      Icon(Icons.circle, color: const Color(0xFFFFAB00), size: 18.sp),
+                      SizedBox(width: 10.w),
                       Text(
                         "Tidspunkt med optimal lyseksponering",
                         style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                       ),
-                      SizedBox(height: 14.h),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(Icons.circle, color: const Color(0xFF5DADE2), size: 18.sp),
+                      SizedBox(width: 10.w),
                       Text(
                         "Tidspunkt med uoptimal lyseksponering",
                         style: TextStyle(color: Colors.white70, fontSize: 14.sp),

@@ -43,9 +43,10 @@ class CustomerOverviewScreen extends StatelessWidget {
               CustomerLightDailyBarChart(
                 rmeqScore: rmeq,
               ),
+              SizedBox(height: 40.h),
               CustomerLightRecommendationsCard(
-                recommendations: advancedCustomerRecs,
-              ),
+                personalRecommendations: advancedCustomerRecs,
+              )
             ],
           ),
         );

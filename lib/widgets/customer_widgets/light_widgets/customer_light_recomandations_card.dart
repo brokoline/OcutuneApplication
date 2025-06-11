@@ -1,43 +1,28 @@
-// lib/widgets/customer_widgets/customer_light_recommendations_card.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
-import '../../../models/light_data_model.dart';
-import '../../../services/processing/light_data_processing.dart';
-
 class CustomerLightRecommendationsCard extends StatelessWidget {
-  final List<String>? recommendations;
-  final List<LightData>? lightData;
-  final int? rMEQ;
-  final bool useCustomerText; // true = du-form, false = patient
+  final List<String> personalRecommendations;
+  final List<String> detailRecommendations;
 
   const CustomerLightRecommendationsCard({
     super.key,
-    this.recommendations,
-    this.lightData,
-    this.rMEQ,
-    this.useCustomerText = true,
+    this.personalRecommendations = const [],
+    this.detailRecommendations = const [],
   });
 
   @override
   Widget build(BuildContext context) {
-    // Hvis recommendations er givet direkte, brug dem
-    final recs = recommendations ??
-        (lightData != null && rMEQ != null
-            ? (useCustomerText
-            ? generateAdvancedRecommendationsForCustomer(
-          data: lightData!,
-          rMEQ: rMEQ!,
-        )
-            : generateAdvancedRecommendationsForPatient(
-          data: lightData!,
-          rMEQ: rMEQ!,
-        ))
-            : []);
+    final bool showPersonal = personalRecommendations.isNotEmpty;
+    final bool showDetail = detailRecommendations.isNotEmpty;
 
-    if (recs.isEmpty) {
+    // Check for OK/tjek besked
+    bool isAllFineMsg = showPersonal &&
+        personalRecommendations.length == 1 &&
+        personalRecommendations.first.trim().toLowerCase().contains("fin ud i denne periode");
+
+    if (!showPersonal && !showDetail) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         child: Text(
@@ -48,48 +33,104 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 0),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Anbefalinger",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ---- Detail/døgnrytme anbefalinger (med kort) ----
+        if (showDetail)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h),
+            child: Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: generalBox,
+                borderRadius: BorderRadius.circular(18),
               ),
-            ),
-            SizedBox(height: 8.h),
-            ...recs.map((r) => Padding(
-              padding: EdgeInsets.only(bottom: 6.h),
-              child: Row(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.lightbulb_outline,
-                    color: Colors.white70,
-                    size: 18.sp,
-                  ),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: Text(
-                      r,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13.sp,
-                      ),
+                  Text(
+                    "Døgnrytme & lys-anbefalinger",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                  SizedBox(height: 8.h),
+                  ...detailRecommendations.map((r) => Padding(
+                    padding: EdgeInsets.only(bottom: 6.h),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.lightbulb_outline, color: Colors.white70, size: 18.sp),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: Text(
+                            r,
+                            style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
                 ],
               ),
-            )),
-          ],
-        ),
-      ),
+            ),
+          ),
+
+        // ---- Personlige anbefalinger (uden card) ----
+        if (showPersonal)
+          Padding(
+            padding: EdgeInsets.only(top: 4.h, bottom: 8.h, left: 2.w, right: 2.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Text(
+                    "Personlige anbefalinger",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+
+                ...personalRecommendations.map((r) {
+                  final bool isFine = r.trim().toLowerCase().contains("fin ud i denne periode");
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 6.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // Centrer hele raden
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isFine ? Icons.check_circle : Icons.lightbulb_outline,
+                          color: isFine ? Colors.greenAccent : Colors.white70,
+                          size: 18.sp,
+                        ),
+                        SizedBox(width: 10.w),
+                        // Brug Flexible her for sikkerheds skyld, hvis teksten er lang:
+                        Flexible(
+                          child: Text(
+                            r,
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13.sp,
+                            ),
+                            textAlign: TextAlign.center, // Centrér teksten
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

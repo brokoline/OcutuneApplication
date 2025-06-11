@@ -23,20 +23,20 @@ class PatientDetailViewModel extends ChangeNotifier {
 
   final String patientId;
 
-  /// Fremtid som henter Patient‐objektet
+  // Fremtid som henter Patient‐objektet
   late final Future<Patient> patientFuture;
 
-  /// Gemmer den hentede Patient‐instans
+  // Gemmer den hentede Patient‐instans
   Patient? _patient;
   Patient? get patient => _patient;
 
-  /// Offentlig getter til rMEQ‐score (kort version). Returnerer 0 hvis ikke tilgængelig.
+  // Offentlig getter til rMEQ‐score (kort version). Returnerer 0 hvis ikke tilgængelig.
   double get rmeqScore => (_patient?.rmeqScore ?? 0).toDouble();
 
-  /// Offentlig getter til gemt MEQ‐score (lang version). Kan være null, hvis patienten ikke har udfyldt MEQ‐spørgeskemaet.
+  // Offentlig getter til gemt MEQ‐score (lang version). Kan være null, hvis patienten ikke har udfyldt MEQ‐spørgeskemaet.
   int? get storedMeqScore => _patient?.meqScore;
 
-  /// Fremtid som henter alle diagnoser for patienten
+  // Fremtid som henter alle diagnoser for patienten
   late final Future<List<Diagnosis>> diagnosisFuture;
 
   /// Fremtid som henter alle patient‐aktiviteter

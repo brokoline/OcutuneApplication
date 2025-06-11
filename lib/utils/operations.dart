@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart';
 
-/// Operations.dart
-/// Hjælpefunktioner til at parse CSV-filer og udføre matrix- og vektoroperationer.
+// Operations.dart
+// Hjælpefunktioner til at parse CSV-filer og udføre matrix- og vektoroperationer.
 class Operations {
-  /// Læs en CSV-fil fra assets (fx 'assets/matrix.csv')
-  /// og returner en matrix (List List double).
+  // Læs en CSV-fil fra assets (fx 'assets/matrix.csv')
+  // og returner en matrix (List List double).
   static Future<List<List<double>>> parseCsvFileToMatrix(String filePath) async {
     // Load CSV-teksten fra assets
     final raw = await rootBundle.loadString(filePath);
@@ -30,8 +30,8 @@ class Operations {
     return matrix;
   }
 
-  /// Gang en matrix (m x n) med en vektor (n)
-  /// Returnerer en vektor af længde m.
+  // Gang en matrix (m x n) med en vektor (n)
+  // Returnerer en vektor af længde m.
   static List<double> multiplyMatrixVector(List<List<double>> matrix, List<double> vector) {
     final nRows = matrix.length;
     if (nRows == 0) return [];
@@ -50,8 +50,8 @@ class Operations {
     return result;
   }
 
-  /// Normaliser en vektor ved at trække middelværdi fra og dividere med standardafvigelse.
-  /// Hvis stdDev er 0, returneres kun vektoren minus mean.
+  // Normaliser en vektor ved at trække middelværdi fra og dividere med standardafvigelse.
+  // Hvis stdDev er 0, returneres kun vektoren minus mean.
   static List<double> normalizeVector(List<double> vector) {
     final n = vector.length;
     if (n == 0) return [];
@@ -74,12 +74,12 @@ class Operations {
     return vector.fold(0.0, (prev, element) => prev + element);
   }
 
-  /// Afsnit alle negative værdier til 0.
+  // Afsnit alle negative værdier til 0.
   static List<double> clipNegativeToZero(List<double> vector) {
     return vector.map((v) => v < 0 ? 0.0 : v).toList();
   }
 
-  /// Giv to vektorer af samme længde, gang dem elementvis og returner en ny vektor.
+  // Giv to vektorer af samme længde, gang dem elementvis og returner en ny vektor.
   static List<double> multiplyElementWise(List<double> v1, List<double> v2) {
     if (v1.length != v2.length) {
       throw ArgumentError('Vektorer skal have samme længde til elementvis multiplikation.');
@@ -92,7 +92,7 @@ class Operations {
     return result;
   }
 
-  /// Giv to vektorer af samme længde, læg dem elementvis sammen og returner en ny vektor.
+  // Giv to vektorer af samme længde, læg dem elementvis sammen og returner en ny vektor.
   static List<double> addElementWise(List<double> v1, List<double> v2) {
     if (v1.length != v2.length) {
       throw ArgumentError('Vektorer skal have samme længde til elementvis addition.');

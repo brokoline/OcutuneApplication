@@ -24,7 +24,7 @@ class LightRecommendationModel {
   });
 }
 
-/// Factory til at bygge recommendations-model ud fra processor og kronotype
+// Factory til at bygge recommendations-model ud fra processor og kronotype
 LightRecommendationModel buildRecommendationModel(
     LightDataProcessing processor, String chronotype) {
   final timeWindows = processor.getTimeWindows();
@@ -38,16 +38,16 @@ LightRecommendationModel buildRecommendationModel(
   );
 }
 
-/// Hjælpefunktion til at formatere decimal-tid til "HH:mm"
+// Hjælpefunktion til at formatere decimal-tid til "HH:mm"
 String _formatTime(double hour) {
   final h = hour.floor();
   final m = ((hour - h) * 60).round();
   return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
 }
 
-/// ----------------------------------------
-/// TEKSTGENERATORER: patient / kunde
-/// ----------------------------------------
+// ----------------------------------------
+// TEKSTGENERATORER: patient / kunde
+// ----------------------------------------
 List<String> patientRecommendationsText(LightRecommendationModel model) {
   return [
     "Kronotype: ${model.chronotype}",

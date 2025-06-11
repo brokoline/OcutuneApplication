@@ -68,7 +68,7 @@ class CustomerProfileScreen extends StatelessWidget {
                 Text(
                   fullName,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.white70,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w600,
                   ),
@@ -222,7 +222,7 @@ class CustomerProfileScreen extends StatelessWidget {
       ),
       subtitle: Text(
         value,
-        style: TextStyle(color: Colors.white, fontSize: 14.sp),
+        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
       ),
     );
   }

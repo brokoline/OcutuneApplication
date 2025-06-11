@@ -1,12 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/screens/patient/sensor_settings/patient_sensor_controller.dart';
-
-
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/controller/ble_controller.dart';
-
 
 class PatientSensorSettingsScreen extends StatefulWidget {
   final String patientId;
@@ -33,6 +29,21 @@ class _PatientSensorSettingsScreenState
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  // ---- DYNAMISK BATTERI-IKON & FARVE ----
+  Color _batteryColor(int level) {
+    if (level >= 25) return Colors.green;
+    if (level >= 10) return Colors.orange;
+    return Colors.red;
+  }
+
+  IconData _batteryIcon(int level) {
+    if (level > 90) return Icons.battery_full;
+    if (level > 60) return Icons.battery_6_bar;
+    if (level > 40) return Icons.battery_4_bar;
+    if (level > 20) return Icons.battery_2_bar;
+    return Icons.battery_alert;
   }
 
   @override
@@ -94,10 +105,33 @@ class _PatientSensorSettingsScreenState
                           return ValueListenableBuilder<int>(
                             valueListenable: BleController.batteryNotifier,
                             builder: (context, battery, _) {
-                              return Text(
-                                connected
-                                    ? 'Forbundet til: ${device.name}\n🔋 Batteri: $battery%'
-                                    : _controller.devices.isEmpty
+                              return connected
+                                  ? Row(
+                                children: [
+                                  Text(
+                                    'Forbundet til: ${device.name}  ',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15),
+                                  ),
+                                  Icon(
+                                    _batteryIcon(battery),
+                                    color: _batteryColor(battery),
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$battery%',
+                                    style: TextStyle(
+                                      color: _batteryColor(battery),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              )
+                                  : Text(
+                                _controller.devices.isEmpty
                                     ? 'Bluetooth er slået til.\nIngen sensor forbundet.'
                                     : 'Bluetooth er slået til.\n${_controller.devices.length} enhed(er) fundet.',
                                 style: const TextStyle(
@@ -118,7 +152,8 @@ class _PatientSensorSettingsScreenState
               builder: (context, device, _) {
                 if (device == null) {
                   return ElevatedButton.icon(
-                    onPressed: () => _controller.requestPermissionsAndScan(context),
+                    onPressed: () =>
+                        _controller.requestPermissionsAndScan(context),
                     icon: const Icon(Icons.bluetooth_searching),
                     label: const Text('Søg efter sensor'),
                     style: ElevatedButton.styleFrom(
@@ -133,7 +168,8 @@ class _PatientSensorSettingsScreenState
                 }
 
                 return ElevatedButton.icon(
-                  onPressed: () => _controller.disconnectFromDevice(context),
+                  onPressed: () =>
+                      _controller.disconnectFromDevice(context),
                   icon: const Icon(Icons.link_off),
                   label: const Text('Afbryd forbindelse'),
                   style: ElevatedButton.styleFrom(
@@ -190,15 +226,19 @@ class _PatientSensorSettingsScreenState
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  final connectedDevice = BleController.connectedDeviceNotifier.value;
+                                  final connectedDevice =
+                                      BleController.connectedDeviceNotifier.value;
                                   if (connectedDevice == null ||
                                       connectedDevice.id != device.id) {
-                                    _controller.connectToDevice(context, device);
+                                    _controller.connectToDevice(
+                                        context, device);
                                   }
                                 },
                                 borderRadius: BorderRadius.circular(8),
-                                hoverColor: const Color.fromRGBO(255, 255, 255, 0.1),
-                                splashColor: const Color.fromRGBO(255, 255, 255, 0.2),
+                                hoverColor: const Color.fromRGBO(
+                                    255, 255, 255, 0.1),
+                                splashColor: const Color.fromRGBO(
+                                    255, 255, 255, 0.2),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 12),
@@ -233,7 +273,8 @@ class _PatientSensorSettingsScreenState
                                         ),
                                       ),
                                       ValueListenableBuilder<DiscoveredDevice?>(
-                                        valueListenable: BleController.connectedDeviceNotifier,
+                                        valueListenable:
+                                        BleController.connectedDeviceNotifier,
                                         builder: (context, connectedDevice, _) {
                                           if (connectedDevice?.id == device.id) {
                                             return const Icon(

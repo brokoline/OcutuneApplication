@@ -3,11 +3,10 @@
 import 'package:flutter/material.dart';
 import '../models/light_data_model.dart';
 
-/// En utility‐klasse til at gruppere rå LightData i time‐, uge‐ og
-/// måned‐buckets. Alle gruppering sker i lokal tid (dvs. .toLocal()).
-///
-/// Metoderne returnerer enten rå gennemsnits‐ediLux (ikke procenter),
-/// eller rå gennemsnits‐procenter baseret på ediLux*100, alt efter behov.
+// En utility‐klasse til at gruppere rå LightData i time‐, uge‐ og
+// måned‐buckets. Alle gruppering sker i lokal tid (dvs. .toLocal()).
+// Metoderne returnerer enten rå gennemsnits‐ediLux (ikke procenter),
+// eller rå gennemsnits‐procenter baseret på ediLux*100, alt efter behov.
 class LightUtils {
   LightUtils._(); // Privat constructor – må ikke instantieres
 
