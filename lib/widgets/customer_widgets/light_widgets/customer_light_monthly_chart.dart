@@ -7,7 +7,7 @@ import '../../../models/daily_light_summary_model.dart';
 import '../../../services/services/api_services.dart';
 
 class CustomerLightMonthlyBarChart extends StatefulWidget {
-  const CustomerLightMonthlyBarChart({Key? key}) : super(key: key);
+  const CustomerLightMonthlyBarChart({super.key});
 
   @override
   State<CustomerLightMonthlyBarChart> createState() =>
