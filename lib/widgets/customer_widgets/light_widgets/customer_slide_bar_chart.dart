@@ -50,10 +50,8 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
     // 2) UGENTLIG GRAF → ingen ekstra parametre
     final weeklyPage = const CustomerLightWeeklyBarChart();
 
-    // 3) MÅNEDLIG GRAF → bruger rmeqScore + chronotype
+    // 3) MÅNEDLIG GRAF → ingen ekstra parametre
     final monthlyPage = CustomerLightMonthlyBarChart(
-      rmeqScore: widget.rmeqScore,
-      chronotype: widget.chronotype,
     );
 
     final pages = <Widget>[

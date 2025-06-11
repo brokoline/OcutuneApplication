@@ -55,7 +55,7 @@ class SyncUseCase {
           } else if (type == 'light') {
             print('[SyncUseCase] Forsøger at sende light id=$id til server…');
 
-            // ─── 1) Pre‑valider payload for null/forkerte værdier ────
+            // 1) Pre‑validere payload for null og forkerte værdier
             const requiredFields = [
               'patient_id',
               'sensor_id',

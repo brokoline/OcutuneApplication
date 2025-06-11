@@ -39,7 +39,6 @@ class CustomerOverviewScreen extends StatelessWidget {
                 recommendations: recommendations,
               ),
               SizedBox(height: 40.h),
-              // Tilføj gerne mere indhold her efter behov
             ],
           ),
         );

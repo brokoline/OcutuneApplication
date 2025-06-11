@@ -1,5 +1,3 @@
-// lib/widgets/customer_widgets/customer_light_daily_bar_chart.dart
-
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -41,8 +39,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
       _errorMessage = null;
     });
     try {
-      final fetched =
-      await ApiService.fetchDailyLightData(patientId: 'P3');
+      final fetched = await ApiService.fetchDailyLightData(patientId: 'P3');
       setState(() => _todayData = fetched);
     } catch (e) {
       setState(() => _errorMessage = 'Kunne ikke hente dagsdata: $e');
@@ -58,13 +55,13 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: const Center(child: CircularProgressIndicator()),
           );
         }
         if (snapshot.hasError) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 'Fejl ved hentning af login‐status: ${snapshot.error}',
@@ -77,7 +74,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
         final token = snapshot.data;
         if (token == null) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Container(
               decoration: BoxDecoration(
                 color: generalBox,
@@ -89,8 +86,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
                 children: [
                   Text(
                     'Du skal logge ind for at se daglig lyseksponering.',
-                    style:
-                    TextStyle(color: Colors.white70, fontSize: 14.sp),
+                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 12.h),
@@ -108,8 +104,6 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
             ),
           );
         }
-
-        // Token findes → hent data, hvis ikke allerede hentet
         if (_todayData == null && _errorMessage == null && !_isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _fetchTodayLightData();
@@ -118,13 +112,13 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
 
         if (_isLoading) {
           return SizedBox(
-            height: 160.h,
+            height: 180.h,
             child: const Center(child: CircularProgressIndicator()),
           );
         }
         if (_errorMessage != null) {
           return SizedBox(
-            height: 160.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 _errorMessage!,
@@ -136,7 +130,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
         }
         if (_todayData != null && _todayData!.isEmpty) {
           return SizedBox(
-            height: 160.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 'Ingen lysmålinger i dag (lokal tid).',
@@ -156,15 +150,11 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
               tsLocal.day == nowLocal.day;
         }).toList();
 
-        if (todayData.isNotEmpty) {
-          debugPrint('Antal datapunkter i dag: ${todayData.length}');
-        }
-
         final hourlyLux = LightUtils.groupByHourOfDay(todayData);
         double maxLux = hourlyLux.reduce(max).clamp(1.0, double.infinity);
 
-        final groups = List<BarChartGroupData>.generate(24, (hourIndex) {
-          final avgLux = hourlyLux[hourIndex];
+        final groups = List<BarChartGroupData>.generate(24, (i) {
+          final avgLux = hourlyLux[i];
           double pct = (avgLux / maxLux) * 100.0;
           pct = pct.clamp(0.0, 100.0);
 
@@ -174,7 +164,7 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
               : const Color(0xFF5DADE2);
 
           return BarChartGroupData(
-            x: hourIndex,
+            x: i,
             barRods: [
               BarChartRodData(
                 toY: pct,
@@ -184,167 +174,127 @@ class _CustomerLightDailyBarChartState extends State<CustomerLightDailyBarChart>
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 100,
-                  color: Colors.grey.withOpacity(0.15),
+                  color: const Color(0xFF4A4A4A),
                 ),
               ),
             ],
           );
         });
 
-        return Card(
-          color: generalBox,
-          margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 0),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r)),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Daglig lyseksponering",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(bottom: 10.h),
+              child: Text(
+                "Daglig lyseksponering",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 12.h),
-                SizedBox(
-                  height: 150.h,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text("100%",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 10.sp)),
-                          Text("80%",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 10.sp)),
-                          Text("60%",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 10.sp)),
-                          Text("40%",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 10.sp)),
-                          Text("20%",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 10.sp)),
-                          Text("0%",
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 10.sp)),
-                        ],
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: BarChart(
-                          BarChartData(
-                            minY: 0,
-                            maxY: 100,
-                            backgroundColor: Colors.transparent,
-                            borderData: FlBorderData(show: false),
-                            gridData: FlGridData(
-                              show: true,
-                              horizontalInterval: 20,
-                              getDrawingHorizontalLine: (y) {
-                                return FlLine(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  strokeWidth: 1,
-                                );
-                              },
+              ),
+            ),
+            SizedBox(
+              height: 180.h,
+              child: BarChart(
+                BarChartData(
+                  minY: 0,
+                  maxY: 100,
+                  backgroundColor: Colors.transparent,
+                  borderData: FlBorderData(show: false),
+                  gridData: FlGridData(
+                    show: true,
+                    horizontalInterval: 20,
+                    getDrawingHorizontalLine: (y) => FlLine(
+                      color: Colors.white24,
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 20,
+                        reservedSize: 44,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            "${value.toInt()}%",
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10.sp,
                             ),
-                            titlesData: FlTitlesData(
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  interval: 1,
-                                  reservedSize: 24,
-                                  getTitlesWidget: (value, meta) {
-                                    final hour = value.toInt();
-                                    if (hour % 4 == 0 || hour == 23) {
-                                      final label = hour == 23
-                                          ? "23:59"
-                                          : "${hour
-                                          .toString()
-                                          .padLeft(2, '0')}:00";
-                                      return Text(
-                                        label,
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 10.sp,
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 40,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx % 4 == 0) {
+                            final label = "${idx.toString().padLeft(2, '0')}:00";
+                            return Padding(
+                              padding: EdgeInsets.only(top: 6.h),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10.sp,
                                 ),
                               ),
-                              leftTitles: AxisTitles(
-                                  sideTitles:
-                                  SideTitles(showTitles: false)),
-                              topTitles: AxisTitles(
-                                  sideTitles:
-                                  SideTitles(showTitles: false)),
-                              rightTitles: AxisTitles(
-                                  sideTitles:
-                                  SideTitles(showTitles: false)),
-                            ),
-                            alignment: BarChartAlignment.spaceAround,
-                            groupsSpace: 4.w,
-                            barGroups: groups,
-                          ),
-                        ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  alignment: BarChartAlignment.spaceAround,
+                  groupsSpace: 4.w,
+                  barGroups: groups,
+                ),
+              ),
+            ),
+            SizedBox(height: 22.h),
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.circle, color: const Color(0xFFFFAB00), size: 16.sp),
+                      SizedBox(height: 14.h),
+                      Icon(Icons.circle, color: const Color(0xFF5DADE2), size: 16.sp),
+                    ],
+                  ),
+                  SizedBox(width: 12.w),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Tidspunkt med optimal lyseksponering",
+                        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                      ),
+                      SizedBox(height: 14.h),
+                      Text(
+                        "Tidspunkt med uoptimal lyseksponering",
+                        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                       ),
                     ],
                   ),
-                ),
-                SizedBox(height: 12.h),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.circle,
-                          color: const Color(0xFFFFAB00),
-                          size: 12.sp,
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          "Tidspunkt med optimal lyseksponering",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.circle,
-                          color: const Color(0xFF5DADE2),
-                          size: 12.sp,
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          "Tidspunkt med uoptimal lyseksponering",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );

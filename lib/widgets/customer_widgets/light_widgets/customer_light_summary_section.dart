@@ -41,18 +41,11 @@ class CustomerLightSummarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1) Lys‐anbefalinger
-        CustomerLightRecommendationsCard(
-          recommendations: recommendations,
-        ),
-        SizedBox(height: 20.h),
-
-
-        // 3) Lys‐eksponering: Dag / Uge / Måned swipebar
+        // 1) Lys‐eksponering: Dag / Uge / Måned swipebar
         const Text(
           'Lys‐eksponering',
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.white70,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -62,6 +55,12 @@ class CustomerLightSummarySection extends StatelessWidget {
           rmeqScore: rmeqScore,
           chronotype: chronotype,
         ),
+
+        // 2) Lys‐anbefalinger
+        CustomerLightRecommendationsCard(
+          recommendations: recommendations,
+        ),
+        SizedBox(height: 20.h),
       ],
     );
   }

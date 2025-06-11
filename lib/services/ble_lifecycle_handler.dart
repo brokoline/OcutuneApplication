@@ -31,7 +31,7 @@ class BleLifecycleHandler extends WidgetsBindingObserver {
     debugPrint('🔁 BLE LifecycleHandler STARTET');
   }
 
-  /// Stop observer + lyttere
+  // Stop observer + lyttere
   void stop() {
     _shouldAutoReconnect = false;
     WidgetsBinding.instance.removeObserver(this);

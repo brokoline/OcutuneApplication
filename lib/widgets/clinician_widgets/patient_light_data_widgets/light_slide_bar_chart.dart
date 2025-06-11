@@ -53,7 +53,6 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
     // 3) MÅNEDLIG GRAF → henter selv via API (patientId + rmeqScore)
     final monthlyPage = LightMonthlyBarChart(
       patientId: widget.patientId,
-      rmeqScore: widget.rmeqScore,
     );
 
     // 4) Saml de tre sider i en PageView

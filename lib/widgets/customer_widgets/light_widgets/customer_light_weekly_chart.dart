@@ -1,17 +1,12 @@
-// lib/widgets/customer_widgets/customer_light_weekly_bar_chart.dart
-
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/models/daily_light_summary_model.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 import '../../../services/auth_storage.dart';
 
-
-/// En “customer”-version af uge-diagrammet.
-/// Henter altid data for patient “P3”. Hvis ingen JWT findes, vis en “Log ind”-prompt.
 class CustomerLightWeeklyBarChart extends StatefulWidget {
   const CustomerLightWeeklyBarChart({Key? key}) : super(key: key);
 
@@ -30,11 +25,9 @@ class _CustomerLightWeeklyBarChartState
   @override
   void initState() {
     super.initState();
-    // Hent JWT/token én gang
     _tokenFuture = AuthStorage.getToken();
   }
 
-  /// Henter 7 daglige summeringer for patient 'P3'
   Future<void> _fetchWeekLightData(String token) async {
     setState(() {
       _isLoading = true;
@@ -42,7 +35,6 @@ class _CustomerLightWeeklyBarChartState
     });
 
     try {
-      // Brug metoden, der automatisk sætter Authorization-header
       final fetched = await ApiService.fetchWeeklyLightData(patientId: 'P3');
       setState(() => _weekData = fetched);
     } catch (e) {
@@ -58,18 +50,16 @@ class _CustomerLightWeeklyBarChartState
     return FutureBuilder<String?>(
       future: _tokenFuture,
       builder: (context, snapshot) {
-        // 1) Venter på token
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 2) Fejl under hent af token
         if (snapshot.hasError) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 'Fejl ved hentning af login-status: ${snapshot.error}',
@@ -81,10 +71,9 @@ class _CustomerLightWeeklyBarChartState
         }
 
         final token = snapshot.data;
-        // 3) Ingen token → vis login-prompt
         if (token == null) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Container(
               decoration: BoxDecoration(
                 color: generalBox,
@@ -96,8 +85,7 @@ class _CustomerLightWeeklyBarChartState
                 children: [
                   Text(
                     'Du skal logge ind for at se ugentlige lysmålinger.',
-                    style:
-                    TextStyle(color: Colors.white70, fontSize: 14.sp),
+                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 12.h),
@@ -116,25 +104,22 @@ class _CustomerLightWeeklyBarChartState
           );
         }
 
-        // 4) Token findes → hent data, hvis ikke allerede hentet
         if (_weekData == null && _errorMessage == null && !_isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _fetchWeekLightData(token);
           });
         }
 
-        // 5) Vis loader, hvis data hentes
         if (_isLoading) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: const Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 6) Hvis fejl ved hent
         if (_errorMessage != null) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 _errorMessage!,
@@ -145,11 +130,10 @@ class _CustomerLightWeeklyBarChartState
           );
         }
 
-        // 7) Hent de 7 daglige summeringer
         final weeklyData = _weekData ?? [];
         if (weeklyData.isEmpty) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 'Ingen lysmålinger i denne uge.',
@@ -160,26 +144,19 @@ class _CustomerLightWeeklyBarChartState
           );
         }
 
-        // ──────────────────────────────────────────────────────────────
-        // 8) Byg diagram baseret på de 7 dags-summeringer
-        // Sortér (hvis ikke serveren sender i korrekt rækkefølge)
         weeklyData.sort((a, b) => a.day.compareTo(b.day));
 
-        // Beregn procentsats: pctAbove = (countHighLight / totalMeasurements) * 100
-        // pctBelow = 100 – pctAbove (eller 0.0, hvis totalMeasurements == 0)
         final List<double> pctAboveList = List<double>.generate(7, (i) {
           final summary = weeklyData[i];
           if (summary.totalMeasurements == 0) return 0.0;
           return (summary.countHighLight / summary.totalMeasurements) * 100.0;
         });
-
         final List<double> pctBelowList = List<double>.generate(7, (i) {
           final summary = weeklyData[i];
           if (summary.totalMeasurements == 0) return 0.0;
           return 100.0 - pctAboveList[i];
         });
 
-        // Byg BarChartGroupData med to lag: blå = pctBelow, orange = pctAbove
         List<BarChartGroupData> barGroups = [];
         for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
           final double below = pctBelowList[dayIndex].clamp(0.0, 100.0);
@@ -189,14 +166,13 @@ class _CustomerLightWeeklyBarChartState
           final bool hasData = summary.totalMeasurements > 0;
 
           if (!hasData) {
-            // Hvis ingen data: vis en hel grå søjle op til 100%
             barGroups.add(
               BarChartGroupData(
                 x: dayIndex,
                 barRods: [
                   BarChartRodData(
                     toY: 100.0,
-                    color: Colors.grey.shade600,
+                    color: const Color(0xFF4A4A4A),
                     width: 14.w,
                     borderRadius: BorderRadius.circular(4.r),
                   ),
@@ -204,7 +180,6 @@ class _CustomerLightWeeklyBarChartState
               ),
             );
           } else {
-            // Ellers: blå nederst (pctBelow), orange øverst (pctAbove)
             barGroups.add(
               BarChartGroupData(
                 x: dayIndex,
@@ -217,18 +192,18 @@ class _CustomerLightWeeklyBarChartState
                       BarChartRodStackItem(
                         0,
                         below,
-                        const Color(0xFF5DADE2), // blå
+                        const Color(0xFF5DADE2),
                       ),
                       BarChartRodStackItem(
                         below,
-                        below + above, // = 100.0
-                        const Color(0xFFFFAB00), // orange
+                        below + above,
+                        const Color(0xFFFFAB00),
                       ),
                     ],
                     backDrawRodData: BackgroundBarChartRodData(
                       show: true,
                       toY: 100,
-                      color: Colors.grey.withOpacity(0.15),
+                      color: const Color(0xFF444444),
                     ),
                   ),
                 ],
@@ -237,98 +212,127 @@ class _CustomerLightWeeklyBarChartState
           }
         }
 
-        // Danske labels Man→Tir→Ons→Tor→Fre→Lør→Søn
         const List<String> weekdayLabels = [
           'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'
         ];
 
-        // 9) Tegn kortet
-        return Card(
-          color: const Color(0xFF2A2A2A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Ugentlig lysmængde',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16.sp,
-                  ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(bottom: 10.h),
+              child: Text(
+                'Ugentlig lysmængde',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
                 ),
-                SizedBox(height: 12.h),
-                SizedBox(
-                  height: 180.h,
-                  child: BarChart(
-                    BarChartData(
-                      minY: 0,
-                      maxY: 100,
-                      backgroundColor: Colors.transparent,
-                      borderData: FlBorderData(show: false),
-                      gridData: FlGridData(
-                        show: true,
-                        horizontalInterval: 20,
-                        getDrawingHorizontalLine: (y) {
-                          return FlLine(
-                            color: Colors.grey.withOpacity(0.3),
-                            strokeWidth: 1,
-                          );
-                        },
+              ),
+            ),
+            SizedBox(
+              height: 180.h,
+              child: Padding(
+                padding: EdgeInsets.only(right: 20.w), // ekstra plads til søndag
+                child: BarChart(
+                  BarChartData(
+                    minY: 0,
+                    maxY: 100,
+                    backgroundColor: Colors.transparent,
+                    borderData: FlBorderData(show: false),
+                    gridData: FlGridData(
+                      show: true,
+                      horizontalInterval: 20,
+                      getDrawingHorizontalLine: (y) => FlLine(
+                        color: Colors.white24,
+                        strokeWidth: 1,
                       ),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 20,
-                            reservedSize: 32,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                "${value.toInt()}%",
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: 20,
+                          reservedSize: 32,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              "${value.toInt()}%",
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 10.sp,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: 1,
+                          reservedSize: 40, // større så søndag aldrig cuttes
+                          getTitlesWidget: (value, meta) {
+                            final idx = value.toInt();
+                            if (idx < 0 || idx > 6) return const SizedBox.shrink();
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                top: 6.h,
+                                right: idx == 6 ? 14.w : 0, // ekstra plads til SØN
+                              ),
+                              child: Text(
+                                weekdayLabels[idx],
                                 style: TextStyle(
-                                  color: Colors.white54,
+                                  color: Colors.white70,
                                   fontSize: 10.sp,
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 1,
-                            reservedSize: 32,
-                            getTitlesWidget: (value, meta) {
-                              final idx = value.toInt();
-                              if (idx < 0 || idx > 6) return const SizedBox.shrink();
-                              return SideTitleWidget(
-                                meta: meta,
-                                child: Text(
-                                  weekdayLabels[idx],
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 10.sp,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       ),
-                      alignment: BarChartAlignment.spaceAround,
-                      groupsSpace: 8.w,
-                      barGroups: barGroups,
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     ),
+                    alignment: BarChartAlignment.spaceAround,
+                    groupsSpace: 8.w,
+                    barGroups: barGroups,
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            SizedBox(height: 22.h),
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.circle, color: const Color(0xFFFFAB00), size: 16.sp),
+                      SizedBox(height: 14.h),
+                      Icon(Icons.circle, color: const Color(0xFF5DADE2), size: 16.sp),
+                    ],
+                  ),
+                  SizedBox(width: 12.w),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Tidspunkt med optimal lyseksponering",
+                        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                      ),
+                      SizedBox(height: 14.h),
+                      Text(
+                        "Tidspunkt med uoptimal lyseksponering",
+                        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );

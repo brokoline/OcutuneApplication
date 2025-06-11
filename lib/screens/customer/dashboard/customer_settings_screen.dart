@@ -43,7 +43,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                             leading: Icon(Icons.manage_accounts, color: Colors.white70, size: 24.sp),
                             title: Text(
                               'Profiloplysninger',
-                              style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                              style: TextStyle(color: Colors.white70, fontSize: 16.sp),
                             ),
                             trailing: Icon(Icons.chevron_right, color: Colors.white54, size: 24.sp),
                             onTap: () {

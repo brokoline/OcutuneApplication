@@ -3,13 +3,13 @@
 import 'dart:async';
 import 'sync_use_case.dart';
 
-/// SyncScheduler sørger for, at SyncUseCase.syncAll() kaldes med et fast interval.
-/// Selv hvis der opstår en fejl i syncAll(), vil den vente til næste interval og prøve igen.
+// SyncScheduler sørger for, at SyncUseCase.syncAll() kaldes med et fast interval.
+// Selv hvis der opstår en fejl i syncAll(), vil den vente til næste interval og prøve igen.
 class SyncScheduler {
   static Timer? _timer;
 
-  /// Starter en periodisk timer, der kører [SyncUseCase.syncAll()] hvert [interval].
-  /// Hvis der allerede er en kørende timer, stoppes den først.
+  // Starter en periodisk timer, der kører [SyncUseCase.syncAll()] hvert [interval].
+  // Hvis der allerede er en kørende timer, stoppes den først.
   static void start({required Duration interval}) {
     // Stop en evt. eksisterende timer, så vi undgår flere samtidige Timers
     _timer?.cancel();

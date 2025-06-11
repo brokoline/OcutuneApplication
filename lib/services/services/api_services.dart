@@ -213,12 +213,14 @@ class ApiService {
   }
 
 
-  static Future<List<LightData>> fetchMonthlyLightData({
+  static Future<List<DailyLightSummary>> fetchMonthlyLightData({
     required String patientId,
   }) async {
     final response = await _get("/patients/$patientId/lightdata/monthly");
     final rawList = _handleListResponse(response);
-    return rawList.map((jsonMap) => LightData.fromJson(jsonMap)).toList();
+    return rawList
+        .map((jsonMap) => DailyLightSummary.fromJson(jsonMap))
+        .toList();
   }
 
 

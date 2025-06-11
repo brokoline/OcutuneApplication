@@ -199,7 +199,6 @@ class LightPollingService {
     }
   }
 
-  // Ekstern adgang, hvis du vil genbruge håndtering af data fra UI
   Future<void> handleData(List<int> data) async {
     await _handleData(data);
   }

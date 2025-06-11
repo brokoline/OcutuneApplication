@@ -82,7 +82,6 @@ class LightData {
     final DateTime parsedUtc = DateTime.parse(rawDate);
 
     // 3) Konverter fragten fra UTC ind i lokal tid (Copenhagen),
-    //    hvis rette tidszone er sat på enheden.
     final DateTime local = parsedUtc.toLocal();
 
     // 4) Melanopic EDI (kan være num eller null)

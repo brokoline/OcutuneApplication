@@ -25,13 +25,10 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
       );
     }
 
-    return Card(
-      color: generalBox,
-      margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Padding(
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 0),
+      child: Container(
+        // Fjern color: generalBox, så den er transparent
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,32 +42,29 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
               ),
             ),
             SizedBox(height: 8.h),
-            // Én række per string i recommendations
-            ...recommendations.map((r) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: 6.h),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      color: Colors.white70,
-                      size: 18.sp,
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      child: Text(
-                        r,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13.sp,
-                        ),
+            ...recommendations.map((r) => Padding(
+              padding: EdgeInsets.only(bottom: 6.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: Colors.white70,
+                    size: 18.sp,
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      r,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13.sp,
                       ),
                     ),
-                  ],
-                ),
-              );
-            }),
+                  ),
+                ],
+              ),
+            )),
           ],
         ),
       ),
