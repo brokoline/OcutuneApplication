@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '/theme/colors.dart';
 import '../../../models/light_data_model.dart';
 import '../../../utils/light_utils.dart';
 import '../../../services/services/api_services.dart';
