@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/light_widgets/customer_light_daily_chart.dart';
+import '../../../controller/chronotype_controller.dart';
 import '../../../models/customer_model.dart';
 import '../../../services/processing/light_data_processing.dart';
 import '../../../models/light_data_model.dart';
@@ -24,6 +26,22 @@ class CustomerOverviewScreen extends StatelessWidget {
       rMEQ: profile.rmeqScore,
     );
 
+    final int rmeqScore = profile.rmeqScore; // fra din profil-model!
+    final chronoManager = ChronotypeManager(rmeqScore);
+    final chronoLabel = chronoManager.getChronotypeLabel();
+    final timeMap = chronoManager.getRecommendedTimes();
+    final fmt = DateFormat('HH:mm');
+
+    final List<String> detailRecommendations = [
+      "Kronotype: $chronoLabel",
+      "DLMO (Dim Light Melatonin Onset): ${fmt.format(timeMap['dlmo']!)}",
+      "Opvågning (DLMO + 10 timer): ${fmt.format(timeMap['wake_time']!)}",
+      "Sengetid (DLMO + 2 timer): ${fmt.format(timeMap['sleep_start']!)}",
+      "Light-boost start: ${fmt.format(timeMap['lightboost_start']!)}",
+      "Light-boost slut: ${fmt.format(timeMap['lightboost_end']!)}",
+    ];
+
+
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       minTextAdapt: true,
@@ -46,6 +64,9 @@ class CustomerOverviewScreen extends StatelessWidget {
               SizedBox(height: 40.h),
               CustomerLightRecommendationsCard(
                 personalRecommendations: advancedCustomerRecs,
+              ),
+              CustomerLightRecommendationsCard(
+                detailRecommendations: detailRecommendations,   // Kronotype/DLMO anbefalinger
               )
             ],
           ),

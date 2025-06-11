@@ -70,7 +70,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Døgnrytme & lys-anbefalinger",
+                    "Kronotype & døgnrytme-anbefalinger",
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 16.sp,
@@ -84,7 +84,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _detailIcon(r),
-                        SizedBox(width: 12.w),
+                        SizedBox(width: 6.w),
                         Expanded(
                           child: Text(
                             r,

@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
 import '../../../models/customer_model.dart';
 import '../../../theme/colors.dart';
 import '../../../widgets/customer_widgets/light_widgets/customer_light_summary_section.dart';
@@ -13,6 +12,8 @@ class CustomerLightDetailScreen extends StatelessWidget {
     super.key,
     required this.profile,
   });
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,6 @@ class CustomerLightDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Fyldtekst
               Padding(
                 padding: EdgeInsets.only(bottom: 14.h),
                 child: Text(
@@ -44,12 +44,11 @@ class CustomerLightDetailScreen extends StatelessWidget {
                   textAlign: TextAlign.left,
                 ),
               ),
-              // Summary-section med RIGTIGE data
               CustomerLightSummarySection(
                 rmeqScore: rmeq,
                 meqScore: meq,
                 chronotype: chrono,
-                recommendations: const [], // eller de anbefalinger du ønsker
+                recommendations: const [],
               ),
             ],
           ),
