@@ -13,7 +13,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
       backgroundColor: generalBackground,
       appBar: const CustomerAppBar(
         showBackButton: true,
-        title: 'Vilkår & betingelser',
+        title: 'Privatlivspolitik',
       ),
       body: SafeArea(
         child: Padding(
