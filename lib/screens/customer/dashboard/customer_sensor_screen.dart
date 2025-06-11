@@ -5,7 +5,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/controller/ble_controller.dart';
 
 
-import 'customer_sensor_controller.dart';
+import '../customer_sensor_controller.dart';
 
 class CustomerSensorScreen extends StatefulWidget {
   final String customerId;
