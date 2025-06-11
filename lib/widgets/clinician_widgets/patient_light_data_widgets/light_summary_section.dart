@@ -105,8 +105,6 @@ class LightSummarySection extends StatelessWidget {
         ClinicianRecommendationCard(
           recommendations: clinicianRecs,
         ),
-        SizedBox(height: 16.h),
-
         //  Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
         LightSlideBarChart(
           patientId: patientId,

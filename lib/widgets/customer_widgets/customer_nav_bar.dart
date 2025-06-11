@@ -44,12 +44,14 @@ class CustomerNavBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Image.asset(
               "assets/icon/BLE-sensor-ikon.png",
-              height:50,
-              width: 50,
-              color: Colors.white70,
+              height: 28,
+              width: 28,
+              color: currentIndex == 2 ? Colors.white : Colors.white54,
             ),
             label: "Sensor",
           ),
+
+
 
           const BottomNavigationBarItem(
             icon: Icon(Icons.info_outline),

@@ -29,14 +29,14 @@ import 'screens/customer/register/chronotype_setup/customer_choose_chronotype_sc
 import 'screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'screens/customer/register/learn_about_chronotypes/customer_details_about_chronotypes_screen.dart';
 import 'screens/customer/register/registration_complete/customer_complete_setup_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_1_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_5_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_1_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_2_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_3_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_4_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_5_screen.dart';
 
 
-// 📂 Customer Dashboard (root) screens & controller
+// Customer Dashboard (root) screens & controller
 import 'screens/patient/patient_dashboard_screen.dart';
 import 'screens/patient/activities/patient_activity_screen.dart';
 import 'screens/patient/sensor_settings/patient_sensor_screen.dart';

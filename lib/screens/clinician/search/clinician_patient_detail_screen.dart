@@ -106,7 +106,7 @@ class PatientDetailView extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
 
-            // ─── Diagnoser ─────────────────────────────────
+            // ─── Kronotype anbealinger + diagnoser ─────────────────────────────────
             FutureBuilder<List<Diagnosis>>(
               future: vm.diagnosisFuture,
               builder: (context, diagSnap) {

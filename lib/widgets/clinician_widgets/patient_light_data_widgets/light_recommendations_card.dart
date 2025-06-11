@@ -6,7 +6,7 @@ import '../../../controller/chronotype_controller.dart';
 import '../../../services/processing/light_data_processing.dart';
 import '../../../../models/light_data_model.dart';
 
-class LightRecommendationsCard extends StatefulWidget {
+class LightRecommendationsCard extends StatelessWidget {
   final String title;
   final int rmeqScore;
   final List<LightData> lightData;
@@ -22,23 +22,9 @@ class LightRecommendationsCard extends StatefulWidget {
     this.initiallyExpanded = false,
   });
 
-  @override
-  State<LightRecommendationsCard> createState() => _LightRecommendationsCardState();
-}
-
-class _LightRecommendationsCardState extends State<LightRecommendationsCard> {
-  late bool expanded;
-  bool hovering = false;
-
-  @override
-  void initState() {
-    super.initState();
-    expanded = widget.initiallyExpanded;
-  }
-
   List<String> _buildRecommendations() {
-    if (widget.showChronotype) {
-      final chrono = ChronotypeManager(widget.rmeqScore);
+    if (showChronotype) {
+      final chrono = ChronotypeManager(rmeqScore);
       final chronoLabel = chrono.getChronotypeLabel();
       final timeMap = chrono.getRecommendedTimes();
       final fmt = DateFormat('HH:mm');
@@ -51,10 +37,10 @@ class _LightRecommendationsCardState extends State<LightRecommendationsCard> {
         "Light-boost slut: ${fmt.format(timeMap['lightboost_end']!)}",
       ];
     } else {
-      return LightDataProcessing(rMEQ: widget.rmeqScore)
+      return LightDataProcessing(rMEQ: rmeqScore)
           .generateAdvancedRecommendations(
-        data: widget.lightData,
-        rMEQ: widget.rmeqScore,
+        data: lightData,
+        rMEQ: rmeqScore,
       );
     }
   }
@@ -86,100 +72,61 @@ class _LightRecommendationsCardState extends State<LightRecommendationsCard> {
   Widget build(BuildContext context) {
     final recommendations = _buildRecommendations();
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => hovering = true),
-      onExit: (_) => setState(() => hovering = false),
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10.h),
-        decoration: BoxDecoration(
-          color: generalBox,
-          borderRadius: BorderRadius.circular(12.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: initiallyExpanded,
+          tilePadding: EdgeInsets.symmetric(horizontal: 16.w),
+          collapsedBackgroundColor: generalBox,
+          backgroundColor: generalBox,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          trailing: Icon(Icons.expand_more, color: Colors.white70),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
             ),
-          ],
-          border: Border.all(
-            color: hovering ? Colors.white24 : Colors.transparent,
-            width: 1.1,
           ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12.r),
-          child: Column(
-            children: [
-              InkWell(
-                onTap: () => setState(() => expanded = !expanded),
-                splashColor: Colors.white12,
-                highlightColor: Colors.white10,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 18.h),
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: recommendations.isEmpty
+                  ? Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: Text(
+                  "Ingen anbefalinger tilgængelige",
+                  style: TextStyle(color: Colors.white54, fontSize: 15.sp),
+                ),
+              )
+                  : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: recommendations.map((r) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h, top: 4.h),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      _recIcon(r),
+                      SizedBox(width: 14.w),
                       Expanded(
                         child: Text(
-                            widget.title,
-                            style: TextStyle(
-                                color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.w600)
-                        ),
-                      ),
-                      AnimatedRotation(
-                        duration: const Duration(milliseconds: 200),
-                        turns: expanded ? 0.5 : 0.0,
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Colors.white54,
-                          size: 30.sp,
+                          r,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14.sp,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
+                )).toList(),
               ),
-              AnimatedCrossFade(
-                firstChild: Container(),
-                secondChild: Padding(
-                  padding: EdgeInsets.only(
-                    left: 18.w, right: 18.w, bottom: 14.h,
-                  ),
-                  child: recommendations.isEmpty
-                      ? Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    child: Text(
-                      "Ingen anbefalinger tilgængelige",
-                      style: TextStyle(color: Colors.white54, fontSize: 15.sp),
-                    ),
-                  )
-                      : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: recommendations.map((r) => Padding(
-                      padding: EdgeInsets.only(bottom: 10.h),
-                      child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            _recIcon(r),
-                            SizedBox(width: 13.w),
-                            Expanded(
-                              child: Text(
-                                r,
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14.sp,
-                                ),
-                              ),
-                            ),
-                          ]
-                      ),
-                    )).toList(),
-                  ),
-                ),
-                crossFadeState: expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 200),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
