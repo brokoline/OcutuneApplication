@@ -70,9 +70,37 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
       );
     }
 
+    if (_todayData == null && _errorMessage == null && !_isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _fetchTodayLightData();
+      });
+      return SizedBox(
+        height: 180.h,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_isLoading) {
+      return SizedBox(
+        height: 180.h,
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_errorMessage != null) {
+      return SizedBox(
+        height: 180.h,
+        child: Center(
+          child: Text(
+            _errorMessage!,
+            style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
     if (_todayData != null && _todayData!.isEmpty) {
       return SizedBox(
-        height: 160.h,
+        height: 180.h,
         child: Center(
           child: Text(
             'Ingen lysmålinger i dag (lokal tid).',
@@ -82,6 +110,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
         ),
       );
     }
+
 
     final rawData = _todayData!;
     final nowLocal = DateTime.now();

@@ -57,7 +57,7 @@ class CustomerProfileScreen extends StatelessWidget {
           ),
         ),
         body: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -180,8 +180,7 @@ class CustomerProfileScreen extends StatelessWidget {
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                        Text('Kunne ikke slette bruger: \$e')),
+                        content: Text('Kunne ikke slette bruger: \$e')),
                   );
                 }
               },

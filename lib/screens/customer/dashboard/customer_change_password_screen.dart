@@ -99,9 +99,15 @@ class _CustomerChangePasswordScreenState extends State<CustomerChangePasswordScr
             showBackButton: true,
           ),
         ),
-        body: Center(
-          child: SizedBox(
-            width: contentWidth,
+
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              top: 32.h,
+              left: (MediaQuery.of(context).size.width - contentWidth) / 2,
+              right: (MediaQuery.of(context).size.width - contentWidth) / 2,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -165,7 +171,7 @@ class _CustomerChangePasswordScreenState extends State<CustomerChangePasswordScr
               ],
             ),
           ),
-        ),
+      ),
         bottomNavigationBar: CustomerNavBar(
           currentIndex: context.watch<CustomerRootController>().currentIndex,
           onTap: _onNavTap,
