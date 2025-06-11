@@ -36,7 +36,7 @@ class CustomerLightSummarySection extends StatelessWidget {
         // 1) Lys‐eksponering: Dag / Uge / Måned swipebar
         Center(
           child: Text(
-            'Oversigt over din lyseksponering',
+            'Din lyseksponering over tid',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 18,

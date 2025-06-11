@@ -45,7 +45,7 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
     // 1) DAGLIG GRAF → bruger rmeqScore + chronotype
     final dailyPage = CustomerLightDailyBarChart(
       rmeqScore: widget.rmeqScore,
-      title: "Daglig lysmængde",
+      title: "Daglig lyseksponering",
     );
 
     // 2) UGENTLIG GRAF → ingen ekstra parametre

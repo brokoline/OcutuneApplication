@@ -54,10 +54,6 @@ class CustomerRootController extends ChangeNotifier {
       final result = await ApiService.fetchCustomerProfile();
       _profile = result.first;
       _chronoModel = result.second;
-      _recommendations = [
-        '08:00 – Gå en morgentur i dagslys',
-        '21:00 – Undgå skærmlys før sengetid',
-      ];
     } catch (e) {
       _error = e.toString();
     } finally {

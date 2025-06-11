@@ -124,7 +124,7 @@ class CustomerRootView extends StatelessWidget {
                   lightDataList: [],
                 ),
 
-                // 1: Lysdetalje
+                // 1: Lysdetaljer
                 CustomerLightDetailScreen(
                   profile: profile,
                 ),
@@ -137,9 +137,8 @@ class CustomerRootView extends StatelessWidget {
               ];
 
               final titles = [
-                "$name’s oversigt",
-
-                'Lysdetalje',
+                "Oversigt for $name",
+                'Lysdetaljer',
                 'Chronobiologi',
                 'Indstillinger',
               ];
