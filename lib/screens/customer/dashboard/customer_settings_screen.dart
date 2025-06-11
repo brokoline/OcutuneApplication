@@ -81,7 +81,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                                 color: Colors.white70, size: 24.sp),
                             title: Text('Skift adgangskode',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 16.sp)),
+                                    color: Colors.white70, fontSize: 16.sp)),
                             trailing: Icon(Icons.chevron_right,
                                 color: Colors.white54, size: 24.sp),
                             onTap: () async {
@@ -114,7 +114,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                                 color: Colors.white70, size: 24.sp),
                             title: Text('Notifikationer',
                                 style: TextStyle(
-                                    color: Colors.white, fontSize: 16.sp)),
+                                    color: Colors.white70, fontSize: 16.sp)),
                             trailing: Icon(Icons.chevron_right,
                                 color: Colors.white54, size: 24.sp),
                             onTap: () {
@@ -134,7 +134,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                           // Om Ocutune
                           ListTile(
                             leading: Icon(Icons.list_alt, color: Colors.white70, size: 24.sp),
-                            title: Text('Om Ocutune', style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+                            title: Text('Om Ocutune', style: TextStyle(color: Colors.white70, fontSize: 16.sp)),
                             trailing: Icon(Icons.chevron_right, color: Colors.white54, size: 24.sp),
                             onTap: () {
                               final rootCtrl = context.read<CustomerRootController>();
