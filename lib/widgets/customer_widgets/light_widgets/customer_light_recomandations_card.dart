@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:ocutune_light_logger/theme/colors.dart';
 
 class CustomerLightRecommendationsCard extends StatelessWidget {
   final List<String> personalRecommendations;
@@ -41,7 +40,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     final bool showPersonal = personalRecommendations.isNotEmpty;
     final bool showDetail = detailRecommendations.isNotEmpty;
 
-
     if (!showPersonal && !showDetail) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -54,78 +52,70 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ---- Detail/døgnrytme anbefalinger (med kort) ----
+        // ---- Døgnrytme/kronotype anbefalinger ----
         if (showDetail)
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: generalBox,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Kronotype & døgnrytme-anbefalinger",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 2.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "Kronotype & døgnrytme-anbefalinger",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
                   ),
-                  SizedBox(height: 8.h),
-                  ...detailRecommendations.map((r) => Padding(
-                    padding: EdgeInsets.only(bottom: 8.h),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        _detailIcon(r),
-                        SizedBox(width: 6.w),
-                        Expanded(
-                          child: Text(
-                            r,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                              height: 1.3,
-                            ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8.h),
+                ...detailRecommendations.map((r) => Padding(
+                  padding: EdgeInsets.only(bottom: 10.h),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _detailIcon(r),
+                      SizedBox(width: 14.w),
+                      Expanded(
+                        child: Text(
+                          r,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ],
-                    ),
-                  )),
-                ],
-              ),
+                      ),
+                    ],
+                  ),
+                )),
+              ],
             ),
           ),
 
-        // ---- Personlige anbefalinger (uden card) ----
+        // ---- Personlige anbefalinger (centreret header + tekst) ----
         if (showPersonal)
           Padding(
             padding: EdgeInsets.only(top: 4.h, bottom: 8.h, left: 2.w, right: 2.w),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(
-                  child: Text(
-                    "Personlige anbefalinger",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                Text(
+                  "Personlige anbefalinger",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8.h),
                 ...personalRecommendations.map((r) {
                   final bool isFine = r.trim().toLowerCase().contains("fin ud i denne periode");
                   return Padding(
-                    padding: EdgeInsets.only(bottom: 6.h),
+                    padding: EdgeInsets.only(bottom: 10.h),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -133,15 +123,16 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                         Icon(
                           isFine ? Icons.check_circle : Icons.lightbulb_outline,
                           color: isFine ? Colors.greenAccent : Colors.white70,
-                          size: 18.sp,
+                          size: 20.sp,
                         ),
-                        SizedBox(width: 10.w),
+                        SizedBox(width: 14.w),
                         Flexible(
                           child: Text(
                             r,
                             style: TextStyle(
                               color: Colors.white70,
-                              fontSize: 13.sp,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
                             ),
                             textAlign: TextAlign.center,
                           ),

@@ -7,7 +7,7 @@ class DataProcessing {
   Interpreter? _interpreter;
   bool _modelLoaded = false;
 
-  /// Erstat med de korrekte offset‐værdier fra din vejleder.
+  /// bør erstattes med de korrekte offset‐værdier fra vejleder.
   static const List<double> offsetCorrection = [
     0.0, 0.0, 0.0, /* … fyld ud … */
   ];
@@ -29,9 +29,9 @@ class DataProcessing {
     _modelLoaded = false;
   }
 
-  /// Kør ML‐inference ved hjælp af Interpreter.run(...) i stedet for TensorBuffer.
-  /// - [inputVector] skal være en List<double> med præcis `N` elementer.
-  /// - Returnerer en List<double> med `M` elementer, råt output fra modellen.
+  // Kør ML‐inference ved hjælp af Interpreter.run(...) i stedet for TensorBuffer.
+  // - [inputVector] skal være en List<double> med præcis `N` elementer.
+  // - Returnerer en List<double> med `M` elementer, råt output fra modellen.
   List<double> runModel(List<double> inputVector) {
     if (!_modelLoaded || _interpreter == null) {
       throw StateError('ML-model ikke loaded. Kald loadModel() først.');
