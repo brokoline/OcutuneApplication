@@ -6,7 +6,7 @@ import 'package:path/path.dart';
 class OfflineStorageService {
   static Database? _db;
 
-  /// Initialize the local SQLite database
+  // Initialize the local SQLite database
   static Future<void> init() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ocutune_offline.db');
@@ -52,7 +52,7 @@ class OfflineStorageService {
     );
   }
 
-  /// Save a data payload locally in the unsynced queue
+  // Save a data payload locally in the unsynced queue
   static Future<void> saveLocally({
     required String type,
     required Map<String, dynamic> data,
@@ -71,14 +71,8 @@ class OfflineStorageService {
         return;
       }
 
-      final spectrum = data['spectrum'];
-      if (spectrum is! List) {
-        debugPrint("⚠️ Afvist: spectrum er ikke List");
-        return;
-      }
 
       // Ensure proper types and default missing fields
-      data['spectrum']       = spectrum.map((e) => (e as num).toDouble()).toList();
       data['light_type']     = data['light_type']      ?? 'Unknown';
       data['action_required']= data['action_required'] ?? 0;
       data['timestamp']      = data['timestamp']       ?? DateTime.now().toIso8601String();

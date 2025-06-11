@@ -12,7 +12,7 @@ import '../../../../utils/light_data_processing.dart';
 import 'clinician_recommandation_card.dart';
 import 'light_slide_bar_chart.dart';
 import 'light_recommendations_card.dart';
-import 'light_score_card.dart';
+
 
 class LightSummarySection extends StatelessWidget {
   final String patientId;
@@ -115,17 +115,7 @@ class LightSummarySection extends StatelessWidget {
         ),
         SizedBox(height: 16.h),
 
-        // ─────── 3) Score card (rMEQ + MEQ) ───────────────────────────────
-        LightScoreCard(
-          rmeqScore: rmeqScore,
-          meqScore: meqScore ?? 0,
-          patientId: patientId,
-
-
-        ),
-        SizedBox(height: 24.h),
-
-        // ─────── 4) Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
+        // ─────── 3) Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
         LightSlideBarChart(
           patientId: patientId,
           rmeqScore: rmeqScore,

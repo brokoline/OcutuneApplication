@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'customer_light_recomandations_card.dart';
-import 'customer_light_score_card.dart';
 import 'customer_slide_bar_chart.dart';
 
 /// En samlet “Customer”‐summary‐sektion, der viser:
@@ -48,12 +47,6 @@ class CustomerLightSummarySection extends StatelessWidget {
         ),
         SizedBox(height: 20.h),
 
-        // 2) Lys‐Score (rMEQ, MEQ og kronotype)
-        CustomerLightScoreCard(
-          rmeqScore: rmeqScore,
-          meqScore: meqScore,
-        ),
-        SizedBox(height: 24.h),
 
         // 3) Lys‐eksponering: Dag / Uge / Måned swipebar
         const Text(

@@ -6,7 +6,6 @@ import 'package:ocutune_light_logger/services/services/offline_storage_service.d
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 
 class SyncUseCase {
-  // Guard flag to prevent overlapping sync calls
   static bool _isSyncing = false;
 
   static Future<void> syncAll() async {
@@ -16,10 +15,7 @@ class SyncUseCase {
     }
     _isSyncing = true;
     try {
-      // 0) Purge alle korrupt/ugyldige light-poster før sync
       await OfflineStorageService.purgeInvalidUnsyncedData();
-
-      // 1) Hent alle resterende, gyldige usynced rækker
       final rows = await OfflineStorageService.getUnsyncedData();
       if (rows.isEmpty) {
         print('[SyncUseCase] Ingen offline‑poster at synkronisere.');
@@ -35,7 +31,6 @@ class SyncUseCase {
 
         try {
           if (type == 'battery') {
-            // … uændret battery‑flow …
             print('[SyncUseCase] Forsøger at sende battery id=$id til server…');
             final String patientId = payload['patient_id'] as String;
             final int batteryLevel = payload['battery_level'] as int;
@@ -60,7 +55,7 @@ class SyncUseCase {
           } else if (type == 'light') {
             print('[SyncUseCase] Forsøger at sende light id=$id til server…');
 
-            // ─── 1) Pre‑valider payload for null/forkerte værdier ────────────────
+            // ─── 1) Pre‑valider payload for null/forkerte værdier ────
             const requiredFields = [
               'patient_id',
               'sensor_id',
@@ -86,7 +81,7 @@ class SyncUseCase {
               continue;
             }
 
-            // ─── 2) Hent JWT og send ───────────────────────────────────────────
+            // ─── 2) Hent JWT og send ───
             final String? jwt = await AuthStorage.getToken();
             if (jwt == null) {
               print('[SyncUseCase] Ingen JWT tilgængelig – springer over id=$id');
@@ -101,12 +96,10 @@ class SyncUseCase {
               print('[SyncUseCase] sendLightData returnerede false for id=$id. Beholder posten.');
             }
           } else {
-            // Ukendt type → slet for at undgå evigt loop
             print("[SyncUseCase] Ukendt type '$type' for id=$id; sletter posten.");
             await OfflineStorageService.deleteById(id);
           }
         } catch (e) {
-          // Fanger andre uventede fejl per post – behold posten til næste runde
           print("[SyncUseCase] FEJL under synkronisering af id=$id, type='$type': $e");
         }
       }

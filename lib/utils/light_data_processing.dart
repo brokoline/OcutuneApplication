@@ -73,7 +73,7 @@ class LightDataProcessing {
     return 'daytime';
   }
 
-  /// Beregner lysscore (0..100) ud fra melanopicEDI og interval
+  // Beregner lysscore (0..100) ud fra melanopicEDI og interval
   double calculateLightScore(double melanopicEDI, String interval) {
     switch (interval) {
       case 'lightboost':
@@ -91,7 +91,7 @@ class LightDataProcessing {
     }
   }
 
-  /// Returnerer et map med 'score', 'interval' og 'recommendation' for et givet tidspunkt
+  // Returnerer et map med 'score', 'interval' og 'recommendation' for et givet tidspunkt
   Map<String, dynamic> evaluateLightExposure({
     required double melanopicEDI,
     DateTime? time,

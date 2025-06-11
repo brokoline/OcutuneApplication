@@ -147,7 +147,6 @@ class LightPollingService {
         'illuminance'    : illuminance,
         'exposure_score' : exposureScore,
         'action_required': actionCode,
-        'spectrum'       : spectrumMel,
       };
 
       print('📊 Light data:');
