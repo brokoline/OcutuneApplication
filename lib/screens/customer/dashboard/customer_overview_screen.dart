@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/widgets/customer_widgets/light_widgets/customer_light_daily_chart.dart';
 import '../../../controller/chronotype_controller.dart';
 import '../../../models/customer_model.dart';
-import '../../../services/processing/light_data_processing.dart';
+import '../../../services/processing/dlmo_data_processing.dart';
 import '../../../models/light_data_model.dart';
 import '../../../widgets/customer_widgets/light_widgets/customer_light_recomandations_card.dart';
 

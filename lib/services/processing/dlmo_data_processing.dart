@@ -3,9 +3,9 @@
 import 'dart:math';
 import '../../models/light_data_model.dart';
 
-/// ----------------------------------------
-/// MODEL: Anbefalingsvinduer & kronotype
-/// ----------------------------------------
+// ----------------------------------------
+// MODEL: Anbefalingsvinduer & kronotype
+// ----------------------------------------
 class LightRecommendationModel {
   final String chronotype;
   final double dlmo;

@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../controller/chronotype_controller.dart';
-import '../../../services/processing/light_data_processing.dart';
+import '../../../services/processing/dlmo_data_processing.dart';
 import '../../../../models/light_data_model.dart';
 
 class LightRecommendationsCard extends StatelessWidget {
