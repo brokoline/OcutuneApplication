@@ -19,7 +19,7 @@ class BatteryPollingService {
     required this.sensorId,
   });
 
-  /// Starter polling: første læsning efter 15s, derefter hvert 5. minut.
+  // Starter polling: første læsning efter 15s, derefter hvert 5. minut.
   Future<void> start() async {
     // Første upload efter 20 sekunder
     Future.delayed(const Duration(seconds: 15), () async {
@@ -33,11 +33,6 @@ class BatteryPollingService {
     });
   }
 
-  /// Stop polling
-  Future<void> stop() async {
-    _timer?.cancel();
-    _timer = null;
-  }
 
   /// Læs batteri-char, gem lokalt og send til backend (eller gem offline hvis fejler)
   Future<void> _readAndProcess() async {
@@ -97,5 +92,11 @@ class BatteryPollingService {
         stack: st.toString(),
       );
     }
+  }
+
+  // Stop polling
+  Future<void> stop() async {
+    _timer?.cancel();
+    _timer = null;
   }
 }

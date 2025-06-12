@@ -36,13 +36,10 @@ class LightPollingService {
         _patientId = patientId,
         _sensorId  = sensorId;
 
-  /// Starter et første _poll()_ med lidt jitter, og herefter præcist hvert [interval].
+  // Starter et første _poll()_ med lidt jitter, og herefter præcist hvert [interval].
   Future<void> start({ Duration interval = const Duration(seconds: 10) }) async {
     if (_timer?.isActive ?? false) return;
 
-    // Sync gamle, pending poster til backend inden vi går i gang
-    //await OfflineStorageService.syncPendingLightData();
-    //await OfflineStorageService.syncPendingLightData();
 
     // 1) Indlæs ML-model og kurver
     _classifier       = await LightClassifier.create();
@@ -59,14 +56,14 @@ class LightPollingService {
     _timer = Timer.periodic(interval, (_) => _poll());
   }
 
-  /// Stopper den periodiske polling.
+  // Stopper den periodiske polling.
   Future<void> stop() async {
     _timer?.cancel();
     _timer = null;
     _isPolling = false;
   }
 
-  /// Ét enkelt poll-kald, som kun kører hvis vi ikke allerede er i gang.
+  // Ét enkelt poll-kald, som kun kører hvis vi ikke allerede er i gang.
   Future<void> _poll() async {
     if (_isPolling) return;
     _isPolling = true;

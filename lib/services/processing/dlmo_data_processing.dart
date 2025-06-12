@@ -152,7 +152,7 @@ List<String> generateAdvancedRecommendationsForCustomer({
 }
 
 /// ----------------------------------------
-/// ALLE DINE BEREGNINGS- OG HJÆLPEMETODER
+/// ALLE BEREGNINGS- OG HJÆLPEMETODER
 /// ----------------------------------------
 class LightDataProcessing {
   final int rMEQ;
@@ -257,7 +257,7 @@ class LightDataProcessing {
     };
   }
 
-  // (OBS: Den gamle generateAdvancedRecommendations er stadig med, hvis du har kald til den et sted)
+
   List<String> generateAdvancedRecommendations({
     required List<LightData> data,
     required int rMEQ,
