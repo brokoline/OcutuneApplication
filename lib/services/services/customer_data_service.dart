@@ -57,8 +57,6 @@ void saveAnswer(String answer, int score) {
         .where((e) => int.parse(e.key.substring(1)) <= 5)
         .map((e) => e.value)
         .fold(0, (a, b) => a + b);
-
-    // rebuild med ny rmeqScore
     currentCustomerResponse = resp.copyWith(rmeqScore: sum);
   }
 
@@ -68,7 +66,8 @@ void saveAnswer(String answer, int score) {
   print('📊 Total score: ${qs.values.fold(0, (sum, v) => sum + v)}');
 }
 
-/// Sæt kronotype-nøgle
+
+// Sæt kronotype-nøgle
 void setChronotypeKey(String key) {
   final resp = currentCustomerResponse;
   if (resp == null) return;
@@ -78,7 +77,7 @@ void setChronotypeKey(String key) {
   );
 }
 
-/// Sender hele pakken til backend
+// Sender hele pakken til backend
 Future<void> submitCustomerResponse() async {
   final resp = currentCustomerResponse;
   if (resp == null) return;
@@ -114,6 +113,5 @@ Future<void> submitCustomerResponse() async {
     simUserId: refreshToken,
   );
   print('✅ Tokens og bruger gemt: access=$accessToken');
-
   print("✅ Data sendt og modtaget korrekt");
 }
