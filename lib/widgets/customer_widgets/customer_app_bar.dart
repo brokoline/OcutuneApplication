@@ -27,6 +27,7 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       elevation: 0,
       centerTitle: true,
+      toolbarHeight: 100.h, // Increased height
       leading: showBackButton && Navigator.canPop(context)
           ? IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.white70),
@@ -42,20 +43,26 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
             color: Colors.white70,
           ),
           if (title != null)
-            Text(
-              title!,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
+            Padding(
+              padding: EdgeInsets.only(top: 4.h),
+              child: Text(
+                title!,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           if (subtitle != null)
-            Text(
-              subtitle!,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 12.sp,
+            Padding(
+              padding: EdgeInsets.only(top: 2.h),
+              child: Text(
+                subtitle!,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12.sp,
+                ),
               ),
             ),
         ],
@@ -73,5 +80,5 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(100.h);
 }

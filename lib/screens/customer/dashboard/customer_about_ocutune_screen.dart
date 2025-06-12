@@ -29,7 +29,7 @@ class CustomerAboutOcutuneScreen extends StatelessWidget {
         style: TextStyle(
           fontSize: 18.sp,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Colors.white70,
         ),
       ),
     ),
@@ -106,86 +106,14 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                     '''• Søvn & velvære: Naturlig døgnrytme styres af lys, og korrekt eksponering kan forbedre søvnkvalitet.
 • Arbejdsmiljø: Optimeret belysning øger trivsel og produktivitet.
 • Indendørs landbrug: Planters vækst afhænger af både lysintensitet og spektrum.
-• Forskning: Gyldige data til studier i lysbiologi og bæredygtigt design.''',
+• Forskning: Gyldige data fra studier i lysbiologi og bæredygtigt design.''',
                   ),
 
                   _sectionTitle('Vores teknologi'),
                   _bodyText(
-                    '''• Sensorenhed: Kompakt hardware til bæring eller montering.
+                    '''• Sensorenhed: Kompakt hardware.
 • App & Dashboard: Realtids-visualisering og avancerede analyser.
-• API: Integrer rådata direkte i egne systemer.''',
-                  ),
-
-                  _sectionTitle('Fordele ved Ocutune'),
-                  Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(3),
-                    },
-                    children: [
-                      TableRow(children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Høj præcision',
-                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text(
-                              'Professionel kalibrering sikrer nøjagtighed',
-                              style: TextStyle(
-                                  fontSize: 14.sp, color: Colors.white70)),
-                        ),
-                      ]),
-                      TableRow(children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Brugervenligt dashboard',
-                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Intuitiv data- og grafvisning',
-                              style: TextStyle(
-                                  fontSize: 14.sp, color: Colors.white70)),
-                        ),
-                      ]),
-                      TableRow(children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Skræddersyede alarmer',
-                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text(
-                              'Notifikation ved for meget/få eksponering',
-                              style: TextStyle(
-                                  fontSize: 14.sp, color: Colors.white70)),
-                        ),
-                      ]),
-                      TableRow(children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Skalerbar løsning',
-                              style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.h),
-                          child: Text('Fra enkeltbrug til store installationer',
-                              style: TextStyle(
-                                  fontSize: 14.sp, color: Colors.white70)),
-                        ),
-                      ]),
-                    ],
-                  ),
-
-                  _sectionTitle('Kom i gang'),
-                  GestureDetector(
-                    onTap: () => _launchLink('https://ocutune.com'),
-                    child: Text('• Besøg vores hjemmeside',
-                        style:
-                        TextStyle(fontSize: 14.sp, color: Colors.white70)),
+• API: Integrer rådata direkte i egne systemer og opbevarer data på egen server.''',
                   ),
 
                   _sectionTitle('Kontakt os'),

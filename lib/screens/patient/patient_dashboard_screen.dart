@@ -1,6 +1,9 @@
+// lib/screens/patient_dashboard_screen.dart
+
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/controller/ble_controller.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_patient_dashboard_tile.dart';
@@ -8,7 +11,10 @@ import 'package:ocutune_light_logger/widgets/universal/ocutune_patient_dashboard
 class PatientDashboardScreen extends StatefulWidget {
   final String patientId;
 
-  const PatientDashboardScreen({super.key, required this.patientId});
+  const PatientDashboardScreen({
+    Key? key,
+    required this.patientId,
+  }) : super(key: key);
 
   @override
   State<PatientDashboardScreen> createState() => _PatientDashboardScreenState();
@@ -21,8 +27,9 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
   void initState() {
     super.initState();
     _nameFuture = AuthStorage.getName().then((name) {
-      if (name.trim().isEmpty) return 'Bruger';
-      return name.split(' ').first;
+      final trimmed = name.trim();
+      if (trimmed.isEmpty) return 'Bruger';
+      return trimmed.split(' ').first;
     });
   }
 
@@ -52,23 +59,14 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.logout),
-                color: Colors.white70,
-                onPressed: () async {
-                  await AuthStorage.logout();
-                  if (!context.mounted) return;
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/login',
-                        (_) => false,
-                  );
-                },
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.logout),
+            color: Colors.white70,
+            onPressed: () async {
+              await AuthStorage.logout();
+              if (!mounted) return;
+              Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+            },
           ),
         ],
       ),
@@ -77,7 +75,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
           future: _nameFuture,
           builder: (context, snapshot) {
             final greeting = 'Hej ${snapshot.data ?? 'Bruger'}';
-
             return SingleChildScrollView(
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
               child: ConstrainedBox(
@@ -111,10 +108,11 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                       ),
                       SizedBox(height: 18.h),
 
-                      ValueListenableBuilder<int>(
-                        valueListenable: BleController.batteryNotifier,
-                        builder: (context, battery, _) {
-                          final connected = battery > 0;
+                      // Her bruger vi først connectedDeviceNotifier
+                      ValueListenableBuilder<DiscoveredDevice?>(
+                        valueListenable: BleController.connectedDeviceNotifier,
+                        builder: (context, connectedDevice, _) {
+                          final isConnected = connectedDevice != null;
                           return OcutunePatientDashboardTile(
                             label: 'Sensorforbindelse',
                             iconAsset: 'assets/icon/BLE-sensor-ikon.png',
@@ -125,29 +123,47 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                 arguments: widget.patientId,
                               );
                             },
-                            trailingWidget: connected
-                                ? Row(
-                              children: [
-                                Icon(
-                                  _batteryIcon(battery),
-                                  color: _batteryColor(battery),
-                                  size: 20.sp,
-                                ),
-                                SizedBox(width: 6.w),
-                                Text(
-                                  '$battery%',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: _batteryColor(battery),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                            trailingWidget: isConnected
+                            // Hvis forbundet, vis batteri
+                                ? ValueListenableBuilder<int>(
+                              valueListenable: BleController.batteryNotifier,
+                              builder: (context, battery, _) {
+                                final color = _batteryColor(battery);
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _batteryIcon(battery),
+                                      color: color,
+                                      size: 20.sp,
+                                    ),
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      '$battery%',
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        color: color,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             )
-                                : null,
+                            // Hvis ikke forbundet, vis tekst
+                                : Text(
+                              'Ikke forbundet',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           );
                         },
                       ),
+
+                      SizedBox(height: 12.h),
 
                       OcutunePatientDashboardTile(
                         label: 'Registrér en aktivitet',
@@ -167,7 +183,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                         },
                       ),
 
-                      SizedBox(height: 10.h),
+                      Spacer(),
                     ],
                   ),
                 ),
@@ -176,7 +192,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
           },
         ),
       ),
-
     );
   }
 }

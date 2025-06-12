@@ -57,7 +57,7 @@ class CustomerProfileScreen extends StatelessWidget {
           ),
         ),
         body: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -68,7 +68,7 @@ class CustomerProfileScreen extends StatelessWidget {
                 Text(
                   fullName,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.white70,
                     fontSize: 20.sp,
                     fontWeight: FontWeight.w600,
                   ),
@@ -180,8 +180,7 @@ class CustomerProfileScreen extends StatelessWidget {
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                        Text('Kunne ikke slette bruger: \$e')),
+                        content: Text('Kunne ikke slette bruger: \$e')),
                   );
                 }
               },
@@ -223,7 +222,7 @@ class CustomerProfileScreen extends StatelessWidget {
       ),
       subtitle: Text(
         value,
-        style: TextStyle(color: Colors.white, fontSize: 14.sp),
+        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
       ),
     );
   }

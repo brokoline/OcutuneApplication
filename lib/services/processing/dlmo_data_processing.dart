@@ -1,16 +1,164 @@
 // lib/utils/light_data_processing.dart
 
 import 'dart:math';
-import '../models/light_data_model.dart';
+import '../../models/light_data_model.dart';
 
-/// Klasse til at konvertere R‐MEQ til MEQ, estimere DLMO/Tau,
-/// beregne lysscore, og generere avancerede anbefalinger baseret på LightData.
+// ----------------------------------------
+// MODEL: Anbefalingsvinduer & kronotype
+// ----------------------------------------
+class LightRecommendationModel {
+  final String chronotype;
+  final double dlmo;
+  final double sleepStart;
+  final double sleepEnd;
+  final double boostStart;
+  final double boostEnd;
+
+  LightRecommendationModel({
+    required this.chronotype,
+    required this.dlmo,
+    required this.sleepStart,
+    required this.sleepEnd,
+    required this.boostStart,
+    required this.boostEnd,
+  });
+}
+
+// Factory til at bygge recommendations-model ud fra processor og kronotype
+LightRecommendationModel buildRecommendationModel(
+    LightDataProcessing processor, String chronotype) {
+  final timeWindows = processor.getTimeWindows();
+  return LightRecommendationModel(
+    chronotype: chronotype,
+    dlmo: timeWindows['dlmoStart']!,
+    sleepStart: timeWindows['sleepStart']!,
+    sleepEnd: timeWindows['sleepEnd']!,
+    boostStart: timeWindows['boostStart']!,
+    boostEnd: timeWindows['boostEnd']!,
+  );
+}
+
+// Hjælpefunktion til at formatere decimal-tid til "HH:mm"
+String _formatTime(double hour) {
+  final h = hour.floor();
+  final m = ((hour - h) * 60).round();
+  return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
+}
+
+// ----------------------------------------
+// TEKSTGENERATORER: patient / kunde
+// ----------------------------------------
+List<String> patientRecommendationsText(LightRecommendationModel model) {
+  return [
+    "Kronotype: ${model.chronotype}",
+    "DLMO (Dim Light Melatonin Onset): ${_formatTime(model.dlmo)}",
+    "Sengetid (DLMO + 2 timer): ${_formatTime(model.sleepStart)}",
+    "Opvågning (DLMO + 10 timer): ${_formatTime(model.sleepEnd)}",
+    "Light-boost start: ${_formatTime(model.boostStart)}",
+    "Light-boost slut: ${_formatTime(model.boostEnd)}",
+  ];
+}
+
+List<String> customerRecommendationsText(LightRecommendationModel model) {
+  return [
+    "Kronotype: ${model.chronotype}",
+    "Melatonin-onset: ${_formatTime(model.dlmo)}",
+    "Foreslået sengetid: ${_formatTime(model.sleepStart)}",
+    "Foreslået opvågning: ${_formatTime(model.sleepEnd)}",
+    "Anbefalet light-boost start: ${_formatTime(model.boostStart)}",
+    "Anbefalet light-boost slut: ${_formatTime(model.boostEnd)}",
+  ];
+}
+
+/// ----------------------------------------
+/// AVANCEREDE ANBEFALINGER: patient / kunde
+/// ----------------------------------------
+
+// Analysefunktion - genbruges af begge varianter
+Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
+  final processor = LightDataProcessing(rMEQ: rMEQ);
+  final Map<String, int> counters = {
+    'lowMorning': 0,
+    'highEvening': 0,
+    'poorScore': 0,
+  };
+
+  for (final d in data) {
+    final eval = processor.evaluateLightExposure(
+      melanopicEDI: d.melanopicEdi.toDouble(),
+      time: d.capturedAt,
+    );
+    if (d.capturedAt.hour >= 6 &&
+        d.capturedAt.hour <= 10 &&
+        eval['score'] < 60) {
+      counters['lowMorning'] = counters['lowMorning']! + 1;
+    }
+    if (d.capturedAt.hour >= 20 &&
+        eval['interval'] == 'sleep' &&
+        eval['score'] < 60) {
+      counters['highEvening'] = counters['highEvening']! + 1;
+    }
+    if (eval['score'] < 50) {
+      counters['poorScore'] = counters['poorScore']! + 1;
+    }
+  }
+  return counters;
+}
+
+// PATIENT: Avancerede anbefalinger (3. person)
+List<String> generateAdvancedRecommendationsForPatient({
+  required List<LightData> data,
+  required int rMEQ,
+}) {
+  final counters = _analyzeLightData(data, rMEQ);
+  final List<String> messages = [];
+
+  if (counters['lowMorning']! > 3) {
+    messages.add("Patienten har haft lav lys‐eksponering i morgentimerne – anbefal tidligere lyseksponering.");
+  }
+  if (counters['highEvening']! > 2) {
+    messages.add("Patienten har haft for meget lys om aftenen – anbefal at dæmp belysningen efter kl. 20.");
+  }
+  if (counters['poorScore']! > 5) {
+    messages.add("Flere målinger viser utilstrækkeligt lys – overvej en snak med patienten om at justere sine rutiner.");
+  }
+  if (messages.isEmpty) {
+    messages.add("Patientens lysrytme ser fin ud i denne periode");
+  }
+  return messages;
+}
+
+// KUNDE: Avancerede anbefalinger (direkte til bruger)
+List<String> generateAdvancedRecommendationsForCustomer({
+  required List<LightData> data,
+  required int rMEQ,
+}) {
+  final counters = _analyzeLightData(data, rMEQ);
+  final List<String> messages = [];
+
+  if (counters['lowMorning']! > 3) {
+    messages.add("Du har haft lav lyseksponering om morgenen. Prøv at komme ud i dagslys tidligere.");
+  }
+  if (counters['highEvening']! > 2) {
+    messages.add("Du har haft for meget lys om aftenen. Prøv at dæmpe belysningen efter kl. 20.");
+  }
+  if (counters['poorScore']! > 5) {
+    messages.add("Flere målinger viser for lidt lys. Overvej at justere dine lysvaner.");
+  }
+  if (messages.isEmpty) {
+    messages.add("Din lysrytme ser fin ud i denne periode.");
+  }
+  return messages;
+}
+
+/// ----------------------------------------
+/// ALLE BEREGNINGS- OG HJÆLPEMETODER
+/// ----------------------------------------
 class LightDataProcessing {
   final int rMEQ;
 
   LightDataProcessing({required this.rMEQ});
 
-  /// Konverterer R‐MEQ til MEQ‐værdi (fast tabel)
   double convertToMEQ() {
     if (rMEQ >= 22) return 78.0;
     if (rMEQ >= 18) return 64.0;
@@ -19,24 +167,20 @@ class LightDataProcessing {
     return 23.0;
   }
 
-  /// Estimerer DLMO (Dinner Light Melatonin Onset) ud fra MEQ
   double estimateDLMO(double meq) {
     return (209.023 - meq) / 7.288;
   }
 
-  /// Estimerer intern døgnrytme‐periode (Tau) ud fra MEQ
   double estimateTau(double meq) {
     return (24.97514314 - meq) / 0.01714266123;
   }
 
-  /// Beregner start‐tidspunkt for lysboost (DLMO‐buffer + offset)
   double calculateBoostStart(double tau, double dlmo) {
     double shift = tau - 24;
     double boostOffset = 2.6 + 0.06666666667 * sqrt(9111 + 15000 * shift);
     return dlmo - boostOffset;
   }
 
-  /// Returnerer et kort med alle tidsvinduer (DLMO, sleep, boost)
   Map<String, double> getTimeWindows() {
     final meq = convertToMEQ();
     final dlmo = estimateDLMO(meq);
@@ -56,7 +200,6 @@ class LightDataProcessing {
     };
   }
 
-  /// Finder, hvilket interval (lightboost, dlmo, sleep, daytime) nu ligger i
   String getCurrentInterval(DateTime now) {
     final time = now.hour + now.minute / 60.0;
     final windows = getTimeWindows();
@@ -73,7 +216,6 @@ class LightDataProcessing {
     return 'daytime';
   }
 
-  /// Beregner lysscore (0..100) ud fra melanopicEDI og interval
   double calculateLightScore(double melanopicEDI, String interval) {
     switch (interval) {
       case 'lightboost':
@@ -91,7 +233,6 @@ class LightDataProcessing {
     }
   }
 
-  /// Returnerer et map med 'score', 'interval' og 'recommendation' for et givet tidspunkt
   Map<String, dynamic> evaluateLightExposure({
     required double melanopicEDI,
     DateTime? time,
@@ -116,8 +257,7 @@ class LightDataProcessing {
     };
   }
 
-  /// Genererer en samlet liste af anbefalinger baseret på en liste af LightData
-  /// Tæller forskellige “problempunkter” og returnerer tekst‐beskeder.
+
   List<String> generateAdvancedRecommendations({
     required List<LightData> data,
     required int rMEQ,
@@ -135,21 +275,18 @@ class LightDataProcessing {
         time: d.capturedAt,
       );
 
-      // Morgentimer (06-10): lav score < 60?
       if (d.capturedAt.hour >= 6 &&
           d.capturedAt.hour <= 10 &&
           eval['score'] < 60) {
         counters['lowMorning'] = counters['lowMorning']! + 1;
       }
 
-      // Aften (efter kl. 20) i “sleep”-interval med score < 60?
       if (d.capturedAt.hour >= 20 &&
           eval['interval'] == 'sleep' &&
           eval['score'] < 60) {
         counters['highEvening'] = counters['highEvening']! + 1;
       }
 
-      // Generel tælling af målinger med score < 50
       if (eval['score'] < 50) {
         counters['poorScore'] = counters['poorScore']! + 1;
       }
@@ -182,7 +319,6 @@ class LightDataProcessing {
     return messages;
   }
 
-  /// Ekstra hjælpemetoder, hvis du ønsker at gruppere lys pr. dag/uge:
   Map<int, double> groupLuxByDay(List<LightData> data) {
     final Map<int, List<double>> map = {};
     for (final d in data) {

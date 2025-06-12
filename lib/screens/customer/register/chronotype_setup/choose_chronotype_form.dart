@@ -129,9 +129,9 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
   }
 
   Widget _buildChronoCard(ChronotypeModel type) {
-    final isSelected = selectedChronotype == type.title;
+    final isSelected = selectedChronotype == type.typeKey;
     return GestureDetector(
-      onTap: () => setState(() => selectedChronotype = type.title),
+      onTap: () => setState(() => selectedChronotype = type.typeKey),
       child: Container(
         width: double.infinity,
         margin: const EdgeInsets.only(bottom: 12),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 const generalBackground = Color(0xFF676767);
 const generalBox = Color(0xFF4C4C4C);
 const generalBoxHover = Color(0xFF8C8B8B);
-const generalDropDownBoxBacground = Color(0xFF323131);
+const generalDropDownBoxBackground = Color(0xFF323131);
 
 const navBar = Color(0xFF3A3A3A);
 

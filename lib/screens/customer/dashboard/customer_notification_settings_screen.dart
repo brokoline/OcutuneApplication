@@ -35,7 +35,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         SwitchListTile(
           title: Text(
             label,
-            style: TextStyle(color: Colors.white, fontSize: 16.sp),
+            style: TextStyle(color: Colors.white70, fontSize: 16.sp),
           ),
           value: value,
           onChanged: onChanged,

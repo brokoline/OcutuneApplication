@@ -22,7 +22,7 @@
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:exported="false"
             android:permission="android.permission.FOREGROUND_SERVICE"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync|connectedDevice" />
 
         <!-- Main activity -->
         <activity
@@ -43,3 +43,4 @@
             android:value="2" />
     </application>
 </manifest>
+

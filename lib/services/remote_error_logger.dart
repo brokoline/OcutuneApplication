@@ -5,6 +5,7 @@ class RemoteErrorLogger {
     required String patientId,
     required String type,
     required String message,
+    required String stack,
   }) async {
     try {
       await ApiService.postSyncErrorLog({

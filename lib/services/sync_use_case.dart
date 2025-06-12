@@ -3,105 +3,110 @@
 import 'dart:convert';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
-import 'package:ocutune_light_logger/services/auth_storage.dart'; // <- Hent token herfra
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 
-/// SyncUseCase tager lokale, u‐synkroniserede rækker fra OfflineStorageService
-/// og forsøger at sende dem til serveren via ApiService. Hvis en enkelt række
-/// ikke kan synkroniseres, fanges fejlen pr. post, og vi prøver igen næste runde.
 class SyncUseCase {
-  /// Hent alle rækker, der ligger i den lokale SQLite‐tabel 'unsynced_data',
-  /// og send dem til serveren. Hvis det lykkes, slettes den pågældende række.
-  static Future<void> syncAll() async {
-    // Hent alle usynkroniserede rækker
-    final rows = await OfflineStorageService.getUnsyncedData();
+  static bool _isSyncing = false;
 
-    if (rows.isEmpty) {
-      print("[SyncUseCase] Ingen offline‐poster at synkronisere.");
+  static Future<void> syncAll() async {
+    if (_isSyncing) {
+      print('[SyncUseCase] Sync already in progress, skipping overlapping call.');
       return;
     }
+    _isSyncing = true;
+    try {
+      await OfflineStorageService.purgeInvalidUnsyncedData();
+      final rows = await OfflineStorageService.getUnsyncedData();
+      if (rows.isEmpty) {
+        print('[SyncUseCase] Ingen offline‑poster at synkronisere.');
+        return;
+      }
+      print('[SyncUseCase] Starter synkronisering af ${rows.length} offline‑poster...');
 
-    print("[SyncUseCase] Starter synkronisering af ${rows.length} offline‐poster...");
+      for (final row in rows) {
+        final int id = row['id'] as int;
+        final String type = row['type'] as String;
+        final Map<String, dynamic> payload =
+        jsonDecode(row['json'] as String) as Map<String, dynamic>;
 
-    // Loop over hver række fra unsynced_data
-    for (final row in rows) {
-      final int id = row['id'] as int;
-      final String type = row['type'] as String;
-      final Map<String, dynamic> payload = jsonDecode(row['json'] as String);
+        try {
+          if (type == 'battery') {
+            print('[SyncUseCase] Forsøger at sende battery id=$id til server…');
+            final String patientId = payload['patient_id'] as String;
+            final int batteryLevel = payload['battery_level'] as int;
+            int? sensorId;
+            if (payload['sensor_id'] is int) {
+              sensorId = payload['sensor_id'] as int;
+            } else if (payload['sensor_id'] is String) {
+              sensorId = int.tryParse(payload['sensor_id'] as String);
+            }
 
-      try {
-        // -------------------------------------------------------
-        // 1) Batteri‐data (hvis du har gemt 'type':'battery')
-        // -------------------------------------------------------
-        if (type == 'battery') {
-          final String patientId = payload['patient_id'] as String;
-          final int batteryLevel = payload['battery_level'] as int;
+            final bool success = await ApiService.reportBatteryStatus(
+              patientId,
+              batteryLevel,
+              sensorId: sensorId,
+            );
+            if (success) {
+              await OfflineStorageService.deleteById(id);
+              print('[SyncUseCase] Slettede battery‑post id=$id fra offline‑kø.');
+            } else {
+              print('[SyncUseCase] reportBatteryStatus returnerede false for id=$id. Beholder posten.');
+            }
+          } else if (type == 'light') {
+            print('[SyncUseCase] Forsøger at sende light id=$id til server…');
 
-          // Tjek om payload['sensor_id'] enten er en int eller streng, parse til int?
-          int? sensorId;
-          if (payload['sensor_id'] is int) {
-            sensorId = payload['sensor_id'] as int;
-          } else if (payload['sensor_id'] is String) {
-            sensorId = int.tryParse(payload['sensor_id'] as String);
-          }
+            // 1) Pre‑validere payload for null og forkerte værdier
+            const requiredFields = [
+              'patient_id',
+              'sensor_id',
+              'timestamp',
+              'lux_level',
+              'melanopic_edi',
+              'illuminance',
+            ];
+            final isBad = requiredFields.any((k) {
+              final v = payload[k];
+              if (v == null) return true;
+              if (k == 'sensor_id' && (v is int ? false : int.tryParse(v.toString()) == null)) {
+                return true;
+              }
+              return false;
+            }) ||
+                // Fjern “Unknown” som light_type
+                (payload['light_type'] == null || payload['light_type'] == 'Unknown');
 
-          print("[SyncUseCase] Forsøger at sende battery id=$id til server…");
+            if (isBad) {
+              print('[SyncUseCase] Ugyldig light‑data id=$id (null/Unknown) – sletter posten.');
+              await OfflineStorageService.deleteById(id);
+              continue;
+            }
 
-          // Kald ApiService.reportBatteryStatus
-          final bool success = await ApiService.reportBatteryStatus(
-            patientId,
-            batteryLevel,
-            sensorId: sensorId,
-          );
+            // ─── 2) Hent JWT og send ───
+            final String? jwt = await AuthStorage.getToken();
+            if (jwt == null) {
+              print('[SyncUseCase] Ingen JWT tilgængelig – springer over id=$id');
+              continue;
+            }
 
-          if (success) {
-            await OfflineStorageService.deleteById(id);
-            print("[SyncUseCase] Slettede battery‐post id=$id fra offline‐kø.");
+            final bool success = await ApiService.sendLightData(payload, jwt);
+            if (success) {
+              await OfflineStorageService.deleteById(id);
+              print('[SyncUseCase] Slettede light‑post id=$id fra offline‑kø.');
+            } else {
+              print('[SyncUseCase] sendLightData returnerede false for id=$id. Beholder posten.');
+            }
           } else {
-            print("[SyncUseCase] reportBatteryStatus returnerede false for id=$id. Beholder posten.");
-          }
-        }
-        // -------------------------------------------------------
-        // 2) Lysdata (hvis du har gemt 'type':'light')
-        // -------------------------------------------------------
-        else if (type == 'light') {
-          print("[SyncUseCase] Forsøger at sende light id=$id til server…");
-
-          // Hent JWT fra AuthStorage
-          final String? jwt = await AuthStorage.getToken();
-          if (jwt == null) {
-            print("[SyncUseCase] Ingen JWT tilgængelig – kan ikke kalde sendLightData");
-            // Vi springer selve kaldet over, men sletter ikke posten – så der kan forsøges næste gang.
-            continue;
-          }
-
-          // ApiService.sendLightData forventer (Map<String,dynamic> data, String jwt)
-          final bool success = await ApiService.sendLightData(
-            payload,
-            jwt,
-          );
-
-          if (success) {
+            print("[SyncUseCase] Ukendt type '$type' for id=$id; sletter posten.");
             await OfflineStorageService.deleteById(id);
-            print("[SyncUseCase] Slettede light‐post id=$id fra offline‐kø.");
-          } else {
-            print("[SyncUseCase] sendLightData returnerede false for id=$id. Beholder posten.");
           }
-        }
-        // -------------------------------------------------------
-        // 3) Ukendt type → slet posten for at undgå at sidde fast
-        // -------------------------------------------------------
-        else {
-          print("[SyncUseCase] Ukendt type '$type' for id=$id; sletter for at undgå loop.");
-          await OfflineStorageService.deleteById(id);
+        } catch (e) {
+          print("[SyncUseCase] FEJL under synkronisering af id=$id, type='$type': $e");
         }
       }
-      catch (e) {
-        // Fanger exception per post (fx netværkstimeout, server‐fejl, JSON‐fejl osv.)
-        print("[SyncUseCase] FEJL under synkronisering af id=$id, type='$type': $e");
-        // Vi sletter ikke posten her, så den bliver forsøgt igen næste runde.
-      }
+
+      print('[SyncUseCase] Synkroniseringsrunde færdig.');
+    } finally {
+      _isSyncing = false;
     }
-
-    print("[SyncUseCase] Synkroniseringsrunde færdig.");
   }
 }

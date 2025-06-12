@@ -1,24 +1,13 @@
-// lib/widgets/customer_widgets/customer_light_monthly_bar_chart.dart
-
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../services/auth_storage.dart';
 import '/theme/colors.dart';
-import '/models/light_data_model.dart';
-import '/utils/light_utils.dart';
-import '/controller/chronotype_controller.dart';
-import '/services/services/api_services.dart';
-import 'package:fl_chart/fl_chart.dart';
+import '../../../models/daily_light_summary_model.dart';
+import '../../../services/services/api_services.dart';
 
 class CustomerLightMonthlyBarChart extends StatefulWidget {
-  final int rmeqScore;
-  final String chronotype;
-
-  const CustomerLightMonthlyBarChart({
-    Key? key,
-    required this.rmeqScore,
-    required this.chronotype,
-  }) : super(key: key);
+  const CustomerLightMonthlyBarChart({super.key});
 
   @override
   State<CustomerLightMonthlyBarChart> createState() =>
@@ -27,7 +16,7 @@ class CustomerLightMonthlyBarChart extends StatefulWidget {
 
 class _CustomerLightMonthlyBarChartState
     extends State<CustomerLightMonthlyBarChart> {
-  List<LightData>? _monthData;
+  List<DailyLightSummary>? _monthlySummary;
   String? _errorMessage;
   bool _isLoading = false;
   late Future<String?> _tokenFuture;
@@ -38,25 +27,23 @@ class _CustomerLightMonthlyBarChartState
     _tokenFuture = AuthStorage.getToken();
   }
 
-  Future<void> _fetchMonthLightData() async {
+  Future<void> _fetchMonthlyLightData() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
-      final fetched =
+      final summaryList =
       await ApiService.fetchMonthlyLightData(patientId: 'P3');
-      setState(() {
-        _monthData = fetched;
-      });
+      if (!mounted) return;
+      setState(() => _monthlySummary = summaryList);
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Kunne ikke hente månedsdata: $e';
-      });
+      if (!mounted) return;
+      setState(() => _errorMessage = 'Kunne ikke hente månedsdata: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (!mounted) return;
+      setState(() => _isLoading = false);
     }
   }
 
@@ -67,27 +54,26 @@ class _CustomerLightMonthlyBarChartState
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: const Center(child: CircularProgressIndicator()),
           );
         }
         if (snapshot.hasError) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
-                'Fejl ved hent af login‐status: ${snapshot.error}',
+                'Fejl ved hentning af login‐status: ${snapshot.error}',
                 style: TextStyle(color: Colors.redAccent, fontSize: 14.sp),
                 textAlign: TextAlign.center,
               ),
             ),
           );
         }
-
         final token = snapshot.data;
         if (token == null) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Container(
               decoration: BoxDecoration(
                 color: generalBox,
@@ -98,9 +84,8 @@ class _CustomerLightMonthlyBarChartState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Du skal logge ind for at se månedlige lysmål.',
-                    style:
-                    TextStyle(color: Colors.white70, fontSize: 14.sp),
+                    'Du skal logge ind for at se månedlige lysmålinger.',
+                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 12.h),
@@ -119,21 +104,21 @@ class _CustomerLightMonthlyBarChartState
           );
         }
 
-        if (_monthData == null && _errorMessage == null && !_isLoading) {
+        if (_monthlySummary == null && _errorMessage == null && !_isLoading) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _fetchMonthLightData();
+            _fetchMonthlyLightData();
           });
         }
 
         if (_isLoading) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: const Center(child: CircularProgressIndicator()),
           );
         }
         if (_errorMessage != null) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
                 _errorMessage!,
@@ -144,13 +129,13 @@ class _CustomerLightMonthlyBarChartState
           );
         }
 
-        final rawData = _monthData ?? [];
-        if (rawData.isEmpty) {
+        final summaryList = _monthlySummary ?? [];
+        if (summaryList.isEmpty) {
           return SizedBox(
-            height: 200.h,
+            height: 180.h,
             child: Center(
               child: Text(
-                'Ingen lysmålinger i denne måned (UTC).',
+                'Ingen lysmålinger denne måned.',
                 style: TextStyle(color: Colors.white70, fontSize: 14.sp),
                 textAlign: TextAlign.center,
               ),
@@ -158,212 +143,187 @@ class _CustomerLightMonthlyBarChartState
           );
         }
 
-        // Filtrér “denne måned” udfra UTC (år+måned)
-        final nowUtc = DateTime.now().toUtc();
-        final year = nowUtc.year;
-        final month = nowUtc.month;
-        final List<LightData> thisMonthData = rawData.where((d) {
-          final ts = d.capturedAt.toUtc();
-          return ts.year == year && ts.month == month;
-        }).toList();
+        final today = DateTime.now();
+        final year = today.year;
+        final month = today.month;
+        final daysInMonth = DateTime(year, month + 1, 0).day;
 
-        // Byg Map<dag, gennemsnitlig ediLux> for denne måned
-        final domMap = LightUtils.groupByDayOfMonthLux(thisMonthData);
-        final sortedDays = domMap.keys.toList()..sort();
+        Map<int, DailyLightSummary> summaryByDay = {
+          for (var d in summaryList) d.day.day: d
+        };
 
-        // Lave en ChronotypeManager baseret på kundens rMEQ og chronotype
-        final ChronotypeManager chrono =
-        ChronotypeManager(widget.rmeqScore);
+        List<BarChartGroupData> barGroups = [];
+        for (int day = 1; day <= daysInMonth; day++) {
+          bool isFuture = DateTime(year, month, day).isAfter(today);
+          final summary = summaryByDay[day];
+          if (isFuture) break;
 
-        // DLMO‐dato i UTC (vi tager “dag” ud af DateTime)
-        final DateTime dlmoUtc = chrono.getRecommendedTimes()['dlmo']!.toUtc();
-        final int recommendedDay = dlmoUtc.day;
-
-        final double startBoostHour = chrono.lightboostStartHour;
-        final double endBoostHour = chrono.lightboostEndHour;
-
-        final double maxAvgLux =
-        domMap.values.reduce((a, b) => a > b ? a : b);
-
-        const thresholdPct = 50.0;
-        const Color goodColor = Color(0xFFFFAB00);
-        const Color badColor = Color(0xFF5DADE2);
-        final neutralColor = Colors.grey.shade600;
-
-        final List<BarChartGroupData> barGroups = [];
-
-        for (int idx = 0; idx < sortedDays.length; idx++) {
-          final day = sortedDays[idx];
-          final avgLuxForDay = domMap[day]!;
-
-          final avgY = (maxAvgLux > 0)
-              ? ((avgLuxForDay / maxAvgLux) * 100.0).clamp(0.0, 100.0)
-              : 0.0;
-
-          if (day != recommendedDay) {
+          if (summary == null || summary.totalMeasurements == 0) {
             barGroups.add(
               BarChartGroupData(
-                x: idx,
+                x: day,
                 barRods: [
                   BarChartRodData(
-                    toY: avgY,
-                    color: neutralColor,
-                    width: 16.w,
+                    toY: 0,
+                    color: const Color(0xFF444444),
+                    width: 14.w,
                     borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            double pctAbove = (summary.countHighLight / summary.totalMeasurements) * 100.0;
+            double pctBelow = 100.0 - pctAbove;
+            barGroups.add(
+              BarChartGroupData(
+                x: day,
+                barRods: [
+                  BarChartRodData(
+                    toY: 100.0,
+                    width: 14.w,
+                    borderRadius: BorderRadius.circular(4.r),
+                    rodStackItems: [
+                      BarChartRodStackItem(
+                        0,
+                        pctBelow,
+                        const Color(0xFF5DADE2),
+                      ),
+                      BarChartRodStackItem(
+                        pctBelow,
+                        100,
+                        const Color(0xFFFFAB00),
+                      ),
+                    ],
                     backDrawRodData: BackgroundBarChartRodData(
                       show: true,
                       toY: 100,
-                      color: Colors.grey.withOpacity(0.15),
+                      color: const Color(0xFF444444),
                     ),
                   ),
                 ],
               ),
             );
-            continue;
           }
-
-          // Hvis det er DLMO‐dag → check boost‐vindue
-          final onlyThatDay = thisMonthData.where((d) {
-            return d.capturedAt.toUtc().day == day;
-          }).toList();
-
-          final inWindow = onlyThatDay.where((d) {
-            final tsUtc = d.capturedAt.toUtc();
-            final double hourFrac =
-                tsUtc.hour + (tsUtc.minute / 60.0);
-            return hourFrac >= startBoostHour &&
-                hourFrac < endBoostHour;
-          }).toList();
-
-          double avgInWindowPct = 0.0;
-          if (inWindow.isNotEmpty) {
-            final sumPct = inWindow
-                .map((d) => (d.ediLux * 100.0).clamp(0.0, 100.0))
-                .reduce((a, b) => a + b);
-            avgInWindowPct =
-                (sumPct / inWindow.length).clamp(0.0, 100.0);
-          }
-
-          final meetsThreshold = avgInWindowPct >= thresholdPct;
-          final barColor = meetsThreshold ? goodColor : badColor;
-
-          barGroups.add(
-            BarChartGroupData(
-              x: idx,
-              barRods: [
-                BarChartRodData(
-                  toY: avgY,
-                  color: barColor,
-                  width: 16.w,
-                  borderRadius: BorderRadius.circular(4.r),
-                  backDrawRodData: BackgroundBarChartRodData(
-                    show: true,
-                    toY: 100,
-                    color: Colors.grey.withOpacity(0.15),
-                  ),
-                ),
-              ],
-            ),
-          );
         }
 
-        return Card(
-          color: Colors.grey.shade900,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          elevation: 4,
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Månedlig lysmængde (rMEQ: ${widget.rmeqScore}, '
-                      'Chronotype: ${widget.chronotype})',
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(bottom: 10.h),
+              child: Center(
+                child: Text(
+                  'Månedlig lyseksponering',
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 12.h),
-                SizedBox(
-                  height: 200.h,
-                  child: BarChart(
-                    BarChartData(
-                      minY: 0,
-                      maxY: 100,
-                      alignment: BarChartAlignment.spaceBetween,
-                      backgroundColor: Colors.grey.shade900,
-                      borderData: FlBorderData(show: false),
-                      gridData: FlGridData(
-                        show: true,
-                        horizontalInterval: 20,
-                        getDrawingHorizontalLine: (double y) {
-                          return FlLine(
-                            color: Colors.grey.withOpacity(0.3),
-                            strokeWidth: 1,
+              ),
+            ),
+            SizedBox(
+              height: 180.h,
+              child: BarChart(
+                BarChartData(
+                  minY: 0,
+                  maxY: 100,
+                  backgroundColor: Colors.transparent,
+                  borderData: FlBorderData(show: false),
+                  gridData: FlGridData(
+                    show: true,
+                    horizontalInterval: 20,
+                    getDrawingHorizontalLine: (y) => FlLine(
+                      color: Colors.white24,
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 20,
+                        reservedSize: 32,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            "${value.toInt()}%",
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10.sp,
+                            ),
                           );
                         },
                       ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 1,
-                            reservedSize: 32,
-                            getTitlesWidget:
-                                (double value, TitleMeta meta) {
-                              final idx = value.toInt();
-                              if (idx < 0 ||
-                                  idx >= sortedDays.length) {
-                                return const SizedBox.shrink();
-                              }
-                              return SideTitleWidget(
-                                meta: meta,
-                                child: Text(
-                                  sortedDays[idx].toString(),
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 10.sp,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            interval: 20,
-                            reservedSize: 32,
-                            getTitlesWidget:
-                                (double value, TitleMeta meta) {
-                              return Text(
-                                "${value.toInt()}%",
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 24,
+                        getTitlesWidget: (value, meta) {
+                          final idx = value.toInt();
+                          if (idx < 1 || idx > daysInMonth) return const SizedBox.shrink();
+                          if (idx == 1 || idx == daysInMonth || idx % 3 == 0) {
+                            return Padding(
+                              padding: EdgeInsets.only(top: 6.h),
+                              child: Text(
+                                '$idx',
                                 style: TextStyle(
-                                  color: Colors.white54,
+                                  color: Colors.white70,
                                   fontSize: 10.sp,
                                 ),
-                              );
-                            },
-                          ),
-                        ),
-                        topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
                       ),
-                      barGroups: barGroups,
-                      groupsSpace: 4.w,
                     ),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
+                  alignment: BarChartAlignment.spaceAround,
+                  groupsSpace: 8.w,
+                  barGroups: barGroups,
                 ),
-              ],
+              ),
             ),
-          ),
+            SizedBox(height: 10.h),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(Icons.circle, color: const Color(0xFFFFAB00), size: 18.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        "Tidspunkt med optimal lyseksponering",
+                        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(Icons.circle, color: const Color(0xFF5DADE2), size: 18.sp),
+                      SizedBox(width: 10.w),
+                      Text(
+                        "Tidspunkt med uoptimal lyseksponering",
+                        style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
     );

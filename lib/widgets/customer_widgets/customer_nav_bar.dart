@@ -27,27 +27,38 @@ class CustomerNavBar extends StatelessWidget {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
 
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
             label: 'Oversigt',
           ),
 
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.wb_sunny_outlined),
             activeIcon: Icon(Icons.wb_sunny),
             label: 'Lysdetalje',
           ),
 
           BottomNavigationBarItem(
+            icon: Image.asset(
+              "assets/icon/BLE-sensor-ikon.png",
+              height: 50,
+              width: 50,
+              color: currentIndex == 2 ? Colors.white : Colors.white54,
+            ),
+            label: "Sensor",
+          ),
+
+
+          const BottomNavigationBarItem(
             icon: Icon(Icons.info_outline),
             activeIcon: Icon(Icons.info),
             label: 'Chrono-info',
           ),
 
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Indstillinger',
           ),

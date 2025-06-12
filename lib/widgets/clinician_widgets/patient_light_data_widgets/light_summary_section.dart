@@ -7,12 +7,11 @@ import 'package:intl/intl.dart';
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
 import '../../../controller/chronotype_controller.dart';
-import '../../../../utils/light_data_processing.dart';
+import '../../../services/processing/dlmo_data_processing.dart';
 
 import 'clinician_recommandation_card.dart';
 import 'light_slide_bar_chart.dart';
-import 'light_recommendations_card.dart';
-import 'light_score_card.dart';
+
 
 class LightSummarySection extends StatelessWidget {
   final String patientId;
@@ -103,26 +102,10 @@ class LightSummarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ─────── 1) VIS kliniker-anbefalinger øverst ────────────────────────
         ClinicianRecommendationCard(
           recommendations: clinicianRecs,
         ),
-        SizedBox(height: 16.h),
-
-        // ─────── 2) VIS “almindelige” anbefalinger ─────────────────────────
-        LightRecommendationsCard(
-          recommendations: recs,
-        ),
-        SizedBox(height: 16.h),
-
-        // ─────── 3) Score card (rMEQ + MEQ) ───────────────────────────────
-        LightScoreCard(
-          rmeqScore: rmeqScore,
-          meqScore: meqScore ?? 0,
-        ),
-        SizedBox(height: 24.h),
-
-        // ─────── 4) Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
+        //  Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
         LightSlideBarChart(
           patientId: patientId,
           rmeqScore: rmeqScore,

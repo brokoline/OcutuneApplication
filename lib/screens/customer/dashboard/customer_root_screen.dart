@@ -14,6 +14,7 @@ import '../customer_root_controller.dart';
 import 'customer_chrono_info_screen.dart';
 import 'customer_overview_screen.dart';
 import 'customer_light_detail_screen.dart';
+import 'customer_sensor_screen.dart';
 import 'customer_settings_screen.dart';
 
 class CustomerRootScreen extends StatelessWidget {
@@ -113,26 +114,28 @@ class CustomerRootView extends StatelessWidget {
 
               // ─── Profil‐data er hentet ─────────────────────────────
               final Customer profile = snapshot.data!.first;
-              final ChronotypeModel? chronoModel = snapshot.data!.second;
+
 
               final String name = '${profile.firstName} ${profile.lastName}';
-              final List<String> recommendations = [
-                '08:00 – Gå en morgentur i dagslys',
-                '21:00 – Undgå skærmlys før sengetid',
-              ];
-
               // Fire separate undersider, lagt i en liste:
               final pages = [
                 // 0: Oversigt
                 CustomerOverviewScreen(
                   profile: profile,
-                  recommendations: recommendations,
+                  lightDataList: [],
                 ),
 
-                // 1: Lysdetalje
-                const CustomerLightDetailScreen(),
+                // 1: Lysdetaljer
+                CustomerLightDetailScreen(
+                  profile: profile,
+                ),
 
-                // 2: Kronobiologi
+                // 2: Sensor side
+                CustomerSensorScreen(
+                  customerId: '',
+                ),
+
+                // 3: Kronobiologi
                 const CustomerChronotypeInfoScreen(),
 
                 // 4: Indstillinger for notifikationer
@@ -140,8 +143,9 @@ class CustomerRootView extends StatelessWidget {
               ];
 
               final titles = [
-                "\$name’s oversigt",
-                'Lysdetalje',
+                "Oversigt for $name",
+                'Lysdetaljer',
+                'Sensorforbindelse',
                 'Chronobiologi',
                 'Indstillinger',
               ];

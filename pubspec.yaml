@@ -23,6 +23,7 @@ dependencies:
   fl_chart: ^1.0.0
   flutter_foreground_task: 8.0.0
   flutter_secure_storage: ^10.0.0-beta.4
+  image_picker: ^1.0.7
   sqflite: ^2.3.0
   path: ^1.8.3
   path_provider: ^2.1.2

@@ -3,10 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// En kort‐widget, der viser en liste af lys-anbefalinger til klinikere
-/// i samme visuelle stil som LightScoreCard, men uden baggrundscard og overskrift.
 class ClinicianRecommendationCard extends StatelessWidget {
-  /// Listen af anbefalingstekster, fx fra LightDataProcessing.generateAdvancedRecommendations(...)
   final List<String> recommendations;
 
   const ClinicianRecommendationCard({

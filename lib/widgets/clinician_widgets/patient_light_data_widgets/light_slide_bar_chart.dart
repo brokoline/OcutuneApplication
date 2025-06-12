@@ -53,7 +53,6 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
     // 3) MÅNEDLIG GRAF → henter selv via API (patientId + rmeqScore)
     final monthlyPage = LightMonthlyBarChart(
       patientId: widget.patientId,
-      rmeqScore: widget.rmeqScore,
     );
 
     // 4) Saml de tre sider i en PageView
@@ -66,7 +65,7 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
     return Column(
       children: [
         SizedBox(
-          height: 320.h,
+          height: 290.h,
           child: PageView(
             controller: _pageController,
             children: pages,

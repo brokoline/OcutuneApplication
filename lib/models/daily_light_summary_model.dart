@@ -1,10 +1,10 @@
 // lib/models/daily_light_summary_model.dart
 
 class DailyLightSummary {
-  final DateTime day;           // fx DateTime.parse("2025-06-02")
-  final int countHighLight;     // svarer til JSON-feltet "count_high_light"
-  final int countLowLight;      // svarer til JSON-feltet "count_low_light"
-  final int totalMeasurements;  // svarer til JSON-feltet "total_measurements"
+  final DateTime day;
+  final int countHighLight;
+  final int countLowLight;
+  final int totalMeasurements;
 
   DailyLightSummary({
     required this.day,

@@ -8,7 +8,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/customer/customer_root_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
+import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
+import 'package:ocutune_light_logger/services/services/sensor_log_service.dart';
+import 'package:ocutune_light_logger/services/sync_scheduler.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:ocutune_light_logger/services/services/foreground_service_handler.dart';
+
 
 // 🧩 Skærme
 import 'screens/splash_screen.dart';
@@ -23,14 +29,14 @@ import 'screens/customer/register/chronotype_setup/customer_choose_chronotype_sc
 import 'screens/customer/register/learn_about_chronotypes/customer_learn_about_chronotypes_screen.dart';
 import 'screens/customer/register/learn_about_chronotypes/customer_details_about_chronotypes_screen.dart';
 import 'screens/customer/register/registration_complete/customer_complete_setup_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_1_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_3_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_4_screen.dart';
-import 'screens/customer/register/registration_steps/chronotype_survey/customer_question_5_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_1_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_2_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_3_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_4_screen.dart';
+import 'screens/customer/register/chronotype_survey/customer_question_5_screen.dart';
 
 
-// 📂 Customer Dashboard (root) screens & controller
+// Customer Dashboard (root) screens & controller
 import 'screens/patient/patient_dashboard_screen.dart';
 import 'screens/patient/activities/patient_activity_screen.dart';
 import 'screens/patient/sensor_settings/patient_sensor_screen.dart';
@@ -51,32 +57,126 @@ import 'services/processing/data_processing.dart';
 import 'services/processing/data_processing_manager.dart';
 import 'viewmodel/clinician/patient_detail_viewmodel.dart';
 
-void main() async {
+
+@pragma('vm:entry-point')
+void startCallback() {
+  FlutterForegroundTask.setTaskHandler(OcutuneForegroundHandler());
+}
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 1) Init lokal SQLite‐buffer for offline data
+  await OfflineStorageService.init();
+  await SensorLogService.init();
+
+  // 2) Start sync‐scheduler med 30s interval
+  SyncScheduler.start(interval: const Duration(minutes: 10));
+
+  // 3) Lyt på netværksændringer for at trigge en ekstra sync
+  //Connectivity().onConnectivityChanged.listen((status) {
+  // if (status != ConnectivityResult.none) {
+  //    // syncAll vil forsøge alle typer data (light, battery, etc.)
+  //    SyncUseCase.syncAll();
+  //  }
+  //);
+
+  // 4) Certs og UI‐opsætning
   if (!kReleaseMode) {
     HttpOverrides.global = MyHttpOverrides();
   }
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Color(0xFF4C4C4C),
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+  ErrorWidget.builder = (details) => Center(
+    child: Text('🚨 FEJL: ${details.exception}', style: const TextStyle(color: Colors.red)),
+  );
 
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Color(0xFF4C4C4C),
-    statusBarIconBrightness: Brightness.light,
-  ));
+  // 5) Foreground‐service init
+  FlutterForegroundTask.initCommunicationPort();
+  FlutterForegroundTask.init(
+    androidNotificationOptions: AndroidNotificationOptions(
+      channelId: 'ocutune_channel',
+      channelName: 'Ocutune Baggrunds-Service',
+      channelDescription: 'Logger i baggrunden',
+      channelImportance: NotificationChannelImportance.LOW,
+      priority: NotificationPriority.LOW,
+      enableVibration: false,
+      playSound: false,
+      showWhen: true,
+      visibility: NotificationVisibility.VISIBILITY_PUBLIC,
+    ),
+    iosNotificationOptions: const IOSNotificationOptions(
+      showNotification: true,
+      playSound: false,
+    ),
+    foregroundTaskOptions: const ForegroundTaskOptions(
+      interval: 10000,
+      isOnceEvent: false,
+      autoRunOnBoot: false,
+      allowWakeLock: true,
+      allowWifiLock: true,
+    ),
+  );
 
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Center(
-      child: Text(
-        '🚨 FEJL: ${details.exception}',
-        style: const TextStyle(color: Colors.red),
-        textAlign: TextAlign.center,
-      ),
-    );
-  };
-
-  // ➕ Kald AppInitializer.initialize() før runApp
+  // 6) Øvrig app‐init
   await AppInitializer.initialize();
 
+  // 7) Kør selve app’en
   runApp(const OcutuneApp());
+}
+
+/// Én samlet HttpOverrides, der giver self-signed certs
+/// og logger alle GET/POST/opener-chatter.
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    // 1) Opret standard HttpClient og accepter alle certs
+    final inner = super.createHttpClient(context)
+      ..badCertificateCallback = (cert, host, port) => true;
+
+    // 2) Pak den ind i vores logger
+    return _LoggingHttpClient(inner);
+  }
+}
+
+/// Logger alle HTTP-kald for at lette debug i DEV
+class _LoggingHttpClient implements HttpClient {
+  final HttpClient _inner;
+  _LoggingHttpClient(this._inner);
+
+  @override
+  set autoUncompress(bool value) => _inner.autoUncompress = value;
+  @override
+  bool get autoUncompress => _inner.autoUncompress;
+
+  @override
+  Future<HttpClientRequest> getUrl(Uri url) {
+    print('🌐 [GET] $url');
+    return _inner.getUrl(url);
+  }
+
+  @override
+  Future<HttpClientRequest> postUrl(Uri url) {
+    print('📡 [POST] $url');
+    return _inner.postUrl(url);
+  }
+
+  @override
+  Future<HttpClientRequest> openUrl(String method, Uri url) {
+    print('🧩 [OPEN] $method $url');
+    return _inner.openUrl(method, url);
+  }
+
+  @override
+  void close({bool force = false}) => _inner.close(force: force);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      Function.apply(_inner.noSuchMethod, [invocation]);
 }
 
 class OcutuneApp extends StatelessWidget {
@@ -203,56 +303,4 @@ class OcutuneApp extends StatelessWidget {
       ),
     );
   }
-}
-
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    final inner = super.createHttpClient(context)
-      ..badCertificateCallback = (cert, host, port) {
-        print('⚠️ [CERT] Godkendt manuelt for: $host');
-        return true;
-      };
-    return _LoggingHttpClient(inner);
-  }
-}
-
-class _LoggingHttpClient implements HttpClient {
-  final HttpClient _inner;
-
-  _LoggingHttpClient(this._inner);
-
-  // Tilføj setter og getter for autoUncompress, så NetworkImage ikke fejler:
-  @override
-  set autoUncompress(bool value) {
-    _inner.autoUncompress = value;
-  }
-
-  @override
-  bool get autoUncompress => _inner.autoUncompress;
-
-  @override
-  Future<HttpClientRequest> getUrl(Uri url) {
-    print('🌐 [GET] $url');
-    return _inner.getUrl(url);
-  }
-
-  @override
-  Future<HttpClientRequest> postUrl(Uri url) {
-    print('📡 [POST] $url');
-    return _inner.postUrl(url);
-  }
-
-  @override
-  Future<HttpClientRequest> openUrl(String method, Uri url) {
-    print('🧩 [OPEN] $method $url');
-    return _inner.openUrl(method, url);
-  }
-
-  @override
-  void close({bool force = false}) => _inner.close(force: force);
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      Function.apply(_inner.noSuchMethod, [invocation]);
 }

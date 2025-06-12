@@ -1,4 +1,4 @@
-// lib/controllers/patient_sensor_controller.dart
+// lib/controllers/customer_sensor_controller.dart
 
 import 'dart:async';
 
@@ -9,8 +9,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ocutune_light_logger/controller/ble_controller.dart';
 import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 
-class PatientSensorController {
-  final String patientId;
+class CustomerSensorController {
+  final String customerId;
   final BleController bleController;
 
   /// Privat liste over fundne devices
@@ -24,7 +24,7 @@ class PatientSensorController {
 
   BleLifecycleHandler? _lifecycleHandler;
 
-  PatientSensorController({ required this.patientId })
+  CustomerSensorController({ required this.customerId })
       : bleController = BleController();
 
   /// Skal kaldes én gang fra fx initState()
@@ -80,7 +80,7 @@ class PatientSensorController {
     try {
       await bleController.connectToDevice(
         device: device,
-        patientId: patientId,
+        patientId: customerId, // <--- NB: behold "patientId" hvis BLE-controlleren forventer det!
       );
 
       // Opsæt genopkobling ved app-lifecycle
@@ -90,7 +90,7 @@ class PatientSensorController {
         ..start()
         ..updateDevice(
           device: device,
-          patientId: patientId,
+          patientId: customerId, // <--- NB: samme her!
         );
 
       ScaffoldMessenger.of(context).showSnackBar(

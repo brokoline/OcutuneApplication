@@ -3,11 +3,10 @@
 import 'package:flutter/material.dart';
 import '../models/light_data_model.dart';
 
-/// En utility‐klasse til at gruppere rå LightData i time‐, uge‐ og
-/// måned‐buckets. Alle gruppering sker i lokal tid (dvs. .toLocal()).
-///
-/// Metoderne returnerer enten rå gennemsnits‐ediLux (ikke procenter),
-/// eller rå gennemsnits‐procenter baseret på ediLux*100, alt efter behov.
+// En utility‐klasse til at gruppere rå LightData i time‐, uge‐ og
+// måned‐buckets. Alle gruppering sker i lokal tid (dvs. .toLocal()).
+// Metoderne returnerer enten rå gennemsnits‐ediLux (ikke procenter),
+// eller rå gennemsnits‐procenter baseret på ediLux*100, alt efter behov.
 class LightUtils {
   LightUtils._(); // Privat constructor – må ikke instantieres
 
@@ -119,10 +118,9 @@ class LightUtils {
 
   // --------------------------------------------------------------------------------
   // 5) UGEDAG‐OG‐MÅNEDSBASERET BUCKETING (PROCENT): groupByWeekdayPct
-  //
   // Input:  Liste af LightData.
   // Handling: Samler ediLux‐værdier i lokal ugedag og omregner hver måling til procent
-  //           via (ediLux * 100).clamp(0..100). Derefter beregnes gennemsnit pr. ugedag.
+  // via (ediLux * 100).clamp(0..100). Derefter beregnes gennemsnit pr. ugedag.
   // Output: Map<int,double> med nøgler 0=Mandag..6=Søndag, værdier = gennemsnitlig procent (0..100).
   static Map<int, double> groupByWeekdayPct(List<LightData> data) {
     final Map<int, List<double>> buckets = { for (var i = 0; i < 7; i++) i: <double>[] };
@@ -153,7 +151,7 @@ class LightUtils {
   //
   // Input:  Liste af LightData.
   // Handling: Samler ediLux i lokal dag i måneden, omregner hver til procent (ediLux*100,
-  //           clamp), beregner gennemsnit pr. dag.
+  // clamp), beregner gennemsnit pr. dag.
   // Output: Map<int,double> med nøgler = dag i måneden (1..31), værdier = gennemsnitlig procent (0..100).
   static Map<int, double> groupByDayOfMonthPct(List<LightData> data) {
     final Map<int, List<double>> buckets = {};

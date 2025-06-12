@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -134,8 +135,6 @@ static Future<int?> getPatientId() async {
   }
 
 
-
-
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
@@ -156,7 +155,59 @@ static Future<int?> getPatientId() async {
     await prefs.remove('customer_first_name');
     await prefs.remove('customer_last_name');
   }
+
+  static const _lastDeviceKey = 'last_connected_device';
+
+  // Kald denne lige efter du har connected i UI-laget
+  static Future<void> setLastConnectedDeviceId(String deviceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastDeviceKey, deviceId);
+  }
+
+  // Hentes i BG-servicen når den starter
+  static Future<String?> getLastConnectedDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_lastDeviceKey);
+
+  }
+
+  /// Gemmer sensorId for en given enheds-serial lokalt
+  static Future<void> saveSensorIdForDevice(
+      String deviceSerial,
+      String sensorId,
+      ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('sensorId_$deviceSerial', sensorId);
+  }
+
+  /// Prøver først at læse sensorId fra SharedPreferences.
+  /// Hvis der ikke findes noget, slår vi op via API'et og gemmer resultatet.
+  static Future<String?> getSensorIdForDevice(
+      String deviceSerial,
+      ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final local = prefs.getString('sensorId_$deviceSerial');
+    if (local != null) {
+      return local;
+    }
+
+    // Hvis ikke lokalt, hent fra backend
+    final jwt = await getToken();
+    if (jwt == null) return null;
+
+    final int? remoteId =
+    await ApiService.getSensorIdFromDevice(deviceSerial, jwt);
+    if (remoteId != null) {
+      final sid = remoteId.toString();
+      await prefs.setString('sensorId_$deviceSerial', sid);
+      return sid;
+    }
+
+    return null;
+  }
 }
+
+
 
 
 

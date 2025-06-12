@@ -122,9 +122,9 @@ Tilpas arbejds- og søvnplan efter din kronotype for optimal trivsel.''',
 • Czeisler et al. (1999): Lavt aftenlys udskyder DLMO
 • Burgess et al. (2003): Morgenlys fremmer opvågning
 • Roenneberg et al. (2007): Alders- og sæsonvariation i kronotyper
-• Gooley et al. (2010): Melanopsins rolle i circadian respons
+• Gooley et al. (2010): Melanopsins rolle i circadisk respons
 
-Udforsk forskning for at dykke dybere ned i din døgnrytme.''',
+Udforsk gerne forskningen og dyk dybere ned i din døgnrytme.''',
       actionLabel: 'Læs Mere',
       onActionTap: (ctx) {
         // TODO: Implementer link eller oversigt over artikler

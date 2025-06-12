@@ -1,24 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:provider/provider.dart';
 
 import '../../../models/diagnose_model.dart';
+import '../../../models/light_data_model.dart';
 import '../../../models/patient_model.dart';
 import '../../../theme/colors.dart';
+import '../../../viewmodel/clinician/patient_detail_viewmodel.dart';
+import '../patient_light_data_widgets/light_recommendations_card.dart';
 import 'clinician_patient_diagnose_card.dart';
+
+
 
 class CombinedPatientInfoCard extends StatelessWidget {
   final Patient patient;
   final List<Diagnosis> diagnoses;
 
   const CombinedPatientInfoCard({
-    Key? key,
+    super.key,
     required this.patient,
     required this.diagnoses,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<PatientDetailViewModel>(context, listen: true);
+    final int rmeqScore = viewModel.rmeqScore.toInt();
+    final List<LightData> lightData = viewModel.rawLightData;
+
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       child: Theme(
@@ -44,7 +54,6 @@ class CombinedPatientInfoCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _sectionTitle('Patientinformation'),
                   _infoRow('Navn', '${patient.firstName} ${patient.lastName}'),
                   _infoRow('CPR', patient.cpr ?? ''),
                   if (patient.street?.isNotEmpty ?? false)
@@ -70,6 +79,13 @@ class CombinedPatientInfoCard extends StatelessWidget {
                 ],
               ),
             ),
+            LightRecommendationsCard(
+              title: 'Kronotype anbefalinger',
+              rmeqScore: rmeqScore,
+              lightData: lightData,
+              showChronotype: true,
+            ),
+            SizedBox(height: 10.h),
             DiagnosisCard(diagnoses: diagnoses),
           ],
         ),
