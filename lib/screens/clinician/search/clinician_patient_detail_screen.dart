@@ -12,8 +12,6 @@ import '../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_combined_patient_card.dart';
 import '../../../widgets/clinician_widgets/clinician_search_widgets/clinician_patient_activity_card.dart';
-
-import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_recommendations_card.dart';
 import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summary_section.dart';
 
 class PatientDetailScreen extends StatelessWidget {
