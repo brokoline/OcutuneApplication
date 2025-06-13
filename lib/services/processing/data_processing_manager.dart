@@ -58,7 +58,6 @@ class DataProcessingManager extends ChangeNotifier {
       rethrow;
     }
   }
-
   // Lukker og frigiver ressourcer for TFLite-interpreteren
   void disposeModel() {
     _dataProcessing.close();
