@@ -15,9 +15,9 @@ class BatteryService {
   }) async {
     final now = DateTime.now();
 
-    // drop 0 eller negative værdier
+    // dropper 0 eller negative værdier
     if (batteryLevel <= 0) {
-      print("⏱️ Springer batteri-upload over (level <= 0)");
+      print("Springer batteri-upload over (level <= 0)");
       return false;
     }
 
