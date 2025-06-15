@@ -1,9 +1,6 @@
 // lib/services/processing/data_processing_manager.dart
 
 import 'package:flutter/foundation.dart';
-import '../../models/patient_model.dart';
-import '../../models/customer_model.dart';
-import '../../models/rmeq_profile_model.dart'; // hvor dine extension getters er
 import 'data_processing.dart';
 
 // Resultatmodel til UI m.m.
@@ -35,17 +32,17 @@ class DataProcessingManager extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  /// Initialisér med en profil (Patient eller Customer).
-  /// Skal kaldes når bruger vælges eller logger ind!
+  // Initialisér med en profil (Patient eller Customer).
+  // Skal kaldes når bruger vælges eller logger ind
   Future<void> setProfile(dynamic profile) async {
     _activeProfile = profile;
-    final int rmeq = profile.rmeqScore; // extension getter (se rmeq_profile_model.dart)
+    final int rmeq = profile.rmeqScore;
     _dataProcessing = DataProcessing(true, rmeq);
     await _dataProcessing!.initializeMatrices();
     notifyListeners();
   }
 
-  /// Geninitialiser DataProcessing hvis du skifter profil
+  // Geninitialiser DataProcessing hvis du skifter profil
   void disposeModel() {
     _dataProcessing?.close();
     _dataProcessing = null;
@@ -53,7 +50,7 @@ class DataProcessingManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Kør data-processing workflow
+  // Kør data-processing workflow
   Future<ProcessedLightData?> runProcessData(List<double> inputVector) async {
     if (_dataProcessing == null) {
       _error = "Ingen aktiv profil valgt!";
@@ -90,5 +87,5 @@ class DataProcessingManager extends ChangeNotifier {
   String get activeProfileName =>
       _activeProfile != null ? _activeProfile.fullName : '';
   int? get activeRmeqScore =>
-      _activeProfile != null ? _activeProfile.rmeqScore : null;
+      _activeProfile?.rmeqScore;
 }

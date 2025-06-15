@@ -210,11 +210,11 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
                     ),
                   ),
 
-                  // Kontaktoplysninger (valgfrit)
+                  // Kontaktoplysninger
                   SizedBox(height: 16.h),
                   OcutuneTextField(
                     controller: _contactController,
-                    label: 'Kontaktoplysninger (valgfrit)',
+                    label: 'Ekstra ontaktoplysninger (valgfrit)',
                     maxLines: 1,
                     obscureText: false,
                   ),

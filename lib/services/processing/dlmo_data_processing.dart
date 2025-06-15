@@ -1,4 +1,4 @@
-// lib/utils/light_data_processing.dart
+// lib/services/processing/DLMO_data_processing.dart
 
 import 'dart:math';
 import '../../models/light_data_model.dart';
@@ -70,9 +70,9 @@ List<String> customerRecommendationsText(LightRecommendationModel model) {
   ];
 }
 
-/// ----------------------------------------
-/// AVANCEREDE ANBEFALINGER: patient / kunde
-/// ----------------------------------------
+// ----------------------------------------
+// AVANCEREDE ANBEFALINGER: patient / kunde
+// ----------------------------------------
 
 // Analysefunktion - genbruges af begge varianter
 Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
@@ -151,9 +151,9 @@ List<String> generateAdvancedRecommendationsForCustomer({
   return messages;
 }
 
-/// ----------------------------------------
-/// ALLE BEREGNINGS- OG HJÆLPEMETODER
-/// ----------------------------------------
+// ----------------------------------------
+// ALLE BEREGNINGS- OG HJÆLPEMETODER
+// ----------------------------------------
 class LightDataProcessing {
   final int rMEQ;
 

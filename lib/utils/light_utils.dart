@@ -70,10 +70,8 @@ class LightUtils {
 
   // --------------------------------------------------------------------------------
   // 3) MONTHLY BUCKETING (RÅ LUX): groupByDayOfMonthLux
-  //
   // Input:  Liste af LightData.
-  // Handling: Vi kalder d.capturedAt.toLocal().day → 1..31 i lokal tid, samler
-  //           ediLux‐værdier i buckets.
+  // Handling: Vi kalder d.capturedAt.toLocal().day → 1..31 i lokal tid, samler ediLux‐værdier i buckets.
   // Output: Map<int,double> med nøgler = dag i måneden (1..31), værdier = gennemsnitlig ediLux.
   static Map<int, double> groupByDayOfMonthLux(List<LightData> data) {
     final Map<int, List<double>> buckets = {};
@@ -99,7 +97,6 @@ class LightUtils {
 
   // --------------------------------------------------------------------------------
   // 4) HJÆLPEMETODER TIL AT KONVERTERE “RÅ LUX‐MAP” → LISTER
-  //
   // groupByWeekdayListLux(): Returnerer List<double> længde 7 i rækkefølge
   //   [Man, Tir, Ons, Tor, Fre, Lør, Søn], med gennemsnitlig ediLux (rå).
   static List<double> groupByWeekdayListLux(List<LightData> data) {

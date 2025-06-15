@@ -8,7 +8,7 @@ import 'sync_use_case.dart';
 class SyncScheduler {
   static Timer? _timer;
 
-  // Starter en periodisk timer, der kører [SyncUseCase.syncAll()] hvert [interval].
+  // Starter en periodisk timer, der kører [SyncUseCase.syncAll()] hvert interval.
   // Hvis der allerede er en kørende timer, stoppes den først.
   static void start({required Duration interval}) {
     // Stop en evt. eksisterende timer, så vi undgår flere samtidige Timers

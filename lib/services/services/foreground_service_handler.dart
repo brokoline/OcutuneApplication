@@ -46,7 +46,7 @@ class OcutuneForegroundHandler extends TaskHandler {
       await AuthStorage.saveSensorIdForDevice(deviceId, sensorId);
     }
 
-    // 3) Definér dine BLE-karakteristika
+    // 3) Definére BLE-karakteristika
     _lightChar = QualifiedCharacteristic(
       deviceId:         deviceId,
       serviceId:        Uuid.parse('0000181b-0000-1000-8000-00805f9b34fb'),
