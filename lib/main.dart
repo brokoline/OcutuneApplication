@@ -37,7 +37,6 @@ import 'controller/inbox_controller.dart';
 import 'screens/clinician/root/clinician_root_controller.dart';
 import 'theme/colors.dart';
 
-import 'services/processing/data_processing.dart';
 import 'services/processing/data_processing_manager.dart';
 import 'viewmodel/clinician/patient_detail_viewmodel.dart';
 
@@ -65,14 +64,8 @@ class OcutuneApp extends StatelessWidget {
       builder: (context, child) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
-          Provider<DataProcessing>(create: (_) => DataProcessing()),
           ChangeNotifierProvider<DataProcessingManager>(
-            create: (ctx) {
-              final dp = ctx.read<DataProcessing>();
-              final manager = DataProcessingManager(dataProcessing: dp);
-              manager.initializeModel();
-              return manager;
-            },
+            create: (_) => DataProcessingManager(),
           ),
           ChangeNotifierProvider<PatientDetailViewModel>(
             create: (_) => PatientDetailViewModel(''),

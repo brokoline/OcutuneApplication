@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/light_data_model.dart';
@@ -35,7 +36,8 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
     });
 
     try {
-      final summaryList = await ApiService.fetchMonthlyLightData(patientId: widget.patientId);
+      final patientIdForLightData = kDebugMode ? 'P3' : widget.patientId;
+      final summaryList = await ApiService.fetchMonthlyLightData(patientId: patientIdForLightData);
       if (!mounted) return;
       setState(() => _monthlySummary = summaryList);
     } catch (e) {

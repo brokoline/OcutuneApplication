@@ -33,25 +33,21 @@ class RegisterController {
       showError(context, "Indtast en gyldig e-mailadresse");
       return;
     }
-
     // 3) Kodeords-længde
     if (password.length < 6) {
       showError(context, "Adgangskoden skal være mindst 6 tegn");
       return;
     }
-
     // 4) Kodeords-match
     if (password != confirmPassword) {
       showError(context, "Adgangskoderne matcher ikke");
       return;
     }
-
     // 5) Accept af vilkår
     if (!agreement.value) {
       showError(context, "Du skal acceptere vilkårene for at fortsætte");
       return;
     }
-
     // 6) Eksistende email
     if (await AuthStorage.emailExists(email)) {
       showError(context, "Denne e-mail er allerede registreret");

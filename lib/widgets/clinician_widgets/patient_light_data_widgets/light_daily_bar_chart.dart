@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/light_data_model.dart';
@@ -38,7 +39,10 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
     });
 
     try {
-      final fetched = await ApiService.fetchDailyLightData(patientId: widget.patientId);
+      final patientIdForLightData = kDebugMode ? 'P3' : widget.patientId;
+
+      final fetched = await ApiService.fetchDailyLightData(patientId: patientIdForLightData);
+
       setState(() => _todayData = fetched);
     } catch (e) {
       setState(() => _errorMessage = 'Kunne ikke hente dagsdata: $e');
@@ -112,13 +116,15 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
 
 
     final rawData = _todayData!;
-    final nowLocal = DateTime.now();
+    final nowLocal = DateTime.now().toLocal();
     final todayData = rawData.where((d) {
       final tsLocal = d.capturedAt.toLocal();
-      return tsLocal.year == nowLocal.year &&
+      final match = tsLocal.year == nowLocal.year &&
           tsLocal.month == nowLocal.month &&
           tsLocal.day == nowLocal.day;
+      return match;
     }).toList();
+
 
     final hourlyLux = LightUtils.groupByHourOfDay(todayData);
     double maxLux = hourlyLux.reduce(max).clamp(1.0, double.infinity);

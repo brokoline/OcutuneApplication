@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/daily_light_summary_model.dart';
@@ -14,11 +15,13 @@ class LightWeeklyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🛠️ Her laves debug-bypass
+    final String patientIdForLightData = kDebugMode ? 'P3' : patientId;
+
     return FutureBuilder<List<DailyLightSummary>>(
-      future: ApiService.fetchWeeklyLightData(patientId: patientId),
+      future: ApiService.fetchWeeklyLightData(patientId: patientIdForLightData),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Loader uden baggrund
           return SizedBox(
             height: 200.h,
             child: const Center(child: CircularProgressIndicator()),
@@ -54,71 +57,50 @@ class LightWeeklyBarChart extends StatelessWidget {
 
         weeklyData.sort((a, b) => a.day.compareTo(b.day));
 
-        final List<double> pctAboveList = List<double>.generate(7, (i) {
+        final List<double> pctAboveList = List.generate(7, (i) {
           final summary = weeklyData[i];
-          if (summary.totalMeasurements == 0) return 0.0;
-          return (summary.countHighLight / summary.totalMeasurements) * 100.0;
+          return summary.totalMeasurements == 0
+              ? 0.0
+              : (summary.countHighLight / summary.totalMeasurements) * 100.0;
         });
-        final List<double> pctBelowList = List<double>.generate(7, (i) {
-          final summary = weeklyData[i];
-          if (summary.totalMeasurements == 0) return 0.0;
+
+        final List<double> pctBelowList = List.generate(7, (i) {
           return 100.0 - pctAboveList[i];
         });
 
-        List<BarChartGroupData> barGroups = [];
-        for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
-          final double below = pctBelowList[dayIndex].clamp(0.0, 100.0);
-          final double above = pctAboveList[dayIndex].clamp(0.0, 100.0);
+        List<BarChartGroupData> barGroups = List.generate(7, (i) {
+          final below = pctBelowList[i].clamp(0.0, 100.0);
+          final above = pctAboveList[i].clamp(0.0, 100.0);
+          final summary = weeklyData[i];
+          final hasData = summary.totalMeasurements > 0;
 
-          final summary = weeklyData[dayIndex];
-          final bool hasData = summary.totalMeasurements > 0;
-
-          if (!hasData) {
-            barGroups.add(
-              BarChartGroupData(
-                x: dayIndex,
-                barRods: [
-                  BarChartRodData(
-                    toY: 100.0,
-                    color: const Color(0xFF4A4A4A), // Mørkere grå
-                    width: 14.w,
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
+          return BarChartGroupData(
+            x: i,
+            barRods: [
+              hasData
+                  ? BarChartRodData(
+                toY: 100.0,
+                width: 14.w,
+                borderRadius: BorderRadius.circular(4.r),
+                rodStackItems: [
+                  BarChartRodStackItem(0, below, const Color(0xFF5DADE2)),
+                  BarChartRodStackItem(below, below + above, const Color(0xFFFFAB00)),
                 ],
-              ),
-            );
-          } else {
-            barGroups.add(
-              BarChartGroupData(
-                x: dayIndex,
-                barRods: [
-                  BarChartRodData(
-                    toY: 100.0,
-                    width: 14.w,
-                    borderRadius: BorderRadius.circular(4.r),
-                    rodStackItems: [
-                      BarChartRodStackItem(
-                        0,
-                        below,
-                        const Color(0xFF5DADE2),
-                      ),
-                      BarChartRodStackItem(
-                        below,
-                        below + above,
-                        const Color(0xFFFFAB00),
-                      ),
-                    ],
-                    backDrawRodData: BackgroundBarChartRodData(
-                      show: true,
-                      toY: 100,
-                      color: const Color(0xFF444444), // Mørkere grå
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true,
+                  toY: 100,
+                  color: const Color(0xFF444444),
+                ),
+              )
+                  : BarChartRodData(
+                toY: 100.0,
+                color: const Color(0xFF4A4A4A),
+                width: 14.w,
+                borderRadius: BorderRadius.circular(4.r),
+              )
+            ],
+          );
+        });
 
         const List<String> weekdayLabels = [
           'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'
@@ -149,12 +131,10 @@ class LightWeeklyBarChart extends StatelessWidget {
                   gridData: FlGridData(
                     show: true,
                     horizontalInterval: 20,
-                    getDrawingHorizontalLine: (y) {
-                      return FlLine(
-                        color: Colors.white24,
-                        strokeWidth: 1,
-                      );
-                    },
+                    getDrawingHorizontalLine: (y) => FlLine(
+                      color: Colors.white24,
+                      strokeWidth: 1,
+                    ),
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -162,15 +142,10 @@ class LightWeeklyBarChart extends StatelessWidget {
                         showTitles: true,
                         interval: 20,
                         reservedSize: 32,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            "${value.toInt()}%",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10.sp,
-                            ),
-                          );
-                        },
+                        getTitlesWidget: (value, meta) => Text(
+                          "${value.toInt()}%",
+                          style: TextStyle(color: Colors.white54, fontSize: 10.sp),
+                        ),
                       ),
                     ),
                     bottomTitles: AxisTitles(
@@ -185,10 +160,7 @@ class LightWeeklyBarChart extends StatelessWidget {
                             padding: EdgeInsets.only(top: 6.h),
                             child: Text(
                               weekdayLabels[idx],
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 10.sp,
-                              ),
+                              style: TextStyle(color: Colors.white70, fontSize: 10.sp),
                             ),
                           );
                         },
@@ -205,12 +177,9 @@ class LightWeeklyBarChart extends StatelessWidget {
             ),
             Center(
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(Icons.circle, color: const Color(0xFFFFAB00), size: 18.sp),
                       SizedBox(width: 10.w),
@@ -223,7 +192,6 @@ class LightWeeklyBarChart extends StatelessWidget {
                   SizedBox(height: 8.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(Icons.circle, color: const Color(0xFF5DADE2), size: 18.sp),
                       SizedBox(width: 10.w),
