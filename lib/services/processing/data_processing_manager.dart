@@ -42,7 +42,7 @@ class DataProcessingManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Geninitialiser DataProcessing hvis du skifter profil
+  // Geninitialiser DataProcessing hvis man skifter profil
   void disposeModel() {
     _dataProcessing?.close();
     _dataProcessing = null;
