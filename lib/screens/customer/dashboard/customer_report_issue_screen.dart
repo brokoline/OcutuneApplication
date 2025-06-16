@@ -214,7 +214,7 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
                   SizedBox(height: 16.h),
                   OcutuneTextField(
                     controller: _contactController,
-                    label: 'Ekstra ontaktoplysninger (valgfrit)',
+                    label: 'Ekstra kontaktoplysninger (valgfrit)',
                     maxLines: 1,
                     obscureText: false,
                   ),
@@ -260,7 +260,7 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
       bottomNavigationBar: CustomerNavBar(
         currentIndex: 4,
         onTap: (idx) {
-          // Skift side logik - matcher dine andre sider:
+          // Skift side logik
           if (idx == 0) Navigator.pushReplacementNamed(context, '/customer_home');
           if (idx == 1) Navigator.pushReplacementNamed(context, '/customer_light');
           if (idx == 2) Navigator.pushReplacementNamed(context, '/customer_devices');

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-import 'package:ocutune_light_logger/screens/customer/customer_root_controller.dart';
-import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
+
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 
 // Imports for screens, controllers mm
@@ -11,6 +10,9 @@ import 'screens/splash_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/login/choose_access_screen.dart';
 import 'screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
+
+import 'package:ocutune_light_logger/screens/customer/customer_root_controller.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_root_screen.dart';
 import 'screens/customer/register/customer_registration_information/customer_register_screen.dart';
 import 'screens/customer/register/terms_and_policy/customer_privacypolicy_screen.dart';
 import 'screens/customer/register/terms_and_policy/customer_termsconditions_screen.dart';
@@ -28,13 +30,16 @@ import 'screens/customer/register/chronotype_survey/customer_question_5_screen.d
 import 'screens/patient/patient_dashboard_screen.dart';
 import 'screens/patient/activities/patient_activity_screen.dart';
 import 'screens/patient/sensor_settings/patient_sensor_screen.dart';
-import 'screens/clinician/root/clinician_root_screen.dart';
 import 'widgets/messages/inbox_screen.dart';
 import 'widgets/messages/message_thread_screen.dart';
 import 'widgets/messages/new_message_screen.dart';
 
+
+import 'screens/clinician/root/clinician_root_screen.dart';
 import 'controller/inbox_controller.dart';
 import 'screens/clinician/root/clinician_root_controller.dart';
+
+
 import 'theme/colors.dart';
 
 import 'services/processing/data_processing_manager.dart';
@@ -42,8 +47,6 @@ import 'viewmodel/clinician/patient_detail_viewmodel.dart';
 
 @pragma('vm:entry-point')
 void startCallback() {
-  // Behold denne, hvis foreground handler kræver det
-  // (eller flyt til AppInitializer hvis du vil)
 }
 
 Future<void> main() async {

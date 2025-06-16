@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/auth_storage.dart';
+import '../profile/clinician_profile_screen.dart';
 import '../search/clinician_search_controller.dart';
 import 'clinician_root_controller.dart';
 import '../../../widgets/clinician_widgets/clinician_nav_bar.dart';
@@ -13,7 +14,7 @@ import '../search/clinician_search_screen.dart';
 import '../messages/clinician_inbox_screen.dart';
 
 class ClinicianRootScreen extends StatefulWidget {
-  const ClinicianRootScreen({Key? key}) : super(key: key);
+  const ClinicianRootScreen({super.key});
 
   @override
   State<ClinicianRootScreen> createState() => _ClinicianRootScreenState();
@@ -29,6 +30,7 @@ class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
       child: const ClinicianSearchScreen(),
     ),
     const ClinicianInboxScreen(),
+    const ClinicianProfileScreen(),
   ];
 
 
@@ -66,8 +68,6 @@ class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: ClinicianAppBar(
-        showLogout: _currentIndex == 0,
-        onLogout: _logout,
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: ClinicianNavBar(
@@ -79,11 +79,11 @@ class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
 }
 
 class _ClinicianDashboardContent extends StatelessWidget {
-  const _ClinicianDashboardContent({Key? key}) : super(key: key);
+  const _ClinicianDashboardContent();
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🌀 Building ClinicianDashboardContent');
+
 
     return SafeArea(
       child: Padding(
@@ -95,10 +95,9 @@ class _ClinicianDashboardContent extends StatelessWidget {
               future: AuthStorage.getClinicianName(),
               builder: (context, snapshot) {
                 return Text(
-                  snapshot.hasData ? 'Hej ${snapshot.data!}' : 'Kliniker Dashboard',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22.sp,
+                  snapshot.hasData ? 'Velkommen ${snapshot.data!}' : 'Kliniker Dashboard',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white70,
                     fontWeight: FontWeight.w600,
                   ),
                 );
@@ -109,9 +108,8 @@ class _ClinicianDashboardContent extends StatelessWidget {
 
             Text(
               'Notifikationer',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18.sp,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Colors.white70,
                 fontWeight: FontWeight.w600,
               ),
             ),

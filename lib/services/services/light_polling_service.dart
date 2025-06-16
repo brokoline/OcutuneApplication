@@ -35,7 +35,7 @@ class LightPollingService {
         _sensorId  = sensorId;
 
   // Starter et første _poll()_ med lidt jitter, og herefter præcist hvert [interval].
-  Future<void> start({ Duration interval = const Duration(seconds: 3) }) async {
+  Future<void> start({ Duration interval = const Duration(seconds: 10) }) async {
     if (_timer?.isActive ?? false) return;
 
 

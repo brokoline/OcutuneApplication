@@ -35,7 +35,7 @@ class ClinicianNavBar extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
+            activeIcon: Icon(Icons.search_outlined),
             label: 'Søg',
           ),
           BottomNavigationBarItem(
@@ -44,9 +44,9 @@ class ClinicianNavBar extends StatelessWidget {
             label: 'Indbakke',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profil',
+            icon: Icon(Icons.medical_services_outlined),
+            activeIcon: Icon(Icons.medical_services),
+            label: 'Klinik',
           ),
         ],
       ),
