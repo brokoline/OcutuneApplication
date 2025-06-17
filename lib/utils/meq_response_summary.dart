@@ -1,7 +1,7 @@
 import '../services/services/customer_data_service.dart';
 
-/// Et lille objekt, der pakker rMEQ og MEQ sammen.
-/// MEQ kan være `null` indtil den er beregnet; `meqDisplay` giver en tom streng i så fald.
+// Et lille objekt, der pakker rMEQ og MEQ sammen.
+// MEQ kan være `null` indtil den er beregnet; `meqDisplay` giver en tom streng i så fald.
 class meqResponseSummary {
   final int rmeq;
   final int? meq;

@@ -178,7 +178,7 @@ class BleController {
     }
   }
 
-  /// Optional: discover services API
+  // discover services API
   Future<List<DiscoveredService>> discoverServices() async {
     final device = connectedDeviceNotifier.value;
     if (device == null) {
@@ -188,6 +188,6 @@ class BleController {
     return _ble.discoverServices(device.id);
   }
 
-  /// Giv direkte adgang til BLE-instansen
+  // Giv direkte adgang til BLE-instansen
   FlutterReactiveBle get bleInstance => _ble;
 }

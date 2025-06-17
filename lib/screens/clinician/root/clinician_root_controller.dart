@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/models/patient_model.dart'; // ← Juster path hvis nødvendigt
+import 'package:ocutune_light_logger/models/patient_model.dart';
 
 class ClinicianDashboardController extends ChangeNotifier {
   List<String> _notifications = [];
@@ -50,8 +50,6 @@ class ClinicianDashboardController extends ChangeNotifier {
   }
 
   Future<void> loadPatientDetails(int patientId) async {
-    // Simuler API kald for at hente detaljer
-    await Future.delayed(const Duration(milliseconds: 300));
 
     _selectedPatient = _allPatients.firstWhere(
           (patient) => patient.id == patientId,
@@ -63,7 +61,6 @@ class ClinicianDashboardController extends ChangeNotifier {
 
   void handleNotificationTap(int index) {
     debugPrint('Notifikation trykket: ${_notifications[index]}');
-    // Her kunne du implementere navigation til relevant patient
   }
 
   void addNotification(String message) {

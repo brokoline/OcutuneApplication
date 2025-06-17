@@ -1,21 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:tflite_flutter/tflite_flutter.dart';
+import '../../utils/operations.dart';
 
-// Til normalisering og mean
-class Operations {
-  static List<double> normalizeVector(List<double> v) {
-    double maxVal = v.reduce(max);
-    return v.map((e) => e / (maxVal == 0 ? 1 : maxVal)).toList();
-  }
-
-  static double mean(List<double> v) =>
-      v.isEmpty ? 0.0 : v.reduce((a, b) => a + b) / v.length;
-}
-
-// Resultat-model
 class ProcessedResult {
   final List<double> spectrum;
   final double melanopic;
@@ -35,27 +22,31 @@ class ProcessedResult {
 }
 
 class DataProcessing {
+  bool customize;
+  int? rMEQ;
+
+  DataProcessing(this.customize, [this.rMEQ]);
+  double? slb, elb, ss, es, dlmo;
+
   Interpreter? _interpreter;
   bool _modelLoaded = false;
   bool _matricesLoaded = false;
 
-  // --- Matrixfiler og korrektioner ---
-  late final List<List<double>> M0, M1, M2, M3, M4, M5, M6;
+  late final List<List<double>> m0, m1, m2, m3, m4, m5, m6;
   late final List<List<double>> cieCmf1931, alphaOpic;
   List<double> yBar = List.filled(401, 0.0);
   List<double> mediArr = List.filled(401, 0.0);
 
-  // Til 8-kanals data
   static const List<double> offsetCorrection = [
     0.00197, 0.00725, 0.00319, 0.00131,
-    0.00147, 0.00186, 0.00176, 0.00522
+    0.00147, 0.00186, 0.00176, 0.00522, 0.003, 0.001
   ];
   static const List<double> factorCorrection = [
     1.02811, 1.03149, 1.03142, 1.03125,
-    1.03390, 1.03445, 1.03508, 1.03359
+    1.03390, 1.03445, 1.03508, 1.03359, 1.23384, 1.26942
   ];
 
-  // ML-model load
+  // ML-model
   Future<void> loadModel(String modelAssetPath) async {
     if (_modelLoaded) return;
     try {
@@ -72,28 +63,16 @@ class DataProcessing {
     _modelLoaded = false;
   }
 
-  // CSV-loader
-  Future<List<List<double>>> parseCsvFileToMatrix(String path) async {
-    final data = await rootBundle.loadString(path);
-    final lines = LineSplitter.split(data);
-    return lines
-        .where((line) => line.trim().isNotEmpty)
-        .map((line) =>
-        line.split(',').map((e) => double.tryParse(e.trim()) ?? 0.0).toList())
-        .toList();
-  }
-
-  // Initialiserer og læser alle matricefiler
   Future<void> initializeMatrices() async {
-    M0 = await parseCsvFileToMatrix('assets/matrices/matrixdaylight_8.csv');
-    M1 = await parseCsvFileToMatrix('assets/matrices/matrixled_8.csv');
-    M2 = await parseCsvFileToMatrix('assets/matrices/matrixmix_8.csv');
-    M3 = await parseCsvFileToMatrix('assets/matrices/matrixhalogen_8.csv');
-    M4 = await parseCsvFileToMatrix('assets/matrices/matrixfluo_8.csv');
-    M5 = await parseCsvFileToMatrix('assets/matrices/matrixfluoday_8.csv');
-    M6 = await parseCsvFileToMatrix('assets/matrices/matrixscreenday_8.csv');
-    cieCmf1931 = await parseCsvFileToMatrix('assets/matrices/ciecmf1931.csv');
-    alphaOpic = await parseCsvFileToMatrix('assets/matrices/alpha_opic.csv');
+    m0 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixdaylight_8.csv');
+    m1 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixled_8.csv');
+    m2 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixmix_8.csv');
+    m3 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixhalogen_8.csv');
+    m4 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixfluo_8.csv');
+    m5 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixfluoday_8.csv');
+    m6 = await Operations.parseCsvFileToMatrix('assets/matrices/matrixscreenday_8.csv');
+    cieCmf1931 = await Operations.parseCsvFileToMatrix('assets/matrices/ciecmf1931.csv');
+    alphaOpic = await Operations.parseCsvFileToMatrix('assets/matrices/alpha_opic.csv');
     for (var i = 0; i < 401; i++) {
       yBar[i] = cieCmf1931[i][1];
       mediArr[i] = alphaOpic[i][4];
@@ -101,20 +80,7 @@ class DataProcessing {
     _matricesLoaded = true;
   }
 
-  // Matrix-vector-multiplikation
-  List<double> matrixVectorMultiplication(List<List<double>> matrix, List<double> vector) {
-    List<double> result = List.filled(matrix.length, 0.0);
-    for (int i = 0; i < matrix.length; i++) {
-      double sum = 0.0;
-      for (int j = 0; j < vector.length; j++) {
-        sum += matrix[i][j] * vector[j];
-      }
-      result[i] = sum;
-    }
-    return result;
-  }
-
-  // Hele spektre-workflowet
+  // Samlet workflow til at beregne spektrum
   Future<List<double>> getSpectrum(
       List<double> channels, double astep, double again) async {
     if (!_matricesLoaded) throw Exception('Matricer ikke initialiseret');
@@ -137,13 +103,8 @@ class DataProcessing {
           factorCorrection[i] * (basicCounts[i] - offsetCorrection[i]);
     }
 
-    // ML model input skal være [1][8][1]
     var input = List<List<List<double>>>.generate(
-        1,
-            (_) => List<List<double>>.generate(
-            8, (i) => [correctedData[i]]
-        )
-    );
+        1, (_) => List<List<double>>.generate(8, (i) => [correctedData[i]]));
 
     var output = List.generate(1, (i) => List.filled(7, 0.0));
     _interpreter!.run(input, output);
@@ -153,49 +114,35 @@ class DataProcessing {
 
     switch (maxIndex) {
       case 0:
-        spectrum = matrixVectorMultiplication(M0, correctedData);
+        spectrum = Operations.multiplyMatrixVector(m0, correctedData);
         break;
       case 1:
-        spectrum = matrixVectorMultiplication(M1, correctedData);
+        spectrum = Operations.multiplyMatrixVector(m1, correctedData);
         break;
       case 2:
-        spectrum = matrixVectorMultiplication(M2, correctedData);
+        spectrum = Operations.multiplyMatrixVector(m2, correctedData);
         break;
       case 3:
-        spectrum = matrixVectorMultiplication(M3, correctedData);
+        spectrum = Operations.multiplyMatrixVector(m3, correctedData);
         break;
       case 4:
         if (correctedData[7] > correctedData[6] / 2) {
-          spectrum = matrixVectorMultiplication(M1, correctedData);
+          spectrum = Operations.multiplyMatrixVector(m1, correctedData);
         } else {
-          spectrum = matrixVectorMultiplication(M4, correctedData);
+          spectrum = Operations.multiplyMatrixVector(m4, correctedData);
         }
         break;
       case 5:
-        spectrum = matrixVectorMultiplication(M5, correctedData);
+        spectrum = Operations.multiplyMatrixVector(m5, correctedData);
         break;
       case 6:
-        spectrum = matrixVectorMultiplication(M6, correctedData);
+        spectrum = Operations.multiplyMatrixVector(m6, correctedData);
         break;
     }
     return spectrum;
   }
 
-  // Melanopic illuminance
-  double melanopic(List<double> spectrum) {
-    double normConst = 1.3262 / 1000;
-    double medi = dotProduct(spectrum, mediArr) / normConst;
-    return medi;
-  }
-
-  // Illuminance
-  double illuminance(List<double> spectrum) {
-    double Y = dotProduct(spectrum, yBar);
-    double E = Y * 683; // Konvertering
-    return E;
-  }
-
-  // Helper: Dot product
+  // Dot product helper
   double dotProduct(List<double> a, List<double> b) {
     double sum = 0.0;
     for (int i = 0; i < a.length && i < b.length; i++) {
@@ -204,7 +151,112 @@ class DataProcessing {
     return sum;
   }
 
-  // Threshold-metode og mean-metode
+  // Melanopic (asynkron)
+  Future<double> melanopic(List<double> spectrum) async {
+    double medi = dotProduct(spectrum, mediArr) / (1.3262 / 1000);
+    return medi;
+  }
+
+  // Illuminance (asynkron)
+  Future<double> illuminance(List<double> spectrum) async {
+    double Y = dotProduct(spectrum, yBar);
+    double E = Y * 683;
+    return E;
+  }
+
+  // Daylight Exposure Ratio (DER)
+  Future<double> der(List<double> spectrum) async {
+    double medi = await melanopic(spectrum);
+    double lux = await illuminance(spectrum);
+    return medi / lux;
+  }
+
+  (bool, double) lightExposure(double medi) {
+    if (customize == true) {
+      return customLightExposure(medi);
+    } else {
+      return originalLightExposure(medi);
+    }
+  }
+
+  (bool, double) originalLightExposure(double medi) {
+    int hour = DateTime.now().hour;
+    double percentage = 0.0;
+    bool increase = true;
+
+    if (hour >= 7 && hour < 19) {
+      percentage = ((medi / 250).clamp(0.0, 1.0)) * 100;
+    } else if (hour >= 19 && hour < 23) {
+      percentage = ((10 / medi).clamp(0.0, 1.0)) * 100;
+      increase = false;
+    } else {
+      percentage = ((1 / medi).clamp(0.0, 1.0)) * 100;
+      increase = false;
+    }
+    return (increase, percentage.clamp(0.0, 100.0));
+  }
+
+  void setCustomTime(int rMEQ) {
+    double sleepWindowStart = 22.0; // fx kl 22
+    double dlmoTime = 20.0;         // fx kl 20
+
+    slb = sleepWindowStart;
+    elb = sleepWindowStart + 1.5;
+    dlmo = dlmoTime;
+    ss = dlmoTime + 2;
+    es = dlmoTime + 10;
+  }
+
+  int getTimeFrame(double currentTime) {
+    bool isTimeBetween(double currentTime, double startTime, double endTime) {
+      if (startTime == endTime) {
+        return true;
+      } else if (startTime < endTime) {
+        return currentTime >= startTime && currentTime < endTime;
+      } else {
+        return currentTime >= startTime || currentTime < endTime;
+      }
+    }
+
+    if (isTimeBetween(currentTime, slb!, elb!)) {
+      return 0; //"lightboost";
+    } else if (isTimeBetween(currentTime, elb!, dlmo!)) {
+      return 1; //"daytime";
+    } else if (isTimeBetween(currentTime, dlmo!, ss!)) {
+      return 2; //"dlmo";
+    } else if (isTimeBetween(currentTime, ss!, es!)) {
+      return 3; //"sleep";
+    } else if (isTimeBetween(currentTime, es!, slb!)) {
+      return 1; //"daytime";
+    } else {
+      return 4; // "Unknown period";
+    }
+  }
+
+  (bool, double) customLightExposure(double medi) {
+    double hour = DateTime.now().hour.toDouble();
+    double minute = DateTime.now().minute.toDouble();
+    double currentTime = hour + (minute * 0.01);
+
+    int period = getTimeFrame(currentTime);
+
+    switch (period) {
+      case 0: //lightboost
+        return (true, ((medi / 1316).clamp(0.0, 1.0)) * 100);
+      case 1: //daytime
+        return (true, ((medi / 250).clamp(0.0, 1.0)) * 100);
+      case 2: //DLMO
+        if (medi <= 0.0) return (false, 100.0);
+        return (false, ((10 / medi).clamp(0.0, 1.0)) * 100);
+      case 3: //sleep
+        if (medi <= 0.0) return (false, 100.0);
+        return (false, ((1 / medi).clamp(0.0, 1.0)) * 100);
+      case 4: //error
+        return (true, 0.0);
+    }
+    return (true, 0.0);
+  }
+
   double calculateMedi(List<double> correctedOutput) =>
       Operations.mean(correctedOutput);
 
@@ -218,20 +270,16 @@ class DataProcessing {
     return Duration(seconds: totalSeconds);
   }
 
-  // Fuldt workflow: Fra kanaler til metrikker
   Future<ProcessedResult> processDataWorkflow({
-    required List<double> rawChannels, // typisk 8 værdier fra sensor
+    required List<double> rawChannels,
     required double astep,
     required double again,
   }) async {
-    // (1) Lav spektre
     final spectrum = await getSpectrum(rawChannels, astep, again);
 
-    // (2) Beregn melanopic og illuminance
-    final mediVal = melanopic(spectrum);
-    final illumVal = illuminance(spectrum);
+    final mediVal = await melanopic(spectrum);
+    final illumVal = await illuminance(spectrum);
 
-    // (4) Mean/fThreshold og konverterer til duration
     final medi = calculateMedi(spectrum);
     final fThresh = calculateFThreshold(spectrum, 0.5);
     final mediDuration = convertDoubleToDuration(medi);
@@ -259,5 +307,4 @@ class DataProcessing {
       again: again,
     );
   }
-
 }

@@ -1,7 +1,7 @@
 // lib/services/services/light_polling_service.dart
 
 import 'dart:async';
-import 'dart:math';                            // ← For Random()
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -10,9 +10,8 @@ import 'package:ocutune_light_logger/services/services/light_classifier_service.
 
 import '../../controller/ble_controller.dart';
 
-/// Service der periodisk læser lys-data fra sensoren.
+// Service der periodisk læser lys-data fra sensoren.
 class LightPollingService {
-  final FlutterReactiveBle _ble;
   final QualifiedCharacteristic _char;
   final String _patientId;
   final String _sensorId;
@@ -31,8 +30,7 @@ class LightPollingService {
     required QualifiedCharacteristic characteristic,
     required String patientId,
     required String sensorId,
-  })  : _ble       = ble,
-        _char      = characteristic,
+  })  : _char      = characteristic,
         _patientId = patientId,
         _sensorId  = sensorId;
 
@@ -87,7 +85,7 @@ class LightPollingService {
     final now = DateTime.now();
     // Undgå duplikater inden for 5 sek.
     if (_lastSavedTimestamp != null &&
-        now.difference(_lastSavedTimestamp!).inSeconds < 5) {
+        now.difference(_lastSavedTimestamp!).inSeconds < 1.5) {
       print('🛑 Ignoring duplicate measurement: ${now.toIso8601String()}');
       return;
     }
@@ -116,7 +114,6 @@ class LightPollingService {
       final melanopicEdi = LightClassifier.calculateMelanopicEDI(
         spectrumMel, _melanopicCurve,
       );
-
       final spectrumLux = LightClassifier.reconstructSpectrum(
         rawInput, weights, normalizationFactor: 1 / 1000000.0,
       );
@@ -154,9 +151,9 @@ class LightPollingService {
       print('📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, '
           'action: $actionRequired');
 
-      // Gem til senere upload (eller send nu, hvis on-line)
-      await OfflineStorageService.saveLocally(type: 'light', data: payload);
 
+      // Gem til senere upload
+      await OfflineStorageService.saveLocally(type: 'light', data: payload);
       print('▶️ Light data saved at ${now.toIso8601String()}');
     } catch (e) {
       print('❌ Error handling light data: $e');
