@@ -32,7 +32,8 @@ class OcutuneDropdown<T> extends StatelessWidget {
         items: _buildItems(),
         onChanged: onChanged,
         buttonStyleData: ButtonStyleData(
-          height: 44.h, // 👈 mindre dropdownknap
+          height: 44.h,
+          width: 260.w,
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
             color: Colors.white10,
@@ -41,7 +42,7 @@ class OcutuneDropdown<T> extends StatelessWidget {
           ),
         ),
         dropdownStyleData: DropdownStyleData(
-          maxHeight: 240.h,
+          maxHeight: 100.h,
           padding: EdgeInsets.zero,
           decoration: BoxDecoration(
             color: darkGray,
@@ -54,7 +55,6 @@ class OcutuneDropdown<T> extends StatelessWidget {
               ),
             ],
           ),
-          offset: const Offset(0, 0),
         ),
         iconStyleData: IconStyleData(
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white),

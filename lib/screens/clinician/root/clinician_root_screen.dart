@@ -56,7 +56,7 @@ class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
     }
   }
 
-  void _logout() async {
+  void logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
     if (!mounted) return;

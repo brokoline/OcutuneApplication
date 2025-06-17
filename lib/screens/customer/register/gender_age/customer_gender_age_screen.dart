@@ -7,6 +7,7 @@ import '/theme/colors.dart';
 import 'customer_gender_age_controller.dart';
 import 'customer_gender_age_form_field_widget.dart';
 
+
 class CustomerGenderAgeScreen extends StatefulWidget {
   const CustomerGenderAgeScreen({super.key});
 
@@ -15,16 +16,12 @@ class CustomerGenderAgeScreen extends StatefulWidget {
 }
 
 class _CustomerGenderAgeScreenState extends State<CustomerGenderAgeScreen> {
-  String? selectedYear;
+  String? selectedYear = '2000';
   bool yearChosen = false;
   String? selectedGender;
 
   final List<String> years = [
-    '2000',
-    ...List.generate(
-      DateTime.now().year - 1925 + 1,
-          (index) => (1925 + index).toString(),
-    ).where((year) => year != '2000'),
+    for (int i = 2025; i >= 1925; i--) i.toString(),
   ];
 
 
@@ -44,21 +41,28 @@ class _CustomerGenderAgeScreenState extends State<CustomerGenderAgeScreen> {
         title: 'Opret konto',
       ),
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(top: 80.h, bottom: 300.h), // 👈 Skubber indholdet lidt ned
-            child: CustomerGenderAgeForm(
-              selectedGender: selectedGender,
-              selectedYear: selectedYear,
-              yearChosen: yearChosen,
-              years: years,
-              genders: genders,
-              onGenderChanged: (value) => setState(() => selectedGender = value),
-              onYearChanged: (value) => setState(() {
-                selectedYear = value;
-                yearChosen = true;
-              }),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(top: 60.h, left: 24.w, right: 24.w, bottom: 24.h),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CustomerGenderAgeForm(
+                    selectedGender: selectedGender,
+                    selectedYear: selectedYear,
+                    yearChosen: yearChosen,
+                    years: years,
+                    genders: genders,
+                    onGenderChanged: (value) => setState(() => selectedGender = value),
+                    onYearChanged: (value) => setState(() {
+                      selectedYear = value;
+                      yearChosen = true;
+                    }),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
