@@ -4,8 +4,8 @@ import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/models/customer_model.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
-/// Controller for CustomerRootScreen (Customer Dashboard)
-/// Håndterer profilhentning, fejltilstande og navigation mellem faner.
+// Controller for CustomerRootScreen (Customer Dashboard)
+// Håndterer profilhentning, fejltilstande og navigation mellem faner.
 class CustomerRootController extends ChangeNotifier {
   int _currentIndex = 0;
   Customer? _profile;
@@ -18,25 +18,25 @@ class CustomerRootController extends ChangeNotifier {
     _fetchProfile();
   }
 
-  /// Aktuel faneblad-indeks
+  // Aktuel faneblad-indeks
   int get currentIndex => _currentIndex;
 
-  /// Profil-data
+  // Profil-data
   Customer? get profile => _profile;
 
-  /// Detaljeret chronotype-model
+  // Detaljeret chronotype-model
   ChronotypeModel? get chronoModel => _chronoModel;
 
-  /// Liste med anbefalingstekster
+  // Liste med anbefalingstekster
   List<String> get recommendations => _recommendations;
 
-  /// Om vi henter data lige nu
+  // Om vi henter data lige nu
   bool get isLoading => _isLoading;
 
-  /// Eventuel fejlbesked
+  // Eventuel fejlbesked
   String? get error => _error;
 
-  /// Sætter den aktuelle tab‐indeks og notifikér lyttere
+  // Sætter den aktuelle tab‐indeks og notifikér lyttere
   void setIndex(int index) {
     if (index != _currentIndex) {
       _currentIndex = index;
@@ -44,7 +44,7 @@ class CustomerRootController extends ChangeNotifier {
     }
   }
 
-  /// Henter kundens profil + chronotype via ApiService
+  // Henter kundens profil + chronotype via ApiService
   Future<void> _fetchProfile() async {
     _isLoading = true;
     _error = null;
