@@ -10,7 +10,7 @@ class CustomerRootController extends ChangeNotifier {
   int _currentIndex = 0;
   Customer? _profile;
   ChronotypeModel? _chronoModel;
-  List<String> _recommendations = [];
+  final List<String> _recommendations = [];
   bool _isLoading = true;
   String? _error;
 
