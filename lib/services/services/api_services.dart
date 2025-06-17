@@ -623,7 +623,7 @@ class ApiService {
   // og så ramme det her. Jeg viser eksemplet, men husk at tilsvarende tilføje
   // koden i `message_routes.py` for at opdatere alle beskeder i tråden.
   static Future<void> markThreadAsRead(String threadId) async {
-    final response = await _patch('/messages/thread/$threadId/read', {});
+    final response = await _patch('/api/messages/thread/$threadId/read', {});
     _handleVoidResponse(response, successCode: 204);
   }
 
@@ -634,7 +634,7 @@ class ApiService {
   //     • Slet eller andet kan udvides
   //─────────────────────────────────────────────────────────────────────────────
   static Future<List<String>> fetchActivityLabels(String patientId) async {
-    final response = await _get("/activity-labels/activity-labels?patient_id=$patientId");
+    final response = await _get("/activity-labels?patient_id=$patientId");
     if (response.statusCode == 200) {
       return (jsonDecode(response.body) as List).cast<String>();
     } else {
@@ -654,7 +654,7 @@ class ApiService {
       'patient_id': patientId,
       'label': label,
     };
-    final response = await _post("/activity-labels/activity-labels", payload);
+    final response = await _post("/activity-labels", payload);
     _handleVoidResponse(response, successCode: 201);
   }
 
