@@ -4,8 +4,6 @@ import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/models/customer_model.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
-// Controller for CustomerRootScreen (Customer Dashboard)
-// Håndterer profilhentning, fejltilstande og navigation mellem faner.
 class CustomerRootController extends ChangeNotifier {
   int _currentIndex = 0;
   Customer? _profile;

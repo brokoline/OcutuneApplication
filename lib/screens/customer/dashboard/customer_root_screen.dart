@@ -127,14 +127,14 @@ class CustomerRootView extends StatelessWidget {
                 CustomerActivityScreen(
                 ),
 
-                // 3: Lysdetaljer
-                CustomerLightDetailScreen(
-                  profile: profile,
-                ),
-
                 // 4: Sensor side
                 CustomerSensorScreen(
                   customerId: '',
+                ),
+
+                // 3: Lysdetaljer
+                CustomerLightDetailScreen(
+                  profile: profile,
                 ),
 
                 // 5: Kronobiologi
