@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '/theme/colors.dart';
 
+// --- OcutuneDropdown ---
 class OcutuneDropdown<T> extends StatelessWidget {
   final T? value;
   final String? hintText;
   final List<DropdownMenuItem<T>> items;
   final void Function(T?) onChanged;
+  final double? maxHeight;
 
   const OcutuneDropdown({
     super.key,
@@ -15,6 +17,7 @@ class OcutuneDropdown<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.hintText,
+    this.maxHeight,
   });
 
   @override
@@ -32,7 +35,7 @@ class OcutuneDropdown<T> extends StatelessWidget {
         items: _buildItems(),
         onChanged: onChanged,
         buttonStyleData: ButtonStyleData(
-          height: 44.h,
+          height: 55.h,
           width: 260.w,
           padding: EdgeInsets.symmetric(horizontal: 10.w),
           decoration: BoxDecoration(
@@ -42,7 +45,7 @@ class OcutuneDropdown<T> extends StatelessWidget {
           ),
         ),
         dropdownStyleData: DropdownStyleData(
-          maxHeight: 100.h,
+          maxHeight: maxHeight ?? 200.h,
           padding: EdgeInsets.zero,
           decoration: BoxDecoration(
             color: darkGray,
@@ -71,7 +74,10 @@ class OcutuneDropdown<T> extends StatelessWidget {
       styledItems.add(
         DropdownMenuItem<T>(
           value: items[i].value,
-          child: Center(child: items[i].child),
+          child: SizedBox(
+            height: 32.h,
+            child: Center(child: items[i].child),
+          ),
         ),
       );
       if (i < items.length - 1) {
@@ -93,5 +99,83 @@ class OcutuneDropdown<T> extends StatelessWidget {
       }
     }
     return styledItems;
+  }
+}
+
+
+// --- CustomerGenderAgeForm ---
+class CustomerGenderAgeForm extends StatelessWidget {
+  final String? selectedGender;
+  final String? selectedYear;
+  final bool yearChosen;
+  final List<String> years;
+  final List<Map<String, String>> genders;
+  final void Function(String?) onGenderChanged;
+  final void Function(String?) onYearChanged;
+
+  const CustomerGenderAgeForm({
+    super.key,
+    required this.selectedGender,
+    required this.selectedYear,
+    required this.yearChosen,
+    required this.years,
+    required this.genders,
+    required this.onGenderChanged,
+    required this.onYearChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Text(
+          "Hvornår er du født?",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        /// Årstal
+        OcutuneDropdown<String>(
+          value: selectedYear,
+          hintText: yearChosen ? null : 'Vælg fødselsår',
+          onChanged: onYearChanged,
+          maxHeight: 3 * 100.h + 2 * 1.h, // 3 synlige år + 2 dividers
+          items: years.map((year) {
+            return DropdownMenuItem(
+              value: year,
+              child: Text(year, style: TextStyle(fontSize: 14.sp)),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 48.h),
+        const Text(
+          "Hvad er dit køn?",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: 16.h),
+        /// Køn
+        OcutuneDropdown<String>(
+          value: selectedGender,
+          hintText: 'Vælg køn',
+          onChanged: onGenderChanged,
+          maxHeight: 32.h * genders.length + 1.h * (genders.length - 1),
+          items: genders.map((entry) {
+            return DropdownMenuItem(
+              value: entry['value'],
+              child: Text(entry['label']!, style: TextStyle(fontSize: 14.sp)),
+            );
+          }).toList(),
+        ),
+      ],
+    );
   }
 }

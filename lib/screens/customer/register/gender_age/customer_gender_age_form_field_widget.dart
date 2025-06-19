@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../widgets/customer_widgets/drop_down_menu_widget.dart';
 
-
 class CustomerGenderAgeForm extends StatelessWidget {
   final String? selectedGender;
   final String? selectedYear;
@@ -13,7 +12,7 @@ class CustomerGenderAgeForm extends StatelessWidget {
   final void Function(String?) onYearChanged;
 
   const CustomerGenderAgeForm({
-    super.key,
+    Key? key,
     required this.selectedGender,
     required this.selectedYear,
     required this.yearChosen,
@@ -21,11 +20,16 @@ class CustomerGenderAgeForm extends StatelessWidget {
     required this.genders,
     required this.onGenderChanged,
     required this.onYearChanged,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Skal matche rowHeight i dropdown-widgetten:
+    final double rowHeight = 48.h;
+    final double dividerH  = 1.h;
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const Text(
           "Hvornår er du født?",
@@ -36,22 +40,23 @@ class CustomerGenderAgeForm extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 12.h),  // lidt mindre top‐mellemrum
 
-        /// 🎯 Årstal – brug OcutuneDropdown
+        /// Årstal-dropdown med præcis 3 synlige linjer:
         OcutuneDropdown<String>(
           value: selectedYear,
           hintText: yearChosen ? null : 'Vælg fødselsår',
           onChanged: onYearChanged,
+          maxHeight: 4 * rowHeight + 2 * dividerH,
           items: years.map((year) {
-            return DropdownMenuItem(
+            return DropdownMenuItem<String>(
               value: year,
               child: Text(year, style: TextStyle(fontSize: 14.sp)),
             );
           }).toList(),
         ),
 
-        SizedBox(height: 48.h),
+        SizedBox(height: 32.h),
 
         const Text(
           "Hvad er dit køn?",
@@ -62,15 +67,17 @@ class CustomerGenderAgeForm extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 12.h),
 
-        /// 🎯 Køn – brug OcutuneDropdown
+        /// Køn-dropdown − højde tilpasses antal entries:
         OcutuneDropdown<String>(
           value: selectedGender,
           hintText: 'Vælg køn',
           onChanged: onGenderChanged,
+          maxHeight: genders.length * rowHeight
+              + (genders.length - 1) * dividerH,
           items: genders.map((entry) {
-            return DropdownMenuItem(
+            return DropdownMenuItem<String>(
               value: entry['value'],
               child: Text(entry['label']!, style: TextStyle(fontSize: 14.sp)),
             );

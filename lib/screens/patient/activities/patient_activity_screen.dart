@@ -358,7 +358,7 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   decoration: InputDecoration(
                     labelText: 'Vælg aktivitet',
                     labelStyle: const TextStyle(color: Colors.white70),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 22),
                     filled: true,
                     fillColor: generalBox,
                     enabledBorder: OutlineInputBorder(
@@ -370,34 +370,17 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  style: const TextStyle(color: Colors.white70),
-                  menuMaxHeight: 300,
+                  style: const TextStyle(color: Colors.white70, fontSize: 18),
+                  menuMaxHeight: 320,
                   onChanged: (val) => setState(() => selected = val),
                   items: activities.map((label) {
                     return DropdownMenuItem<String>(
                       value: label,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Color.fromRGBO(255, 255, 255, 0.1),
-                              width: 0.5,
-                            ),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                label,
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                            ),
-                            if (selected == label)
-                              const Icon(Icons.check, color: Colors.white70, size: 16),
-                          ],
-                        ),
+                      child: Text(
+                        label,
+                        style: const TextStyle(color: Colors.white70, fontSize: 18),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     );
                   }).toList(),
