@@ -11,7 +11,7 @@ import '../../../../../widgets/universal/ocutune_next_step_button.dart';
 import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionTwoScreen extends StatefulWidget {
-  const QuestionTwoScreen({Key? key}) : super(key: key);
+  const QuestionTwoScreen({super.key});
 
   @override
   State<QuestionTwoScreen> createState() => _QuestionTwoScreenState();
@@ -156,7 +156,7 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
                               onTap: () => setState(() => selectedOption = option),
                             ),
                           );
-                        }).toList(),
+                        }),
                         SizedBox(height: 160.h),
                       ],
                     ),

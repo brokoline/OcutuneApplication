@@ -11,7 +11,7 @@ import '../../../../../widgets/universal/ocutune_next_step_button.dart';
 import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionThreeScreen extends StatefulWidget {
-  const QuestionThreeScreen({Key? key}) : super(key: key);
+  const QuestionThreeScreen({super.key});
 
   @override
   State<QuestionThreeScreen> createState() => _QuestionThreeScreenState();
@@ -156,7 +156,7 @@ class _QuestionThreeScreenState extends State<QuestionThreeScreen> {
                               onTap: () => setState(() => selectedOption = option),
                             ),
                           );
-                        }).toList(),
+                        }),
                         SizedBox(height: 100.h),
                       ],
                     ),

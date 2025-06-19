@@ -12,7 +12,7 @@ class CustomerGenderAgeForm extends StatelessWidget {
   final void Function(String?) onYearChanged;
 
   const CustomerGenderAgeForm({
-    Key? key,
+    super.key,
     required this.selectedGender,
     required this.selectedYear,
     required this.yearChosen,
@@ -20,7 +20,7 @@ class CustomerGenderAgeForm extends StatelessWidget {
     required this.genders,
     required this.onGenderChanged,
     required this.onYearChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,7 @@ import '../customer_root_controller.dart';
 
 /// Skærm for justering af notifikations-præferencer
 class NotificationSettingsScreen extends StatefulWidget {
-  const NotificationSettingsScreen({Key? key}) : super(key: key);
+  const NotificationSettingsScreen({super.key});
 
   @override
   State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();

@@ -6,7 +6,7 @@ import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 import 'choose_chronotype_controller.dart';
 
 class ChooseChronotypeForm extends StatefulWidget {
-  const ChooseChronotypeForm({Key? key}) : super(key: key);
+  const ChooseChronotypeForm({super.key});
 
   @override
   _ChooseChronotypeFormState createState() => _ChooseChronotypeFormState();

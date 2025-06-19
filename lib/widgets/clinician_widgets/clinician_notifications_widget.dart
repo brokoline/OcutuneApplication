@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../screens/clinician/root/clinician_root_controller.dart';
 
 class ClinicianNotificationsWidget extends StatelessWidget {
-  const ClinicianNotificationsWidget({Key? key}) : super(key: key);
+  const ClinicianNotificationsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

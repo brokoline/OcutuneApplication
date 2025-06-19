@@ -6,7 +6,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 /// including chronotype profiles, genetic basis, assessment tools,
 /// health implications, light spectrum effects, and intervention tips.
 class CustomerChronotypeInfoScreen extends StatelessWidget {
-  const CustomerChronotypeInfoScreen({Key? key}) : super(key: key);
+  const CustomerChronotypeInfoScreen({super.key});
 
   static final List<_SectionData> _sections = [
     _SectionData(

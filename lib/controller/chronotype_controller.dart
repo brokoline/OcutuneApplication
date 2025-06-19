@@ -70,18 +70,18 @@ class ChronotypeManager {
   Map<String, DateTime> getRecommendedTimes({DateTime? reference}) {
     final now = reference ?? DateTime.now();
 
-    DateTime _timeFromDouble(double hour) {
+    DateTime timeFromDouble(double hour) {
       final int h = hour.floor();
       final int m = ((hour % 1) * 60).round();
       return DateTime(now.year, now.month, now.day, h, m);
     }
 
     return {
-      'dlmo': _timeFromDouble(dlmoHour),
-      'sleep_start': _timeFromDouble(dlmoHour + 2),
-      'wake_time': _timeFromDouble(dlmoHour + 10),
-      'lightboost_start': _timeFromDouble(lightboostStartHour),
-      'lightboost_end': _timeFromDouble(lightboostEndHour),
+      'dlmo': timeFromDouble(dlmoHour),
+      'sleep_start': timeFromDouble(dlmoHour + 2),
+      'wake_time': timeFromDouble(dlmoHour + 10),
+      'lightboost_start': timeFromDouble(lightboostStartHour),
+      'lightboost_end': timeFromDouble(lightboostEndHour),
     };
   }
 }

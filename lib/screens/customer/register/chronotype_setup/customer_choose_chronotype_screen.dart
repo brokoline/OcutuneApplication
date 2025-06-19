@@ -6,7 +6,7 @@ import '/theme/colors.dart';
 import 'choose_chronotype_form.dart';
 
 class CustomerChooseChronotypeScreen extends StatelessWidget {
-  const CustomerChooseChronotypeScreen({Key? key}) : super(key: key);
+  const CustomerChooseChronotypeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

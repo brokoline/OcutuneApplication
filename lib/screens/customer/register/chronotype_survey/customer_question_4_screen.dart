@@ -10,7 +10,7 @@ import '../../../../../widgets/universal/ocutune_next_step_button.dart';
 import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionFourScreen extends StatefulWidget {
-  const QuestionFourScreen({Key? key}) : super(key: key);
+  const QuestionFourScreen({super.key});
 
   @override
   State<QuestionFourScreen> createState() => _QuestionFourScreenState();
@@ -156,7 +156,7 @@ class _QuestionFourScreenState extends State<QuestionFourScreen> {
                               onTap: () => setState(() => selectedOption = option),
                             ),
                           );
-                        }).toList(),
+                        }),
                         SizedBox(height: 50.h), // space for floating button
                       ],
                     ),

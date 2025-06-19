@@ -152,7 +152,7 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
                               onTap: () => setState(() => selectedOption = option),
                             ),
                           );
-                        }).toList(),
+                        }),
                         SizedBox(height: 100.h),
                       ],
                     ),

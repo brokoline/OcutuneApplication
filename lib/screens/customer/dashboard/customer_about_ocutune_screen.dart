@@ -155,7 +155,7 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
 
 class _SingleLogoCarousel extends StatefulWidget {
   final List<String> logos;
-  const _SingleLogoCarousel({Key? key, required this.logos}) : super(key: key);
+  const _SingleLogoCarousel({required this.logos});
 
   @override
   State<_SingleLogoCarousel> createState() => _SingleLogoCarouselState();

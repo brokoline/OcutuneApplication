@@ -11,7 +11,7 @@ import '../../../../../services/services/customer_data_service.dart';
 import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionFiveScreen extends StatefulWidget {
-  const QuestionFiveScreen({Key? key}) : super(key: key);
+  const QuestionFiveScreen({super.key});
 
   @override
   State<QuestionFiveScreen> createState() => _QuestionFiveScreenState();
@@ -152,7 +152,7 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
                               onTap: () => setState(() => selectedOption = option),
                             ),
                           );
-                        }).toList(),
+                        }),
                         SizedBox(height: 100.h),
                       ],
                     ),
