@@ -13,6 +13,7 @@ import '../customer_root_controller.dart';
 
 import 'customer_chrono_info_screen.dart';
 import 'customer_overview_screen.dart';
+import 'customer_activity_screen.dart';
 import 'customer_light_detail_screen.dart';
 import 'customer_sensor_screen.dart';
 import 'customer_settings_screen.dart';
@@ -114,10 +115,7 @@ class CustomerRootView extends StatelessWidget {
 
               // ─── Profil‐data er hentet ─────────────────────────────
               final Customer profile = snapshot.data!.first;
-
-
               final String name = '${profile.firstName} ${profile.lastName}';
-              // Fire separate undersider, lagt i en liste:
               final pages = [
                 // 0: Oversigt
                 CustomerOverviewScreen(
@@ -125,25 +123,30 @@ class CustomerRootView extends StatelessWidget {
                   lightDataList: [],
                 ),
 
-                // 1: Lysdetaljer
+                // 1: Aktivitets side
+                CustomerActivityScreen(
+                ),
+
+                // 3: Lysdetaljer
                 CustomerLightDetailScreen(
                   profile: profile,
                 ),
 
-                // 2: Sensor side
+                // 4: Sensor side
                 CustomerSensorScreen(
                   customerId: '',
                 ),
 
-                // 3: Kronobiologi
+                // 5: Kronobiologi
                 const CustomerChronotypeInfoScreen(),
 
-                // 4: Indstillinger for notifikationer
+                // 6: Indstillinger for notifikationer
                 const CustomerSettingsScreen(),
               ];
 
               final titles = [
                 "Oversigt for $name",
+                'Aktiviteter',
                 'Lysdetaljer',
                 'Sensorforbindelse',
                 'Chronobiologi',

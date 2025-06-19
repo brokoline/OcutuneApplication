@@ -36,10 +36,17 @@ class CustomerNavBar extends StatelessWidget {
           ),
 
           const BottomNavigationBarItem(
-            icon: Icon(Icons.wb_sunny_outlined),
-            activeIcon: Icon(Icons.wb_sunny),
-            label: 'Lysdetalje',
+            icon: Icon(Icons.local_activity_rounded),
+            activeIcon: Icon(Icons.local_activity),
+            label: 'Aktivitet',
           ),
+
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.lightbulb_outline_sharp),
+            activeIcon: Icon(Icons.lightbulb),
+            label: 'Lysdetaljer',
+          ),
+
 
           BottomNavigationBarItem(
             icon: Image.asset(
@@ -51,12 +58,12 @@ class CustomerNavBar extends StatelessWidget {
             label: "Sensor",
           ),
 
-
           const BottomNavigationBarItem(
             icon: Icon(Icons.info_outline),
             activeIcon: Icon(Icons.info),
             label: 'Chrono-info',
           ),
+
 
           const BottomNavigationBarItem(
             icon: Icon(Icons.settings),
