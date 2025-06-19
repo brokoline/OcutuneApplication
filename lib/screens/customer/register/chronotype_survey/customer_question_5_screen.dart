@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_selectable_tile.dart';
+import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 
 import '../../../../../services/services/customer_data_service.dart';
-import '../../../../../widgets/universal/ocutune_next_step_button.dart';
+import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionFiveScreen extends StatefulWidget {
   const QuestionFiveScreen({Key? key}) : super(key: key);
@@ -78,8 +80,8 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
         content: Row(
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            SizedBox(width: 12.w),
+            Expanded(child: Text(message, style: TextStyle(color: Colors.white, fontSize: 14.sp))),
           ],
         ),
       ),
@@ -100,15 +102,9 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const CustomerAppBar(
+        showBackButton: true,
+        title: 'Spørgsmål 5/5',
       ),
       body: SafeArea(
         child: FutureBuilder<Map<String, dynamic>>(
@@ -120,7 +116,7 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
               return Center(
                 child: Text(
                   'Fejl: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: Colors.white, fontSize: 16.sp),
                 ),
               );
             } else {
@@ -129,46 +125,51 @@ class _QuestionFiveScreenState extends State<QuestionFiveScreen> {
               final options      = List<String>.from(data['choices'] as List);
               choiceScores       = Map<String,int>.from(data['scores'] as Map);
 
-              return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 120),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        questionText,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5,
-                          color: Colors.white,
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          questionText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            height: 1.5,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      ...options.map((option) {
-                        return OcutuneSelectableTile(
-                          text: option,
-                          selected: selectedOption == option,
-                          onTap: () {
-                            setState(() {
-                              selectedOption = option;
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ],
+                        SizedBox(height: 22.h),
+                        ...options.map((option) {
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 6.h),
+                            child: OcutuneSelectableTile(
+                              text: option,
+                              selected: selectedOption == option,
+                              onTap: () => setState(() => selectedOption = option),
+                            ),
+                          );
+                        }).toList(),
+                        SizedBox(height: 100.h),
+                      ],
+                    ),
                   ),
-                ),
+                  Positioned(
+                    bottom: 24.h,
+                    right: 24.w,
+                    child: OcutuneButton(
+                      type: OcutuneButtonType.floatingIcon,
+                      onPressed: _goToNextScreen,
+                    ),
+                  ),
+                ],
               );
             }
           },
         ),
-      ),
-      floatingActionButton: OcutuneButton(
-        type: OcutuneButtonType.floatingIcon,
-        onPressed: _goToNextScreen,
       ),
     );
   }

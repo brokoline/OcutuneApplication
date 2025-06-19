@@ -1,15 +1,14 @@
-// lib/screens/customer/register/registration_steps/chronotype_survey/customer_question_1_screen.dart
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_selectable_tile.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 
-
 import '../../../../../services/services/customer_data_service.dart';
+import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionOneScreen extends StatefulWidget {
   const QuestionOneScreen({super.key});
@@ -81,8 +80,8 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
         content: Row(
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            SizedBox(width: 12.w),
+            Expanded(child: Text(message, style: TextStyle(color: Colors.white, fontSize: 14.sp))),
           ],
         ),
       ),
@@ -103,87 +102,73 @@ class _QuestionOneScreenState extends State<QuestionOneScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const CustomerAppBar(
+        showBackButton: true,
+        title: 'Spørgsmål 1/5',
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
-                  child: FutureBuilder<Map<String, dynamic>>(
-                    future: _questionData,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            'Fejl: ${snapshot.error}',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        );
-                      } else {
-                        final data         = snapshot.data!;
-                        final questionText = data['text'] as String;
-                        final choices      = data['choices'] as List<String>;
-                        choiceScores       = Map<String, int>.from(data['scores'] as Map);
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              questionText,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                height: 1.5,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            ...choices.map((option) {
-                              return OcutuneSelectableTile(
-                                text: option,
-                                selected: selectedOption == option,
-                                onTap: () {
-                                  setState(() {
-                                    selectedOption = option;
-                                  });
-                                },
-                              );
-                            }),
-                            const SizedBox(height: 100),
-                          ],
-                        );
-                      }
-                    },
-                  ),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _questionData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Fejl: ${snapshot.error}',
+                  style: TextStyle(color: Colors.white, fontSize: 16.sp),
                 ),
-              ),
-            ),
+              );
+            } else {
+              final data         = snapshot.data!;
+              final questionText = data['text'] as String;
+              final choices      = data['choices'] as List<String>;
+              choiceScores       = Map<String, int>.from(data['scores'] as Map);
 
-            // ← her bruger vi OcutuneNextStepButton som i resten af appen
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: OcutuneButton(
-                type: OcutuneButtonType.floatingIcon,
-                onPressed: _goToNextScreen,
-              ),
-            ),
-          ],
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          questionText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            height: 1.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 22.h),
+                        ...choices.map((option) {
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 6.h),
+                            child: OcutuneSelectableTile(
+                              text: option,
+                              selected: selectedOption == option,
+                              onTap: () => setState(() => selectedOption = option),
+                            ),
+                          );
+                        }).toList(),
+                        SizedBox(height: 100.h),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 24.h,
+                    right: 24.w,
+                    child: OcutuneButton(
+                      type: OcutuneButtonType.floatingIcon,
+                      onPressed: _goToNextScreen,
+                    ),
+                  ),
+                ],
+              );
+            }
+          },
         ),
       ),
     );

@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 import '/theme/colors.dart';
 import '/widgets/universal/ocutune_icon_button.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
@@ -26,13 +28,15 @@ class _LearnAboutChronotypesScreenState
   }
 
   Future<void> fetchChronotypes() async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes');
+    final url =
+    Uri.parse('https://ocutune2025.ddns.net/api/chronotypes');
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = json.decode(response.body) as List<dynamic>;
       setState(() {
         chronotypes = data
-            .map((j) => ChronotypeModel.fromJson(j as Map<String, dynamic>))
+            .map((j) =>
+            ChronotypeModel.fromJson(j as Map<String, dynamic>))
             .toList();
         isLoading = false;
       });
@@ -48,54 +52,56 @@ class _LearnAboutChronotypesScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const CustomerAppBar(
+        showBackButton: true,
+        title: 'Lær om kronotyper',
       ),
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+            padding: EdgeInsets.fromLTRB(
+                24.w, 8.h, 24.w, 16.h),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
+              constraints:
+              BoxConstraints(maxWidth: 400.w),
               child: Column(
                 children: [
-                  const SizedBox(height: 32),
-                  const Text(
+                  SizedBox(height: 32.h),
+                  Text(
                     "Vil du lære mere om de\nforskellige kronotyper?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 22,
+                      fontSize: 22.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  const Icon(Icons.info_outline,
-                      size: 36, color: Colors.white60),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Vidste du, at din kronotype ikke kun\npåvirker din søvn – men også hvornår du\ner mest kreativ og produktiv?",
+                  SizedBox(height: 24.h),
+                  Icon(Icons.info_outline,
+                      size: 36.w, // ikon kan være .w
+                      color: Colors.white60),
+                  SizedBox(height: 16.h),
+                  Text(
+                    "Vidste du, at din kronotype ikke kun\npåvirker din søvn – men også hvornår du\n"
+                        "er mest kreativ og produktiv?",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: 15.sp,
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 36),
+                  SizedBox(height: 36.h),
                   ...chronotypes.map((type) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: EdgeInsets.only(
+                          bottom: 16.h),
                       child: OcutuneIconButton(
-                        label: "Hvad er en ${type.title.toLowerCase()}?",
+                        label:
+                        "Hvad er en ${type.title.toLowerCase()}?",
                         imageUrl: type.imageUrl ?? '',
                         onPressed: () {
                           Navigator.pushNamed(
@@ -107,18 +113,19 @@ class _LearnAboutChronotypesScreenState
                       ),
                     );
                   }),
-                  const SizedBox(height: 32),
-                  const Text(
-                    "Selv præsidenter og berømte\niværksættere planlægger deres dag efter\nderes biologiske ur!",
+                  SizedBox(height: 32.h),
+                  Text(
+                    "Selv præsidenter og berømte\niværksættere planlægger deres dag efter\n"
+                        "deres biologiske ur!",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,
                       height: 1.5,
-                      fontSize: 15,
+                      fontSize: 15.sp,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32.h),
                 ],
               ),
             ),
