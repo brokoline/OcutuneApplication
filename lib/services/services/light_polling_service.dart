@@ -69,7 +69,7 @@ class LightPollingService {
       final data = await BleController().safeReadCharacteristic(_char);
       await _handleData(data);
     } catch (e) {
-      print('⚠️ BLE polling error: $e');
+      print('BLE polling error: $e');
     } finally {
       _isPolling = false;
     }
@@ -78,7 +78,7 @@ class LightPollingService {
   Future<void> _handleData(List<int> data) async {
     // Tjek længde
     if (data.length < 48 || data.length % 4 != 0) {
-      print('❌ Invalid BLE data length: ${data.length} bytes - ignoring packet');
+      print('Invalid BLE data length: ${data.length} bytes - ignoring packet');
       return;
     }
 
@@ -86,7 +86,7 @@ class LightPollingService {
     // Undgå duplikater inden for 5 sek.
     if (_lastSavedTimestamp != null &&
         now.difference(_lastSavedTimestamp!).inSeconds < 1.5) {
-      print('🛑 Ignoring duplicate measurement: ${now.toIso8601String()}');
+      print('Ignoring duplicate measurement: ${now.toIso8601String()}');
       return;
     }
     _lastSavedTimestamp = now;
@@ -143,20 +143,20 @@ class LightPollingService {
         'action_required': actionCode,
       };
 
-      print('📊 Light data:');
-      print('🧠 ClassId: $classId ($typeName)');
-      print('📈 EDI: ${melanopicEdi.toStringAsFixed(1)}, '
+      print('Light data:');
+      print('ClassId: $classId ($typeName)');
+      print('EDI: ${melanopicEdi.toStringAsFixed(1)}, '
           'Lux: ${illuminance.toStringAsFixed(1)}, '
           'DER: ${der.toStringAsFixed(4)}');
-      print('📈 Exposure: ${exposureScore.toStringAsFixed(1)}%, '
+      print('Exposure: ${exposureScore.toStringAsFixed(1)}%, '
           'action: $actionRequired');
 
 
       // Gem til senere upload
       await OfflineStorageService.saveLocally(type: 'light', data: payload);
-      print('▶️ Light data saved at ${now.toIso8601String()}');
+      print('Light data saved at ${now.toIso8601String()}');
     } catch (e) {
-      print('❌ Error handling light data: $e');
+      print('Error handling light data: $e');
     }
   }
 
