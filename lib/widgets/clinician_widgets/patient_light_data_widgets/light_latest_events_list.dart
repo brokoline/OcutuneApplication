@@ -12,9 +12,9 @@ class LightLatestEventsList extends StatelessWidget {
   final List<LightData> lightData;
 
   const LightLatestEventsList({
-    Key? key,
+    super.key,
     required this.lightData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class LightLatestEventsList extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

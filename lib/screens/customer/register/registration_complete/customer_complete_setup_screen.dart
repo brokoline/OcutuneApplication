@@ -1,11 +1,11 @@
-// lib/screens/customer/register/registration_complete/customer_complete_setup_screen.dart
-
 import 'dart:math';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../../services/services/customer_data_service.dart';
+import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class DoneSetupScreen extends StatefulWidget {
   const DoneSetupScreen({Key? key}) : super(key: key);
@@ -81,19 +81,16 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
       debugPrint("📥 Response: ${response.statusCode} ${response.body}");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-
-        // Opdater global respons immutabelt
         final resp = currentCustomerResponse;
         if (resp != null) {
           currentCustomerResponse = resp.copyWith(
             chronotype: data['type_key'] as String?,
           );
         }
-
         setState(() {
-          chronotype        = data['title']        as String? ?? 'Ukendt kronotype';
-          chronotypeText    = data['summary_text'] as String? ?? 'Beskrivelse mangler';
-          chronotypeImageUrl = data['image_url']   as String? ?? '';
+          chronotype         = data['title'] as String? ?? 'Ukendt kronotype';
+          chronotypeText     = data['summary_text'] as String? ?? 'Beskrivelse mangler';
+          chronotypeImageUrl = data['image_url'] as String? ?? '';
         });
       } else {
         setState(() {
@@ -130,8 +127,8 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
             );
           }
           setState(() {
-            chronotype        = match['title']        as String? ?? title;
-            chronotypeText    = match['summary_text'] as String? ?? 'Beskrivelse mangler';
+            chronotype         = match['title']        as String? ?? title;
+            chronotypeText     = match['summary_text'] as String? ?? 'Beskrivelse mangler';
             chronotypeImageUrl = match['image_url']   as String? ?? '';
           });
         } else {
@@ -174,7 +171,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
           offset: Offset(dx, dy),
           child: Opacity(
             opacity: opacity,
-            child: Icon(Icons.star, size: size, color: Colors.white),
+            child: Icon(Icons.star, size: size.r, color: Colors.yellow),
           ),
         );
       },
@@ -185,21 +182,20 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        automaticallyImplyLeading: false,
+      appBar: const CustomerAppBar(
+        showBackButton: false,
+        title: 'Velkommen til Ocutune',
       ),
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  height: 200,
-                  width: 200,
+                  height: 150.h,
+                  width: 200.w,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
@@ -212,61 +208,60 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
                         child: chronotypeImageUrl.isNotEmpty
                             ? Image.network(
                           chronotypeImageUrl,
-                          width: 100,
-                          height: 100,
-                          errorBuilder: (c, e, st) =>
-                          const Icon(Icons.broken_image, size: 80, color: Colors.white),
+                          width: 100.w,
+                          height: 100.h,
+                          errorBuilder: (c, e, st) => Icon(Icons.broken_image, size: 80.r, color: Colors.white),
                         )
-                            : const Icon(Icons.image, size: 80, color: Colors.white),
+                            : Icon(Icons.image, size: 80.r, color: Colors.white),
                       ),
-                      _orbitingStar(angleOffset: 0, radius: 60, minSize: 8, maxSize: 16, opacity: 0.8),
-                      _orbitingStar(angleOffset: 120, radius: 75, minSize: 6, maxSize: 14, opacity: 0.6),
-                      _orbitingStar(angleOffset: 240, radius: 65, minSize: 6, maxSize: 12, opacity: 0.5),
+                      _orbitingStar(angleOffset: 0, radius: 60.w, minSize: 8.r, maxSize: 16.r, opacity: 0.8),
+                      _orbitingStar(angleOffset: 120, radius: 75.w, minSize: 6.r, maxSize: 14.r, opacity: 0.6),
+                      _orbitingStar(angleOffset: 240, radius: 65.w, minSize: 6.r, maxSize: 12.r, opacity: 0.5),
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
                 Text(
                   chronotype,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
+                  style: TextStyle(
+                    fontSize: 24.sp,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12.h),
                 Text(
                   chronotypeText,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 16.sp,
                     height: 1.6,
                     color: Colors.white70,
                   ),
                 ),
-                const SizedBox(height: 32),
-                const Text(
+                SizedBox(height: 32.h),
+                Text(
                   "Du er nu klar til at starte din lyslogning!",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                  style: TextStyle(fontSize: 16.sp, color: Colors.white70),
                 ),
-                const SizedBox(height: 48),
+                SizedBox(height: 48.h),
                 SizedBox(
-                  width: double.infinity,
+                  width: 200.w,
                   child: ElevatedButton(
                     onPressed: () => _goToHome(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
+                      backgroundColor: Colors.grey,
                       foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: EdgeInsets.symmetric(vertical: 20.h),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Kom i gang",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),

@@ -663,7 +663,7 @@ class ApiService {
   // GET  /api/activities/activities?patient_id=<id>
   // ──────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchActivities(String patientId) async {
-    final response = await _get("/activities/activities?patient_id=$patientId");
+    final response = await _get("/activities?patient_id=$patientId");
     return _handleListResponse(response);
   }
 
@@ -687,7 +687,7 @@ class ApiService {
       'end_time': endTime,
       'duration_minutes': durationMinutes,
     };
-    final response = await _post("/activities/activities", payload);
+    final response = await _post("/activities", payload);
     _handleVoidResponse(response, successCode: 201);
   }
 
@@ -696,9 +696,104 @@ class ApiService {
   // DELETE /api/activities/activities/<activityId>?user_id=<id>
   // ──────────────────────────────────────────────────────────────────────────────
   static Future<void> deleteActivity(int activityId, { required String userId }) async {
-    final response = await _delete("/activities/activities/$activityId?user_id=$userId");
-    _handleVoidResponse(response, successCode: 200);
+    final response = await _delete("/activities/$activityId?user_id=$userId");
+    // Flask returnerer 204 No Content på succes
+    _handleVoidResponse(response, successCode: 204);
   }
+
+
+  //─────────────────────────────────────────────────────────────────────────────
+  // 17) Customer‐events (Activities) under /api/customer
+  //─────────────────────────────────────────────────────────────────────────────
+  /// 1) Henter alle customer‐event labels
+  ///    GET /api/customer/activities/labels?customer_id=$customerId
+  static Future<List<String>> fetchCustomerActivityLabels(String customerId) async {
+    final response = await _get("/customer/activities/labels?customer_id=$customerId");
+    if (response.statusCode != 200) {
+      throw Exception('Kunne ikke hente labels: ${response.statusCode}');
+    }
+
+    dynamic decoded = json.decode(response.body);
+    if (decoded is String) decoded = json.decode(decoded);
+    if (decoded is Map && decoded['labels'] is List) decoded = decoded['labels'];
+    if (decoded is! List) {
+      throw Exception('Uventet format for customer labels: ${decoded.runtimeType}');
+    }
+
+    return decoded.map<String>((e) {
+      if (e is Map && e['label'] is String) return e['label'] as String;
+      return e as String;
+    }).toList();
+  }
+
+  /// 2) Henter alle customer‐events (activities)
+  ///    GET /api/customer/activities?customer_id=<id>
+  static Future<List<Map<String, dynamic>>> fetchCustomerActivities(String customerId) async {
+    final response = await _get("/customer/activities?customer_id=$customerId");
+    if (response.statusCode != 200) {
+      throw Exception('Kunne ikke hente aktiviteter: ${response.statusCode}');
+    }
+    final decoded = json.decode(response.body);
+    if (decoded is List) {
+      return List<Map<String, dynamic>>.from(decoded);
+    }
+    throw Exception('Uventet format for customer activities');
+  }
+
+  /// 3) Opretter et nyt customer‐event (activity)
+  ///    POST /api/customer/activities
+  static Future<void> addCustomerActivityEvent({
+    required String customerId,
+    required String eventType,
+    required String note,
+    required String startTime,
+    required String endTime,
+    required int durationMinutes,
+  }) async {
+    final payload = {
+      'customer_id':      customerId,
+      'event_type':       eventType,
+      'note':             note,
+      'start_time':       startTime,
+      'end_time':         endTime,
+      'duration_minutes': durationMinutes,
+    };
+    final response = await _post("/customer/activities", payload);
+    if (response.statusCode != 201) {
+      throw Exception('Kunne ikke oprette aktivitet: ${response.statusCode}');
+    }
+  }
+
+  /// 4) Sletter et customer‐event (activity)
+  ///    DELETE /api/customer/activities/<activityId>?customer_id=<id>
+  static Future<void> deleteCustomerActivity(
+      int activityId,
+      String customerId, {
+        /// Hvad HTTP-kode vi forventer på succes (default 204)
+        int successCode = 204,
+      }) async {
+    final response = await _delete(
+      "/customer/activities/$activityId?customer_id=$customerId",
+    );
+    _handleVoidResponse(response, successCode: successCode);
+  }
+
+  /// 5) Tilføjer en ny custom‐label til customer
+  ///    POST /api/customer/activities/labels
+  static Future<void> addCustomerActivityLabel({
+    required String customerId,
+    required String label,
+  }) async {
+    final payload = {
+      'customer_id': customerId,
+      'label':       label,
+    };
+    final response = await _post("/customer/activities/labels", payload);
+    if (response.statusCode != 201) {
+      throw Exception('Kunne ikke tilføje label: ${response.statusCode}');
+    }
+  }
+
   //─────────────────────────────────────────────────────────────────────────────
   // 17) 🌐 Offline‐synkronisering & fejl‐log (Error Logs)
   //     POST /api/error-logs

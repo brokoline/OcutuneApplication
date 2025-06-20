@@ -1,21 +1,27 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 import '/theme/colors.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class AboutChronotypeScreen extends StatefulWidget {
   final String chronotypeId;
 
-  const AboutChronotypeScreen({super.key, required this.chronotypeId});
+  const AboutChronotypeScreen({
+    super.key,
+    required this.chronotypeId,
+  });
 
   @override
   State<AboutChronotypeScreen> createState() =>
       _AboutChronotypeScreenState();
 }
 
-class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
+class _AboutChronotypeScreenState
+    extends State<AboutChronotypeScreen> {
   ChronotypeModel? chronotype;
   bool isLoading = true;
 
@@ -26,12 +32,13 @@ class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
   }
 
   Future<void> fetchChronotype() async {
-    final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes/${widget.chronotypeId}',
-    );
+    final url = Uri.parse(
+        'https://ocutune2025.ddns.net/api/chronotypes/${widget.chronotypeId}');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+      final data =
+      json.decode(response.body) as Map<String, dynamic>;
       setState(() {
         chronotype = ChronotypeModel.fromJson(data);
         isLoading = false;
@@ -48,59 +55,66 @@ class _AboutChronotypeScreenState extends State<AboutChronotypeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const CustomerAppBar(
+        showBackButton: true,
+        title: 'Kronotype detaljer',
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : chronotype == null
-          ? const Center(
-        child: Text("Ingen data fundet",
-            style: TextStyle(color: Colors.white70)),
-      )
-          : Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              chronotype!.title,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+      body: SafeArea(
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : chronotype == null
+            ? const Center(
+          child: Text("Ingen data fundet",
+              style: TextStyle(
+                  color: Colors.white70)),
+        )
+            : SingleChildScrollView(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            crossAxisAlignment:
+            CrossAxisAlignment.center,
+            children: [
+              Text(
+                chronotype!.title,
+                style: TextStyle(
+                  fontSize: 38.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white70,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            if (chronotype!.imageUrl != null)
-              Image.network(
-                chronotype!.imageUrl!,
-                height: 260,
-                errorBuilder: (_, __, ___) =>
-                const Icon(Icons.broken_image,
-                    color: Colors.white),
+              SizedBox(height: 10.h),
+              if (chronotype!.imageUrl != null)
+                Image.network(
+                  chronotype!.imageUrl!,
+                  height: 200.h,
+                  errorBuilder:
+                      (_, __, ___) =>
+                  const Icon(
+                    Icons.broken_image,
+                    color: Colors.white70,
+                  ),
+                ),
+              SizedBox(height: 24.h),
+              Text(
+                chronotype!.shortDescription,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15.sp,
+                ),
               ),
-            const SizedBox(height: 24),
-            Text(
-              chronotype!.shortDescription,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: Colors.white70, fontSize: 15),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              chronotype!.longDescription ??
-                  'Ingen beskrivelse tilgængelig.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: Colors.white70, fontSize: 15),
-            ),
-          ],
+              SizedBox(height: 16.h),
+              Text(
+                chronotype!.longDescription ??
+                    'Ingen beskrivelse tilgængelig.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15.sp,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

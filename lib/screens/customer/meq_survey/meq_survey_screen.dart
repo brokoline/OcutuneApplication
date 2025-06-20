@@ -10,7 +10,7 @@ import '../../../widgets/meq_widgets/meq_question_page.dart';
 class MeqSurveyScreen extends StatefulWidget {
   final int participantId; // f.eks. modtaget fra login
 
-  MeqSurveyScreen({required this.participantId});
+  const MeqSurveyScreen({super.key, required this.participantId});
 
   @override
   MeqSurveyScreenState createState() => MeqSurveyScreenState();
@@ -18,7 +18,7 @@ class MeqSurveyScreen extends StatefulWidget {
 
 class MeqSurveyScreenState extends State<MeqSurveyScreen> {
   late Future<List<MeqQuestion>> _futureQuestions;
-  Map<int, Map<String, int>> _answers = {};
+  final Map<int, Map<String, int>> _answers = {};
   PageController? _pageController;
 
   @override
@@ -166,9 +166,7 @@ class MeqSurveyScreenState extends State<MeqSurveyScreen> {
             return const Center(child: Text('Ingen spørgsmål fundet.'));
           } else {
             final questions = snapshot.data!;
-            if (_pageController == null) {
-              _pageController = PageController(initialPage: 0);
-            }
+            _pageController ??= PageController(initialPage: 0);
             final totalQuestions = questions.length;
 
             return Column(

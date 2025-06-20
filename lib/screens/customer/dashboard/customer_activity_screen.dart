@@ -6,14 +6,14 @@ import '../../../services/auth_storage.dart';
 import '../../../widgets/universal/confirm_dialog.dart';
 import '../../../widgets/universal/ocutune_next_step_button.dart';
 
-class PatientActivityScreen extends StatefulWidget {
-  const PatientActivityScreen({super.key});
+class CustomerActivityScreen extends StatefulWidget {
+  const CustomerActivityScreen({super.key});
 
   @override
-  State<PatientActivityScreen> createState() => _PatientActivityScreenState();
+  State<CustomerActivityScreen> createState() => _CustomerActivityScreenState();
 }
 
-class _PatientActivityScreenState extends State<PatientActivityScreen> {
+class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
   List<Map<String, dynamic>> recent = [];
   List<String> activities = [];
   String? selected;
@@ -27,34 +27,32 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> loadActivityLabels() async {
     try {
-      final rawId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getCustomerId();
       if (rawId == null) return;
-      final patientId = rawId.toString();
+      final customerId = rawId.toString();
 
-      final labels = await ApiService.fetchActivityLabels(patientId);
+      final labels = await ApiService.fetchCustomerActivityLabels(customerId);
       if (!mounted) return;
-      setState(() {
-        activities = labels;
-      });
+      setState(() => activities = labels);
     } catch (e) {
-      debugPrint('Kunne ikke hente labels: $e');
+      debugPrint('Kunne ikke hente customer-labels: $e');
+      // silently fail
     }
   }
 
   Future<void> loadActivities() async {
     try {
-      final rawId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getCustomerId();
       if (rawId == null) return;
-      final patientId = rawId.toString();
+      final customerId = rawId.toString();
 
-      final activitiesFromDb = await ApiService.fetchActivities(patientId);
-
+      final activitiesFromDb = await ApiService.fetchCustomerActivities(customerId);
       if (!mounted) return;
+
       setState(() {
         recent = activitiesFromDb.map((a) {
           final start = DateTime.tryParse(a['start_time'] ?? '') ?? DateTime.now();
           final end = DateTime.tryParse(a['end_time'] ?? '') ?? start;
-
           return {
             'id': a['id'],
             'label': a['event_type'],
@@ -66,7 +64,8 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
         }).toList();
       });
     } catch (e) {
-      debugPrint('Error loading activities: $e');
+      debugPrint('Error loading customer activities: $e');
+      // silently fail
     }
   }
 
@@ -82,30 +81,30 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> registerActivity(String label, DateTime startTime, DateTime endTime) async {
     final duration = endTime.difference(startTime).inMinutes;
-
     try {
-      final rawId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getCustomerId();
       if (rawId == null) return;
-      final patientId = rawId.toString();
+      final customerId = rawId.toString();
 
-      await ApiService.addActivityEvent(
-        patientId: patientId,
-        eventType: label,
-        note: 'Manuelt registreret',
-        startTime: startTime.toIso8601String(),
-        endTime: endTime.toIso8601String(),
+      await ApiService.addCustomerActivityEvent(
+        customerId:      customerId,
+        eventType:       label,
+        note:            'Manuelt registreret',
+        startTime:       startTime.toIso8601String(),
+        endTime:         endTime.toIso8601String(),
         durationMinutes: duration,
       );
 
       await loadActivities();
       await loadActivityLabels();
-
       if (!mounted) return;
+
       setState(() => selected = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Aktivitet "$label" registreret')),
       );
     } catch (e) {
+      debugPrint('Error registering customer activity: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke gemme aktivitet')),
@@ -115,18 +114,23 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
 
   Future<void> deleteActivity(int id) async {
     try {
-      final rawId = await AuthStorage.getUserId();
+      final rawId = await AuthStorage.getCustomerId();
       if (rawId == null) return;
-      final userId = rawId.toString();
+      final customerId = rawId.toString();
 
-      await ApiService.deleteActivity(id, userId: userId);
+      await ApiService.deleteCustomerActivity(
+        id,
+        customerId,
+        // successCode: 204 is default
+      );
+
       await loadActivities();
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Aktivitet slettet')),
       );
     } catch (e) {
+      debugPrint('Error deleting customer activity: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke slette aktivitet')),
@@ -143,67 +147,64 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: Wrap(
-            runSpacing: 16,
-            children: [
-              const Text(
-                'Ny aktivitet',
-                style: TextStyle(color: Colors.white70, fontSize: 18),
-              ),
-              TextField(
-                style: const TextStyle(color: Colors.white70),
-                decoration: const InputDecoration(
-                  hintText: 'F.eks. Udflugt',
-                  hintStyle: TextStyle(color: Colors.white54),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white54),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          left: 20, right: 20, top: 20,
+        ),
+        child: Wrap(
+          runSpacing: 16,
+          children: [
+            const Text(
+              'Ny aktivitet',
+              style: TextStyle(color: Colors.white70, fontSize: 18),
+            ),
+            TextField(
+              style: const TextStyle(color: Colors.white70),
+              decoration: const InputDecoration(
+                hintText: 'F.eks. Udflugt',
+                hintStyle: TextStyle(color: Colors.white54),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white54),
                 ),
-                onChanged: (value) => newLabel = value,
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white70),
+                ),
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: OcutuneButton(
-                  text: 'Tilføj',
-                  onPressed: () async {
-                    if (newLabel.trim().isEmpty) return;
-                    try {
-                      final rawId = await AuthStorage.getUserId();
-                      if (rawId == null) return;
-                      final patientId = rawId.toString();
+              onChanged: (v) => newLabel = v,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: OcutuneButton(
+                text: 'Tilføj',
+                onPressed: () async {
+                  if (newLabel.trim().isEmpty) return;
+                  try {
+                    final rawId = await AuthStorage.getCustomerId();
+                    if (rawId == null) return;
+                    final customerId = rawId.toString();
 
-                      await ApiService.addActivityLabel(
-                        patientId: patientId,
-                        label: newLabel.trim(),
-                      );
-                      await loadActivityLabels();
-                      if (!mounted) return;
-                      Navigator.pop(context);
-                    } catch (e) {
-                      if (!mounted) return;
+                    await ApiService.addCustomerActivityLabel(
+                      customerId: customerId,
+                      label:      newLabel.trim(),
+                    );
+                    await loadActivityLabels();
+                    if (!mounted) return;
+                    Navigator.pop(context);
+                  } catch (_) {
+                    if (mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Kunne ikke tilføje aktivitetstype')),
+                        const SnackBar(content: Text('Kunne ikke tilføje type')),
                       );
                     }
-                  },
-                ),
+                  }
+                },
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -212,52 +213,47 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
       context: context,
       helpText: helpText,
       initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            timePickerTheme: TimePickerThemeData(
-              backgroundColor: generalBox,
-              hourMinuteTextColor: Colors.white70,
-              dialHandColor: Colors.white70,
-              dayPeriodTextColor: Colors.white70,
-              helpTextStyle: const TextStyle(color: Colors.white70),
-            ),
-            colorScheme: ColorScheme.dark(
-              primary: Colors.white70,
-              onPrimary: Colors.black,
-              surface: generalBox,
-              onSurface: Colors.white70,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(foregroundColor: Colors.white70),
-            ),
+      builder: (_, child) => Theme(
+        data: ThemeData.dark().copyWith(
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: generalBox,
+            hourMinuteTextColor: Colors.white70,
+            dialHandColor: Colors.white70,
+            dayPeriodTextColor: Colors.white70,
+            helpTextStyle: const TextStyle(color: Colors.white70),
           ),
-          child: child!,
-        );
-      },
+          colorScheme: ColorScheme.dark(
+            primary: Colors.white70,
+            onPrimary: Colors.black,
+            surface: generalBox,
+            onSurface: Colors.white70,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: Colors.white70),
+          ),
+        ),
+        child: child!,
+      ),
     );
   }
 
   Future<void> openConfirmDialog() async {
     if (selected == null || !mounted) return;
-
-    final now = DateTime.now();
-
-    final start = await showStyledTimePicker('Hvornår startede aktiviteten ca.?');
+    final now   = DateTime.now();
+    final start = await showStyledTimePicker('Starttidspunkt');
     if (start == null || !mounted) return;
-    final startDateTime = DateTime(now.year, now.month, now.day, start.hour, start.minute);
-
-    final end = await showStyledTimePicker('Hvornår sluttede aktiviteten ca.?');
+    final end = await showStyledTimePicker('Sluttidspunkt');
     if (end == null || !mounted) return;
-    final endDateTime = DateTime(now.year, now.month, now.day, end.hour, end.minute);
 
-    await registerActivity(selected!, startDateTime, endDateTime);
+    final startDt = DateTime(now.year, now.month, now.day, start.hour,  start.minute);
+    final endDt   = DateTime(now.year, now.month, now.day, end.hour,    end.minute);
+    await registerActivity(selected!, startDt, endDt);
   }
 
   Widget buildRecentCard(Map<String, dynamic> item) {
-    final start = item['start'] as DateTime;
-    final end = item['end'] as DateTime;
-    final duration = end.difference(start);
+    final DateTime start = item['start'];
+    final DateTime end   = item['end'];
+    final duration       = end.difference(start);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -272,25 +268,21 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                item['label'],
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
-              ),
+              Text(item['label'],
+                  style: const TextStyle(color: Colors.white70, fontSize: 16)),
               if (item['deletable'] == true)
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.white54),
                   onPressed: () async {
-                    final confirmed = await showDialog<bool>(
+                    final ok = await showDialog<bool>(
                       context: context,
-                      builder: (context) => ConfirmDialog(
+                      builder: (_) => ConfirmDialog(
                         title: 'Bekræft sletning',
                         message: 'Er du sikker på, at du vil slette denne aktivitet?',
                         onConfirm: () {},
                       ),
                     );
-                    if (confirmed == true && mounted) {
-                      await deleteActivity(item['id']);
-                    }
+                    if (ok == true && mounted) await deleteActivity(item['id']);
                   },
                 ),
             ],
@@ -299,14 +291,10 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Varighed: ${formatDuration(duration)}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              Text(
-                formatDateTime(start),
-                style: const TextStyle(color: Colors.white38),
-              ),
+              Text('Varighed: ${formatDuration(duration)}',
+                  style: const TextStyle(color: Colors.white70)),
+              Text(formatDateTime(start),
+                  style: const TextStyle(color: Colors.white38)),
             ],
           ),
         ],
@@ -318,22 +306,6 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          'Registrér aktivitet',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white70,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white70),
-      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -372,18 +344,32 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   ),
                   style: const TextStyle(color: Colors.white70, fontSize: 18),
                   menuMaxHeight: 320,
-                  onChanged: (val) => setState(() => selected = val),
-                  items: activities.map((label) {
+                  onChanged: (v) => setState(() => selected = v),
+                  items: activities.isEmpty
+                      ? [
+                    DropdownMenuItem<String>(
+                      value: null,
+                      enabled: false,
+                      child: Text(
+                        'Ingen aktiviteter er oprettet endnu',
+                        style: TextStyle(color: Colors.white54, fontSize: 18),
+                      ),
+                    )
+                  ]
+                      : activities.map((label) {
                     return DropdownMenuItem<String>(
                       value: label,
-                      child: Text(
-                        label,
-                        style: const TextStyle(color: Colors.white70, fontSize: 18),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(label,
+                          style: const TextStyle(color: Colors.white70, fontSize: 16),
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
                     );
                   }).toList(),
+                  hint: activities.isEmpty
+                      ? Text(
+                    'Ingen aktiviteter er oprettet endnu',
+                    style: TextStyle(color: Colors.white54),
+                  )
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 Align(
@@ -391,18 +377,13 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   child: TextButton.icon(
                     onPressed: openNewActivityDialog,
                     icon: const Icon(Icons.add, color: Colors.white70),
-                    label: const Text(
-                      'Opret ny aktivitet',
-                      style: TextStyle(color: Colors.white70),
-                    ),
+                    label: const Text('Opret ny aktivitet',
+                        style: TextStyle(color: Colors.white70)),
                   ),
                 ),
                 const SizedBox(height: 12),
                 if (selected != null)
-                  OcutuneButton(
-                    text: 'Bekræft registrering',
-                    onPressed: openConfirmDialog,
-                  )
+                  OcutuneButton(text: 'Bekræft registrering', onPressed: openConfirmDialog)
                 else
                   const SizedBox(height: 24),
                 if (recent.isEmpty)

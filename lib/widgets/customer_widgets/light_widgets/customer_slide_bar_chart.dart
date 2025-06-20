@@ -21,10 +21,10 @@ class CustomerLightSlideBarChart extends StatefulWidget {
   final String chronotype;
 
   const CustomerLightSlideBarChart({
-    Key? key,
+    super.key,
     required this.rmeqScore,
     required this.chronotype,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomerLightSlideBarChart> createState() =>

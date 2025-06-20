@@ -1,36 +1,26 @@
-// lib/screens/customer/register/registration_steps/chronotype_survey/customer_question_2_screen.dart
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/widgets/universal/ocutune_slider.dart';
-
+import 'package:ocutune_light_logger/widgets/universal/ocutune_selectable_tile.dart';
 
 import '../../../../../services/services/customer_data_service.dart';
 import '../../../../../widgets/universal/ocutune_next_step_button.dart';
+import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 
 class QuestionTwoScreen extends StatefulWidget {
-  const QuestionTwoScreen({Key? key}) : super(key: key);
+  const QuestionTwoScreen({super.key});
 
   @override
   State<QuestionTwoScreen> createState() => _QuestionTwoScreenState();
 }
 
 class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
-  double sliderValue = 2;
+  String? selectedOption;
+  Map<String, int> choiceScores = {};
   late Future<Map<String, dynamic>> _questionData;
-
-  final List<Color> colors = [
-    Colors.red,
-    Colors.orange,
-    Colors.white,
-    Colors.lightGreen,
-    Colors.green,
-  ];
-
-  List<String> choices = [];
 
   @override
   void initState() {
@@ -40,9 +30,9 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
   }
 
   Future<Map<String, dynamic>> fetchQuestionData(int questionId) async {
-    const baseUrl     = 'https://ocutune2025.ddns.net/api';
+    const baseUrl = 'https://ocutune2025.ddns.net/api';
     final questionsUrl = Uri.parse('$baseUrl/questions');
-    final choicesUrl   = Uri.parse('$baseUrl/choices');
+    final choicesUrl = Uri.parse('$baseUrl/choices');
 
     final responses = await Future.wait([
       http.get(questionsUrl),
@@ -50,8 +40,8 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
     ]);
 
     if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
-      final List<dynamic> questions   = jsonDecode(responses[0].body) as List<dynamic>;
-      final List<dynamic> choicesData  = jsonDecode(responses[1].body) as List<dynamic>;
+      final questions = jsonDecode(responses[0].body) as List<dynamic>;
+      final choices = jsonDecode(responses[1].body) as List<dynamic>;
 
       final question = questions.firstWhere(
             (q) => q['id'] == questionId,
@@ -61,27 +51,21 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
         throw Exception("Spørgsmålet med ID $questionId blev ikke fundet.");
       }
 
-      final filtered = choicesData
-          .where((item) => item['question_id'] == questionId)
+      final filteredChoices = choices
+          .where((c) => c['question_id'] == questionId)
           .toList();
-      if (filtered.isEmpty) {
+      if (filteredChoices.isEmpty) {
         throw Exception("Ingen valgmuligheder fundet til spørgsmål $questionId");
       }
 
-      filtered.sort((a, b) => (a['score'] as int).compareTo(b['score'] as int));
-
-      final choiceList = filtered
-          .map((item) => item['choice_text'] as String)
-          .toList();
       final scoreMap = <String, int>{
-        for (var item in filtered)
-          item['choice_text'] as String: item['score'] as int,
+        for (var c in filteredChoices) c['choice_text'] as String: c['score'] as int,
       };
 
       return {
-        'text':    question['question_text'] as String,
-        'choices': choiceList,
-        'scores':  scoreMap,
+        'text': question['question_text'] as String,
+        'choices': scoreMap.keys.toList(),
+        'scores': scoreMap,
       };
     } else {
       throw Exception('Kunne ikke hente spørgsmål og/eller valgmuligheder.');
@@ -95,41 +79,36 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
         content: Row(
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.white, fontSize: 14.sp),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _goToNext(Map<String, int> scoreMap) {
-    final index = sliderValue.round();
-    if (choices.isEmpty || index < 0 || index >= choices.length) {
+  void _goToNext() {
+    if (selectedOption != null) {
+      final score = choiceScores[selectedOption!] ?? 0;
+      saveAnswer(selectedOption!, score);
+      Navigator.pushNamed(context, '/Q3');
+    } else {
       showError(context, "Vælg venligst en mulighed først");
-      return;
     }
-
-    final selectedChoice = choices[index];
-    final score = scoreMap[selectedChoice] ?? 0;
-
-    saveAnswer(selectedChoice, score);
-    Navigator.pushNamed(context, '/Q3');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+      appBar: const CustomerAppBar(
+        showBackButton: true,
+        title: 'Spørgsmål 2/5',
       ),
       body: SafeArea(
         child: FutureBuilder<Map<String, dynamic>>(
@@ -139,49 +118,55 @@ class _QuestionTwoScreenState extends State<QuestionTwoScreen> {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Center(
-                child: Text("Fejl: ${snapshot.error}", style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  'Fejl: \${snapshot.error}',
+                  style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                ),
               );
             } else {
-              final data      = snapshot.data!;
+              final data = snapshot.data!;
               final questionText = data['text'] as String;
-              choices        = List<String>.from(data['choices'] as List);
-              final scoreMap = Map<String,int>.from(data['scores'] as Map);
+              final options = List<String>.from(data['choices'] as List);
+              choiceScores = Map<String, int>.from(data['scores'] as Map);
 
               return Stack(
                 children: [
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            questionText,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              height: 1.5,
+                  SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          questionText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            height: 1.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 22.h),
+                        ...options.map((option) {
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 6.h),
+                            child: OcutuneSelectableTile(
+                              text: option,
+                              selected: selectedOption == option,
+                              onTap: () => setState(() => selectedOption = option),
                             ),
-                          ),
-                          const SizedBox(height: 40),
-                          OcutuneSlider(
-                            value: sliderValue,
-                            labels: choices,
-                            colors: colors,
-                            onChanged: (val) => setState(() => sliderValue = val),
-                          ),
-                        ],
-                      ),
+                          );
+                        }),
+                        SizedBox(height: 160.h),
+                      ],
                     ),
                   ),
                   Positioned(
-                    bottom: 24,
-                    right: 24,
+                    bottom: 24.h,
+                    right: 24.w,
                     child: OcutuneButton(
                       type: OcutuneButtonType.floatingIcon,
-                      onPressed: () => _goToNext(scoreMap),
+                      onPressed: _goToNext,
                     ),
                   ),
                 ],

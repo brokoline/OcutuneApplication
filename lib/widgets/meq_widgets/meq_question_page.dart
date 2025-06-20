@@ -12,11 +12,11 @@ class MeqQuestionPage extends StatelessWidget {
   final void Function(int choiceIndex) onChoiceSelected;
 
   const MeqQuestionPage({
-    Key? key,
+    super.key,
     required this.question,
     this.selectedChoiceIndex,
     required this.onChoiceSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

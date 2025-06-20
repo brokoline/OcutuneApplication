@@ -11,7 +11,7 @@ import '../../../widgets/universal/ocutune_textfield.dart';
 
 
 class CustomerReportIssueScreen extends StatefulWidget {
-  const CustomerReportIssueScreen({Key? key}) : super(key: key);
+  const CustomerReportIssueScreen({super.key});
 
   @override
   State<CustomerReportIssueScreen> createState() => _CustomerReportIssueScreenState();

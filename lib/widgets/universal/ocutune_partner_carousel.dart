@@ -7,8 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// filter på Belid & Good Light, DTU mindre, resten original
 class SimpleLogoCarousel extends StatefulWidget {
   final List<String> logos;
-  const SimpleLogoCarousel({Key? key, required this.logos})
-      : super(key: key);
+  const SimpleLogoCarousel({super.key, required this.logos});
 
   @override
   State<SimpleLogoCarousel> createState() => _SimpleLogoCarouselState();

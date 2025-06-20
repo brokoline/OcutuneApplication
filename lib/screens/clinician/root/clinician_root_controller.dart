@@ -3,7 +3,7 @@ import 'package:ocutune_light_logger/models/patient_model.dart';
 
 class ClinicianDashboardController extends ChangeNotifier {
   List<String> _notifications = [];
-  List<Patient> _allPatients = [];
+  final List<Patient> _allPatients = [];
   List<Patient> _searchResults = [];
   Patient? _selectedPatient;
 

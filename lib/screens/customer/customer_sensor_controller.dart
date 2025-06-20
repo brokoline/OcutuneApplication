@@ -13,13 +13,13 @@ class CustomerSensorController {
   final String customerId;
   final BleController bleController;
 
-  /// Privat liste over fundne devices
+  // Privat liste over fundne devices
   final List<DiscoveredDevice> _devices = [];
 
-  /// Notifier som UI kan lytte på
+  // Notifier som UI kan lytte på
   final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier([]);
 
-  /// Gør listen tilgængelig uden for klassen
+  // Gør listen tilgængelig uden for klassen
   List<DiscoveredDevice> get devices => List.unmodifiable(_devices);
 
   BleLifecycleHandler? _lifecycleHandler;
@@ -27,7 +27,7 @@ class CustomerSensorController {
   CustomerSensorController({ required this.customerId })
       : bleController = BleController();
 
-  /// Skal kaldes én gang fra fx initState()
+  // Skal kaldes én gang fra fx initState()
   void init() {
     // Når en ny device bliver fundet
     bleController.onDeviceDiscovered = (device) {
@@ -40,13 +40,13 @@ class CustomerSensorController {
     bleController.monitorBluetoothState();
   }
 
-  /// Skal kaldes fra dispose()
+  // Skal kaldes fra dispose()
   void dispose() {
     _lifecycleHandler?.stop();
     devicesNotifier.dispose();
   }
 
-  /// Spørg om nødvendige tilladelser, før der scannes
+  // Spørg om nødvendige tilladelser, før der scannes
   Future<void> requestPermissionsAndScan(BuildContext context) async {
     final statusLocation = await Permission.locationWhenInUse.request();
     final statusScan     = await Permission.bluetoothScan.request();
@@ -72,7 +72,7 @@ class CustomerSensorController {
     bleController.startScan();
   }
 
-  /// Forbind til en valgt device og sæt lifecycle‐handler op
+  // Forbind til en valgt device og sæt lifecycle‐handler op
   Future<void> connectToDevice(
       BuildContext context,
       DiscoveredDevice device,
@@ -80,7 +80,7 @@ class CustomerSensorController {
     try {
       await bleController.connectToDevice(
         device: device,
-        patientId: customerId, // <--- NB: behold "patientId" hvis BLE-controlleren forventer det!
+        patientId: customerId,
       );
 
       // Opsæt genopkobling ved app-lifecycle
@@ -90,7 +90,7 @@ class CustomerSensorController {
         ..start()
         ..updateDevice(
           device: device,
-          patientId: customerId, // <--- NB: samme her!
+          patientId: customerId,
         );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +103,7 @@ class CustomerSensorController {
     }
   }
 
-  /// Afbryd forbindelse og fjern lifecycle‐observer
+  // Afbryd forbindelse og fjern lifecycle‐observer
   void disconnectFromDevice(BuildContext context) {
     _lifecycleHandler?.stop();
     bleController.disconnect();

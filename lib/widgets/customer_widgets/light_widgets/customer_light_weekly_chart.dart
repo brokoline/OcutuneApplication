@@ -8,7 +8,7 @@ import 'package:ocutune_light_logger/models/daily_light_summary_model.dart';
 import '../../../services/auth_storage.dart';
 
 class CustomerLightWeeklyBarChart extends StatefulWidget {
-  const CustomerLightWeeklyBarChart({Key? key}) : super(key: key);
+  const CustomerLightWeeklyBarChart({super.key});
 
   @override
   State<CustomerLightWeeklyBarChart> createState() =>
