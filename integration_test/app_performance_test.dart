@@ -47,14 +47,14 @@ void main() {
 
       // Log slow frames
       final slowFrames = validTimings.where((t) {
-        final build = t.buildDuration?.inMilliseconds ?? 0;
-        final raster = t.rasterDuration?.inMilliseconds ?? 0;
+        final build = t.buildDuration.inMilliseconds ?? 0;
+        final raster = t.rasterDuration.inMilliseconds ?? 0;
         return build > 16 || raster > 16;
       }).toList();
       print('Slow frames count: ${slowFrames.length}');
       for (var t in slowFrames) {
-        print('🔴 build=${t.buildDuration?.inMilliseconds}ms, '
-            'raster=${t.rasterDuration?.inMilliseconds}ms');
+        print('🔴 build=${t.buildDuration.inMilliseconds}ms, '
+            'raster=${t.rasterDuration.inMilliseconds}ms');
       }
 
       // Allow up to 5% slow frames
