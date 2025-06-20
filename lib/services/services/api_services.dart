@@ -663,7 +663,7 @@ class ApiService {
   // GET  /api/activities/activities?patient_id=<id>
   // ──────────────────────────────────────────────────────────────────────────────
   static Future<List<Map<String, dynamic>>> fetchActivities(String patientId) async {
-    final response = await _get("/activities/activities?patient_id=$patientId");
+    final response = await _get("/activities?patient_id=$patientId");
     return _handleListResponse(response);
   }
 
@@ -687,7 +687,7 @@ class ApiService {
       'end_time': endTime,
       'duration_minutes': durationMinutes,
     };
-    final response = await _post("/activities/activities", payload);
+    final response = await _post("/activities", payload);
     _handleVoidResponse(response, successCode: 201);
   }
 
@@ -696,8 +696,9 @@ class ApiService {
   // DELETE /api/activities/activities/<activityId>?user_id=<id>
   // ──────────────────────────────────────────────────────────────────────────────
   static Future<void> deleteActivity(int activityId, { required String userId }) async {
-    final response = await _delete("/activities/activities/$activityId?user_id=$userId");
-    _handleVoidResponse(response, successCode: 200);
+    final response = await _delete("/activities/$activityId?user_id=$userId");
+    // Flask returnerer 204 No Content på succes
+    _handleVoidResponse(response, successCode: 204);
   }
 
 
@@ -768,14 +769,13 @@ class ApiService {
   static Future<void> deleteCustomerActivity(
       int activityId,
       String customerId, {
+        /// Hvad HTTP-kode vi forventer på succes (default 204)
         int successCode = 204,
       }) async {
     final response = await _delete(
       "/customer/activities/$activityId?customer_id=$customerId",
     );
-    if (response.statusCode != successCode) {
-      throw Exception('Fejl: ${response.statusCode}');
-    }
+    _handleVoidResponse(response, successCode: successCode);
   }
 
   /// 5) Tilføjer en ny custom‐label til customer
