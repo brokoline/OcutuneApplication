@@ -735,7 +735,7 @@ class ApiService {
     }
     final decoded = json.decode(response.body);
     if (decoded is List) {
-      return List<Map<String, dynamic>>.from(decoded as List);
+      return List<Map<String, dynamic>>.from(decoded);
     }
     throw Exception('Uventet format for customer activities');
   }

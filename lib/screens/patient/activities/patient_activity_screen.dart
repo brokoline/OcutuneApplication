@@ -405,7 +405,16 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
                   )
                 else
                   const SizedBox(height: 24),
-                if (recent.isNotEmpty) ...[
+                if (recent.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Text(
+                      'Ingen aktiviteter endnu.\nTryk “Opret ny aktivitet” for at komme i gang.',
+                      style: const TextStyle(color: Colors.white54, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else ...[
                   const Align(
                     alignment: Alignment.centerLeft,
                     child: Text(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';;
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/services/api_services.dart';
@@ -17,65 +17,42 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
   List<Map<String, dynamic>> recent = [];
   List<String> activities = [];
   String? selected;
-  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    setState(() => isLoading = true);
-    try {
-      await Future.wait([
-        loadActivities(),
-        loadActivityLabels(),
-      ]);
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
-    }
+    loadActivities();
+    loadActivityLabels();
   }
 
   Future<void> loadActivityLabels() async {
     try {
       final rawId = await AuthStorage.getCustomerId();
-      if (rawId == null) { /* … */ return; }
+      if (rawId == null) return;
+      final customerId = rawId.toString();
 
-      // fetch now returns List<String> directly
-      final labels = await ApiService.fetchCustomerActivityLabels(rawId.toString());
-
+      final labels = await ApiService.fetchCustomerActivityLabels(customerId);
       if (!mounted) return;
-      setState(() {
-        activities = labels;
-        if (labels.isNotEmpty) selected = labels.first;
-      });
+      setState(() => activities = labels);
     } catch (e) {
-      debugPrint('Kunne ikke hente labels: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kunne ikke hente aktiviteter')),
-      );
+      debugPrint('Kunne ikke hente customer-labels: $e');
+      // silently fail
     }
   }
-
-
 
   Future<void> loadActivities() async {
     try {
       final rawId = await AuthStorage.getCustomerId();
       if (rawId == null) return;
+      final customerId = rawId.toString();
 
-      final activitiesFromDb = await ApiService.fetchCustomerActivities(rawId.toString());
+      final activitiesFromDb = await ApiService.fetchCustomerActivities(customerId);
       if (!mounted) return;
 
       setState(() {
         recent = activitiesFromDb.map((a) {
           final start = DateTime.tryParse(a['start_time'] ?? '') ?? DateTime.now();
           final end = DateTime.tryParse(a['end_time'] ?? '') ?? start;
-
           return {
             'id': a['id'],
             'label': a['event_type'],
@@ -87,11 +64,8 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
         }).toList();
       });
     } catch (e) {
-      debugPrint('Error loading activities: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kunne ikke indlæse aktivitetshistorik')),
-      );
+      debugPrint('Error loading customer activities: $e');
+      // silently fail
     }
   }
 
@@ -106,83 +80,66 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
   }
 
   Future<void> registerActivity(String label, DateTime startTime, DateTime endTime) async {
-    if (startTime.isAfter(endTime)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sluttid skal være efter starttid')),
-      );
-      return;
-    }
-
     final duration = endTime.difference(startTime).inMinutes;
-    setState(() => isLoading = true);
-
     try {
       final rawId = await AuthStorage.getCustomerId();
       if (rawId == null) return;
+      final customerId = rawId.toString();
 
       await ApiService.addCustomerActivityEvent(
-        customerId: rawId.toString(),
-        eventType: label,
-        note: 'Manuelt registreret',
-        startTime: startTime.toIso8601String(),
-        endTime: endTime.toIso8601String(),
+        customerId:      customerId,
+        eventType:       label,
+        note:            'Manuelt registreret',
+        startTime:       startTime.toIso8601String(),
+        endTime:         endTime.toIso8601String(),
         durationMinutes: duration,
       );
 
-      await _loadData();
-
+      await loadActivities();
+      await loadActivityLabels();
       if (!mounted) return;
+
+      setState(() => selected = null);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Aktivitet "$label" registreret')),
       );
     } catch (e) {
-      debugPrint('Error registering activity: $e');
+      debugPrint('Error registering customer activity: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke gemme aktivitet')),
       );
-    } finally {
-      if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> deleteActivity(int id) async {
-    final rawId = await AuthStorage.getCustomerId();
-    if (rawId == null) return;
-    final customerId = rawId.toString();
-
     try {
-      // ⚠️ two positionals, plus we can be explicit about successCode if you like:
+      final rawId = await AuthStorage.getCustomerId();
+      if (rawId == null) return;
+      final customerId = rawId.toString();
+
       await ApiService.deleteCustomerActivity(
         id,
         customerId,
-        // successCode: 204, // ← optional, but it's already the default
+        // successCode: 204 is default
       );
 
-      // now remove it from the local list so the UI updates instantly:
-      setState(() {
-        recent.removeWhere((item) => item['id'] == id);
-      });
-
+      await loadActivities();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Aktivitet slettet')),
       );
     } catch (e) {
-      // if it still fails, let's log the status / body
-      debugPrint('DELETE failed: $e');
+      debugPrint('Error deleting customer activity: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke slette aktivitet')),
       );
     }
   }
 
-
-
   void openNewActivityDialog() {
     String newLabel = '';
-    final formKey = GlobalKey<FormState>();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -195,64 +152,57 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
           bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           left: 20, right: 20, top: 20,
         ),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Ny aktivitet',
-                style: TextStyle(color: Colors.white70, fontSize: 18),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                autofocus: true,
-                style: const TextStyle(color: Colors.white70),
-                decoration: const InputDecoration(
-                  hintText: 'F.eks. Udflugt',
-                  hintStyle: TextStyle(color: Colors.white54),
-                  border: OutlineInputBorder(),
+        child: Wrap(
+          runSpacing: 16,
+          children: [
+            const Text(
+              'Ny aktivitet',
+              style: TextStyle(color: Colors.white70, fontSize: 18),
+            ),
+            TextField(
+              style: const TextStyle(color: Colors.white70),
+              decoration: const InputDecoration(
+                hintText: 'F.eks. Udflugt',
+                hintStyle: TextStyle(color: Colors.white54),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white54),
                 ),
-                validator: (value) =>
-                value?.trim().isEmpty ?? true ? 'Indtast en aktivitet' : null,
-                onChanged: (value) => newLabel = value,
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white70),
+                ),
               ),
-              const SizedBox(height: 20),
-              OcutuneButton(
-                text: 'Tilføj aktivitet',
+              onChanged: (v) => newLabel = v,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: OcutuneButton(
+                text: 'Tilføj',
                 onPressed: () async {
-                  if (!(formKey.currentState?.validate() ?? false)) return;
-
-                  setState(() => isLoading = true);
+                  if (newLabel.trim().isEmpty) return;
                   try {
                     final rawId = await AuthStorage.getCustomerId();
                     if (rawId == null) return;
+                    final customerId = rawId.toString();
 
                     await ApiService.addCustomerActivityLabel(
-                      customerId: rawId.toString(),
-                      label: newLabel.trim(),
+                      customerId: customerId,
+                      label:      newLabel.trim(),
                     );
-
                     await loadActivityLabels();
                     if (!mounted) return;
                     Navigator.pop(context);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('"$newLabel" tilføjet')),
-                    );
-                  } catch (e) {
-                    debugPrint('Error adding label: $e');
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Fejl: ${e.toString()}')),
-                    );
-                  } finally {
-                    if (mounted) setState(() => isLoading = false);
+                  } catch (_) {
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kunne ikke tilføje type')),
+                      );
+                    }
                   }
                 },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -263,7 +213,7 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
       context: context,
       helpText: helpText,
       initialTime: TimeOfDay.now(),
-      builder: (ctx, child) => Theme(
+      builder: (_, child) => Theme(
         data: ThemeData.dark().copyWith(
           timePickerTheme: TimePickerThemeData(
             backgroundColor: generalBox,
@@ -289,31 +239,21 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
 
   Future<void> openConfirmDialog() async {
     if (selected == null || !mounted) return;
-
-    final now = DateTime.now();
+    final now   = DateTime.now();
     final start = await showStyledTimePicker('Starttidspunkt');
     if (start == null || !mounted) return;
-    final startDt = DateTime(now.year, now.month, now.day, start.hour, start.minute);
-
     final end = await showStyledTimePicker('Sluttidspunkt');
     if (end == null || !mounted) return;
-    final endDt = DateTime(now.year, now.month, now.day, end.hour, end.minute);
 
-    if (endDt.isBefore(startDt)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sluttid skal være efter starttid')),
-      );
-      return;
-    }
-
+    final startDt = DateTime(now.year, now.month, now.day, start.hour,  start.minute);
+    final endDt   = DateTime(now.year, now.month, now.day, end.hour,    end.minute);
     await registerActivity(selected!, startDt, endDt);
   }
 
   Widget buildRecentCard(Map<String, dynamic> item) {
-    final start = item['start'] as DateTime;
-    final end = item['end'] as DateTime;
-    final duration = end.difference(start);
+    final DateTime start = item['start'];
+    final DateTime end   = item['end'];
+    final duration       = end.difference(start);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -325,50 +265,36 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Øverste række: label + slet-knap
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                item['label'],
-                style: const TextStyle(color: Colors.white70, fontSize: 16),
-              ),
+              Text(item['label'],
+                  style: const TextStyle(color: Colors.white70, fontSize: 16)),
               if (item['deletable'] == true)
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.white54),
                   onPressed: () async {
-                    // Vis dialog og få svar
-                    final confirmed = await showDialog<bool>(
+                    final ok = await showDialog<bool>(
                       context: context,
                       builder: (_) => ConfirmDialog(
                         title: 'Bekræft sletning',
                         message: 'Er du sikker på, at du vil slette denne aktivitet?',
                         onConfirm: () {},
                       ),
-                    ) ?? false;
-
-                    if (confirmed) {
-                      await deleteActivity(item['id']);
-                    }
+                    );
+                    if (ok == true && mounted) await deleteActivity(item['id']);
                   },
                 ),
             ],
           ),
-
           const SizedBox(height: 6),
-
-          // Nederste række: varighed + tidspunkt
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Varighed: ${formatDuration(duration)}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-              Text(
-                formatDateTime(start),
-                style: const TextStyle(color: Colors.white38),
-              ),
+              Text('Varighed: ${formatDuration(duration)}',
+                  style: const TextStyle(color: Colors.white70)),
+              Text(formatDateTime(start),
+                  style: const TextStyle(color: Colors.white38)),
             ],
           ),
         ],
@@ -376,94 +302,112 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: generalBackground,
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-        onRefresh: _loadData,
-        child: SingleChildScrollView(
+      body: SafeArea(
+        child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Her kan du registrere aktiviteter, hvor du har været udsat for dagslys, '
-                    'men ikke har haft din lyslogger med dig - f.eks. hvis du har været på stranden, '
-                    'ude og motionere eller blot haft den glemt derhjemme.',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-              const SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: selected,
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
-                dropdownColor: generalBox,
-                isExpanded: true,
-                decoration: InputDecoration(
-                  labelText: 'Vælg aktivitet',
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 22),
-                  filled: true,
-                  fillColor: generalBox,
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.transparent),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white54),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                style: const TextStyle(color: Colors.white70, fontSize: 18),
-                menuMaxHeight: 320,
-                onChanged: (val) => setState(() => selected = val),
-                items: activities.map((label) {
-                  return DropdownMenuItem<String>(
-                    value: label,
-                    child: Text(
-                      label,
-                      style: const TextStyle(color: Colors.white70, fontSize: 18),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: openNewActivityDialog,
-                  icon: const Icon(Icons.add, color: Colors.white70),
-                  label: const Text(
-                    'Opret ny aktivitet',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (selected != null)
-                OcutuneButton(
-                  text: 'Bekræft registrering',
-                  onPressed: openConfirmDialog,
-                )
-              else
-                const SizedBox(height: 24),
-              if (recent.isNotEmpty) ...[
-                const Align(
-                  alignment: Alignment.centerLeft,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
                   child: Text(
-                    'Seneste registreringer',
-                    style: TextStyle(color: Colors.white70),
+                    'Her kan du registrere aktiviteter, hvor du har været udsat for dagslys, '
+                        'men ikke har haft din lyslogger med dig - f.eks. hvis du har været på stranden, '
+                        'ude og motionere eller blot haft den glemt derhjemme.',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ),
+                DropdownButtonFormField<String>(
+                  value: selected,
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                  dropdownColor: generalBox,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: 'Vælg aktivitet',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 22),
+                    filled: true,
+                    fillColor: generalBox,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.transparent),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white54),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 18),
+                  menuMaxHeight: 320,
+                  onChanged: (v) => setState(() => selected = v),
+                  items: activities.isEmpty
+                      ? [
+                    DropdownMenuItem<String>(
+                      value: null,
+                      enabled: false,
+                      child: Text(
+                        'Ingen aktiviteter er oprettet endnu',
+                        style: TextStyle(color: Colors.white54, fontSize: 18),
+                      ),
+                    )
+                  ]
+                      : activities.map((label) {
+                    return DropdownMenuItem<String>(
+                      value: label,
+                      child: Text(label,
+                          style: const TextStyle(color: Colors.white70, fontSize: 16),
+                          maxLines: 2, overflow: TextOverflow.ellipsis),
+                    );
+                  }).toList(),
+                  hint: activities.isEmpty
+                      ? Text(
+                    'Ingen aktiviteter er oprettet endnu',
+                    style: TextStyle(color: Colors.white54),
+                  )
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: openNewActivityDialog,
+                    icon: const Icon(Icons.add, color: Colors.white70),
+                    label: const Text('Opret ny aktivitet',
+                        style: TextStyle(color: Colors.white70)),
                   ),
                 ),
                 const SizedBox(height: 12),
-                ...recent.take(5).map(buildRecentCard),
+                if (selected != null)
+                  OcutuneButton(text: 'Bekræft registrering', onPressed: openConfirmDialog)
+                else
+                  const SizedBox(height: 24),
+                if (recent.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: Text(
+                      'Ingen aktiviteter endnu.\nTryk “Opret ny aktivitet” for at komme i gang.',
+                      style: const TextStyle(color: Colors.white54, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else ...[
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Seneste registreringer',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...recent.take(5).map(buildRecentCard),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
