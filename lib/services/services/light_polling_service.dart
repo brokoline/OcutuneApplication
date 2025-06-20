@@ -128,7 +128,7 @@ class LightPollingService {
       final actionCode = actionRequired == 'increase'
           ? 1 : actionRequired == 'decrease' ? 2 : 0;
 
-      // Byg payload og gem lokalt (flagges som pending upload)
+      // gemmer payload lokalt
       final payload = {
         'timestamp'      : now.toIso8601String(),
         'patient_id'     : _patientId,
