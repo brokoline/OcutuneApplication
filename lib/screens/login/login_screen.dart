@@ -55,19 +55,23 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result["success"] == true) {
         final String token = result["token"] as String;
         final Map<String, dynamic> user = result["user"] as Map<String, dynamic>;
-        final String userId = user["id"].toString();
 
-        // Gem token + bruger‐id i SharedPreferences (via AuthStorage)
+        // Hent det faktiske customerId fra dit user-objekt
+        final int customerId = user["id"] as int;
+        final String userId = customerId.toString();
+
+        // Gem token, id og customerId i én operation
         await AuthStorage.saveLogin(
-          id: userId,
-          role: "",       // Kunden har ikke en “role”‐værdi (vi kan lade den stå tom)
-          simUserId: "",  // Kunden har heller ikke et simUserId
-          token: token,
+          id:         userId,
+          role:       "",       // eller "customer"
+          simUserId:  "",
+          token:      token,
+          customerId: customerId,  // ← passér det med her!
         );
 
-        // Naviger til CustomerDashboard
         Navigator.of(context).pushReplacementNamed('/customerDashboard');
-      } else {
+      }
+      else {
         final String msg = result["message"] as String;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),

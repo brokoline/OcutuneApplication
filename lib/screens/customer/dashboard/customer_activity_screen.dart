@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/services/api_services.dart';
 import '../../../services/auth_storage.dart';
-import '../../../widgets/customer_widgets/customer_app_bar.dart';
 import '../../../widgets/universal/confirm_dialog.dart';
 import '../../../widgets/universal/ocutune_next_step_button.dart';
 
@@ -150,39 +149,36 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
   }
 
   Future<void> deleteActivity(int id) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => ConfirmDialog(
-        title: 'Bekræft sletning',
-        message: 'Vil du slette denne aktivitet?',
-        onConfirm: () => Navigator.of(context).pop(true),
-      ),
-    );
-
-    if (confirmed != true) return;
-    setState(() => isLoading = true);
+    final rawId = await AuthStorage.getCustomerId();
+    if (rawId == null) return;
+    final customerId = rawId.toString();
 
     try {
-      final rawId = await AuthStorage.getCustomerId();
-      if (rawId == null) return;
+      // ⚠️ two positionals, plus we can be explicit about successCode if you like:
+      await ApiService.deleteCustomerActivity(
+        id,
+        customerId,
+        // successCode: 204, // ← optional, but it's already the default
+      );
 
-      await ApiService.deleteCustomerActivity(id, customerId: rawId.toString());
-      await loadActivities();
+      // now remove it from the local list so the UI updates instantly:
+      setState(() {
+        recent.removeWhere((item) => item['id'] == id);
+      });
 
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Aktivitet slettet')),
       );
     } catch (e) {
-      debugPrint('Error deleting activity: $e');
-      if (!mounted) return;
+      // if it still fails, let's log the status / body
+      debugPrint('DELETE failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Kunne ikke slette aktivitet')),
       );
-    } finally {
-      if (mounted) setState(() => isLoading = false);
     }
   }
+
+
 
   void openNewActivityDialog() {
     String newLabel = '';
@@ -320,47 +316,67 @@ class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
     final end = item['end'] as DateTime;
     final duration = end.difference(start);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: generalBox,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  item['label'],
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: generalBox,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Øverste række: label + slet-knap
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                item['label'],
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+              if (item['deletable'] == true)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.white54),
+                  onPressed: () async {
+                    // Vis dialog og få svar
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => ConfirmDialog(
+                        title: 'Bekræft sletning',
+                        message: 'Er du sikker på, at du vil slette denne aktivitet?',
+                        onConfirm: () {},
+                      ),
+                    ) ?? false;
+
+                    if (confirmed) {
+                      await deleteActivity(item['id']);
+                    }
+                  },
                 ),
-                if (item['deletable'] == true)
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.white54),
-                    onPressed: () => deleteActivity(item['id']),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Varighed: ${formatDuration(duration)}',
-                    style: const TextStyle(color: Colors.white70)),
-                Text(formatDateTime(start),
-                    style: const TextStyle(color: Colors.white54)),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+
+          const SizedBox(height: 6),
+
+          // Nederste række: varighed + tidspunkt
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Varighed: ${formatDuration(duration)}',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              Text(
+                formatDateTime(start),
+                style: const TextStyle(color: Colors.white38),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
