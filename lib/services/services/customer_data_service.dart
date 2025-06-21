@@ -38,21 +38,21 @@ void saveAnswer(String answer, int score) {
   final resp = currentCustomerResponse;
   if (resp == null) return;
 
-  // 1) svar‐tekster
-  final answers = resp.answers;
-  if (answers.length >= currentQuestion) {
-    answers[currentQuestion - 1] = answer;
-  } else {
-    answers.add(answer);
+  // Sørg for listen altid har plads til det aktuelle spørgsmål
+  while (resp.answers.length < currentQuestion) {
+    resp.answers.add(''); // midlertidigt tomme svar for at sikre korrekt længde
   }
 
-  // 2) score‐map
+  // Gem svaret på den korrekte plads
+  resp.answers[currentQuestion - 1] = answer;
+
+  // Opdater score-map
   final qs = resp.questionScores;
   final key = 'q$currentQuestion';
   qs[key] = score;
 
-  // 3) hvis de første 5 spørgsmål besvaret, genberegn rMEQ
-  if (answers.length >= 5) {
+  // Beregn rMEQ hvis nødvendigt
+  if (resp.answers.length >= 5) {
     final sum = qs.entries
         .where((e) => int.parse(e.key.substring(1)) <= 5)
         .map((e) => e.value)
@@ -60,7 +60,7 @@ void saveAnswer(String answer, int score) {
     currentCustomerResponse = resp.copyWith(rmeqScore: sum);
   }
 
-  // debug-udskrift
+  // Debug-print
   print('💾 Svar gemt: $answer (score $score) → Q$currentQuestion');
   print('📋 Alle scores: ${qs.toString()}');
   print('📊 Total score: ${qs.values.fold(0, (sum, v) => sum + v)}');

@@ -103,7 +103,7 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
                           ),
                           onPressed: () {
                             setState(() => selectedChronotype = null);
-                            Navigator.pushNamed(context, '/Q1');
+                            Navigator.pushNamed(context, '/questions');
                           },
                           child: const Text("Test dig selv"),
                         ),

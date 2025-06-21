@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/customer_rmeq_questions_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/question_controller.dart';
 import 'package:provider/provider.dart';
 
 
@@ -73,6 +75,7 @@ class OcutuneApp extends StatelessWidget {
           ChangeNotifierProvider<PatientDetailViewModel>(
             create: (_) => PatientDetailViewModel(''),
           ),
+          ChangeNotifierProvider(create: (_) => QuestionController()),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -97,11 +100,7 @@ class OcutuneApp extends StatelessWidget {
               final typeKey = ModalRoute.of(context)!.settings.arguments as String;
               return AboutChronotypeScreen(chronotypeId: typeKey);
             },
-            '/Q1': (_) => const QuestionOneScreen(),
-            '/Q2': (_) => const QuestionTwoScreen(),
-            '/Q3': (_) => const QuestionThreeScreen(),
-            '/Q4': (_) => const QuestionFourScreen(),
-            '/Q5': (_) => const QuestionFiveScreen(),
+            '/questions': (_) => const QuestionScreen(),
             '/doneSetup': (_) => const DoneSetupScreen(),
             '/patient/dashboard': (context) {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;
