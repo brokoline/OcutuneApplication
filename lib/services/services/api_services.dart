@@ -114,6 +114,19 @@ class ApiService {
     );
   }
 
+//─────────────────────────────────────────────────────────────────────────────
+// 7) Helper: HTTP PUT (indsætter "/api" foran endpointet)
+//─────────────────────────────────────────────────────────────────────────────
+  static Future<http.Response> _put(String endpoint, Map<String, dynamic> body) async {
+    final headers = await _authHeaders();
+    return http.put(
+      Uri.parse('$baseUrl/api$endpoint'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
+  }
+
+
   //─────────────────────────────────────────────────────────────────────────────
   // 7) Helper: Behandl “list”‐response
   //─────────────────────────────────────────────────────────────────────────────
@@ -1149,6 +1162,26 @@ class ApiService {
 
     return body;
   }
+
+
+  static Future<Map<String, dynamic>> updateCustomerChronotype({
+    required String chronotypeKey,
+    int? rmeqScore,
+  }) async {
+    final payload = <String, dynamic>{
+      'chronotype': chronotypeKey,
+      if (rmeqScore != null) 'rmeq_score': rmeqScore,
+    };
+
+    final response = await _put('/customer/profile', payload);
+    final body = _handleResponse(response);
+
+    print('✅ Kronotype opdateret til: $chronotypeKey');
+
+    return body;
+  }
+
+
 
   static Future<void> deleteCustomer(String id) async {
     final response = await _delete('/customer/delete/$id');

@@ -76,42 +76,89 @@ void setChronotypeKey(String key) {
     chronotype: key,
   );
 }
+// Opdatere hvis de ændre kronotype
+Future<void> updateCustomerProfile(Map<String, dynamic> updatedData) async {
+  final token = await AuthStorage.getToken();
+  final url = Uri.parse('https://ocutune2025.ddns.net/api/customer/profile');
+  final response = await http.put(
+    url,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode(updatedData),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Kunne ikke opdatere profilen: ${response.body}');
+  }
+}
 
 // Sender hele pakken til backend
+// Sender hele pakken til backend (registrér eller opdatér eksisterende bruger)
 Future<void> submitCustomerResponse() async {
   final resp = currentCustomerResponse;
   if (resp == null) return;
 
-  final url      = Uri.parse('https://ocutune2025.ddns.net/api/auth/registerCustomer');
+  final registerUrl = Uri.parse('https://ocutune2025.ddns.net/api/auth/registerCustomer');
+  final profileUpdateUrl = Uri.parse('https://ocutune2025.ddns.net/api/customer/profile');
   final jsonBody = json.encode(resp.toJson());
 
-  print("📤 Upload data til $url");
+  print("📤 Forsøger registrering på $registerUrl");
   print("📦 Payload: $jsonBody");
 
-  final response = await http.post(
-    url,
+  final registerResponse = await http.post(
+    registerUrl,
     headers: {'Content-Type': 'application/json'},
     body: jsonBody,
   );
 
-  if (response.statusCode == 409) {
-    throw Exception("Denne e-mail er allerede registreret.");
-  }
-  if (response.statusCode != 201) {
-    throw Exception("Fejl ved upload: ${response.body}");
-  }
+  if (registerResponse.statusCode == 409) {
+    print("⚠️ Bruger findes allerede – forsøger opdatering af profil.");
 
-  final Map<String, dynamic> body = json.decode(response.body);
-  final accessToken  = body['access_token']  as String;
-  final refreshToken = body['refresh_token'] as String;
-  final userJson     = body['user'] as Map<String, dynamic>;
+    // Forsøger opdatering af eksisterende brugerprofil
+    final token = await AuthStorage.getToken();
+    if (token == null) {
+      throw Exception("Manglende token til profilopdatering.");
+    }
 
-  await AuthStorage.saveLogin(
-    id:        userJson['id'].toString(),
-    role:      userJson['role'] as String,
-    token:     accessToken,
-    simUserId: refreshToken,
-  );
-  print('✅ Tokens og bruger gemt: access=$accessToken');
-  print("✅ Data sendt og modtaget korrekt");
+    final updateResponse = await http.put(
+      profileUpdateUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({
+        'chronotype': resp.chronotype,
+        'rmeq_score': resp.rmeqScore,
+        'answers': resp.answers,
+        'question_scores': resp.questionScores,
+      }),
+    );
+
+    if (updateResponse.statusCode != 200) {
+      throw Exception("Kunne ikke opdatere brugerprofil: ${updateResponse.body}");
+    }
+
+    print('✅ Profil opdateret korrekt.');
+
+  } else if (registerResponse.statusCode != 201) {
+    throw Exception("Fejl ved registrering: ${registerResponse.body}");
+  } else {
+    // Registrering lykkedes – gem login info
+    final Map<String, dynamic> body = json.decode(registerResponse.body);
+    final accessToken = body['access_token'] as String;
+    final refreshToken = body['refresh_token'] as String;
+    final userJson = body['user'] as Map<String, dynamic>;
+
+    await AuthStorage.saveLogin(
+      id: userJson['id'].toString(),
+      role: userJson['role'] as String,
+      token: accessToken,
+      simUserId: refreshToken,
+    );
+
+    print('✅ Tokens og bruger gemt: access=$accessToken');
+    print("✅ Registrering gennemført med succes");
+  }
 }

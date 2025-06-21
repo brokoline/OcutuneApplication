@@ -40,7 +40,7 @@ class ChooseChronotypeController {
 
   // Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
   // svar‐tekst, sætter chronotypeKey og navigerer videre.
-  static Future<void> goToNextScreen(BuildContext ctx, String? selectedChronotype) async {
+  static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
     if (selectedChronotype == null) {
       showError(ctx, "Vælg en kronotype eller tag testen først");
       return;
@@ -52,32 +52,15 @@ class ChooseChronotypeController {
       return;
     }
 
-    try {
-      final chronotypes = await fetchChronotypes();
-      final chosenType = chronotypes.firstWhere(
-            (type) => type.typeKey == selectedChronotype,
-        orElse: () => throw Exception('Kronotype ikke fundet'),
-      );
+    // Overskriv tidligere svar helt tydeligt her:
+    currentCustomerResponse = resp.copyWith(
+      answers: [selectedChronotype],  // Overskriv tidligere svar med kun den nye valgte
+      chronotype: selectedChronotype, // Sæt kronotypen direkte
+      questionScores: {},             // Nulstil tidligere score
+      rmeqScore: null,                // Nulstil tidligere beregninger
+      meqScore: null,
+    );
 
-      currentCustomerResponse = CustomerResponse(
-        firstName: resp.firstName,
-        lastName: resp.lastName,
-        email: resp.email,
-        gender: resp.gender,
-        birthYear: resp.birthYear,
-        answers: [...resp.answers, chosenType.typeKey],
-        questionScores: Map.from(resp.questionScores),
-        rmeqScore: resp.rmeqScore,
-        meqScore: resp.meqScore,
-        chronotype: chosenType.typeKey,
-        password: resp.password,
-      );
-
-      setChronotypeKey(chosenType.typeKey);
-
-      Navigator.pushNamed(ctx, '/doneSetup');
-    } catch (e) {
-      showError(ctx, 'Fejl: ${e.toString()}');
-    }
+    Navigator.pushNamed(ctx, '/doneSetup');
   }
 }
