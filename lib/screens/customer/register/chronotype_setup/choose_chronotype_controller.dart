@@ -38,9 +38,9 @@ class ChooseChronotypeController {
     );
   }
 
-  /// Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
-  /// svar‐tekst, sætter chronotypeKey og navigerer videre.
-  static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
+  // Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
+  // svar‐tekst, sætter chronotypeKey og navigerer videre.
+  static Future<void> goToNextScreen(BuildContext ctx, String? selectedChronotype) async {
     if (selectedChronotype == null) {
       showError(ctx, "Vælg en kronotype eller tag testen først");
       return;
@@ -52,21 +52,32 @@ class ChooseChronotypeController {
       return;
     }
 
-    // Bygger et nyt CustomerResponse-objekt på baggrund af det gamle:
-    currentCustomerResponse = CustomerResponse(
-      firstName:     resp.firstName,
-      lastName:      resp.lastName,
-      email:         resp.email,
-      gender:        resp.gender,
-      birthYear:     resp.birthYear,
-      answers:       [...resp.answers, selectedChronotype],
-      questionScores: Map.from(resp.questionScores),
-      rmeqScore:     resp.rmeqScore,
-      meqScore:      resp.meqScore,
-      chronotype: selectedChronotype,
-      password:      resp.password,
-    );
+    try {
+      final chronotypes = await fetchChronotypes();
+      final chosenType = chronotypes.firstWhere(
+            (type) => type.typeKey == selectedChronotype,
+        orElse: () => throw Exception('Kronotype ikke fundet'),
+      );
 
-    Navigator.pushNamed(ctx, '/doneSetup');
+      currentCustomerResponse = CustomerResponse(
+        firstName: resp.firstName,
+        lastName: resp.lastName,
+        email: resp.email,
+        gender: resp.gender,
+        birthYear: resp.birthYear,
+        answers: [...resp.answers, chosenType.typeKey],
+        questionScores: Map.from(resp.questionScores),
+        rmeqScore: resp.rmeqScore,
+        meqScore: resp.meqScore,
+        chronotype: chosenType.typeKey,
+        password: resp.password,
+      );
+
+      setChronotypeKey(chosenType.typeKey);
+
+      Navigator.pushNamed(ctx, '/doneSetup');
+    } catch (e) {
+      showError(ctx, 'Fejl: ${e.toString()}');
+    }
   }
 }
