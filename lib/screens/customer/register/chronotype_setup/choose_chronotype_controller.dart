@@ -3,8 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../../services/services/customer_data_service.dart'; // ← currentCustomerResponse her
-import '/models/customer_response_model.dart';
+import '../../../../services/services/customer_data_service.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class ChooseChronotypeController {
