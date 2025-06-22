@@ -46,8 +46,8 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         }),
       );
 
-      print('📥 Statuskode: ${response.statusCode}');
-      print('📦 Svar body: ${response.body}');
+      print('Statuskode: ${response.statusCode}');
+      print('Svar body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -98,7 +98,7 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         setState(() => loginError = 'Forkert brugernavn eller adgangskode');
       }
     } catch (e) {
-      print('💥 Undtagelse fanget: $e');
+      print('Undtagelse fanget: $e');
       setState(() => loginError = 'Netværksfejl eller server utilgængelig');
     } finally {
       setState(() => isLoading = false);

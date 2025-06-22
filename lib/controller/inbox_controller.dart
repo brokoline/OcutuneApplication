@@ -68,12 +68,20 @@ class InboxController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 📬 Filtrerer beskeder baseret på brugerens rolle
+  // Filtrerer beskeder baseret på brugerens rolle
   List<Message> _filteredMessages() {
     return _allMessages.where((msg) {
-      return inboxType == InboxType.clinician ? msg.isMe : !msg.isMe;
+      switch (inboxType) {
+        case InboxType.clinician:
+        // Kliniker skal se beskeder, der er TIL klinikeren (senderId != mig)
+          return !msg.isMe;
+        case InboxType.patient:
+        // Patient skal se beskeder, der er FRA patienten (senderId == mig)
+          return msg.isMe;
+      }
     }).toList();
   }
+
 
 
   Future<void> refresh() async {
