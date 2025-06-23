@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/customer_rmeq_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/question_controller.dart';
+import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_controller.dart';
 import 'package:provider/provider.dart';
 
 
@@ -135,7 +136,10 @@ class OcutuneApp extends StatelessWidget {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;
               return PatientSensorSettingsScreen(patientId: patientId);
             },
-            '/patient/activities': (_) => PatientActivityScreen(),
+            '/patient/activities': (context) => ChangeNotifierProvider(
+              create: (_) => PatientActivityController()..init(),
+              child: const PatientActivityScreen(),
+            ),
             '/customerDashboard': (_) =>
                 ChangeNotifierProvider<CustomerRootController>(
                   create: (_) => CustomerRootController(),
