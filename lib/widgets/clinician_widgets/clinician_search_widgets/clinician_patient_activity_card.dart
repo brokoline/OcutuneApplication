@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:intl/intl.dart';
 
 import '../../../models/patient_event_model.dart';
 import '../../../theme/colors.dart';
@@ -56,48 +57,44 @@ class PatientActivityCard extends StatelessWidget {
   }
 
   Widget _buildEventTile(PatientEvent event) {
-    final startTimeText = _renderTime(event.startTime);
+    // Formatter start‐tidspunktet
+    final date = DateFormat('dd.MM').format(event.startTime!);
+    final time = event.startTime!.hour.toString().padLeft(2,'0')
+        + ':' + event.startTime!.minute.toString().padLeft(2,'0');
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(FontAwesome5Solid.clock, size: 18.sp, color: Colors.white70),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Text(
-                '${event.eventType}${startTimeText.isNotEmpty
-                    ? ' $startTimeText'
-                    : ''}',
-                style: TextStyle(color: Colors.white70,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
+    // Dur‐tekst
+    final dur = event.durationMinutes ?? 0;
+
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      leading: Icon(FontAwesome5Solid.clock, size: 18.sp, color: Colors.white70),
+      title: Text(
+        event.eventType,
+        style: TextStyle(
+          color: Colors.white70,
+          fontSize: 15.sp,
+          fontWeight: FontWeight.bold,
         ),
-        SizedBox(height: 4.h),
-        Text(
-          _renderDurationLine(event),
-          style: TextStyle(color: Colors.white70, fontSize: 13.sp),
-        ),
-        if (_shouldShowNote(event)) ...[
-          SizedBox(height: 6.h),
-          Text(
-            event.note!,
-            style: TextStyle(color: Colors.white70, fontSize: 13.sp, height: 1.4),
-          ),
-        ],
-      ],
+      ),
+      subtitle: Text(
+        '$dur min registreret • $date • $time',
+        style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+      ),
     );
   }
 
+
   String _renderTime(DateTime? dt) {
     if (dt == null) return '';
-    return '(${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString()
-        .padLeft(2, '0')})';
+    // Formater dato + tid
+    final date = DateFormat('dd.MM').format(dt);
+    final time = dt.hour.toString().padLeft(2, '0')
+        + ':' + dt.minute.toString().padLeft(2, '0');
+    return '($date • $time)';
   }
+
 
   String _renderDurationLine(PatientEvent e) {
     final hasStart = e.startTime != null;

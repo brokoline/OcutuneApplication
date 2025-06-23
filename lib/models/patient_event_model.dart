@@ -1,3 +1,20 @@
+import 'dart:io';
+
+
+// Prøver ISO-8601 først, så RFC1123.
+DateTime? _parseAny(String? s) {
+  if (s == null) return null;
+  // ISO-8601
+  final dt = DateTime.tryParse(s);
+  if (dt != null) return dt;
+  try {
+    // RFC1123 fallback
+    return HttpDate.parse(s).toLocal();
+  } catch (_) {
+    return null;
+  }
+}
+
 class PatientEvent {
   final int id;
   final String patientId;
@@ -21,14 +38,14 @@ class PatientEvent {
 
   factory PatientEvent.fromJson(Map<String, dynamic> json) {
     return PatientEvent(
-      id: json['id'],
-      patientId: json['patient_id'],
-      eventType: json['event_type'],
-      note: json['note'],
-      startTime: DateTime.tryParse(json['start_time'] ?? ''),
-      endTime: DateTime.tryParse(json['end_time'] ?? ''),
-      durationMinutes: json['duration_minutes'],
-      eventTimestamp: DateTime.tryParse(json['event_timestamp'] ?? ''),
+      id: json['id'] as int,
+      patientId: json['patient_id'] as String,
+      eventType: json['event_type'] as String,
+      note: json['note'] as String?,
+      startTime: _parseAny(json['start_time'] as String?),
+      endTime:   _parseAny(json['end_time']   as String?),
+      durationMinutes: json['duration_minutes'] as int?,
+      eventTimestamp:  _parseAny(json['event_timestamp'] as String?),
     );
   }
 }

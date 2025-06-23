@@ -1,3 +1,5 @@
+// File: lib/widgets/universal/confirm_dialog.dart
+
 import 'package:flutter/material.dart';
 import '../../theme/colors.dart';
 
@@ -19,14 +21,8 @@ class ConfirmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: generalBox,
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white70),
-      ),
-      content: Text(
-        message,
-        style: const TextStyle(color: Colors.white60),
-      ),
+      title: Text(title, style: const TextStyle(color: Colors.white70)),
+      content: Text(message, style: const TextStyle(color: Colors.white60)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       actions: [
         TextButton(
@@ -35,7 +31,9 @@ class ConfirmDialog extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: () {
-            Navigator.of(context).pop(true);
+            // 1) Luk kun dialogen med `false` så dine existing .then(ok) IKKE skyder igen.
+            Navigator.of(context).pop(false);
+            // 2) Kør det callback, du allerede har givet (f.eks. deleteActivity).
             onConfirm();
           },
           icon: const Icon(Icons.delete, color: Colors.red),
