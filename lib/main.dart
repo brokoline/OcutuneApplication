@@ -1,5 +1,9 @@
+// lib/main.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_controller.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/customer_rmeq_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/question_controller.dart';
 import 'package:ocutune_light_logger/screens/login/choose_access/choose_access_controller.dart';
@@ -8,7 +12,6 @@ import 'package:ocutune_light_logger/screens/login/login_controller.dart';
 import 'package:ocutune_light_logger/screens/login/simuleret_mitID_login/simulated_mitid_login_controller.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_controller.dart';
 import 'package:provider/provider.dart';
-
 
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 
@@ -35,20 +38,18 @@ import 'widgets/messages/inbox_screen.dart';
 import 'widgets/messages/message_thread_screen.dart';
 import 'widgets/messages/new_message_screen.dart';
 
-
 import 'screens/clinician/root/clinician_root_screen.dart';
 import 'controller/inbox_controller.dart';
 import 'screens/clinician/root/clinician_root_controller.dart';
-
 
 import 'theme/colors.dart';
 
 import 'services/processing/data_processing_manager.dart';
 import 'viewmodel/clinician/patient_detail_viewmodel.dart';
 
+
 @pragma('vm:entry-point')
-void startCallback() {
-}
+void startCallback() {}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,6 +79,8 @@ class OcutuneApp extends StatelessWidget {
             create: (_) => PatientDetailViewModel(''),
           ),
           ChangeNotifierProvider(create: (_) => QuestionController()),
+          // Du kan tilføje CustomerRootController her, hvis du vil
+          // ChangeNotifierProvider(create: (_) => CustomerRootController()),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -111,14 +114,6 @@ class OcutuneApp extends StatelessWidget {
                 child: PatientDashboardScreen(patientId: patientId),
               );
             },
-            '/clinician/inbox': (_) => ChangeNotifierProvider(
-              create: (_) => InboxController(inboxType: InboxType.clinician),
-              child: const InboxScreen(
-                inboxType: InboxType.clinician,
-                useClinicianAppBar: true,
-                showNewMessageButton: true,
-              ),
-            ),
             '/patient/inbox': (_) => ChangeNotifierProvider(
               create: (_) => InboxController(inboxType: InboxType.patient),
               child: const InboxScreen(
@@ -132,25 +127,37 @@ class OcutuneApp extends StatelessWidget {
               return MessageThreadScreen(threadId: threadId);
             },
             '/patient/new_message': (_) => const NewMessageScreen(),
+            '/patient_sensor_settings': (context) {
+              final patientId = ModalRoute.of(context)!.settings.arguments as String;
+              return PatientSensorSettingsScreen(patientId: patientId);
+            },
+            '/patient/activities': (context) => ChangeNotifierProvider<PatientActivityController>(
+              create: (_) => PatientActivityController()..init(),
+              child: const PatientActivityScreen(),
+            ),
+            '/clinician/inbox': (_) => ChangeNotifierProvider(
+              create: (_) => InboxController(inboxType: InboxType.clinician),
+              child: const InboxScreen(
+                inboxType: InboxType.clinician,
+                useClinicianAppBar: true,
+                showNewMessageButton: true,
+              ),
+            ),
             '/clinician/message_detail': (context) {
               final threadId = ModalRoute.of(context)!.settings.arguments as String;
               return MessageThreadScreen(threadId: threadId);
             },
             '/clinician/new_message': (_) => const NewMessageScreen(),
             '/clinician': (_) => ClinicianRootScreen(),
-            '/patient_sensor_settings': (context) {
-              final patientId = ModalRoute.of(context)!.settings.arguments as String;
-              return PatientSensorSettingsScreen(patientId: patientId);
-            },
-            '/patient/activities': (context) => ChangeNotifierProvider(
-              create: (_) => PatientActivityController()..init(),
-              child: const PatientActivityScreen(),
+            '/customerDashboard': (_) => ChangeNotifierProvider<CustomerRootController>(
+              create: (_) => CustomerRootController(),
+              child: const CustomerRootScreen(),
             ),
-            '/customerDashboard': (_) =>
-                ChangeNotifierProvider<CustomerRootController>(
-                  create: (_) => CustomerRootController(),
-                  child: const CustomerRootScreen(),
-                ),
+            // Ny route for customer aktiviteter
+            '/customer/activities': (context) => ChangeNotifierProvider<CustomerActivityController>(
+              create: (_) => CustomerActivityController(),
+              child: const CustomerActivityScreen(),
+            ),
           },
         ),
       ),

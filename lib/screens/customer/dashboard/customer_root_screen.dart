@@ -13,7 +13,7 @@ import '../customer_root_controller.dart';
 
 import 'customer_chrono_info_screen.dart';
 import 'customer_overview_screen.dart';
-import 'customer_activity_screen.dart';
+import 'activity/customer_activity_screen.dart';
 import 'customer_light_detail_screen.dart';
 import 'customer_sensor_screen.dart';
 import 'customer_settings_screen.dart';
@@ -147,8 +147,8 @@ class CustomerRootView extends StatelessWidget {
               final titles = [
                 "Oversigt for $name",
                 'Aktiviteter',
-                'Lysdetaljer',
                 'Sensorforbindelse',
+                'Lysdetaljer',
                 'Chronobiologi',
                 'Indstillinger',
               ];
