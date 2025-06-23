@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/customer_rmeq_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/question_controller.dart';
+import 'package:ocutune_light_logger/screens/login/choose_access/choose_access_controller.dart';
+import 'package:ocutune_light_logger/screens/login/choose_access/choose_access_screen.dart';
 import 'package:ocutune_light_logger/screens/login/login_controller.dart';
+import 'package:ocutune_light_logger/screens/login/simuleret_mitID_login/simulated_mitid_login_controller.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_controller.dart';
 import 'package:provider/provider.dart';
 
@@ -12,7 +15,6 @@ import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 // Imports for screens, controllers mm
 import 'screens/splash_screen.dart';
 import 'screens/login/login_screen.dart';
-import 'screens/login/choose_access_screen.dart';
 import 'screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
 
 import 'package:ocutune_light_logger/screens/customer/customer_root_controller.dart';
@@ -66,7 +68,9 @@ class OcutuneApp extends StatelessWidget {
       builder: (context, child) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => LoginController()),
+          ChangeNotifierProvider(create: (_) => ChooseAccessController()),
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
+          ChangeNotifierProvider(create: (_) => SimulatedLoginController()),
           ChangeNotifierProvider<DataProcessingManager>(
             create: (_) => DataProcessingManager(),
           ),

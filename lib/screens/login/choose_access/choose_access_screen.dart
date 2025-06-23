@@ -1,7 +1,10 @@
+// lib/screens/login/choose_access_screen.dart
+
 import 'package:flutter/material.dart';
-import '../../services/auth_storage.dart';
-import '/theme/colors.dart';
+import 'package:provider/provider.dart';
+import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
+import 'choose_access_controller.dart';
 
 class ChooseAccessScreen extends StatefulWidget {
   const ChooseAccessScreen({super.key});
@@ -14,38 +17,33 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    // ask controller to check login
+    context.read<ChooseAccessController>().checkLoginStatus();
   }
-
-  Future<void> _checkLoginStatus() async {
-    final token = await AuthStorage.getToken();
-    if (token == null) {
-      print('🟡 Ingen gemt login – vis adgangsvalg');
-      return;
-    }
-
-    final role = await AuthStorage.getUserRole();
-    final id = await AuthStorage.getUserId();
-
-    print('🧠 Rolle fundet: $role');
-    print('🆔 ID fundet: $id');
-
-    if (role == 'patient' && id != null) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/patient/dashboard',
-        arguments: id,
-      );
-    } else if (role == 'clinician' && id != null) {
-      Navigator.pushReplacementNamed(context, '/clinician');
-    } else {
-      print('🟡 Ingen komplet brugerdata – vis adgangsvalg');
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
+    final ctrl = context.watch<ChooseAccessController>();
+
+    // react to destination changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      switch (ctrl.destination) {
+        case AccessDestination.patientDashboard:
+          Navigator.pushReplacementNamed(
+            context,
+            '/patient/dashboard',
+            arguments: ctrl.userId,
+          );
+          break;
+        case AccessDestination.clinicianDashboard:
+          Navigator.pushReplacementNamed(context, '/clinician');
+          break;
+        case AccessDestination.none:
+        // stay on this screen
+          break;
+      }
+    });
+
     return Scaffold(
       backgroundColor: generalBackground,
       appBar: AppBar(
