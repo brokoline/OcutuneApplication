@@ -6,7 +6,7 @@ import '../../../../widgets/universal/ocutune_next_step_button.dart';
 import 'customer_activity_controller.dart';
 
 class CustomerActivityScreen extends StatelessWidget {
-  const CustomerActivityScreen({Key? key}) : super(key: key);
+  const CustomerActivityScreen({super.key});
 
   String _formatDateTime(DateTime dt) => DateFormat('dd.MM • HH:mm').format(dt);
   String _formatDuration(Duration d) {
@@ -67,6 +67,7 @@ class _CustomerActivityView extends StatelessWidget {
                   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
                   dropdownColor: generalBox,
                   isExpanded: true,
+                  menuMaxHeight: 5 * 48.0, // ca. 5 items à 48px højde
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: generalBox,
@@ -80,12 +81,10 @@ class _CustomerActivityView extends StatelessWidget {
                     ),
                   ),
                   style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  items: ctrl.activities
-                      .map((label) => DropdownMenuItem(
+                  items: ctrl.activities.map((label) => DropdownMenuItem(
                     value: label,
                     child: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ))
-                      .toList(),
+                  )).toList(),
                   onChanged: ctrl.setSelected,
                   hint: const Text('Vælg aktivitet', style: TextStyle(color: Colors.white54)),
                 ),
