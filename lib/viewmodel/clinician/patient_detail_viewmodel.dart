@@ -37,7 +37,7 @@ class PatientDetailViewModel extends ChangeNotifier {
       final String patientIdForLightData = kDebugMode ? 'P3' : patientId;
 
       if (kDebugMode) {
-        debugPrint('⚠️ [DEBUG MODE] Henter lysdata for P3 i stedet for $patientId');
+        debugPrint('[DEBUG MODE] Henter lysdata for P3 i stedet for $patientId');
       }
 
       final list = await ApiService.getPatientLightData(patientIdForLightData);

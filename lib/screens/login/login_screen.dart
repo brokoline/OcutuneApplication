@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_textfield.dart';
-import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_card.dart';
+import '../../widgets/universal/ocutune_login_button.dart';
 import 'login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -47,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _showForgotPasswordDialog(BuildContext context) {
+  void _showForgotDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -81,102 +82,121 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: generalBackground,
         resizeToAvoidBottomInset: true,
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 50.h),
-
-                // Card med logo + felter + knapper
-                OcutuneCard(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'assets/logo/logo_ocutune.png',
-                        width: 100.w,
+          child: Column(
+            children: [
+              // Top‐link
+              Padding(
+                padding: EdgeInsets.only(top: 12.h),
+                child: Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/chooseAccess'),
+                    child: Text(
+                      'Kliniker eller patient?\n Log ind her',
+                      style: TextStyle(
                         color: Colors.white70,
+                        fontSize: 14.sp,
+                        decoration: TextDecoration.underline,
+                        fontWeight: FontWeight.w800,
                       ),
-                      SizedBox(height: 32.h),
-
-                      // E‐mail‐felt
-                      OcutuneTextField(
-                        label:      'E‐mail',
-                        controller: _emailController,
-                        labelStyle: TextStyle(fontSize: 16.sp),
-                      ),
-                      SizedBox(height: 16.h),
-
-                      // Adgangskode‐felt
-                      OcutuneTextField(
-                        label:      'Adgangskode',
-                        isPassword: true,
-                        controller: _passwordController,
-                        labelStyle: TextStyle(fontSize: 16.sp),
-                      ),
-                      SizedBox(height: 24.h),
-
-                      // Login‐knap
-                      OcutuneButton(
-                        text: controller.isLoading ? 'Logger ind…' : 'Log ind',
-                        type: OcutuneButtonType.primary,
-                        onPressed: () {
-                          if (controller.isLoading) return;
-                          _onLoginPressed(context);
-                        },
-                      ),
-
-                      SizedBox(height: 8.h),
-
-                      // Glemt adgangskode?
-                      TextButton(
-                        onPressed: () => _showForgotPasswordDialog(context),
-                        child: Text(
-                          'Glemt adgangskode?',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ),
-
-                      // Opret bruger-knap
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/register');
-                        },
-                        child: Text(
-                          'Ikke registreret? Opret bruger',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 16.h),
-
-                // Vælg Kliniker vs Patient
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/chooseAccess');
-                  },
-                  child: Text(
-                    'Kliniker eller patient? Log ind her',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
-                      fontSize: 14.sp,
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              // Login‐kort
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: 20.h),
+                      OcutuneCard(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Logo
+                            Image.asset(
+                              'assets/logo/logo_ocutune.png',
+                              width: 100.w,
+                              color: Colors.white70,
+                            ),
+                            SizedBox(height: 32.h),
+
+                            // E‐mail‐felt
+                            OcutuneTextField(
+                              label:      'E‐mail',
+                              controller: _emailController,
+                              labelStyle: TextStyle(fontSize: 16.sp),
+                            ),
+                            SizedBox(height: 16.h),
+
+                            // Adgangskode‐felt
+                            OcutuneTextField(
+                              label:      'Adgangskode',
+                              isPassword: true,
+                              controller: _passwordController,
+                              labelStyle: TextStyle(fontSize: 16.sp),
+                            ),
+                            SizedBox(height: 24.h),
+
+                            LoginButton(
+                              text:      controller.isLoading ? 'Logger ind…' : 'Log ind',
+                              isLoading: controller.isLoading,
+                              onPressed: controller.isLoading
+                                  ? null
+                                  : () => _onLoginPressed(context),
+                            ),
+                            SizedBox(height: 16.h),
+
+                            // Glemt adgangskode
+                            TextButton(
+                              onPressed: () => _showForgotDialog(context),
+                              child: Text(
+                                'Glemt adgangskode?',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                            ),
+
+                            // Opret bruger
+                            TextButton(
+                              onPressed: () => Navigator.pushNamed(context, '/register'),
+                              child: Text(
+                                'Ikke registreret? Opret bruger',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Footer: version
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Center(
+                  child: Text(
+                    'Version 1.0.0',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 13.sp,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
