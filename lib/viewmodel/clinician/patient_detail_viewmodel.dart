@@ -32,11 +32,20 @@ class PatientDetailViewModel extends ChangeNotifier {
     _isFetchingRaw = true;
     _rawFetchError = null;
     notifyListeners();
+
     try {
-      final list = await ApiService.getPatientLightData(patientId);
-      _rawLightData = list.map((e) => LightData.fromJson(e)).toList();
+      final String patientIdForLightData = kDebugMode ? 'P3' : patientId;
+
+      if (kDebugMode) {
+        debugPrint('⚠️ [DEBUG MODE] Henter lysdata for P3 i stedet for $patientId');
+      }
+
+      final list = await ApiService.getPatientLightData(patientIdForLightData);
+      final rawList = list.map((e) => LightData.fromJson(e)).toList();
+      _rawLightData = rawList;
       _isFetchingRaw = false;
       notifyListeners();
+
       await _triggerProcessYesterday();
     } catch (e) {
       _rawFetchError = e.toString();
@@ -44,6 +53,12 @@ class PatientDetailViewModel extends ChangeNotifier {
       _isFetchingRaw = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _dataProcessingManager.disposeModel();
+    super.dispose();
   }
 
   // ─── ML‐bearbejdning ────────────────────────────────────
@@ -127,10 +142,4 @@ class PatientDetailViewModel extends ChangeNotifier {
   // ─── Hjælpemetoder til scores ───────────────────────
   double get rmeqScore => (_patient?.rmeqScore ?? 0).toDouble();
   int? get storedMeqScore => _patient?.meqScore;
-
-  @override
-  void dispose() {
-    _dataProcessingManager.disposeModel();
-    super.dispose();
-  }
 }
