@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../services/services/api_services.dart';
 import '../../../services/auth_storage.dart';
-import '../../../widgets/universal/confirm_dialog.dart';
 import '../../../widgets/universal/ocutune_next_step_button.dart';
 
 /// Formatter til SQL‐tidsformat fra API’en
@@ -239,12 +238,22 @@ class _PatientActivityScreenState extends State<PatientActivityScreen> {
               onPressed: () {
                 showDialog<bool>(
                   context: context,
-                  builder: (dialogCtx) => ConfirmDialog(
-                    title: 'Slet aktivitet?',
-                    message: 'Bekræft sletning',
-                    onConfirm: () {
-                      Navigator.of(dialogCtx).pop(true);
-                    },
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: generalBox,
+                    title: const Text('Slet aktivitet?', style: TextStyle(color: Colors.white70)),
+                    content: const Text('Bekræft sletning', style: TextStyle(color: Colors.white60)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Annuller', style: TextStyle(color: Colors.white54)),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        label: const Text('Slet', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
                   ),
                 ).then((ok) {
                   if (ok == true) {
