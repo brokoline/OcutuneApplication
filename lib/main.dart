@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/customer_rmeq_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/question_controller.dart';
+import 'package:ocutune_light_logger/screens/login/login_controller.dart';
 import 'package:ocutune_light_logger/screens/patient/activities/patient_activity_controller.dart';
 import 'package:provider/provider.dart';
 
@@ -64,6 +65,7 @@ class OcutuneApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) => MultiProvider(
         providers: [
+          ChangeNotifierProvider(create: (_) => LoginController()),
           ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
           ChangeNotifierProvider<DataProcessingManager>(
             create: (_) => DataProcessingManager(),

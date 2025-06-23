@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_textfield.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_card.dart';
-import '../../services/services/api_services.dart';
-import '../../services/auth_storage.dart';
+import 'login_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,77 +18,60 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController    = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  bool _isLoading = false;
+  final _emailController    = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    final String email    = emailController.text.trim();
-    final String password = passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Udfyld både e‐mail og adgangskode')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Kalder customerLogin på ApiService
-      final result = await ApiService.customerLogin(email, password);
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (result["success"] == true) {
-        final String token = result["token"] as String;
-        final Map<String, dynamic> user = result["user"] as Map<String, dynamic>;
-
-        // Hent det faktiske customerId fra dit user-objekt
-        final int customerId = user["id"] as int;
-        final String userId = customerId.toString();
-
-        // Gem token, id og customerId i én operation
-        await AuthStorage.saveLogin(
-          id:         userId,
-          role:       "",       // eller "customer"
-          simUserId:  "",
-          token:      token,
-          customerId: customerId,  // ← passér det med her!
-        );
-
+  void _onLoginPressed(BuildContext context) {
+    final controller = context.read<LoginController>();
+    controller
+        .login(
+      email:    _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    )
+        .then((success) {
+      if (!mounted) return;
+      if (success) {
         Navigator.of(context).pushReplacementNamed('/customerDashboard');
-      }
-      else {
-        final String msg = result["message"] as String;
+      } else if (controller.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
+          SnackBar(content: Text(controller.errorMessage!)),
         );
       }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Netværksfejl: $e')),
-      );
-    }
+    });
+  }
+
+  void _showForgotPasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: generalBox,
+        title: const Text('Ups!'),
+        content: const Text(
+          'Det var ikke så heldigt…\n\n'
+              'Lige nu kan vi desværre ikke regenerere din adgangskode, '
+              'så du bliver nødt til at oprette en ny profil.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Okay'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<LoginController>();
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -104,6 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: 50.h),
+
+                // Card med logo + felter + knapper
                 OcutuneCard(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -117,36 +102,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // E‐mail‐felt
                       OcutuneTextField(
-                        label: 'E‐mail',
-                        controller: emailController,
+                        label:      'E‐mail',
+                        controller: _emailController,
                         labelStyle: TextStyle(fontSize: 16.sp),
                       ),
                       SizedBox(height: 16.h),
 
                       // Adgangskode‐felt
                       OcutuneTextField(
-                        label: 'Adgangskode',
+                        label:      'Adgangskode',
                         isPassword: true,
-                        controller: passwordController,
+                        controller: _passwordController,
                         labelStyle: TextStyle(fontSize: 16.sp),
                       ),
                       SizedBox(height: 24.h),
 
                       // Login‐knap
                       OcutuneButton(
-                        text: _isLoading ? 'Logger ind…' : 'Log ind',
-                        onPressed: () {
-                          if (_isLoading) return;
-                          _handleLogin();
-                        },
+                        text: controller.isLoading ? 'Logger ind…' : 'Log ind',
                         type: OcutuneButtonType.primary,
+                        onPressed: () {
+                          if (controller.isLoading) return;
+                          _onLoginPressed(context);
+                        },
                       ),
 
-                      SizedBox(height: 1.h),
+                      SizedBox(height: 8.h),
+
+                      // Glemt adgangskode?
                       TextButton(
-                        onPressed: () {
-                          // TODO: Glemt adgangskode‐logik
-                        },
+                        onPressed: () => _showForgotPasswordDialog(context),
                         child: Text(
                           'Glemt adgangskode?',
                           style: TextStyle(
@@ -155,6 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+
+                      // Opret bruger-knap
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/register');
@@ -171,7 +158,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                SizedBox(height: 10.h),
+                SizedBox(height: 16.h),
+
+                // Vælg Kliniker vs Patient
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/chooseAccess');
@@ -186,7 +175,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 1.h),
               ],
             ),
           ),
