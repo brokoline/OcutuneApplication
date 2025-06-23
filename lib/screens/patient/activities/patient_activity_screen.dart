@@ -22,7 +22,7 @@ DateTime _parseDate(String s) {
 }
 
 class PatientActivityScreen extends StatefulWidget {
-  const PatientActivityScreen({Key? key}) : super(key: key);
+  const PatientActivityScreen({super.key});
 
   @override
   State<PatientActivityScreen> createState() => _PatientActivityScreenState();
