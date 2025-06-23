@@ -80,6 +80,7 @@ class OcutuneApp extends StatelessWidget {
           ),
           ChangeNotifierProvider(create: (_) => QuestionController()),
           // Du kan tilføje CustomerRootController her, hvis du vil
+          ChangeNotifierProvider(create: (_) => CustomerActivityController()),
           // ChangeNotifierProvider(create: (_) => CustomerRootController()),
         ],
         child: MaterialApp(
@@ -153,11 +154,7 @@ class OcutuneApp extends StatelessWidget {
               create: (_) => CustomerRootController(),
               child: const CustomerRootScreen(),
             ),
-            // Ny route for customer aktiviteter
-            '/customer/activities': (context) => ChangeNotifierProvider<CustomerActivityController>(
-              create: (_) => CustomerActivityController(),
-              child: const CustomerActivityScreen(),
-            ),
+            '/customer/activities': (context) => const CustomerActivityScreen(),
           },
         ),
       ),

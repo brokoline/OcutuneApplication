@@ -1,90 +1,166 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
-import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
-
+import '../../../../widgets/universal/ocutune_next_step_button.dart';
 import 'customer_activity_controller.dart';
 
-class CustomerActivityScreen extends StatefulWidget {
-  const CustomerActivityScreen({super.key});
+class CustomerActivityScreen extends StatelessWidget {
+  const CustomerActivityScreen({Key? key}) : super(key: key);
 
-  @override
-  State<CustomerActivityScreen> createState() => _CustomerActivityScreenState();
-}
-
-class _CustomerActivityScreenState extends State<CustomerActivityScreen> {
-  final CustomerActivityController _controller = CustomerActivityController();
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_update);
-    _controller.loadActivities();
-    _controller.loadLabels();
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_update);
-    super.dispose();
-  }
-
-  void _update() => setState(() {});
-
-  Future<TimeOfDay?> _pickTime(String helpText) async {
-    return await showTimePicker(
-      context: context,
-      helpText: helpText,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            timePickerTheme: TimePickerThemeData(
-              backgroundColor: generalBox,
-              hourMinuteTextColor: Colors.white70,
-            ),
-            colorScheme: ColorScheme.dark(
-              primary: Colors.white70,
-              surface: generalBox,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-  }
-
-  Future<void> _onConfirm() async {
-    if (_controller.selected == null) return;
-
-    final now = DateTime.now();
-    final startTime = await _pickTime('Starttid');
-    if (startTime == null) return;
-
-    final endTime = await _pickTime('Sluttid');
-    if (endTime == null) return;
-
-    final start = DateTime(now.year, now.month, now.day, startTime.hour, startTime.minute);
-    final end = DateTime(now.year, now.month, now.day, endTime.hour, endTime.minute);
-
-    await _controller.registerActivity(_controller.selected!, start, end, context);
+  String _formatDateTime(DateTime dt) => DateFormat('dd.MM • HH:mm').format(dt);
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    if (h > 0 && m > 0) return '$h t $m m';
+    if (h > 0) return '$h t';
+    return '$m m';
   }
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => CustomerActivityController()..init(),
+      child: _CustomerActivityView(
+        formatDateTime : _formatDateTime,
+        formatDuration : _formatDuration,
+      ),
+    );
+  }
+}
+
+class _CustomerActivityView extends StatelessWidget {
+  final String Function(DateTime) formatDateTime;
+  final String Function(Duration) formatDuration;
+
+  const _CustomerActivityView({
+    required this.formatDateTime,
+    required this.formatDuration,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = context.watch<CustomerActivityController>();
+
     return Scaffold(
       backgroundColor: generalBackground,
-      body: SafeArea(
+      body: ctrl.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // Din eksisterende UI-kode her...
-              if (_controller.selected != null)
-                OcutuneButton(
-                  text: 'Bekræft registrering',
-                  onPressed: _onConfirm,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Her kan du registrere aktiviteter, hvor du har været udsat for dagslys, '
+                      'men ikke har haft din lyslogger med dig – f.eks. hvis du har været på stranden, '
+                      'ude og motionere eller blot haft den glemt derhjemme.',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
-            ],
+                const SizedBox(height: 16),
+
+                // Dropdown
+                DropdownButtonFormField<String>(
+                  value: ctrl.selected,
+                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                  dropdownColor: generalBox,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: generalBox,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white54),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  items: ctrl.activities
+                      .map((label) => DropdownMenuItem(
+                    value: label,
+                    child: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ))
+                      .toList(),
+                  onChanged: ctrl.setSelected,
+                  hint: const Text('Vælg aktivitet', style: TextStyle(color: Colors.white54)),
+                ),
+                const SizedBox(height: 12),
+
+                // Opret ny aktivitet
+                TextButton.icon(
+                  onPressed: () => ctrl.openNewActivityDialog(context),
+                  icon: const Icon(Icons.add, color: Colors.white70),
+                  label: const Text('Opret ny aktivitet', style: TextStyle(color: Colors.white70)),
+                ),
+                const SizedBox(height: 12),
+
+                // Bekræft registrering
+                if (ctrl.selected != null)
+                  OcutuneButton(
+                    text: 'Bekræft registrering',
+                    onPressed: () => ctrl.openConfirmDialog(context),
+                  ),
+
+                const SizedBox(height: 24),
+
+                // Seneste registreringer
+                if (ctrl.recent.isEmpty)
+                  const Center(
+                    child: Text(
+                      'Ingen aktiviteter endnu.\nTryk “Opret ny aktivitet” for at komme i gang.',
+                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else ...[
+                  const Text('Seneste registreringer', style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 12),
+                  ...ctrl.recent.take(5).map((item) {
+                    final start    = item['start'] as DateTime;
+                    final end      = item['end']   as DateTime;
+                    final duration = end.difference(start);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: generalBox,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(item['label'], style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                              if (item['deletable'] == true)
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.white54),
+                                  onPressed: () => ctrl.confirmDelete(item['id'] as int, context),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Varighed: ${formatDuration(duration)}',
+                                  style: const TextStyle(color: Colors.white70)),
+                              Text(formatDateTime(start), style: const TextStyle(color: Colors.white38)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ],
+            ),
           ),
         ),
       ),
