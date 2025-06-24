@@ -1,5 +1,3 @@
-// lib/screens/clinician/search/clinician_patient_detail_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -16,11 +14,12 @@ import '../../../widgets/clinician_widgets/patient_light_data_widgets/light_summ
 
 class PatientDetailScreen extends StatelessWidget {
   final String patientId;
-  const PatientDetailScreen({super.key, required this.patientId});
+  const PatientDetailScreen({Key? key, required this.patientId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<PatientDetailViewModel>(
+    return ChangeNotifierProvider(
       create: (_) => PatientDetailViewModel(patientId),
       child: const PatientDetailView(),
     );
@@ -28,162 +27,141 @@ class PatientDetailScreen extends StatelessWidget {
 }
 
 class PatientDetailView extends StatelessWidget {
-  const PatientDetailView({super.key});
+  const PatientDetailView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<PatientDetailViewModel>(context);
+    final vm = context.watch<PatientDetailViewModel>();
 
-    return FutureBuilder<Patient>(
-      future: vm.patientFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    // 1) Vent kun på lysdata
+    return FutureBuilder<void>(
+      future: vm.lightDataFuture,
+      builder: (ctx, lightSnap) {
+        if (vm.isFetchingRaw) {
           return _buildLoading();
         }
-        if (snapshot.hasError) {
-          return _buildError(snapshot.error.toString());
+        if (vm.rawFetchError != null) {
+          return _buildError('Fejl ved lysdata: ${vm.rawFetchError}');
         }
-        final patient = snapshot.data!;
+        // 2) Lysdata klar → hent patient og vis resten
+        return FutureBuilder<Patient>(
+          future: vm.fetchPatientDetails(),
+          builder: (ctx, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return _buildLoading();
+            }
+            if (snap.hasError) {
+              return _buildError('Fejl: ${snap.error}');
+            }
+            final patient = snap.data!;
 
-        return _buildBody(context, patient, vm);
+            return Scaffold(
+              backgroundColor: generalBackground,
+              appBar: const ClinicianAppBar(showBackButton: true),
+              body: SingleChildScrollView(
+                padding:
+                EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ─── Header ────────────────────────────────────
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Patient detaljer',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${patient.firstName} ${patient.lastName}',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 14.sp),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // ─── Kronotype + diagnoser ──────────────────────
+                    FutureBuilder<List<Diagnosis>>(
+                      future: vm.fetchDiagnoses(),
+                      builder: (ctx, diagSnap) {
+                        final diagnoses = diagSnap.data ?? [];
+                        return CombinedPatientInfoCard(
+                          patient: patient,
+                          diagnoses: diagnoses,
+                        );
+                      },
+                    ),
+                    SizedBox(height: 8.h),
+
+                    // ─── Aktiviteter ───────────────────────────────
+                    FutureBuilder<List<PatientEvent>>(
+                      future: vm.fetchPatientEvents(),
+                      builder: (ctx, evtSnap) {
+                        if (evtSnap.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                                color: Colors.white),
+                          );
+                        }
+                        if (evtSnap.hasError) {
+                          return Text(
+                            'Fejl ved aktiviteter: ${evtSnap.error}',
+                            style: TextStyle(
+                                color: Colors.red, fontSize: 14.sp),
+                          );
+                        }
+                        final events = evtSnap.data!;
+                        if (events.isEmpty) {
+                          return Text(
+                            'Ingen registrerede aktiviteter.',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 14.sp),
+                          );
+                        }
+                        return PatientActivityCard(events: events);
+                      },
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // ─── Lysdata (samlet oversigt) ─────────────────
+                    LightSummarySection(
+                      patientId: patient.id,
+                      rmeqScore: vm.rmeqScore.toInt(),
+                      meqScore: vm.storedMeqScore,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
       },
     );
   }
 
-  Widget _buildLoading() {
-    return const Scaffold(
-      backgroundColor: generalBackground,
-      appBar: ClinicianAppBar(showBackButton: true),
-      body: Center(child: CircularProgressIndicator(color: Colors.white)),
-    );
-  }
+  Widget _buildLoading() => const Scaffold(
+    backgroundColor: generalBackground,
+    appBar: ClinicianAppBar(showBackButton: true),
+    body: Center(child: CircularProgressIndicator(color: Colors.white)),
+  );
 
-  Widget _buildError(String error) {
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: const ClinicianAppBar(showBackButton: true),
-      body: Center(
-        child: Text('Fejl: $error', style: const TextStyle(color: Colors.red, fontSize: 16)),
-      ),
-    );
-  }
-
-  Widget _buildBody(
-      BuildContext context,
-      Patient patient,
-      PatientDetailViewModel vm,
-      ) {
-    final fullName = '${patient.firstName} ${patient.lastName}';
-
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: const ClinicianAppBar(showBackButton: true),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ─── Header ────────────────────────────────────
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Patient detaljer',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    fullName,
-                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20.h),
-
-            // ─── Kronotype anbealinger + diagnoser ─────────────────────────────────
-            FutureBuilder<List<Diagnosis>>(
-              future: vm.diagnosisFuture,
-              builder: (context, diagSnap) {
-                final diagnoses = diagSnap.data ?? [];
-                return CombinedPatientInfoCard(
-                  patient: patient,
-                  diagnoses: diagnoses,
-                );
-              },
-            ),
-            SizedBox(height: 8.h),
-
-            // ─── Aktiviteter ───────────────────────────────
-            FutureBuilder<List<PatientEvent>>(
-              future: vm.patientEventsFuture,
-              builder: (context, evtSnap) {
-                if (evtSnap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Colors.white));
-                }
-                if (evtSnap.hasError) {
-                  return Text(
-                    'Fejl ved aktiviteter: ${evtSnap.error}',
-                    style: TextStyle(color: Colors.red, fontSize: 14.sp),
-                  );
-                }
-                final events = evtSnap.data ?? [];
-                if (events.isEmpty) {
-                  return Text(
-                    'Ingen registrerede aktiviteter.',
-                    style: TextStyle(color: Colors.white70, fontSize: 14.sp),
-                  );
-                }
-                return PatientActivityCard(events: events);
-              },
-            ),
-            SizedBox(height: 16.h),
-
-            // ─── Lysdata (samlet oversigt) ─────────────────
-            FutureBuilder<void>(
-              future: vm.getLightDataFuture,
-              builder: (context, lightSnap) {
-                // a) If we’re still fetching raw data:
-                if (vm.isFetchingRaw) {
-                  return const Center(child: CircularProgressIndicator(color: Colors.white));
-                }
-                // b) If there was an error fetching raw data:
-                if (vm.rawFetchError != null) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
-                    child: Text(
-                      'Fejl ved lysdata: ${vm.rawFetchError}',
-                      style: TextStyle(color: Colors.red, fontSize: 14.sp),
-                    ),
-                  );
-                }
-
-                // c) Otherwise, we have both rawData AND ML‐processing done:
-                final rmeq    = vm.rmeqScore;        // int
-                final meq     = vm.storedMeqScore;   // int? (may be null)
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-
-                    // 2) LightSummarySection: grafer + ML + anbefalinger
-                    LightSummarySection(
-                      patientId: vm.patient!.id,
-                      rmeqScore: rmeq.toInt(),
-                      meqScore: meq,
-                    ),
-
-                    SizedBox(height: 16.h),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildError(String message) => Scaffold(
+    backgroundColor: generalBackground,
+    appBar: const ClinicianAppBar(showBackButton: true),
+    body: Center(
+      child: Text(message,
+          style: const TextStyle(color: Colors.red, fontSize: 16)),
+    ),
+  );
 }

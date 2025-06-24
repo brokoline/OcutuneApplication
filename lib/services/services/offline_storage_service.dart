@@ -151,7 +151,7 @@ class OfflineStorageService {
     }
   }
 
-  /// Delete invalid light entries
+  // Delete invalid light entries
   static Future<void> deleteInvalidLightData() async {
     if (_db == null) return;
     await _db!.delete(

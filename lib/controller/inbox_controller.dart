@@ -8,13 +8,15 @@ enum InboxType { patient, clinician }
 class InboxController extends ChangeNotifier {
   final InboxType inboxType;
 
-  InboxController({required this.inboxType});
-
+  String? _myUserId;
   List<Message> _allMessages = [];
-  List<Message> get messages => _filteredMessages();
+
+  InboxController({required this.inboxType});
 
   bool isLoading = false;
   String? error;
+
+  List<Message> get messages => _filteredMessages();
 
   Future<void> fetchInbox() async {
     isLoading = true;
@@ -24,17 +26,15 @@ class InboxController extends ChangeNotifier {
     try {
       final jwt = await AuthStorage.getTokenPayload();
       final userId = jwt['sub']?.toString();
+      _myUserId = userId;
 
       if (userId == null) {
         error = 'Bruger-ID mangler.';
-        isLoading = false;
-        notifyListeners();
-        return;
+      } else {
+        final raw = await MessageService.fetchMessages(userId);
+        raw.sort((a, b) => b.sentAt.compareTo(a.sentAt));
+        _allMessages = raw;
       }
-
-      final raw = await MessageService.fetchMessages(userId);
-      raw.sort((a, b) => b.sentAt.compareTo(a.sentAt));
-      _allMessages = raw;
     } catch (e) {
       error = '❌ Kunne ikke hente beskeder: $e';
     }
@@ -49,11 +49,11 @@ class InboxController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final token = await AuthStorage.getToken();
       final rawId = await AuthStorage.getUserId();
       final userId = rawId?.toString();
+      _myUserId = userId;
 
-      if (token != null && userId != null) {
+      if (userId != null) {
         final fetched = await MessageService.fetchMessages(userId);
         fetched.sort((a, b) => b.sentAt.compareTo(a.sentAt));
         _allMessages = fetched;
@@ -68,13 +68,14 @@ class InboxController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 📬 Filtrerer beskeder baseret på brugerens rolle
   List<Message> _filteredMessages() {
+    if (_myUserId == null) return [];
+
+    // Vis alle beskeder, hvor bruger er enten afsender eller modtager
     return _allMessages.where((msg) {
-      return inboxType == InboxType.clinician ? msg.isMe : !msg.isMe;
+      return msg.senderId == _myUserId || msg.receiverId == _myUserId;
     }).toList();
   }
-
 
   Future<void> refresh() async {
     await fetchInbox();

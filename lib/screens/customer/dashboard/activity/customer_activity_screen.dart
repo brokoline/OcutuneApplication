@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 import '../../../../widgets/universal/ocutune_next_step_button.dart';
-import 'patient_activity_controller.dart';
+import 'customer_activity_controller.dart';
 
-class PatientActivityScreen extends StatelessWidget {
-  const PatientActivityScreen({super.key});
+class CustomerActivityScreen extends StatelessWidget {
+  const CustomerActivityScreen({super.key});
 
   String _formatDateTime(DateTime dt) => DateFormat('dd.MM • HH:mm').format(dt);
   String _formatDuration(Duration d) {
@@ -20,8 +20,8 @@ class PatientActivityScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PatientActivityController()..init(),
-      child: _PatientActivityView(
+      create: (_) => CustomerActivityController()..init(),
+      child: _CustomerActivityView(
         formatDateTime : _formatDateTime,
         formatDuration : _formatDuration,
       ),
@@ -29,34 +29,21 @@ class PatientActivityScreen extends StatelessWidget {
   }
 }
 
-class _PatientActivityView extends StatelessWidget {
+class _CustomerActivityView extends StatelessWidget {
   final String Function(DateTime) formatDateTime;
   final String Function(Duration) formatDuration;
 
-  const _PatientActivityView({
+  const _CustomerActivityView({
     required this.formatDateTime,
     required this.formatDuration,
   });
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = context.watch<PatientActivityController>();
+    final ctrl = context.watch<CustomerActivityController>();
 
     return Scaffold(
       backgroundColor: generalBackground,
-      appBar: AppBar(
-        backgroundColor: generalBackground,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white70),
-        title: const Text(
-          'Aktiviteter',
-          style: TextStyle(
-              color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-      ),
       body: ctrl.isLoading
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
@@ -68,19 +55,19 @@ class _PatientActivityView extends StatelessWidget {
               children: [
                 const Text(
                   'Her kan du registrere aktiviteter, hvor du har været udsat for dagslys, '
-                      'men ikke har haft din lyslogger med dig - f.eks. på stranden, ude og motionere '
-                      'eller blot haft den glemt derhjemme.',
+                      'men ikke har haft din lyslogger med dig – f.eks. hvis du har været på stranden, '
+                      'ude og motionere eller blot haft den glemt derhjemme.',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
 
-                // Dropdown med max 5 items
+                // Dropdown
                 DropdownButtonFormField<String>(
                   value: ctrl.selected,
                   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
                   dropdownColor: generalBox,
                   isExpanded: true,
-                  menuMaxHeight: 5 * 48.0,
+                  menuMaxHeight: 5 * 48.0, // ca. 5 items à 48px højde
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: generalBox,
@@ -94,12 +81,10 @@ class _PatientActivityView extends StatelessWidget {
                     ),
                   ),
                   style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  items: ctrl.activities
-                      .map((label) => DropdownMenuItem(
+                  items: ctrl.activities.map((label) => DropdownMenuItem(
                     value: label,
                     child: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  ))
-                      .toList(),
+                  )).toList(),
                   onChanged: ctrl.setSelected,
                   hint: const Text('Vælg aktivitet', style: TextStyle(color: Colors.white54)),
                 ),
@@ -163,7 +148,8 @@ class _PatientActivityView extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Varighed: ${formatDuration(duration)}', style: const TextStyle(color: Colors.white70)),
+                              Text('Varighed: ${formatDuration(duration)}',
+                                  style: const TextStyle(color: Colors.white70)),
                               Text(formatDateTime(start), style: const TextStyle(color: Colors.white38)),
                             ],
                           ),

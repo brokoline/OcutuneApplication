@@ -3,8 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../../../services/services/customer_data_service.dart'; // ← currentCustomerResponse her
-import '/models/customer_response_model.dart';
+import '../../../../services/services/customer_data_service.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
 
 class ChooseChronotypeController {
@@ -38,8 +37,8 @@ class ChooseChronotypeController {
     );
   }
 
-  /// Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
-  /// svar‐tekst, sætter chronotypeKey og navigerer videre.
+  // Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
+  // svar‐tekst, sætter chronotypeKey og navigerer videre.
   static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
     if (selectedChronotype == null) {
       showError(ctx, "Vælg en kronotype eller tag testen først");
@@ -52,19 +51,13 @@ class ChooseChronotypeController {
       return;
     }
 
-    // Bygger et nyt CustomerResponse-objekt på baggrund af det gamle:
-    currentCustomerResponse = CustomerResponse(
-      firstName:     resp.firstName,
-      lastName:      resp.lastName,
-      email:         resp.email,
-      gender:        resp.gender,
-      birthYear:     resp.birthYear,
-      answers:       [...resp.answers, selectedChronotype],
-      questionScores: Map.from(resp.questionScores),
-      rmeqScore:     resp.rmeqScore,
-      meqScore:      resp.meqScore,
-      chronotype: selectedChronotype,
-      password:      resp.password,
+    // Overskriv tidligere svar helt tydeligt her:
+    currentCustomerResponse = resp.copyWith(
+      answers: [selectedChronotype],  // Overskriv tidligere svar med kun den nye valgte
+      chronotype: selectedChronotype, // Sæt kronotypen direkte
+      questionScores: {},             // Nulstil tidligere score
+      rmeqScore: null,                // Nulstil tidligere beregninger
+      meqScore: null,
     );
 
     Navigator.pushNamed(ctx, '/doneSetup');

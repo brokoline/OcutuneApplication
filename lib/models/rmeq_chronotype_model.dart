@@ -47,9 +47,9 @@ class ChronotypeModel {
     "language": language,
   };
 
-  /// Hvis `imageUrl` er tom eller null, returnér en tom streng.
-  /// Hvis `imageUrl` allerede starter med "http", returnér den uændret.
-  /// Ellers præfikser vi med basen og returnerer en fuld sti.
+  // Hvis `imageUrl` er tom eller null, returnér en tom streng.
+  // Hvis `imageUrl` allerede starter med "http", returnér den uændret.
+  // Ellers præfikser vi med basen og returnerer en fuld sti.
   String get fullImageUrl {
     if (imageUrl == null || imageUrl!.isEmpty) {
       return "";

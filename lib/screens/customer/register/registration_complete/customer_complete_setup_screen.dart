@@ -65,7 +65,7 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
       if (answers.isNotEmpty) {
         final title = answers.last;
         debugPrint("📥 Sidste svar-tekst (titel): $title");
-        await fetchChronotypeByTitle(title);
+        await fetchChronotypeByTypeKey(title);
       } else {
         debugPrint("⚠️ Ingen scores eller answers fundet i currentCustomerResponse");
       }
@@ -107,16 +107,16 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
     }
   }
 
-  Future<void> fetchChronotypeByTitle(String title) async {
+  Future<void> fetchChronotypeByTypeKey(String typeKey) async {
     final url = Uri.parse('https://ocutune2025.ddns.net/api/chronotypes');
-    debugPrint("🌐 Henter chronotype via titel: $title → $url");
+    debugPrint("🌐 Henter chronotype via typeKey: $typeKey → $url");
     try {
       final response = await http.get(url);
       debugPrint("📥 Response: ${response.statusCode} ${response.body}");
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
         final match = data.firstWhere(
-              (c) => c['title'] == title,
+              (c) => c['type_key'] == typeKey,
           orElse: () => null,
         );
         if (match != null) {
@@ -127,25 +127,26 @@ class _DoneSetupScreenState extends State<DoneSetupScreen>
             );
           }
           setState(() {
-            chronotype         = match['title']        as String? ?? title;
+            chronotype         = match['title']        as String? ?? typeKey;
             chronotypeText     = match['summary_text'] as String? ?? 'Beskrivelse mangler';
             chronotypeImageUrl = match['image_url']   as String? ?? '';
           });
         } else {
           setState(() {
-            chronotype     = title;
+            chronotype     = typeKey;
             chronotypeText = 'Ingen beskrivelse fundet';
           });
         }
       }
     } catch (e) {
-      debugPrint("❌ Fejl under fetchChronotypeByTitle: $e");
+      debugPrint("❌ Fejl under fetchChronotypeByTypeKey: $e");
       setState(() {
-        chronotype     = title;
+        chronotype     = typeKey;
         chronotypeText = 'Kunne ikke hente data';
       });
     }
   }
+
 
   void _goToHome(BuildContext context) {
     debugPrint("➡️ Går til kundedashboard");

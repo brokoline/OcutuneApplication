@@ -1,3 +1,5 @@
+// lib/screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
@@ -17,8 +19,8 @@ class SimulatedLoginScreen extends StatefulWidget {
 }
 
 class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
-  final TextEditingController userIdController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController userIdController     = TextEditingController();
+  final TextEditingController passwordController   = TextEditingController();
   bool isLoading = false;
   String? loginError;
 
@@ -27,9 +29,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       setState(() => loginError = 'Udfyld både bruger‐ID og adgangskode');
       return;
     }
-
-    print('🔁 Sender POST til: ${ApiService.baseUrl}/api/auth/mitid/login');
-    print('📨 Payload: sim_userid=$userId, sim_password=$password');
 
     setState(() {
       isLoading = true;
@@ -41,43 +40,33 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         Uri.parse('${ApiService.baseUrl}/api/auth/mitid/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'sim_userid': userId,
+          'sim_userid':   userId,
           'sim_password': password,
         }),
       );
-
-      print('📥 Statuskode: ${response.statusCode}');
-      print('📦 Svar body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         // Gem login‐info (id, rolle, token, sim_userid)
         await auth.AuthStorage.saveLogin(
-          id: data['id'],
-          role: data['role'],
-          token: data['token'],
-          simUserId: data['sim_userid'],
+          id:         data['id'],
+          role:       data['role'],
+          token:      data['token'],
+          simUserId:  data['sim_userid'],
         );
-        // DEBUG: Bekræft at token blev gemt korrekt
-        final savedToken = await auth.AuthStorage.getToken();
-        print('>>> DEBUG: Gemt token i AuthStorage = $savedToken');
 
-        // Gem navn, afhængigt af om det er clinician eller patient
+        // Gem profil‐navn
         if (data['role'] == 'clinician') {
           await auth.AuthStorage.saveClinicianProfile(
             firstName: data['first_name'],
-            lastName: data['last_name'],
+            lastName:  data['last_name'],
           );
-          final name = await auth.AuthStorage.getClinicianName();
-          print('>>> DEBUG: Gemt kliniker navn = $name');
         } else {
           await auth.AuthStorage.savePatientProfile(
             firstName: data['first_name'],
-            lastName: data['last_name'],
+            lastName:  data['last_name'],
           );
-          final fname = await auth.AuthStorage.getName();
-          print('>>> DEBUG: Gemt patient navn = $fname');
         }
 
         if (!mounted) return;
@@ -89,16 +78,13 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
             '/patient/dashboard',
             arguments: data['id'],
           );
-        } else if (data['role'] == 'clinician') {
-          Navigator.pushReplacementNamed(context, '/clinician');
         } else {
-          setState(() => loginError = 'Ukendt rolle: ${data['role']}');
+          Navigator.pushReplacementNamed(context, '/clinician');
         }
       } else {
         setState(() => loginError = 'Forkert brugernavn eller adgangskode');
       }
     } catch (e) {
-      print('💥 Undtagelse fanget: $e');
       setState(() => loginError = 'Netværksfejl eller server utilgængelig');
     } finally {
       setState(() => isLoading = false);
@@ -114,8 +100,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         automaticallyImplyLeading: true,
         backgroundColor: generalBackground,
         foregroundColor: Colors.white70,
-        surfaceTintColor: Colors.transparent,
-        scrolledUnderElevation: 0,
         elevation: 0,
         title: Text(
           widget.title,
@@ -128,19 +112,18 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: 24.w,
-            vertical: 24.h,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SimulatedMitIDBox(
-                title: widget.title,
-                controller: userIdController,
-                errorMessage: loginError,
-                onContinue: (user, password) =>
-                    _attemptLogin(user.trim(), password.trim()),
+                title:              widget.title,
+                controller:         userIdController,
+                passwordController: passwordController,
+                isLoading:          isLoading,
+                errorMessage:       loginError,
+                onContinue: (user, pass) =>
+                    _attemptLogin(user.trim(), pass.trim()),
               ),
             ],
           ),
@@ -152,7 +135,8 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
         child: const Center(child: CircularProgressIndicator()),
       )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation:
+      FloatingActionButtonLocation.centerFloat,
     );
   }
 }
