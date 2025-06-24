@@ -83,9 +83,8 @@ class OcutuneApp extends StatelessWidget {
           ),
           ChangeNotifierProvider(create: (_) => QuestionController()),
           ChangeNotifierProvider(create: (_) => MeqQuestionController()),
-          // Du kan tilføje CustomerRootController her, hvis du vil
           ChangeNotifierProvider(create: (_) => CustomerActivityController()),
-          // ChangeNotifierProvider(create: (_) => CustomerRootController()),
+          ChangeNotifierProvider(create: (_) => CustomerRootController()),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,

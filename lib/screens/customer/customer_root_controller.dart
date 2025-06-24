@@ -1,4 +1,5 @@
 // lib/screens/customer/dashboard/customer_root_controller.dart
+
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/models/customer_model.dart';
@@ -13,7 +14,7 @@ class CustomerRootController extends ChangeNotifier {
   String? _error;
 
   CustomerRootController() {
-    _fetchProfile();
+    fetchProfile();
   }
 
   // Aktuel faneblad-indeks
@@ -42,15 +43,15 @@ class CustomerRootController extends ChangeNotifier {
     }
   }
 
-  // Henter kundens profil + chronotype via ApiService
-  Future<void> _fetchProfile() async {
+  /// Public metode til at hente/opfresh’e profil fra API
+  Future<void> fetchProfile() async {
     _isLoading = true;
-    _error = null;
+    _error     = null;
     notifyListeners();
 
     try {
       final result = await ApiService.fetchCustomerProfile();
-      _profile = result.first;
+      _profile     = result.first;
       _chronoModel = result.second;
     } catch (e) {
       _error = e.toString();

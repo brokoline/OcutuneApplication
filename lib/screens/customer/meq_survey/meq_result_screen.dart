@@ -16,14 +16,26 @@ class _MeqResultScreenState extends State<MeqResultScreen> {
   @override
   void initState() {
     super.initState();
-    // Hent controller via Provider
-    ctrl = Provider.of<MeqQuestionController>(context, listen: false);
-    // Send svarene og hent scoren:
-    ctrl.submitAnswers(widget.participantId).catchError((e){
-      // evt. vis en fejl-dialog
-      debugPrint("Fejl ved submit: $e");
+    final ctrl = Provider.of<MeqQuestionController>(context, listen: false);
+
+    // parse String → int
+    final id = int.tryParse(widget.participantId) ?? 0;
+    if (id == 0) {
+      debugPrint("❌ Ugyldigt participantId: ${widget.participantId}");
+      return;
+    }
+
+    // læg det i en postFrameCallback, så context er sikkert tilgængeligt
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final score = await ctrl.submitAnswers(id);
+        debugPrint("✅ MEQ score = $score");
+      } catch (e) {
+        debugPrint("❌ Fejl ved submit: $e");
+      }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -7,6 +7,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_selectable_tile.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 import '../../../services/auth_storage.dart';
+import '../customer_root_controller.dart';
 import 'meq_question_controller.dart';
 
 class CustomerMeqQuestionsScreen extends StatefulWidget {
@@ -59,17 +60,27 @@ class _CustomerMeqQuestionsScreenState
       return;
     }
 
-    final qid = ctrl.currentQuestion.id;
-    ctrl.recordAnswer(qid, _selectedChoiceId!);
+    // Gem svaret lokalt
+    ctrl.recordAnswer(ctrl.currentQuestion.id, _selectedChoiceId!);
 
     if (ctrl.isLastQuestion) {
+      // Hent det int-id du nu skal sende
       final cid = await AuthStorage.getCustomerId();
       if (cid == null) {
         _showError("Kunne ikke finde customerId i lokal storage");
         return;
       }
+
       try {
-        await ctrl.submitAnswers(cid.toString());
+        // Tjek om vi skal oprette eller opdatere
+        final hasTaken = context.read<CustomerRootController>().profile?.meqScore != null;
+
+        // Send int direkte — ikke cid.toString()
+        await ctrl.submitAnswers(cid, isUpdate: hasTaken);
+
+        // Genindlæs profil så du får den nye meqScore
+        await context.read<CustomerRootController>().fetchProfile();
+
         Navigator.of(context).pushReplacementNamed('/meqResult');
       } catch (e) {
         _showError("Kunne ikke gemme svar: $e");
@@ -79,6 +90,7 @@ class _CustomerMeqQuestionsScreenState
       setState(() => _selectedChoiceId = null);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
