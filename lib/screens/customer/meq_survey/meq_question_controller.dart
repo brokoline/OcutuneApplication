@@ -147,4 +147,13 @@ class MeqQuestionController with ChangeNotifier {
     notifyListeners();
     return _meqScore;
   }
+
+  // Nulstiller controller-state så en ny kunde kan starte forfra
+  void reset() {
+    questions.clear();
+    currentQuestionIndex = 0;
+    _answers.clear();
+    _meqScore = 0;
+    notifyListeners();
+  }
 }

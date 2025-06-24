@@ -1,3 +1,5 @@
+// lib/screens/customer/meq_survey/customer_meq_questions_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +24,9 @@ class _CustomerMeqQuestionsScreenState
   @override
   void initState() {
     super.initState();
-    context.read<MeqQuestionController>().fetchQuestions();
+    final ctrl = context.read<MeqQuestionController>();
+    ctrl.reset();          // **Ryd alle gamle spørgsmål og svar**
+    ctrl.fetchQuestions(); // Hent dem fra serveren igen
   }
 
   void _showError(String message) {
@@ -90,11 +94,8 @@ class _CustomerMeqQuestionsScreenState
         final idx   = ctrl.currentQuestionIndex + 1;
         final total = ctrl.questions.length;
         final q     = ctrl.currentQuestion;
-
         _selectedChoiceId ??= ctrl.getSavedChoice(q.id);
 
-        // Intercept hardware/back gesture
-        // ignore: deprecated_member_use
         return WillPopScope(
           onWillPop: () async {
             _onBack(ctrl);
