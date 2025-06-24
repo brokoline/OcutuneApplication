@@ -1357,6 +1357,29 @@ class ApiService {
     return jsonResp['status'] == 'OK';
   }
 
+  // Overskriv eksisterende svar via PUT /answers
+  // Returnerer den nye `meq_score`
+  Future<int> updateAnswers({
+    required String participantId,
+    required List<Map<String,int>> answers,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/answers');
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: jsonEncode({
+        'participant_id': participantId,
+        'answers':        answers,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Kunne ikke opdatere svar (PUT): ${response.statusCode} ${response.body}'
+      );
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return (data['meq_score'] ?? 0) as int;
+  }
 
   //─────────────────────────────────────────────────────────────────────────────
   // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov
