@@ -22,7 +22,6 @@ class _CustomerMeqQuestionsScreenState
   @override
   void initState() {
     super.initState();
-    // Start data-loading
     context.read<MeqQuestionController>().fetchQuestions();
   }
 
@@ -34,9 +33,7 @@ class _CustomerMeqQuestionsScreenState
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             SizedBox(width: 12.w),
-            Expanded(
-              child: Text(message, style: const TextStyle(color: Colors.white)),
-            ),
+            Expanded(child: Text(message, style: const TextStyle(color: Colors.white))),
           ],
         ),
       ),
@@ -58,7 +55,6 @@ class _CustomerMeqQuestionsScreenState
       return;
     }
 
-    // 1) gem i controller
     final qid = ctrl.currentQuestion.id;
     ctrl.recordAnswer(qid, _selectedChoiceId!);
 
@@ -84,7 +80,6 @@ class _CustomerMeqQuestionsScreenState
   Widget build(BuildContext context) {
     return Consumer<MeqQuestionController>(
       builder: (context, ctrl, _) {
-        // vis loader indtil spørgsmål er hentet
         if (ctrl.questions.isEmpty) {
           return Scaffold(
             backgroundColor: generalBackground,
@@ -96,7 +91,6 @@ class _CustomerMeqQuestionsScreenState
         final total = ctrl.questions.length;
         final q     = ctrl.currentQuestion;
 
-        // genindstil selection fra controller, hvis vi kommer tilbage
         _selectedChoiceId ??= ctrl.getSavedChoice(q.id);
 
         // Intercept hardware/back gesture
@@ -104,7 +98,7 @@ class _CustomerMeqQuestionsScreenState
         return WillPopScope(
           onWillPop: () async {
             _onBack(ctrl);
-            return false; // forhindrer normal pop
+            return false;
           },
           child: Scaffold(
             backgroundColor: generalBackground,
@@ -145,8 +139,7 @@ class _CustomerMeqQuestionsScreenState
               child: Stack(
                 children: [
                   SingleChildScrollView(
-                    padding:
-                    EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -166,9 +159,7 @@ class _CustomerMeqQuestionsScreenState
                           child: OcutuneSelectableTile(
                             text: c.text,
                             selected: _selectedChoiceId == c.id,
-                            onTap: () => setState(
-                                  () => _selectedChoiceId = c.id,
-                            ),
+                            onTap: () => setState(() => _selectedChoiceId = c.id),
                           ),
                         )),
                         SizedBox(height: 100.h),

@@ -112,7 +112,7 @@ class OcutuneApp extends StatelessWidget {
             },
             '/questions': (_) => const QuestionScreen(),
             '/meq_survey': (_) => const CustomerMeqQuestionsScreen(),
-            '/meqResult': (ctx) =>  MeqResultScreen(),
+            '/meqResult': (ctx) =>  MeqResultScreen(participantId: '',),
             '/doneSetup': (_) => const DoneSetupScreen(),
             '/patient/dashboard': (context) {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;
