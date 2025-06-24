@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_question_controller.dart';
+import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_question_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_result_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/customer_rmeq_questions_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/register/chronotype_survey/question_controller.dart';
 import 'package:ocutune_light_logger/screens/login/choose_access/choose_access_controller.dart';
@@ -79,6 +82,7 @@ class OcutuneApp extends StatelessWidget {
             create: (_) => PatientDetailViewModel(''),
           ),
           ChangeNotifierProvider(create: (_) => QuestionController()),
+          ChangeNotifierProvider(create: (_) => MeqQuestionController()),
           // Du kan tilføje CustomerRootController her, hvis du vil
           ChangeNotifierProvider(create: (_) => CustomerActivityController()),
           // ChangeNotifierProvider(create: (_) => CustomerRootController()),
@@ -107,6 +111,8 @@ class OcutuneApp extends StatelessWidget {
               return AboutChronotypeScreen(chronotypeId: typeKey);
             },
             '/questions': (_) => const QuestionScreen(),
+            '/meq_survey': (_) => const CustomerMeqQuestionsScreen(),
+            '/meqResult': (ctx) =>  MeqResultScreen(),
             '/doneSetup': (_) => const DoneSetupScreen(),
             '/patient/dashboard': (context) {
               final patientId = ModalRoute.of(context)!.settings.arguments as String;

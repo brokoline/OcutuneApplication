@@ -114,7 +114,7 @@ Future<void> submitCustomerResponse() async {
   );
 
   if (registerResponse.statusCode == 409) {
-    print("⚠️ Bruger findes allerede – forsøger opdatering af profil.");
+    print("Bruger findes allerede – forsøger opdatering af profil.");
 
     // Forsøger opdatering af eksisterende brugerprofil
     final token = await AuthStorage.getToken();
@@ -140,7 +140,7 @@ Future<void> submitCustomerResponse() async {
       throw Exception("Kunne ikke opdatere brugerprofil: ${updateResponse.body}");
     }
 
-    print('✅ Profil opdateret korrekt.');
+    print('Profil opdateret korrekt.');
 
   } else if (registerResponse.statusCode != 201) {
     throw Exception("Fejl ved registrering: ${registerResponse.body}");
@@ -158,7 +158,7 @@ Future<void> submitCustomerResponse() async {
       simUserId: refreshToken,
     );
 
-    print('✅ Tokens og bruger gemt: access=$accessToken');
-    print("✅ Registrering gennemført med succes");
+    print('Tokens og bruger gemt: access=$accessToken');
+    print("Registrering gennemført med succes");
   }
 }

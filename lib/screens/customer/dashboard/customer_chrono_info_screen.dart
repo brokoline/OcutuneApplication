@@ -101,8 +101,9 @@ Værktøjer til kronotypevurdering:
 
 Resultater bruges til at designe personlige lys- og søvninterventioner.''',
       actionLabel: 'Start MEQ test',
-      onActionTap: (ctx) => Navigator.pushNamed(ctx, '/chrono_tests'),
+      onActionTap: (ctx) => Navigator.pushNamed(ctx, '/meq_survey'),
     ),
+
     _SectionData(
       icon: Icons.health_and_safety,
       title: 'Sundhedsimplikationer',

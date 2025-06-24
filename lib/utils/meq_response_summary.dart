@@ -1,24 +1,25 @@
+// lib/models/meq_response_summary.dart
+
 import '../services/services/customer_data_service.dart';
 
-// Et lille objekt, der pakker rMEQ og MEQ sammen.
-// MEQ kan være `null` indtil den er beregnet; `meqDisplay` giver en tom streng i så fald.
-class meqResponseSummary {
+class MeqResponseSummary {
   final int rmeq;
   final int? meq;
 
-  meqResponseSummary({
+  MeqResponseSummary({
     required this.rmeq,
     required this.meq,
   });
 
-  factory meqResponseSummary.fromGlobal() {
+  // Henter global state direkte
+  factory MeqResponseSummary.fromGlobal() {
     final resp = currentCustomerResponse;
-    return meqResponseSummary(
+    return MeqResponseSummary(
       rmeq: resp?.rmeqScore ?? 0,
       meq:  resp?.meqScore,
     );
   }
 
-  /// Returnerer MEQ som tekst, eller tom streng hvis ikke sat endnu.
+  // Returnerer MEQ som tekst, eller tom streng
   String get meqDisplay => meq?.toString() ?? '';
 }
