@@ -129,11 +129,13 @@ class ClinicianProfileScreen extends StatelessWidget {
               // Version
               Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
-                child: Text(
-                  'Version 1.0.0',
-                  style: TextStyle(
+                child: Center(
+                  child: Text(
+                    'Version 1.0.0',
+                    style: TextStyle(
                       color: Colors.white54,
-                      fontSize: 13.sp
+                      fontSize: 13.sp,
+                    ),
                   ),
                 ),
               ),

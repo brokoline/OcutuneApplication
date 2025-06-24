@@ -64,7 +64,7 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
               Consumer<ClinicianSearchController>(
                 builder: (context, controller, _) {
                   return OcutuneTextField(
-                    label: 'Søg...',
+                    label: 'Indtast for/efternavn eller CPR',
                     controller: _searchController,
                     textColor: Colors.black,
                     onChanged: controller.searchPatients,

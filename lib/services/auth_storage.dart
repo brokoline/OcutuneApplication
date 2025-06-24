@@ -30,10 +30,10 @@ class AuthStorage {
       final payloadString = utf8.decode(base64.decode(payloadBase64));
       final Map<String, dynamic> payload = json.decode(payloadString);
 
-      print("✅ Login info gemt i SharedPreferences");
+      print("Login info gemt i SharedPreferences");
       return payload;
     } catch (e) {
-      print('❌ Kunne ikke parse JWT payload: $e');
+      print('Kunne ikke parse JWT payload: $e');
       return {};
     }
   }
@@ -53,10 +53,10 @@ class AuthStorage {
 
     if (customerId != null) {
       await prefs.setInt('customerId', customerId);
-      print('✅ Gemte customerId = $customerId');
+      print('Gemte customerId = $customerId');
     }
 
-    print('✅ Login info gemt i SharedPreferences');
+    print('Login info gemt i SharedPreferences');
   }
 
 

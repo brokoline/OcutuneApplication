@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_settings_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_question_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_question_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_result_screen.dart';
@@ -160,6 +161,7 @@ class OcutuneApp extends StatelessWidget {
               child: const CustomerRootScreen(),
             ),
             '/customer/activities': (context) => const CustomerActivityScreen(),
+            '/customer/settings': (_) => const CustomerSettingsScreen(),
           },
         ),
       ),
