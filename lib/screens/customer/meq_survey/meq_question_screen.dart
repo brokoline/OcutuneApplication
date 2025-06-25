@@ -119,7 +119,9 @@ class _CustomerMeqQuestionsScreenState
               preferredSize: Size.fromHeight(100.h),
               child: AppBar(
                 automaticallyImplyLeading: false,
-                backgroundColor: generalBackground,
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                scrolledUnderElevation: 0,
                 elevation: 0,
                 centerTitle: true,
                 toolbarHeight: 100.h,
