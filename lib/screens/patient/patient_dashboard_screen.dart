@@ -65,7 +65,11 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
             onPressed: () async {
               await AuthStorage.logout();
               if (!mounted) return;
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                    (_) => false,
+              );
             },
           ),
         ],
@@ -79,7 +83,8 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height - kToolbarHeight - 32.h,
+                  minHeight:
+                  MediaQuery.of(context).size.height - kToolbarHeight - 32.h,
                 ),
                 child: IntrinsicHeight(
                   child: Column(
@@ -108,32 +113,28 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                       ),
                       SizedBox(height: 18.h),
 
-                      // Her bruger vi først connectedDeviceNotifier
+                      // Sensorforbindelse med subtitle for status
                       ValueListenableBuilder<DiscoveredDevice?>(
-                        valueListenable: BleController.connectedDeviceNotifier,
+                        valueListenable:
+                        BleController.connectedDeviceNotifier,
                         builder: (context, connectedDevice, _) {
                           final isConnected = connectedDevice != null;
                           return OcutunePatientDashboardTile(
                             label: 'Sensorforbindelse',
-                            iconAsset: 'assets/icon/BLE-sensor-ikon.png',
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/patient_sensor_settings',
-                                arguments: widget.patientId,
-                              );
-                            },
-                            trailingWidget: isConnected
-                            // Hvis forbundet, vis batteri
+                            iconAsset:
+                            'assets/icon/BLE-sensor-ikon.png',
+                            subtitle: isConnected
                                 ? ValueListenableBuilder<int>(
-                              valueListenable: BleController.batteryNotifier,
+                              valueListenable:
+                              BleController.batteryNotifier,
                               builder: (context, battery, _) {
-                                final color = _batteryColor(battery);
+                                final color =
+                                _batteryColor(battery);
+                                final icon = _batteryIcon(battery);
                                 return Row(
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      _batteryIcon(battery),
+                                      icon,
                                       color: color,
                                       size: 20.sp,
                                     ),
@@ -143,14 +144,14 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                       style: TextStyle(
                                         fontSize: 13.sp,
                                         color: color,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight:
+                                        FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 );
                               },
                             )
-                            // Hvis ikke forbundet, vis tekst
                                 : Text(
                               'Ikke forbundet',
                               style: TextStyle(
@@ -159,6 +160,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/patient_sensor_settings',
+                                arguments: widget.patientId,
+                              );
+                            },
                           );
                         },
                       ),
@@ -167,9 +175,13 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 
                       OcutunePatientDashboardTile(
                         label: 'Registrér en aktivitet',
-                        iconAsset: 'assets/icon/activity-log-icon.png',
+                        iconAsset:
+                        'assets/icon/activity-log-icon.png',
                         onPressed: () {
-                          Navigator.pushNamed(context, '/patient/activities');
+                          Navigator.pushNamed(
+                            context,
+                            '/patient/activities',
+                          );
                         },
                       ),
 
@@ -177,9 +189,14 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                         label: 'Indbakke',
                         iconAsset: 'assets/icon/mail-outline.png',
                         onPressed: () async {
-                          final jwt = await AuthStorage.getTokenPayload();
+                          final jwt =
+                          await AuthStorage.getTokenPayload();
                           final patientId = jwt['id'];
-                          Navigator.pushNamed(context, '/patient/inbox');
+                          Navigator.pushNamed(
+                            context,
+                            '/patient/inbox',
+                            arguments: patientId,
+                          );
                         },
                       ),
 
