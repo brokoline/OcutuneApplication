@@ -74,7 +74,7 @@ class OcutuneApp extends StatelessWidget {
         providers: [
           ChangeNotifierProvider(create: (_) => LoginController()),
           ChangeNotifierProvider(create: (_) => ChooseAccessController()),
-          ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
+          ChangeNotifierProvider(create: (_) => ClinicianRootController()),
           ChangeNotifierProvider(create: (_) => SimulatedLoginController()),
           ChangeNotifierProvider<DataProcessingManager>(
             create: (_) => DataProcessingManager(),

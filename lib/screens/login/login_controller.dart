@@ -11,12 +11,11 @@ class LoginController extends ChangeNotifier {
   bool get isLoading    => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// Prøver at logge ind. Returnerer `true` ved succes, `false` ved fejl.
   Future<bool> login({
     required String email,
     required String password,
   }) async {
-    // Validering
+
     if (email.isEmpty || password.isEmpty) {
       _errorMessage = 'Udfyld både e‐mail og adgangskode';
       notifyListeners();
@@ -38,7 +37,7 @@ class LoginController extends ChangeNotifier {
         // Gem alt via AuthStorage
         await AuthStorage.saveLogin(
           id:         userId,
-          role:       '',       // eller fx 'customer'
+          role:       '',
           simUserId:  '',
           token:      token,
           customerId: customerId,

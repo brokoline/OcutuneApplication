@@ -113,60 +113,105 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                       ),
                       SizedBox(height: 18.h),
 
-                      // Sensorforbindelse med subtitle for status
+                      // Sensorforbindelse
                       ValueListenableBuilder<DiscoveredDevice?>(
-                        valueListenable:
-                        BleController.connectedDeviceNotifier,
+                        valueListenable: BleController.connectedDeviceNotifier,
                         builder: (context, connectedDevice, _) {
                           final isConnected = connectedDevice != null;
-                          return OcutunePatientDashboardTile(
-                            label: 'Sensorforbindelse',
-                            iconAsset:
-                            'assets/icon/BLE-sensor-ikon.png',
-                            subtitle: isConnected
-                                ? ValueListenableBuilder<int>(
-                              valueListenable:
-                              BleController.batteryNotifier,
-                              builder: (context, battery, _) {
-                                final color =
-                                _batteryColor(battery);
-                                final icon = _batteryIcon(battery);
-                                return Row(
-                                  children: [
-                                    Icon(
-                                      icon,
-                                      color: color,
-                                      size: 20.sp,
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: 12.h),
+                            child: Material(
+                              color: generalBox,
+                              borderRadius: BorderRadius.circular(16.r),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16.r),
+                                splashColor: const Color.fromRGBO(255,255,255,0.15),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/patient_sensor_settings',
+                                    arguments: widget.patientId,
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.25),
+                                      width: 1.2.w,
                                     ),
-                                    SizedBox(width: 6.w),
-                                    Text(
-                                      '$battery%',
-                                      style: TextStyle(
-                                        fontSize: 13.sp,
-                                        color: color,
-                                        fontWeight:
-                                        FontWeight.w500,
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Leading icon
+                                      Image.asset(
+                                        'assets/icon/BLE-sensor-ikon.png',
+                                        width: 48.w,
+                                        height: 48.h,
+                                        color: Colors.white70,
                                       ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            )
-                                : Text(
-                              'Ikke forbundet',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: Colors.redAccent,
-                                fontWeight: FontWeight.w500,
+                                      SizedBox(width: 16.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Sensorforbindelse',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 16.sp,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            if (!isConnected)
+                                              Padding(
+                                                padding: EdgeInsets.only(top: 4.h),
+                                                child: Text(
+                                                  'Ikke forbundet',
+                                                  style: TextStyle(
+                                                    fontSize: 13.sp,
+                                                    color: Colors.redAccent,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      // Batteri når forbundet
+                                      if (isConnected)
+                                        ValueListenableBuilder<int>(
+                                          valueListenable: BleController.batteryNotifier,
+                                          builder: (context, battery, _) {
+                                            final color = _batteryColor(battery);
+                                            return Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  _batteryIcon(battery),
+                                                  color: color,
+                                                  size: 20.sp,
+                                                ),
+                                                SizedBox(width: 6.w),
+                                                Text(
+                                                  '$battery%',
+                                                  style: TextStyle(
+                                                    fontSize: 13.sp,
+                                                    color: color,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/patient_sensor_settings',
-                                arguments: widget.patientId,
-                              );
-                            },
                           );
                         },
                       ),

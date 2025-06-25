@@ -479,6 +479,25 @@ class ApiService {
     }
   }
 
+  // GET kliniker profil/rolle
+  static Future<Map<String, dynamic>?> fetchClinicianProfile() async {
+    final token = await AuthStorage.getToken();
+    if (token == null) return null;
+
+    final url = Uri.parse('$_baseUrl/api/clinician/clinicianprofile');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
 
   //─────────────────────────────────────────────────────────────────────────────
   // 14) Patient‐detaljer & relaterede kald

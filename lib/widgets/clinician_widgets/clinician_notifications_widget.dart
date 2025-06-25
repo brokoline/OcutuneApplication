@@ -7,7 +7,7 @@ class ClinicianNotificationsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<ClinicianDashboardController>(context);
+    final controller = Provider.of<ClinicianRootController>(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -15,7 +15,7 @@ class ClinicianNotificationsWidget extends StatelessWidget {
         Text(
           "Notifikationer",
           style: Theme.of(context).textTheme.titleLarge,
-        ), // <== Denne manglede lukning
+        ),
         ...controller.notifications.map((n) => Card(
           margin: EdgeInsets.symmetric(vertical: 5),
           child: ListTile(
