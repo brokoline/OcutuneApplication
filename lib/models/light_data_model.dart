@@ -3,37 +3,18 @@
 import 'package:intl/intl.dart';
 
 class LightData {
-  /// Her gemmer vi UTC‐timestampet præcist som modtaget fra serveren.
   final DateTime capturedAt;
-
-  /// Det melanopiske EDI‐tal (int), som vi efterfølgende kan omsætte til double.
   final int melanopicEdi;
-
-  /// Illuminance (lux), hvis du ønsker at bruge dét i andre beregninger.
   final int illuminance;
-
-  /// Typen af lys (fx “natural”, “artificial” eller “Ukendt”).
   final String lightType;
-
-  /// En eventuel score, der allerede ligger i JSON‐payloaden.
   final double exposureScore;
-
-  /// Om serveren har flagget, at der kræves en handling.
   final bool actionRequired;
-
-  /// Ekstra getter, hvis du vil tilgå melanopicEdi som double.
   double get ediLux => melanopicEdi.toDouble();
-
-  /// Alias for capturedAt (UTC).
   DateTime get timestamp => capturedAt;
 
-  /// Et eksempel på en beregna­tion baseret på “capturedAt.hour” i UTC.
-  /// Hvis du i stedet vil beregne udfra lokal tid, kan du ændre
-  /// til “capturedAt.toLocal().hour”.
   double get calculatedScore {
     final hourUtc = capturedAt.hour;
 
-    // Eksempel‐logik (tilpas eventuelt jeres egne regler)
     if (hourUtc >= 7 && hourUtc <= 19) {
       return (melanopicEdi / 250).clamp(0.0, 1.0);
     } else if (hourUtc > 19 && hourUtc <= 23) {
@@ -75,10 +56,10 @@ class LightData {
 
   // JSON‐parser som sikrer, at “captured_at” altid bliver tolket som UTC.
   factory LightData.fromJson(Map<String, dynamic> json) {
-    // 1) Hent den rå streng, fx: "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
+    // 1) Hent den rå streng, "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
     final rawDate = json['captured_at'] as String;
 
-    // 2) Parse den ISO‐8601‐streng som UTC; DateTime.parse håndterer 'Z' automatisk.
+    // 2) Parse den ISO‐8601‐streng som UTC
     final DateTime parsedUtc = DateTime.parse(rawDate);
 
     // 3) Konverter fragten fra UTC ind i lokal tid (Copenhagen),

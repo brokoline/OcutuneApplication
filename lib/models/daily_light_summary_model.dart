@@ -24,7 +24,7 @@ class DailyLightSummary {
 
   Map<String, dynamic> toJson() {
     return {
-      'day': day.toIso8601String().split('T').first, // kun “yyyy-MM-dd”
+      'day': day.toIso8601String().split('T').first,
       'count_high_light': countHighLight,
       'count_low_light': countLowLight,
       'total_measurements': totalMeasurements,

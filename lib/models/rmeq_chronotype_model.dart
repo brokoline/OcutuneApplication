@@ -47,23 +47,18 @@ class ChronotypeModel {
     "language": language,
   };
 
-  // Hvis `imageUrl` er tom eller null, returnér en tom streng.
-  // Hvis `imageUrl` allerede starter med "http", returnér den uændret.
-  // Ellers præfikser vi med basen og returnerer en fuld sti.
-  String get fullImageUrl {
+   String get fullImageUrl {
     if (imageUrl == null || imageUrl!.isEmpty) {
       return "";
     }
-    // Hvis serveren allerede sendte en fuld URL, som f.eks. "https://ocutune2025.ddns.net/images/dove.png",
-    // skal vi ikke præfiksere igen:
+
     if (imageUrl!.startsWith('http')) {
       return imageUrl!;
     }
-    // Hvis det kun er et filnavn (f.eks. "dove.png"), præfikser vi:
+
     return "https://ocutune2025.ddns.net/images/$imageUrl";
   }
 
-  /// Samme princip gælder for iconUrl:
   String get fullIconUrl {
     if (iconUrl == null || iconUrl!.isEmpty) {
       return "";
