@@ -129,9 +129,15 @@ class AuthStorage {
 
 
   static Future<String?> getUserRole() async {
+    final payload = await getTokenPayload();
+    final pretty = payload['pretty_role'] as String?;
+    if (pretty != null && pretty.isNotEmpty) {
+      return pretty;
+    }
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_role');
   }
+
 
 
   static Future<String?> getSimUserId() async {
@@ -239,6 +245,7 @@ class AuthStorage {
     return null;
   }
 }
+
 
 
 
