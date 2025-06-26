@@ -72,13 +72,13 @@ class _CustomerMeqQuestionsScreenState
       }
 
       try {
-        // Tjek om vi skal oprette eller opdatere
+        // Tjek om vi skal oprette MEQ eller opdatere
         final hasTaken = context.read<CustomerRootController>().profile?.meqScore != null;
 
-        // Send int direkte — ikke cid.toString()
+        // Send int direkte
         await ctrl.submitAnswers(cid, isUpdate: hasTaken);
 
-        // Genindlæs profil så du får den nye meqScore
+        // Genindlæs profil
         await context.read<CustomerRootController>().fetchProfile();
 
         Navigator.of(context).pushReplacementNamed('/meqResult');

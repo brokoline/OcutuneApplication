@@ -8,7 +8,6 @@ class ClinicianRootController extends ChangeNotifier {
 
   final List<String> _notifications = [];
 
-  /// Offentlig getter til UI’et
   String get name => _name;
   String get role => _role;
   bool get loading => _loading;
@@ -17,9 +16,9 @@ class ClinicianRootController extends ChangeNotifier {
   /// Computed welcome‐tekst
   String get welcomeText {
     if (_role.isNotEmpty) {
-      return 'Velkommen $_name, $_role';
+      return '$_role: $_name';
     }
-    return 'Velkommen $_name';
+    return '$_role: $_name';
   }
 
   ClinicianRootController() {
@@ -45,7 +44,7 @@ class ClinicianRootController extends ChangeNotifier {
       ..addAll([
         'Patient X har sendt en ny besked',
         'Patient Y har registreret ny aktivitet',
-        'Patient Zs lysniveau er under normalen',
+        'Patient Zs gennemsnitlige lysniveau er under det anbefalede',
       ]);
 
     _loading = false;
@@ -53,13 +52,11 @@ class ClinicianRootController extends ChangeNotifier {
   }
 
   Future<void> refreshNotifications() async {
-    // Hvis du har et reelt endpoint, kald det her
     await Future.delayed(const Duration(milliseconds: 200));
     notifyListeners();
   }
 
   void handleNotificationTap(int index) {
-    // Business‐logic for notifikationstap
     debugPrint('Notifikation trykket: ${_notifications[index]}');
   }
 }

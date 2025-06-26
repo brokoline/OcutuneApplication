@@ -25,8 +25,6 @@ class BleController {
 
   // Broadcast for connection updates
   final _connectionUpdatesController = StreamController<ConnectionStateUpdate>.broadcast();
-
-  /// Stream du kan lytte på for at få alle GATT-state opdateringer
   Stream<ConnectionStateUpdate> get connectionStateStream => _connectionUpdatesController.stream;
 
   // Callback for scanning
