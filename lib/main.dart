@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/clinician/search/clinician_search_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/customer_settings_screen.dart';
@@ -75,6 +76,7 @@ class OcutuneApp extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => LoginController()),
           ChangeNotifierProvider(create: (_) => ChooseAccessController()),
           ChangeNotifierProvider(create: (_) => ClinicianRootController()),
+          ChangeNotifierProvider(create: (_) => ClinicianSearchController()),
           ChangeNotifierProvider(create: (_) => SimulatedLoginController()),
           ChangeNotifierProvider<DataProcessingManager>(
             create: (_) => DataProcessingManager(),

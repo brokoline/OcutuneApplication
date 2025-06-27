@@ -21,7 +21,7 @@ class ClinicianProfileScreen extends StatelessWidget {
                 builder: (context, snapshot) {
                   return Center(
                     child: Text(
-                      'Klinikside',
+                      'Klinikadministration',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.white70,
                         fontWeight: FontWeight.w600,

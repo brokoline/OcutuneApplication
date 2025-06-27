@@ -15,7 +15,7 @@ class LightWeeklyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🛠️ Her laves debug-bypass
+    // Her laves bypass for patientdata
     final String patientIdForLightData = kDebugMode ? 'P3' : patientId;
 
     return FutureBuilder<List<DailyLightSummary>>(

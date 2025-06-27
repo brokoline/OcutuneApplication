@@ -33,7 +33,7 @@ class PatientDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<PatientDetailViewModel>();
 
-    // 1) Vent kun på lysdata
+
     return FutureBuilder<void>(
       future: vm.lightDataFuture,
       builder: (ctx, lightSnap) {
@@ -43,7 +43,7 @@ class PatientDetailView extends StatelessWidget {
         if (vm.rawFetchError != null) {
           return _buildError('Fejl ved lysdata: ${vm.rawFetchError}');
         }
-        // 2) Lysdata klar → hent patient og vis resten
+
         return FutureBuilder<Patient>(
           future: vm.fetchPatientDetails(),
           builder: (ctx, snap) {
@@ -60,11 +60,10 @@ class PatientDetailView extends StatelessWidget {
               appBar: const ClinicianAppBar(showBackButton: true),
               body: SingleChildScrollView(
                 padding:
-                EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                EdgeInsets.symmetric(horizontal: 24.w, vertical: 5.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ─── Header ────────────────────────────────────
                     Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -88,7 +87,7 @@ class PatientDetailView extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 15.h),
 
                     // ─── Kronotype + diagnoser ──────────────────────
                     FutureBuilder<List<Diagnosis>>(
@@ -101,7 +100,7 @@ class PatientDetailView extends StatelessWidget {
                         );
                       },
                     ),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 0.h),
 
                     // ─── Aktiviteter ───────────────────────────────
                     FutureBuilder<List<PatientEvent>>(
@@ -132,7 +131,7 @@ class PatientDetailView extends StatelessWidget {
                         return PatientActivityCard(events: events);
                       },
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 5.h),
 
                     // ─── Lysdata (samlet oversigt) ─────────────────
                     LightSummarySection(

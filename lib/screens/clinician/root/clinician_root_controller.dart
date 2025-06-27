@@ -13,7 +13,6 @@ class ClinicianRootController extends ChangeNotifier {
   bool get loading => _loading;
   List<String> get notifications => List.unmodifiable(_notifications);
 
-  /// Computed welcome‐tekst
   String get welcomeText {
     if (_role.isNotEmpty) {
       return '$_role: $_name';
