@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+/// A widget that displays personal and detailed light recommendations,
+/// with the detailed DLMO section rendered as a simple dropdown.
 class CustomerLightRecommendationsCard extends StatelessWidget {
+  /// Personal, high-level recommendations (e.g. "Your light rhythm looks fine...").
   final List<String> personalRecommendations;
+
+  /// Detailed recommendations (e.g. "Kronotype: neither", "DLMO: 21:49").
   final List<String> detailRecommendations;
 
   const CustomerLightRecommendationsCard({
-    super.key,
+    Key? key,
     this.personalRecommendations = const [],
     this.detailRecommendations = const [],
-  });
+  }) : super(key: key);
 
-  // --------- Mapping detail recommendations to icons/colors ----------
+  /// Maps a recommendation string to an appropriate icon.
   Widget _detailIcon(String rec) {
     if (rec.startsWith("Kronotype")) {
       return Icon(Icons.account_circle, color: Colors.lightBlue[200], size: 20.sp);
@@ -31,7 +36,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     if (rec.toLowerCase().contains("light-boost slut")) {
       return Icon(Icons.nights_stay, color: Colors.blueAccent[200], size: 22.sp);
     }
-    // Default:
     return Icon(Icons.lightbulb_outline, color: Colors.white70, size: 20.sp);
   }
 
@@ -40,6 +44,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     final bool showPersonal = personalRecommendations.isNotEmpty;
     final bool showDetail = detailRecommendations.isNotEmpty;
 
+    // If no recommendations at all
     if (!showPersonal && !showDetail) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -54,48 +59,56 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ---- Døgnrytme/kronotype anbefalinger ----
+        // ---- DLMO analyse og anbefalinger som dropdown ----
         if (showDetail)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 2.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "Kronotype & døgnrytme-anbefalinger",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
+          Container(
+            margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 2.w),
+            decoration: BoxDecoration(color: Colors.transparent),
+            child: ExpansionTile(
+              backgroundColor: Colors.transparent,
+              collapsedBackgroundColor: Colors.transparent,
+
+              // Header tekst
+              title: Text(
+                'DLMO analyse og anbefalinger',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
                 ),
-                SizedBox(height: 8.h),
-                ...detailRecommendations.map((r) => Padding(
-                  padding: EdgeInsets.only(bottom: 10.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      _detailIcon(r),
-                      SizedBox(width: 14.w),
-                      Expanded(
-                        child: Text(
-                          r,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+              ),
+
+              // Dropdown-ikon (roterer automatisk når åbnet)
+              trailing: Icon(
+                Icons.expand_more,
+                color: Colors.white70,
+                size: 24.sp,
+              ),
+
+              // Paddings for children
+              childrenPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 8.h),
+
+              // Selve rekommandationerne
+              children: detailRecommendations.map((r) {
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  horizontalTitleGap: 12.w,
+                  leading: _detailIcon(r),
+                  title: Text(
+                    r,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                )),
-              ],
+                );
+              }).toList(),
             ),
           ),
 
-        // ---- Personlige anbefalinger (centreret header + tekst) ----
+        // ---- Personlige anbefalinger ----
         if (showPersonal)
           Padding(
             padding: EdgeInsets.only(top: 4.h, bottom: 8.h, left: 2.w, right: 2.w),
@@ -103,7 +116,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  "Personlige anbefalinger",
+                  'Personlige anbefalinger',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 16.sp,
@@ -113,7 +126,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                 ),
                 SizedBox(height: 8.h),
                 ...personalRecommendations.map((r) {
-                  final bool isFine = r.trim().toLowerCase().contains("fin ud i denne periode");
+                  final bool isFine = r.trim().toLowerCase().contains('fin ud i denne periode');
                   return Padding(
                     padding: EdgeInsets.only(bottom: 10.h),
                     child: Row(

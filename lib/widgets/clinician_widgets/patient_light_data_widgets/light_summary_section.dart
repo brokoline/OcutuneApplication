@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
-import '../../../controller/chronotype_controller.dart';
 import '../../../services/processing/dlmo_data_processing.dart';
 
 import 'clinician_recommandation_card.dart';
@@ -15,7 +13,7 @@ class LightSummarySection extends StatelessWidget {
   final String patientId;
   final int rmeqScore;
 
-  /// Valgfri MEQ‐score (kun til ScoreCard)
+  // Valgfri MEQ‐score (kun til ScoreCard)
   final int? meqScore;
 
   const LightSummarySection({
@@ -28,8 +26,6 @@ class LightSummarySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<PatientDetailViewModel>(context);
-
-    // Hvis vi stadig henter rå data
     if (vm.isFetchingRaw && vm.rawLightData.isEmpty) {
       return SizedBox(
         height: 200.h,
@@ -72,27 +68,6 @@ class LightSummarySection extends StatelessWidget {
       rMEQ: rmeqScore,
     );
 
-    // Generér "almindelige" anbefalinger via ChronotypeManager
-    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
-    final String chronoLabel = chrono.getChronotypeLabel();
-    final Map<String, DateTime> timeMap = chrono.getRecommendedTimes();
-    final DateFormat fmt = DateFormat('HH:mm');
-
-    final DateTime dlmoDt        = timeMap['dlmo']!;
-    final DateTime sleepStartDt  = timeMap['sleep_start']!;
-    final DateTime wakeTimeDt    = timeMap['wake_time']!;
-    final DateTime lightBoostStart = timeMap['lightboost_start']!;
-    final DateTime lightBoostEnd   = timeMap['lightboost_end']!;
-
-    final List<String> recs = [
-      "Kronotype: \$chronoLabel",
-      "DLMO (Dim Light Melatonin Onset): \${fmt.format(dlmoDt)}",
-      "Sengetid (DLMO + 2 timer): \${fmt.format(sleepStartDt)}",
-      "Opvågning (DLMO + 10 timer): \${fmt.format(wakeTimeDt)}",
-      "Light‐boost start: \${fmt.format(lightBoostStart)}",
-      "Light‐boost slut: \${fmt.format(lightBoostEnd)}",
-    ];
-
     return Padding(
       padding: EdgeInsets.only(top: 8.h, bottom: 12.h),
       child: Column(
@@ -102,8 +77,6 @@ class LightSummarySection extends StatelessWidget {
           ClinicianRecommendationCard(
             recommendations: clinicianRecs,
           ),
-
-
           SizedBox(height: 20.h),
 
           // Graf: dag/uge/måned

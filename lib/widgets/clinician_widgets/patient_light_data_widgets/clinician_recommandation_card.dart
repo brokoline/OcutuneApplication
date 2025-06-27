@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../theme/colors.dart';
 
-/// En sammenklappelig boks, der matcher stilen fra Patientoplysninger og Registrerede aktiviteter.
 class ClinicianRecommendationCard extends StatelessWidget {
   final List<String> recommendations;
 

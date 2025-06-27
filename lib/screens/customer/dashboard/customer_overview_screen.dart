@@ -20,13 +20,13 @@ class CustomerOverviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Generér kunde-anbefalinger her!
+    // Generér kunde-anbefalinger her
     final advancedCustomerRecs = generateAdvancedRecommendationsForCustomer(
       data: lightDataList,
       rMEQ: profile.rmeqScore,
     );
 
-    final int rmeqScore = profile.rmeqScore; // fra din profil-model!
+    final int rmeqScore = profile.rmeqScore;
     final chronoManager = ChronotypeManager(rmeqScore);
     final chronoLabel = chronoManager.getChronotypeLabel();
     final timeMap = chronoManager.getRecommendedTimes();
@@ -66,7 +66,7 @@ class CustomerOverviewScreen extends StatelessWidget {
                 personalRecommendations: advancedCustomerRecs,
               ),
               CustomerLightRecommendationsCard(
-                detailRecommendations: detailRecommendations,   // Kronotype/DLMO anbefalinger
+                detailRecommendations: detailRecommendations,
               )
             ],
           ),
