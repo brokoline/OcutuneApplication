@@ -105,7 +105,7 @@ Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
   return counters;
 }
 
-// PATIENT: Avancerede anbefalinger (3. person)
+// PATIENT: Avancerede anbefalinger
 List<String> generateAdvancedRecommendationsForPatient({
   required List<LightData> data,
   required int rMEQ,

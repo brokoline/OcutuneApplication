@@ -81,7 +81,6 @@ class DataProcessing {
     _matricesLoaded = true;
   }
 
-  // Samlet workflow til at beregne spektrum
   Future<List<double>> getSpectrum(
       List<double> channels, double astep, double again) async {
     if (!_matricesLoaded) throw Exception('Matricer ikke initialiseret');
@@ -143,7 +142,6 @@ class DataProcessing {
     return spectrum;
   }
 
-  // Dot product helper
   double dotProduct(List<double> a, List<double> b) {
     double sum = 0.0;
     for (int i = 0; i < a.length && i < b.length; i++) {
@@ -152,20 +150,17 @@ class DataProcessing {
     return sum;
   }
 
-  // Melanopic (asynkron)
   Future<double> melanopic(List<double> spectrum) async {
     double medi = dotProduct(spectrum, mediArr) / (1.3262 / 1000);
     return medi;
   }
 
-  // Illuminance (asynkron)
   Future<double> illuminance(List<double> spectrum) async {
     double Y = dotProduct(spectrum, yBar);
     double E = Y * 683;
     return E;
   }
 
-  // Daylight Exposure Ratio (DER)
   Future<double> der(List<double> spectrum) async {
     double medi = await melanopic(spectrum);
     double lux = await illuminance(spectrum);

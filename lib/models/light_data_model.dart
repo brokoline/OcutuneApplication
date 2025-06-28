@@ -56,29 +56,29 @@ class LightData {
 
   // JSON‐parser som sikrer, at “captured_at” altid bliver tolket som UTC.
   factory LightData.fromJson(Map<String, dynamic> json) {
-    // 1) Hent den rå streng, "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
+    // 1) Henter den rå streng, "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
     final rawDate = json['captured_at'] as String;
 
     // 2) Parse den ISO‐8601‐streng som UTC
     final DateTime parsedUtc = DateTime.parse(rawDate);
 
-    // 3) Konverter fragten fra UTC ind i lokal tid (Copenhagen),
+    // 3) Konverter fragten fra UTC ind i lokal tid
     final DateTime local = parsedUtc.toLocal();
 
-    // 4) Melanopic EDI (kan være num eller null)
+    // 4) Melanopic EDI (num eller null)
     final dynamic ediRaw = json['melanopic_edi'];
     final int melanopicEdi = (ediRaw is num) ? ediRaw.toInt() : 0;
 
-    // 5) Illuminance (kan være num eller null)
+    // 5) Illuminance (num eller null)
     final dynamic illumRaw = json['illuminance'];
     final int illuminance = (illumRaw is num) ? illumRaw.toInt() : 0;
 
-    // 6) Exposure score (kan være num eller null)
+    // 6) Exposure score (num eller null)
     final dynamic exposureRaw = json['exposure_score'];
     final double exposureScore =
     (exposureRaw is num) ? exposureRaw.toDouble() : 0.0;
 
-    // 7) Action required (kan nu være bool eller num (0/1))
+    // 7) Action required ((0/1))
     final dynamic actionRaw = json['action_required'];
     bool actionRequired;
     if (actionRaw is bool) {
@@ -89,7 +89,7 @@ class LightData {
       actionRequired = false;
     }
 
-    // 8) Light type (kan være null eller streng)
+    // 8) Light type (null eller streng)
     final String lightType = (json['light_type'] as String?) ?? 'Ukendt';
 
     return LightData(

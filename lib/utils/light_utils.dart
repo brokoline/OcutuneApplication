@@ -8,7 +8,7 @@ import '../models/light_data_model.dart';
 // Metoderne returnerer enten rå gennemsnits‐ediLux (ikke procenter),
 // eller rå gennemsnits‐procenter baseret på ediLux*100, alt efter behov.
 class LightUtils {
-  LightUtils._(); // Privat constructor – må ikke instantieres
+  LightUtils._();
 
   // --------------------------------------------------------------------------------
   // 1) DAILY BUCKETING: groupByHourOfDay
@@ -145,7 +145,6 @@ class LightUtils {
 
   // --------------------------------------------------------------------------------
   // 6) MÅNEDSBASERET BUCKETING (PROCENT): groupByDayOfMonthPct
-  //
   // Input:  Liste af LightData.
   // Handling: Samler ediLux i lokal dag i måneden, omregner hver til procent (ediLux*100,
   // clamp), beregner gennemsnit pr. dag.
