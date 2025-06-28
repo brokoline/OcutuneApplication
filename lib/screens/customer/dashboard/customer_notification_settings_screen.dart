@@ -9,7 +9,6 @@ import 'package:ocutune_light_logger/widgets/customer_widgets/customer_nav_bar.d
 
 import '../customer_root_controller.dart';
 
-/// Skærm for justering af notifikations-præferencer
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 

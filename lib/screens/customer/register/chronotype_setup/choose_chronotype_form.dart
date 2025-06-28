@@ -1,5 +1,3 @@
-// lib/forms/choose_chronotype_form.dart
-
 import 'package:flutter/material.dart';
 import '../../../../widgets/universal/ocutune_next_step_button.dart';
 import 'package:ocutune_light_logger/models/rmeq_chronotype_model.dart';
@@ -147,13 +145,11 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
               padding: const EdgeInsets.only(right: 12),
               child: () {
                 final raw = type.imageUrl ?? "";
-                // Byg én enkelt korrekt URL. Hvis raw allerede er en fuld HTTP URL, bruges den direkte:
                 final displayUrl = raw.startsWith("http")
                     ? raw
                     : "https://ocutune2025.ddns.net/images/$raw";
 
                 if (displayUrl.isEmpty) {
-                  // Hvis der ikke er noget billede, vis et placeholder‐ikon i en boks på 48×48
                   return const SizedBox(
                     width: 48,
                     height: 48,
@@ -161,13 +157,12 @@ class _ChooseChronotypeFormState extends State<ChooseChronotypeForm> {
                       child: Icon(
                         Icons.image_not_supported,
                         color: Colors.white70,
-                        size: 24, // Her kan du justere ikonets størrelse
+                        size: 24,
                       ),
                     ),
                   );
                 }
 
-                // Ellers læg billedet i en SizedBox med faste constraints 48×48:
                 return SizedBox(
                   width: 48,
                   height: 48,

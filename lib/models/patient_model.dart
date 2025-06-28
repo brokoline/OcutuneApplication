@@ -13,9 +13,8 @@ class Patient {
   final String? simPassword;
   final DateTime? createdAt;
 
-  // 👉 Erstat totalScore med to felter:
-  final int? meqScore;    // 19-spørgsmålsscoren
-  final int? rmeqScore;   // 5-spørgsmålsscoren
+  final int? meqScore;
+  final int? rmeqScore;
 
   Patient({
     required this.id,

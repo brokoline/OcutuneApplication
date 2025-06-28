@@ -1,7 +1,7 @@
-// lib/widgets/clinician_widgets/patient_light_data_widgets/clinician_recommendation_card.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../../theme/colors.dart';
 
 class ClinicianRecommendationCard extends StatelessWidget {
   final List<String> recommendations;
@@ -13,16 +13,32 @@ class ClinicianRecommendationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.symmetric(horizontal: 16.w),
+        collapsedBackgroundColor: generalBox,
+        backgroundColor: generalBox,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r)),
+        collapsedShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r)),
+        trailing: Icon(Icons.expand_more, color: Colors.white70),
+        title: Text(
+          'Analyse af lysmålinger',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         children: [
-          // Hvis der ikke er nogen anbefalinger, vis en standardtekst
-          if (recommendations.isEmpty)
-            Center(
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: recommendations.isEmpty
+                ? Center(
               child: Text(
-                "Ingen anbefalinger i øjeblikket",
+                'Ingen anbefalinger i øjeblikket',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 14.sp,
@@ -30,9 +46,7 @@ class ClinicianRecommendationCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             )
-          else
-          // Vis hver anbefaling som en punktopstilling
-            Column(
+                : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: recommendations.map((rec) {
                 return Padding(
@@ -40,7 +54,6 @@ class ClinicianRecommendationCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Bullet-punkt
                       Container(
                         width: 6.w,
                         height: 6.w,
@@ -51,7 +64,6 @@ class ClinicianRecommendationCard extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 8.w),
-                      // Tekst
                       Expanded(
                         child: Text(
                           rec,
@@ -67,6 +79,7 @@ class ClinicianRecommendationCard extends StatelessWidget {
                 );
               }).toList(),
             ),
+          ),
         ],
       ),
     );

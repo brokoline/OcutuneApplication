@@ -67,7 +67,7 @@ class _CustomerActivityView extends StatelessWidget {
                   icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
                   dropdownColor: generalBox,
                   isExpanded: true,
-                  menuMaxHeight: 5 * 48.0, // ca. 5 items à 48px højde
+                  menuMaxHeight: 5 * 48.0,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: generalBox,

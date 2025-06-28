@@ -1,75 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:ocutune_light_logger/models/patient_model.dart';
+import 'package:ocutune_light_logger/services/auth_storage.dart';
 
-class ClinicianDashboardController extends ChangeNotifier {
-  List<String> _notifications = [];
-  final List<Patient> _allPatients = [];
-  List<Patient> _searchResults = [];
-  Patient? _selectedPatient;
+class ClinicianRootController extends ChangeNotifier {
+  String _name = '';
+  String _role = '';
+  bool _loading = true;
 
-  List<String> get notifications => _notifications;
-  List<Patient> get searchResults => _searchResults;
-  List<Patient> get allPatients => _allPatients;
-  Patient? get selectedPatient => _selectedPatient;
+  final List<String> _notifications = [];
 
-  Future<void> loadInitialData() async {
-    // Simuler API kald
-    await Future.delayed(const Duration(milliseconds: 500));
+  String get name => _name;
+  String get role => _role;
+  bool get loading => _loading;
+  List<String> get notifications => List.unmodifiable(_notifications);
 
-    _notifications = [
-      'Patient X har sendt en ny besked',
-      'Patient Y har registreret ny aktivitet',
-      'Patient Zs lysniveau er under normalen',
-    ];
-
-    notifyListeners();
+  String get welcomeText {
+    if (_role.isNotEmpty) {
+      return '$_role: $_name';
+    }
+    return '$_role: $_name';
   }
 
-  void selectPatient(Patient patient) {
-    _selectedPatient = patient;
-    notifyListeners();
+  ClinicianRootController() {
+    _loadAll();
   }
 
+  Future<void> _loadAll() async {
+    _loading = true;
+    notifyListeners();
+
+    final results = await Future.wait<String?>([
+      AuthStorage.getClinicianName(),
+      AuthStorage.getUserRole(),
+    ]);
+    _name = results[0] ?? '';
+    _role = results[1] ?? '';
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    _notifications
+      ..clear()
+      ..addAll([
+        'Patient X har sendt en ny besked',
+        'Patient Y har registreret ny aktivitet',
+        'Patient Zs gennemsnitlige lysniveau er under det anbefalede',
+      ]);
+
+    _loading = false;
+    notifyListeners();
+  }
 
   Future<void> refreshNotifications() async {
-    await Future.delayed(const Duration(seconds: 1));
-    notifyListeners();
-  }
-
-  void searchPatient(String query) {
-    if (query.isEmpty) {
-      _searchResults = [];
-    } else {
-      _searchResults = _allPatients.where((patient) =>
-      patient.firstName.toLowerCase().contains(query.toLowerCase()) ||
-          patient.lastName.toLowerCase().contains(query.toLowerCase()) ||
-          (patient.cpr ?? '').contains(query)
-      ).toList();
-    }
-    notifyListeners();
-  }
-
-  Future<void> loadPatientDetails(int patientId) async {
-
-    _selectedPatient = _allPatients.firstWhere(
-          (patient) => patient.id == patientId,
-      orElse: () => throw Exception('Patient ikke fundet'),
-    );
-
+    await Future.delayed(const Duration(milliseconds: 200));
     notifyListeners();
   }
 
   void handleNotificationTap(int index) {
     debugPrint('Notifikation trykket: ${_notifications[index]}');
-  }
-
-  void addNotification(String message) {
-    _notifications.insert(0, message);
-    notifyListeners();
-  }
-
-  void clearNotifications() {
-    _notifications.clear();
-    notifyListeners();
   }
 }

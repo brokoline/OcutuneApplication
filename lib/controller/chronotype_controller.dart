@@ -1,5 +1,3 @@
-// lib/controller/chronotype_controller.dart
-
 import 'dart:math';
 
 class ChronotypeManager {
@@ -16,10 +14,10 @@ class ChronotypeManager {
     dlmoHour = _estimateDlmo(meqScore);
     tau = _estimateTau(meqScore);
     lightboostStartHour = _calculateLightboostStart(tau, dlmoHour);
-    lightboostEndHour = lightboostStartHour + 1.5; // eksempel: 1.5 timers boost
+    lightboostEndHour = lightboostStartHour + 2;
   }
 
-  /// Returnerer en tekst‐label baseret på rMEQ‐score
+  // Returnerer en tekst‐label baseret på rMEQ‐score
   String getChronotypeLabel() {
     if (totalScore >= 22) return 'definitely_morning';
     if (totalScore >= 18) return 'moderately_morning';
@@ -28,45 +26,42 @@ class ChronotypeManager {
     return 'definitely_evening';
   }
 
-  /// Simpel lineær interpolation fra rMEQ (5 spørgsmål) til MEQ (19 spørgsmål).
-  /// Du kan justere disse return‐værdier, så de matcher jeres egne data/model.
   double _estimateMEQ(int rmeq) {
     switch (getChronotypeLabel()) {
       case 'definitely_morning':
-        return 80;
+        return 78;
       case 'moderately_morning':
-        return 65;
-      case 'neither':
+        return 64;
+      case 'intermediate':
         return 50;
       case 'moderately_evening':
-        return 35;
+        return 36;
       case 'definitely_evening':
-        return 25;
+        return 23;
       default:
         return 50;
     }
   }
 
-  /// Approksimerer DLMO‐tidspunkt (i timer) ud fra meqScore.
   double _estimateDlmo(double meq) {
     // Eksempel‐formel baseret på publicerede studier:
     return (209.0 - meq) / 7.29;
   }
 
-  /// Approksimerer døgnlængde (tau) ud fra meqScore.
+  // Approksimerer døgnlængde (tau) ud fra meqScore.
   double _estimateTau(double meq) {
     return (24.98 - meq) / 0.0171;
   }
 
-  /// Beregner start‐tidspunkt (i timer) for “light boost” relativt til DLMO.
+  // Beregner start‐tidspunkt (i timer) for “light boost” relativt til DLMO.
   double _calculateLightboostStart(double tau, double dlmo) {
     final double phaseShift = 24 - tau;
     final double hoursBeforeDlmo = 2.6 + 0.0667 * sqrt(9111 + 15000 * phaseShift);
     return dlmo - hoursBeforeDlmo;
   }
 
-  /// Returnerer en Map med anbefalede tidspunkter (“dlmo”, “sleep_start” osv.)
-  /// i form af DateTime‐objekter for den givne dag.
+  // Returnerer en Map med anbefalede tidspunkter (“dlmo”, “sleep_start” osv.)
+  // i form af DateTime‐objekter for den givne dag.
   Map<String, DateTime> getRecommendedTimes({DateTime? reference}) {
     final now = reference ?? DateTime.now();
 

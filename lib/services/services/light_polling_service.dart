@@ -1,5 +1,3 @@
-// lib/services/services/light_polling_service.dart
-
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
@@ -10,7 +8,6 @@ import 'package:ocutune_light_logger/services/services/light_classifier_service.
 
 import '../../controller/ble_controller.dart';
 
-// Service der periodisk læser lys-data fra sensoren.
 class LightPollingService {
   final QualifiedCharacteristic _char;
   final String _patientId;

@@ -27,13 +27,13 @@ class LightClassifier {
       final classifier = LightClassifier._(interpreter);
       await classifier._loadYBarData();
 
-      print("✅ Interpreter oprettet fra: $modelPath");
-      print("📐 Input shape: ${interpreter.getInputTensor(0).shape}");
-      print("📐 Output shape: ${interpreter.getOutputTensor(0).shape}");
+      print("Interpreter oprettet fra: $modelPath");
+      print("Input shape: ${interpreter.getInputTensor(0).shape}");
+      print("Output shape: ${interpreter.getOutputTensor(0).shape}");
 
       return classifier;
     } catch (e) {
-      print("❌ Fejl ved oprettelse af LightClassifier: $e");
+      print("Fejl ved oprettelse af LightClassifier: $e");
       rethrow;
     }
   }
@@ -52,7 +52,7 @@ class LightClassifier {
     try {
       _interpreter.run(inputTensor, outputTensor);
     } catch (e) {
-      print("❌ Fejl under modelkørsel: $e");
+      print("Fejl under modelkørsel: $e");
       rethrow;
     }
 
@@ -73,10 +73,10 @@ class LightClassifier {
           line.split(',').map((e) => double.tryParse(e.trim()) ?? 0.0).toList())
           .toList();
 
-      print("📄 Indlæst regression_matrix med ${matrix.length} rækker, hver med ${matrix[0].length} værdier");
+      print("Indlæst regression_matrix med ${matrix.length} rækker, hver med ${matrix[0].length} værdier");
       return matrix;
     } catch (e) {
-      print("❌ Fejl ved indlæsning af regression_matrix.csv: $e");
+      print("Fejl ved indlæsning af regression_matrix.csv: $e");
       rethrow;
     }
   }
@@ -86,7 +86,7 @@ class LightClassifier {
     final weightLength = weights.length;
 
     if (weightLength % inputLength != 0) {
-      throw Exception("❌ Vægtlængde ($weightLength) skal være et multiplum af input-længde ($inputLength).");
+      throw Exception("Vægtlængde ($weightLength) skal være et multiplum af input-længde ($inputLength).");
     }
 
     final bandsPerInput = weightLength ~/ inputLength;
@@ -97,7 +97,7 @@ class LightClassifier {
       reconstructed[i] = input[inputIndex] * weights[i] * normalizationFactor;
     }
 
-    print("🔧 Rekonstrueret spektrum (${reconstructed.length} værdier) fra input=$input med faktor $normalizationFactor");
+    print("Rekonstrueret spektrum (${reconstructed.length} værdier) fra input=$input med faktor $normalizationFactor");
     return reconstructed;
   }
 
@@ -112,11 +112,11 @@ class LightClassifier {
           .whereType<double>()
           .toList();
 
-      print("📈 Indlæst kurve fra $path med ${values.length} værdier");
+      print("Indlæst kurve fra $path med ${values.length} værdier");
 
       return values;
     } catch (e) {
-      print("❌ Fejl ved indlæsning af kurve fra $path: $e");
+      print("Fejl ved indlæsning af kurve fra $path: $e");
       rethrow;
     }
   }
@@ -138,7 +138,7 @@ class LightClassifier {
       }
     }
 
-    print("🔁 Resamplet kurve fra ${curve.length} → $targetLength");
+    print("Resamplet kurve fra ${curve.length} → $targetLength");
     return resampled;
   }
 
@@ -155,7 +155,7 @@ class LightClassifier {
     }
 
     final edi = (sum * 683.0) / melanopicConstant;
-    print("☀️ Melanopic EDI: $edi");
+    print("Melanopic EDI: $edi");
     return edi;
   }
 
@@ -172,7 +172,7 @@ class LightClassifier {
     }
 
     final lux = sum * K;
-    print("💡 Illuminance (Lux): $lux");
+    print("Illuminance (Lux): $lux");
     return lux;
   }
 

@@ -1,10 +1,4 @@
-// integration_test/app_performance_test.dart
-// This integration test must be run via `flutter drive` in profile mode on a device/emulator.
-// flutter drive \
-//   --driver=test_driver/perf_driver.dart \
-//   --target=integration_test/app_performance_test.dart \
-//   --profile \
-//   --no-dds
+// Udviklet med hjælp af ChatGPT
 
 import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,7 +16,7 @@ void main() {
       stopwatch.stop();
 
       final startupMs = stopwatch.elapsedMilliseconds;
-      print('🏁 Startup time: ${startupMs} ms');
+      print('Startup time: ${startupMs} ms');
       expect(
         startupMs < 2000,
         true,
@@ -53,7 +47,7 @@ void main() {
       }).toList();
       print('Slow frames count: ${slowFrames.length}');
       for (var t in slowFrames) {
-        print('🔴 build=${t.buildDuration.inMilliseconds}ms, '
+        print('build=${t.buildDuration.inMilliseconds}ms, '
             'raster=${t.rasterDuration.inMilliseconds}ms');
       }
 

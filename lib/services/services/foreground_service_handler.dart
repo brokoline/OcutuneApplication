@@ -24,29 +24,26 @@ class OcutuneForegroundHandler extends TaskHandler {
   Future<void> onStart(DateTime timestamp) async {
     _ble = FlutterReactiveBle();
 
-    // 1) Hent deviceId, patientId og jwt
     final deviceId  = (await AuthStorage.getLastConnectedDeviceId())!;
     final patientId = (await AuthStorage.getUserId())!;
     final jwt       = (await AuthStorage.getToken())!;
 
-    // 2) Forsøg at hente gemt sensorId til dette device
     String? sensorId = await AuthStorage.getSensorIdForDevice(deviceId);
     if (sensorId == null) {
-      // hvis ikke fundet → registrér ny og gem
+
       final newId = await ApiService.registerSensorUse(
         patientId:    patientId,
         deviceSerial: deviceId,
         jwt:          jwt,
       );
       if (newId == null) {
-        debugPrint('❌ Kunne ikke registrere sensor');
+        debugPrint('Kunne ikke registrere sensor');
         return;
       }
       sensorId = newId.toString();
       await AuthStorage.saveSensorIdForDevice(deviceId, sensorId);
     }
 
-    // 3) Definére BLE-karakteristika
     _lightChar = QualifiedCharacteristic(
       deviceId:         deviceId,
       serviceId:        Uuid.parse('0000181b-0000-1000-8000-00805f9b34fb'),
@@ -58,21 +55,18 @@ class OcutuneForegroundHandler extends TaskHandler {
       characteristicId: Uuid.parse('2A19'),
     );
 
-    // 4) Hold GATT-link åben i BG
     _ble.connectToDevice(id: deviceId).listen(
-          (upd) => debugPrint('🔗 BG BLE state=${upd.connectionState}'),
-      onError: (e) => debugPrint('⚠️ BG BLE-error: $e'),
+          (upd) => debugPrint('BG BLE state=${upd.connectionState}'),
+      onError: (e) => debugPrint('BG BLE-error: $e'),
     );
 
-    // 5) Start polling-services
     _batteryService = BatteryPollingService(ble: _ble, deviceId: deviceId, sensorId: sensorId);
     await _batteryService.start();
 
     _lightPollingInit(patientId, sensorId);
 
-    // 6) Initér sync-timer
     _lastSyncTime = timestamp;
-    debugPrint('🔔 BG-service startet ved $timestamp, sensorId=$sensorId');
+    debugPrint('BG-service startet ved $timestamp, sensorId=$sensorId');
   }
 
   void _lightPollingInit(String patientId, String sensorId) async {
@@ -92,17 +86,17 @@ class OcutuneForegroundHandler extends TaskHandler {
       final data = await _ble.readCharacteristic(_lightChar);
       await _lightService.handleData(data);
     } catch (e) {
-      debugPrint('⚠️ BG-lys polling error: $e');
+      debugPrint('BG-lys polling error: $e');
     }
 
     // ── Sync offline-data hver 10 min ───────────────────────────────
     if (timestamp.difference(_lastSyncTime) >= const Duration(minutes: 10)) {
       try {
-        debugPrint('⏳ Starter syncAll ved $timestamp');
+        debugPrint('Starter syncAll ved $timestamp');
         await SyncUseCase.syncAll();
-        debugPrint('✅ syncAll færdig ved $timestamp');
+        debugPrint('syncAll færdig ved $timestamp');
       } catch (e) {
-        debugPrint('⚠️ BG-sync error: $e');
+        debugPrint('BG-sync error: $e');
       }
       _lastSyncTime = timestamp;
     }
@@ -110,10 +104,9 @@ class OcutuneForegroundHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp) async {
-    // Stop BG-services
     _batteryService.stop();
     _lightService.stop();
-    debugPrint('🛑 BG-service stoppet ved $timestamp');
+    debugPrint('BG-service stoppet ved $timestamp');
   }
 
   void onButtonPressed(String id) {}

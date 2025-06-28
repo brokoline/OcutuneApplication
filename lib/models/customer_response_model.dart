@@ -5,22 +5,12 @@ class CustomerResponse {
   final String gender;
   final String birthYear;
 
-  /// Liste med alle svar-tekster (“q1”, “q2” …)
+
   final List<String> answers;
-
-  /// Hvert enkelt svar-score som questionId → score
   final Map<String, int> questionScores;
-
-  /// Kort version (5 spørgsmål)
   final int? rmeqScore;
-
-  /// Lang version (19 spørgsmål)
   final int? meqScore;
-
-  /// Kronotype-nøgle, når kunden vælger kronotype / testen er færdig
   final String? chronotype;
-
-  /// Indregistreret kodeord
   final String? password;
 
   CustomerResponse({

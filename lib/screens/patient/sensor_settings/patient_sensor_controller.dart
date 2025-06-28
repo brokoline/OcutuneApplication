@@ -1,7 +1,4 @@
-// lib/controllers/patient_sensor_controller.dart
-
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,14 +9,10 @@ import 'package:ocutune_light_logger/services/ble_lifecycle_handler.dart';
 class PatientSensorController {
   final String patientId;
   final BleController bleController;
-
-  /// Privat liste over fundne devices
   final List<DiscoveredDevice> _devices = [];
 
-  /// Notifier som UI kan lytte på
   final ValueNotifier<List<DiscoveredDevice>> devicesNotifier = ValueNotifier([]);
 
-  /// Gør listen tilgængelig uden for klassen
   List<DiscoveredDevice> get devices => List.unmodifiable(_devices);
 
   BleLifecycleHandler? _lifecycleHandler;
@@ -27,26 +20,21 @@ class PatientSensorController {
   PatientSensorController({ required this.patientId })
       : bleController = BleController();
 
-  /// Skal kaldes én gang fra fx initState()
   void init() {
-    // Når en ny device bliver fundet
     bleController.onDeviceDiscovered = (device) {
       if (!_devices.any((d) => d.id == device.id)) {
         _devices.add(device);
         devicesNotifier.value = List.unmodifiable(_devices);
       }
     };
-    // Start overvågning af bluetooth-status
     bleController.monitorBluetoothState();
   }
 
-  /// Skal kaldes fra dispose()
   void dispose() {
     _lifecycleHandler?.stop();
     devicesNotifier.dispose();
   }
 
-  /// Spørg om nødvendige tilladelser, før der scannes
   Future<void> requestPermissionsAndScan(BuildContext context) async {
     final statusLocation = await Permission.locationWhenInUse.request();
     final statusScan     = await Permission.bluetoothScan.request();
@@ -65,14 +53,12 @@ class PatientSensorController {
     }
   }
 
-  /// Nulstil liste og start BLE-scanningen
   void startScanning() {
     _devices.clear();
     devicesNotifier.value = [];
     bleController.startScan();
   }
 
-  /// Forbind til en valgt device og sæt lifecycle‐handler op
   Future<void> connectToDevice(
       BuildContext context,
       DiscoveredDevice device,
@@ -83,7 +69,7 @@ class PatientSensorController {
         patientId: patientId,
       );
 
-      // Opsæt genopkobling ved app-lifecycle
+
       _lifecycleHandler = BleLifecycleHandler(
         bleController: bleController,
       )
@@ -103,7 +89,7 @@ class PatientSensorController {
     }
   }
 
-  /// Afbryd forbindelse og fjern lifecycle‐observer
+
   void disconnectFromDevice(BuildContext context) {
     _lifecycleHandler?.stop();
     bleController.disconnect();

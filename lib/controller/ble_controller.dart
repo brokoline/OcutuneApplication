@@ -25,8 +25,6 @@ class BleController {
 
   // Broadcast for connection updates
   final _connectionUpdatesController = StreamController<ConnectionStateUpdate>.broadcast();
-
-  /// Stream du kan lytte på for at få alle GATT-state opdateringer
   Stream<ConnectionStateUpdate> get connectionStateStream => _connectionUpdatesController.stream;
 
   // Callback for scanning
@@ -41,29 +39,29 @@ class BleController {
   LightPollingService? _lightService;
   LightPollingService? get lightService => _lightService;
 
-  /// Sikker læsning af BLE characteristic
+  // Sikker læsning af BLE characteristic
   Future<List<int>> safeReadCharacteristic(QualifiedCharacteristic characteristic) {
     return _bleLock.synchronized(() => _ble.readCharacteristic(characteristic));
   }
 
-  /// Begynd at overvåge bluetooth-status
+  // Begynd at overvåge bluetooth-status
   void monitorBluetoothState() {
     _ble.statusStream
         .listen((status) => isBluetoothOn.value = status == BleStatus.ready);
   }
 
-  /// Start scan
+  // Start scan
   void startScan() {
     _scanStream?.cancel();
     _scanStream = _ble.scanForDevices(withServices: []).listen(
       onDeviceDiscovered,
-      onError: (e) => debugPrint('🚨 Scan-fejl: $e'),
+      onError: (e) => debugPrint('Scan-fejl: $e'),
     );
   }
 
   void stopScan() => _scanStream?.cancel();
 
-  /// Forbind til device og emit opdateringer til connectionStateStream
+  // Forbind til device og emit opdateringer til connectionStateStream
   Future<void> connectToDevice({
     required DiscoveredDevice device,
     required String patientId,
@@ -81,7 +79,7 @@ class BleController {
           case DeviceConnectionState.connected:
             stopScan();
             connectedDeviceNotifier.value = device;
-            debugPrint('✅ Connected to ${device.name}');
+            debugPrint('Connected to ${device.name}');
 
             // Kickstart Android-foreground service
             await FlutterForegroundTask.startService(
@@ -147,7 +145,7 @@ class BleController {
     );
   }
 
-  /// Afbryd og ryd op
+  // Afbryd og ryd op
   Future<void> disconnect() async {
     _connectionStream?.cancel();
     await FlutterForegroundTask.stopService();
@@ -171,10 +169,10 @@ class BleController {
       final data = await _ble.readCharacteristic(char);
       if (data.isNotEmpty) {
         batteryNotifier.value = data[0];
-        debugPrint('🔋 Batteri: ${data[0]}%');
+        debugPrint('Batteri: ${data[0]}%');
       }
     } catch (e) {
-      debugPrint('⚠️ Fejl ved batteri-læsning: $e');
+      debugPrint('Fejl ved batteri-læsning: $e');
     }
   }
 

@@ -1,25 +1,21 @@
-// lib/controller/simulated_login_controller.dart
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart' as auth;
-
-enum SimulatedLoginRole { patient, clinician }
 
 class SimulatedLoginController extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  bool get isLoading    => _isLoading;
+  bool get isLoading     => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// Forsøger login med MitID-simulering.
   Future<void> login({
     required String userId,
     required String password,
-    required void Function(String role, String id) onSuccess,
+    required void Function(String prettyRole, String id) onSuccess,
   }) async {
     if (userId.isEmpty || password.isEmpty) {
       _errorMessage = 'Udfyld både bruger-ID og adgangskode';
@@ -44,31 +40,35 @@ class SimulatedLoginController extends ChangeNotifier {
       if (resp.statusCode == 200) {
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
 
-        // Gem login-info
+        final prettyRole = (data['pretty_role'] as String?)?.trim() ?? '';
+
         await auth.AuthStorage.saveLogin(
-          id:        data['id'].toString(),
-          role:      data['role'],
-          token:     data['token'],
-          simUserId: data['sim_userid'].toString(),
-          customerId: data['role'] == 'patient' ? int.parse(data['id'].toString()) : null,
+          id:         data['id'].toString(),
+          role:       prettyRole,
+          token:      data['token'] as String,
+          simUserId:  data['sim_userid'].toString(),
+          customerId: data['role'] == 'patient'
+              ? int.tryParse(data['id'].toString())
+              : null,
         );
 
-        // Gem profil-navn
         if (data['role'] == 'clinician') {
           await auth.AuthStorage.saveClinicianProfile(
-            firstName: data['first_name'],
-            lastName:  data['last_name'],
+            firstName: data['first_name'] as String,
+            lastName:  data['last_name']  as String,
           );
         } else {
           await auth.AuthStorage.savePatientProfile(
-            firstName: data['first_name'],
-            lastName:  data['last_name'],
+            firstName: data['first_name'] as String,
+            lastName:  data['last_name']  as String,
           );
         }
 
-        onSuccess(data['role'] as String, data['id'].toString());
-      } else {
+        onSuccess(prettyRole, data['id'].toString());
+      } else if (resp.statusCode == 401) {
         _errorMessage = 'Forkert brugernavn eller adgangskode';
+      } else {
+        _errorMessage = 'Serverfejl (${resp.statusCode})';
       }
     } catch (e) {
       _errorMessage = 'Netværksfejl eller server utilgængelig';

@@ -1,5 +1,3 @@
-// lib/services/services/api_services.dart
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ocutune_light_logger/models/customer_model.dart';
@@ -12,16 +10,12 @@ import '../../models/patient_model.dart';
 import '../../models/rmeq_chronotype_model.dart';
 import '../auth_storage.dart';
 
-
-// Simpel tuple‐klasse til at returnere både Customer og ChronotypeModel
 class Pair<A, B> {
   final A first;
   final B second;
   Pair(this.first, this.second);
 }
 
-
-// Base URL for alle API‐kald
 const String _baseUrl = "https://ocutune2025.ddns.net";
 
 class ApiService {
@@ -349,50 +343,62 @@ class ApiService {
     }
   }
 
+  /// GET /api/customer/profile
   static Future<Pair<Customer, ChronotypeModel?>> fetchCustomerProfile() async {
-    // 1) Hent JWT‐token fra lokal storage
+    // 1) Grab token
     final token = await AuthStorage.getToken();
     if (token == null) {
       throw Exception("Ingen token tilgængelig – prøv at logge ind først");
     }
-    print('DEBUG: Bruger token i header: $token');
+
+    // 2) Call profile endpoint
     final uri = Uri.parse('$_baseUrl/api/customer/profile');
     final response = await http.get(
       uri,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type':  'application/json',
         'Authorization': 'Bearer $token',
       },
     );
-    print('DEBUG: GET $uri → statuscode ${response.statusCode}');
-    print('DEBUG: response body: ${response.body}');
+    print('DEBUG: GET $uri → ${response.statusCode}');
+    print('DEBUG: body: ${response.body}');
 
+    // 3) Handle result
     if (response.statusCode == 200) {
-      final Map<String, dynamic> decoded = jsonDecode(response.body);
-      if (decoded["success"] == true) {
-        final data = decoded["data"] as Map<String, dynamic>;
-        final Customer customer = Customer.fromJson(data);
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
 
-        ChronotypeModel? chronoModel;
-        if (data['chronotype_details'] != null) {
-          chronoModel = ChronotypeModel.fromJson(
-            data['chronotype_details'] as Map<String, dynamic>,
-          );
-        } else {
-          chronoModel = null;
-        }
-
-        return Pair(customer, chronoModel);
-      } else {
-        throw Exception(decoded["message"] ?? "Uventet fejl ved hent af profil");
+      // ensure success flag
+      if (decoded['success'] != true) {
+        throw Exception(decoded['message'] ?? "Uventet fejl ved hent af profil");
       }
-    } else if (response.statusCode == 401) {
 
+      // unwrap the “data” envelope
+      final data     = decoded['data'] as Map<String, dynamic>;
+
+      // parse customer
+      final customer = Customer.fromJson(data);
+
+      // parse optional chronotype_details
+      ChronotypeModel? chronoModel;
+      final chronoJson = data['chronotype_details'];
+      if (chronoJson != null) {
+        chronoModel = ChronotypeModel.fromJson(
+            chronoJson as Map<String, dynamic>
+        );
+      }
+
+      return Pair(customer, chronoModel);
+    }
+
+    // non‐200
+    if (response.statusCode == 401) {
       throw Exception("Uautoriseret (401) – tjek token");
     } else if (response.statusCode == 404) {
       throw Exception("Endpoint ikke fundet (404) – tjek URL");
     } else {
-      throw Exception("Serverfejl ved hentning af profil: ${response.statusCode}");
+      throw Exception(
+          "Serverfejl ved hentning af profil: ${response.statusCode}"
+      );
     }
   }
 
@@ -467,6 +473,25 @@ class ApiService {
     }
   }
 
+  // GET kliniker profil/rolle
+  static Future<Map<String, dynamic>?> fetchClinicianProfile() async {
+    final token = await AuthStorage.getToken();
+    if (token == null) return null;
+
+    final url = Uri.parse('$_baseUrl/api/clinician/clinicianprofile');
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
 
   //─────────────────────────────────────────────────────────────────────────────
   // 14) Patient‐detaljer & relaterede kald
@@ -1357,6 +1382,29 @@ class ApiService {
     return jsonResp['status'] == 'OK';
   }
 
+  // Overskriv eksisterende svar via PUT /answers
+  // Returnerer den nye `meq_score`
+  Future<int> updateAnswers({
+    required String participantId,
+    required List<Map<String,int>> answers,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/answers');
+    final response = await http.put(
+      uri,
+      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      body: jsonEncode({
+        'participant_id': participantId,
+        'answers':        answers,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Kunne ikke opdatere svar (PUT): ${response.statusCode} ${response.body}'
+      );
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return (data['meq_score'] ?? 0) as int;
+  }
 
   //─────────────────────────────────────────────────────────────────────────────
   // 21) Gør GET/POST‐metoder tilgængelige uden auth ved behov

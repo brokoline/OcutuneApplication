@@ -1,23 +1,19 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../../../../models/light_data_model.dart';
-import '../../../controller/chronotype_controller.dart';
 import '../../../services/processing/dlmo_data_processing.dart';
 
 import 'clinician_recommandation_card.dart';
 import 'light_slide_bar_chart.dart';
 
-
 class LightSummarySection extends StatelessWidget {
   final String patientId;
   final int rmeqScore;
 
-  /// Valgfri MEQ‐score (kun til ScoreCard)
+  // Valgfri MEQ‐score (kun til ScoreCard)
   final int? meqScore;
 
   const LightSummarySection({
@@ -29,10 +25,7 @@ class LightSummarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Hent viewmodel’en
-    final vm = Provider.of<PatientDetailViewModel>(context, listen: true);
-
-    // 1) Hvis vi stadig henter _rawLightData, vis loading
+    final vm = Provider.of<PatientDetailViewModel>(context);
     if (vm.isFetchingRaw && vm.rawLightData.isEmpty) {
       return SizedBox(
         height: 200.h,
@@ -40,7 +33,7 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // 2) Hvis der er fejl under hentning, vis fejltekst
+    // Fejl under hentning
     if (vm.rawFetchError != null) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -54,7 +47,7 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // 3) Hvis vi har hentet, men listen stadig er tom => ingen lysdata endnu
+    // Ingen data registreret
     if (!vm.isFetchingRaw && vm.rawLightData.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -68,50 +61,31 @@ class LightSummarySection extends StatelessWidget {
 
     final List<LightData> allLightData = vm.rawLightData;
 
-    // ────────────────────────────────────────────────────────────────
-    // 4) Generér kliniker-anbefalinger vha. LightDataProcessing
+    // Generér kliniker-anbefalinger
     final List<String> clinicianRecs = LightDataProcessing(rMEQ: rmeqScore)
         .generateAdvancedRecommendations(
       data: allLightData,
       rMEQ: rmeqScore,
     );
 
-    // 5) Generér “almindelige” anbefalinger via ChronotypeManager (ud fra rMEQ‐score)
-    final ChronotypeManager chrono = ChronotypeManager(rmeqScore);
-    final String chronoLabel = chrono.getChronotypeLabel();
-    final Map<String, DateTime> timeMap = chrono.getRecommendedTimes();
-    final DateFormat fmt = DateFormat('HH:mm');
+    return Padding(
+      padding: EdgeInsets.only(top: 8.h, bottom: 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Klinikers anbefalinger
+          ClinicianRecommendationCard(
+            recommendations: clinicianRecs,
+          ),
+          SizedBox(height: 20.h),
 
-    // Aflæs tidspunkter (bang-operator, da vi antager, at nøglerne findes)
-    final DateTime dlmoDt          = timeMap['dlmo']!;
-    final DateTime sleepStartDt    = timeMap['sleep_start']!;
-    final DateTime wakeTimeDt      = timeMap['wake_time']!;
-    final DateTime lightBoostStart = timeMap['lightboost_start']!;
-    final DateTime lightBoostEnd   = timeMap['lightboost_end']!;
-
-    final List<String> recs = [
-      "Kronotype: $chronoLabel",
-      "DLMO (Dim Light Melatonin Onset): ${fmt.format(dlmoDt)}",
-      "Sengetid (DLMO + 2 timer): ${fmt.format(sleepStartDt)}",
-      "Opvågning (DLMO + 10 timer): ${fmt.format(wakeTimeDt)}",
-      "Light‐boost start: ${fmt.format(lightBoostStart)}",
-      "Light‐boost slut: ${fmt.format(lightBoostEnd)}",
-    ];
-    // ────────────────────────────────────────────────────────────────
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClinicianRecommendationCard(
-          recommendations: clinicianRecs,
-        ),
-        //  Én samlet “slide”-graf: Dag / Uge / Måned ───────────────
-        LightSlideBarChart(
-          patientId: patientId,
-          rmeqScore: rmeqScore,
-        ),
-        SizedBox(height: 24.h),
-      ],
+          // Graf: dag/uge/måned
+          LightSlideBarChart(
+            patientId: patientId,
+            rmeqScore: rmeqScore,
+          ),
+        ],
+      ),
     );
   }
 }

@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
-/// A detailed chronotype information screen with expanded sections,
-/// including chronotype profiles, genetic basis, assessment tools,
-/// health implications, light spectrum effects, and intervention tips.
 class CustomerChronotypeInfoScreen extends StatelessWidget {
   const CustomerChronotypeInfoScreen({super.key});
 
@@ -54,10 +51,10 @@ At logge lys kan hjælpe med at se, om din døgnrytme stemmer overens med din ru
       content: '''
 Forskellige bølgelængder påvirker kroppen forskelligt:
 
- • Blåt Lys (~460–490 nm): Maks. melanopsin-sensitivitet, undertrykker melatonin.
- • Grønligt Lys (~500–550 nm): Moderat effekt, lettere at tolerere.
- • Rødt Lys (~620–700 nm): Minimal påvirkning af SCN, fremmer afslapning.
- • Infrarødt (>700 nm): Ingen effekt på circadian system, bruges i terapi.
+ • Blåt Lys (~460–490 nm): Maks. melanopsin-sensitivitet, undertrykker melatonin.
+ • Grønligt Lys (~500–550 nm): Moderat effekt, lettere at tolerere.
+ • Rødt Lys (~620–700 nm): Minimal påvirkning af SCN, fremmer afslapning.
+ • Infrarødt (>700 nm): Ingen effekt på circadian system, bruges i terapi.
 
 Brug varmt rødt/orange aftenslys for at fremme DLMO og forbedre søvn.''',
     ),
@@ -71,7 +68,7 @@ Specialiserede ganglieceller i nethinden med melanopsin:
  • Døgnrytme-justering ved blåt lys.
 
 Melatonin:
- • Begynder at stige ved DLMO under svag belysning (≤10 lux).
+ • Begynder at stige ved DLMO under svag belysning (≤10 lux).
  • Top midt på natten, falder mod morgenen.
  • Tidspunkt for DLMO indikerer din søvntid.''',
     ),
@@ -81,29 +78,26 @@ Melatonin:
       content: '''
 DLMO er klinisk mål for melatonin-onset:
 
- • Mål i spyt- eller blodprøver under ≤10 lux.
- • Normaliseret DLMO: 20–22 t om aftenen.
+ • Mål i spyt- eller blodprøver under ≤10 lux.
+ • Normaliseret DLMO: 20–22 t om aftenen.
  • Tidlig DLMO: Morgenmenneske; Sen DLMO: Aftenmenneske.
 
 Sammenlign med lyslog for at vurdere interventionstiming.''',
     ),
     _SectionData(
       icon: Icons.quiz,
-      title: 'MEQ & MCTQ Tests',
+      title: 'MEQ Test',
       content: '''
 Værktøjer til kronotypevurdering:
 
+ • Reduced-Morningness–Eveningness Questionnaire (RMEQ, 5 spørgsmål)
+ • Morningness–Eveningness Questionnaire (MEQ, 19 spørgsmål)
+ • Scoreinddeling: Ekstrem morgenvendt, moderat, neutral, moderat aftenvendt, ekstrem aftenvendt
 
- • Reduced-Morningness–Eveningness Questionnaire (RMEQ, 5 spørgsmål, testen blev lavet ved brugeroprettelse)
- • Morningness–Eveningness Questionnaire (MEQ, 19 spørgsmål).
- • Munich Chronotype Questionnaire (MCTQ): Fokus på søvn-/vågetider i hverdag/ferie.
- • Scoreinddeling: Ekstrem morgenvendt, moderat, neutral, moderat aftenvendt, ekstrem aftenvendt.
-
-Resultater bruges til at designe personlige lys- og søvninterventioner.''',
+Resultater bruges til at designe mere personlige lys- og søvninterventioner.''',
       actionLabel: 'Start MEQ test',
       onActionTap: (ctx) => Navigator.pushNamed(ctx, '/meq_survey'),
     ),
-
     _SectionData(
       icon: Icons.health_and_safety,
       title: 'Sundhedsimplikationer',
@@ -128,7 +122,7 @@ Tilpas arbejds- og søvnplan efter din kronotype for optimal trivsel.''',
 Udforsk gerne forskningen og dyk dybere ned i din døgnrytme.''',
       actionLabel: 'Læs Mere',
       onActionTap: (ctx) {
-        // TODO: Implementer link eller oversigt over artikler
+        // TODO: Implementer link
       },
     ),
   ];
@@ -152,9 +146,7 @@ Udforsk gerne forskningen og dyk dybere ned i din døgnrytme.''',
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerColor: Colors.transparent,
-                ),
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
                   tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   leading: Icon(sec.icon, color: Colors.white70, size: 24.r),
@@ -181,7 +173,9 @@ Udforsk gerne forskningen og dyk dybere ned i din døgnrytme.''',
                         padding: EdgeInsets.only(top: 12.h),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white12,
+                            backgroundColor: generalBoxHover,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8.r),
                             ),
@@ -192,7 +186,7 @@ Udforsk gerne forskningen og dyk dybere ned i din døgnrytme.''',
                             sec.actionLabel!,
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: Colors.white70,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

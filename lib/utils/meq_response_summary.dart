@@ -1,5 +1,3 @@
-// lib/models/meq_response_summary.dart
-
 import '../services/services/customer_data_service.dart';
 
 class MeqResponseSummary {
@@ -11,7 +9,6 @@ class MeqResponseSummary {
     required this.meq,
   });
 
-  // Henter global state direkte
   factory MeqResponseSummary.fromGlobal() {
     final resp = currentCustomerResponse;
     return MeqResponseSummary(
@@ -20,6 +17,5 @@ class MeqResponseSummary {
     );
   }
 
-  // Returnerer MEQ som tekst, eller tom streng
   String get meqDisplay => meq?.toString() ?? '';
 }

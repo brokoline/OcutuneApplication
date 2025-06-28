@@ -1,5 +1,3 @@
-// lib/screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
@@ -48,7 +46,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Gem login‐info (id, rolle, token, sim_userid)
         await auth.AuthStorage.saveLogin(
           id:         data['id'],
           role:       data['role'],
@@ -56,7 +53,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
           simUserId:  data['sim_userid'],
         );
 
-        // Gem profil‐navn
         if (data['role'] == 'clinician') {
           await auth.AuthStorage.saveClinicianProfile(
             firstName: data['first_name'],
@@ -71,7 +67,6 @@ class _SimulatedLoginScreenState extends State<SimulatedLoginScreen> {
 
         if (!mounted) return;
 
-        // Navigér baseret på rolle
         if (data['role'] == 'patient') {
           Navigator.pushReplacementNamed(
             context,

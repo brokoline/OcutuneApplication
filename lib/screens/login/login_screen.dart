@@ -1,5 +1,3 @@
-// lib/screens/login/login_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -104,7 +102,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Login‐kort
               Expanded(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -116,7 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Logo
                             Image.asset(
                               'assets/logo/logo_ocutune.png',
                               width: 100.w,
@@ -124,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             SizedBox(height: 32.h),
 
-                            // E‐mail‐felt
                             OcutuneTextField(
                               label:      'E‐mail',
                               controller: _emailController,
@@ -132,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             SizedBox(height: 16.h),
 
-                            // Adgangskode‐felt
                             OcutuneTextField(
                               label:      'Adgangskode',
                               isPassword: true,
@@ -150,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             SizedBox(height: 16.h),
 
-                            // Glemt adgangskode
+
                             TextButton(
                               onPressed: () => _showForgotDialog(context),
                               child: Text(
@@ -162,7 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
 
-                            // Opret bruger
                             TextButton(
                               onPressed: () => Navigator.pushNamed(context, '/register'),
                               child: Text(
@@ -182,7 +175,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Footer: version
               Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
                 child: Center(

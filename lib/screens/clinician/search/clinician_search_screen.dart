@@ -60,11 +60,10 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
               ),
               SizedBox(height: 24.h),
 
-              // Søgning
               Consumer<ClinicianSearchController>(
                 builder: (context, controller, _) {
                   return OcutuneTextField(
-                    label: 'Søg...',
+                    label: 'Indtast for/efternavn eller CPR',
                     controller: _searchController,
                     textColor: Colors.black,
                     onChanged: controller.searchPatients,
@@ -73,7 +72,6 @@ class _ClinicianSearchScreenState extends State<ClinicianSearchScreen> {
               ),
               SizedBox(height: 16.h),
 
-              // Resultatliste
               Expanded(
                 child: ClinicianPatientSearch(controller: _searchController),
               ),

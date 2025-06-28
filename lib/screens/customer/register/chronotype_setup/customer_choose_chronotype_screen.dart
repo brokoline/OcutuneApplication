@@ -1,5 +1,3 @@
-// lib/screens/choose_chronotype_screen.dart
-
 import 'package:flutter/material.dart';
 import '../../../../widgets/customer_widgets/customer_app_bar.dart';
 import '/theme/colors.dart';

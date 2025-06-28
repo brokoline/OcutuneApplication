@@ -24,7 +24,7 @@ class ClinicianSearchController with ChangeNotifier {
     try {
       final response = await ApiService.getClinicianPatients();
       _allPatients = response.map((p) => Patient.fromJson(p)).toList();
-      _filteredPatients = []; // tom som udgangspunkt
+      _filteredPatients = [];
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -37,7 +37,6 @@ class ClinicianSearchController with ChangeNotifier {
 
   Future<void> searchPatients(String query) async {
     _currentQuery = query;
-    print('🔍 Backend-søgning: "$query"');
     _isLoading = true;
     notifyListeners();
 
@@ -45,10 +44,8 @@ class ClinicianSearchController with ChangeNotifier {
       final response = await ApiService.searchPatients(query);
       _filteredPatients = response.map((p) => Patient.fromJson(p)).toList();
       _error = null;
-      print('✅ Resultater: ${_filteredPatients.length}');
     } catch (e) {
       _error = e.toString();
-      print('❌ Fejl i søgning: $_error');
       _filteredPatients = [];
     }
 

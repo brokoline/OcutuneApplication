@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Én logo ad gangen, auto-scroll,
-/// filter på Belid & Good Light, DTU mindre, resten original
 class SimpleLogoCarousel extends StatefulWidget {
   final List<String> logos;
   const SimpleLogoCarousel({super.key, required this.logos});
@@ -18,15 +16,13 @@ class _SimpleLogoCarouselState extends State<SimpleLogoCarousel> {
   late final Timer _timer;
   int _current = 0;
 
-  /// Hvidtone-filter kun på disse filnavne:
   final Set<String> _filterFiles = {
     'partner_belid_lighting_group.png',
     'partner_good_light_group.png',
   };
 
-  /// Størrelses-overrides pr. filnavn (multiplikator af 80% bredde)
   final Map<String, double> _sizeOverrides = {
-    'partner_dtu.png': 0.4, // DTU 40% bredde
+    'partner_dtu.png': 0.4,
   };
 
   @override
@@ -60,9 +56,7 @@ class _SimpleLogoCarouselState extends State<SimpleLogoCarousel> {
       itemBuilder: (_, i) {
         final path = widget.logos[i];
         final filename = path.split('/').last;
-        // Standard 80% bredde
         final baseWidth = 0.8.sw;
-        // Brug override hvis opsat
         final multiplier = _sizeOverrides[filename] ?? 1.0;
         final width = baseWidth * multiplier;
 
@@ -72,7 +66,6 @@ class _SimpleLogoCarouselState extends State<SimpleLogoCarousel> {
           fit: BoxFit.contain,
         );
 
-        // Hvis dette logo skal hvidtones, pak ind i ColorFiltered
         if (_filterFiles.contains(filename)) {
           return Center(
             child: ColorFiltered(

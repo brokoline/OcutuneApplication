@@ -150,7 +150,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
             backDrawRodData: BackgroundBarChartRodData(
               show: true,
               toY: 100,
-              color: const Color(0xFF4A4A4A), // Mørkere grå baggrund
+              color: const Color(0xFF4A4A4A),
             ),
           ),
         ],
@@ -174,7 +174,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
         SizedBox(
           height: 180.h,
           child: Padding(
-            padding: EdgeInsets.only(right: 20.w), // <-- Ekstra højre-padding
+            padding: EdgeInsets.only(right: 20.w),
             child: BarChart(
               BarChartData(
                 minY: 0,
@@ -210,7 +210,7 @@ class _LightDailyBarChartState extends State<LightDailyBarChart> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       interval: 1,
-                      reservedSize: 40, // <-- større reservedSize
+                      reservedSize: 40,
                       getTitlesWidget: (value, meta) {
                         final idx = value.toInt();
                         if (idx % 4 == 0) {

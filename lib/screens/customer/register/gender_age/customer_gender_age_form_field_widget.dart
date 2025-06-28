@@ -24,7 +24,6 @@ class CustomerGenderAgeForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Skal matche rowHeight i dropdown-widgetten:
     final double rowHeight = 48.h;
     final double dividerH  = 1.h;
 
@@ -40,9 +39,8 @@ class CustomerGenderAgeForm extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        SizedBox(height: 12.h),  // lidt mindre top‐mellemrum
+        SizedBox(height: 12.h),
 
-        /// Årstal-dropdown med præcis 3 synlige linjer:
         OcutuneDropdown<String>(
           value: selectedYear,
           hintText: yearChosen ? null : 'Vælg fødselsår',
@@ -69,7 +67,6 @@ class CustomerGenderAgeForm extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
 
-        /// Køn-dropdown − højde tilpasses antal entries:
         OcutuneDropdown<String>(
           value: selectedGender,
           hintText: 'Vælg køn',

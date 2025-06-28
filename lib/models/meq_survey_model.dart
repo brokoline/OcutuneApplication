@@ -11,7 +11,6 @@ class MeqChoice {
     required this.score,
   });
 
-  // Gør JSON (“choice_text”, “score”) om til et MeqChoice-objekt
   factory MeqChoice.fromJson(Map<String, dynamic> json) {
     return MeqChoice(
       id: json['id'] as int,
@@ -20,7 +19,6 @@ class MeqChoice {
     );
   }
 
-  // Hvis du nogensinde skal poste eller gemme et choice-objekt som JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -41,7 +39,6 @@ class MeqQuestion {
     required this.choices,
   });
 
-  /// Gør JSON (“question_text” + indlejrede “choices”) om til et MeqQuestion-objekt
   factory MeqQuestion.fromJson(Map<String, dynamic> json) {
     final raw = json['choices'] as List<dynamic>;
     return MeqQuestion(
@@ -53,7 +50,6 @@ class MeqQuestion {
     );
   }
 
-  // Hvis du vil sende spørgsmålet ud som JSON (fx til en lokal DB)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -63,7 +59,6 @@ class MeqQuestion {
   }
 }
 
-// Hvis du også vil hente/spotte tidligere svar, kan du lave en MeqAnswer-model:
 class MeqAnswer {
   final int id;
   final int participantId;

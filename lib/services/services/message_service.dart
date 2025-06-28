@@ -19,8 +19,8 @@ class MessageService {
         },
       );
 
-      debugPrint('📨 GET /messages/inbox – Status: ${response.statusCode}');
-      debugPrint('📦 Body: ${response.body}');
+      debugPrint('GET /messages/inbox – Status: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -68,8 +68,6 @@ class MessageService {
       'subject': trimmedSubject,
       if (replyTo != null) 'reply_to': replyTo,
     };
-
-    print('📤 Sender besked med payload: $payload');
 
     final response = await ApiService.post('/messages/send', payload);
     ApiService.handleVoidResponse(response, successCode: 200);

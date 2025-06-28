@@ -34,7 +34,7 @@ class BatteryPollingService {
   }
 
 
-  /// Læs batteri-char, gem lokalt og send til backend (eller gem offline hvis fejler)
+  // Læs batteri-char, gem lokalt og send til backend (eller gem offline hvis fejler)
   Future<void> _readAndProcess() async {
     try {
       final char = QualifiedCharacteristic(

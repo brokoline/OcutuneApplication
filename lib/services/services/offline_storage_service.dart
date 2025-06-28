@@ -6,7 +6,6 @@ import 'package:path/path.dart';
 class OfflineStorageService {
   static Database? _db;
 
-  // Initialize the local SQLite database
   static Future<void> init() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'ocutune_offline.db');
@@ -52,27 +51,23 @@ class OfflineStorageService {
     );
   }
 
-  // Save a data payload locally in the unsynced queue
   static Future<void> saveLocally({
     required String type,
     required Map<String, dynamic> data,
   }) async {
     if (_db == null) return;
 
-    // ─── Light-specific validations ────────────────────────────────────────
     if (type == 'light') {
       final patientId = data['patient_id'];
       final sensorId  = data['sensor_id'];
 
-      debugPrint("💡 Kontrollér patientId/sensorId i saveLocally: $patientId / $sensorId");
+      debugPrint("Kontrollér patientId/sensorId i saveLocally: $patientId / $sensorId");
 
       if (patientId == null || sensorId == null || patientId == -1 || sensorId == -1) {
-        debugPrint("⚠️ Afvist: Ugyldig patientId/sensorId: $patientId/$sensorId");
+        debugPrint("Afvist: Ugyldig patientId/sensorId: $patientId/$sensorId");
         return;
       }
 
-
-      // Ensure proper types and default missing fields
       data['light_type']     = data['light_type']      ?? 'Unknown';
       data['action_required']= data['action_required'] ?? 0;
       data['timestamp']      = data['timestamp']       ?? DateTime.now().toIso8601String();
@@ -82,7 +77,6 @@ class OfflineStorageService {
       data['melanopic_edi']  = data['melanopic_edi']  ?? 0.0;
       data['illuminance']    = data['illuminance']    ?? 0.0;
 
-      // Duplicate check based on timestamp
       final timestamp = data['timestamp'];
       final jsonLike  = '%"timestamp":"$timestamp"%';
       final existing = await _db!.query(
@@ -95,7 +89,7 @@ class OfflineStorageService {
         return decoded['patient_id'] == patientId && decoded['sensor_id'] == sensorId;
       });
       if (alreadyExists) {
-        debugPrint("⚠️ Dublet fundet - data ikke gemt for timestamp $timestamp");
+        debugPrint("Dublet fundet - data ikke gemt for timestamp $timestamp");
         return;
       }
     }
@@ -125,7 +119,6 @@ class OfflineStorageService {
     );
   }
 
-  /// Update an existing log entry
   static Future<void> updateLogEntry(
       String startedAt,
       Map<String, dynamic> updates,
@@ -143,15 +136,14 @@ class OfflineStorageService {
       );
 
       if (count == 0) {
-        debugPrint('⚠️ No rows updated for started_at: $startedAt');
+        debugPrint('No rows updated for started_at: $startedAt');
       }
     } catch (e) {
-      debugPrint('⚠️ Failed to update log entry: $e');
+      debugPrint('Failed to update log entry: $e');
       rethrow;
     }
   }
 
-  // Delete invalid light entries
   static Future<void> deleteInvalidLightData() async {
     if (_db == null) return;
     await _db!.delete(
@@ -171,7 +163,6 @@ class OfflineStorageService {
     );
   }
 
-  /// Purge any rows with corrupt JSON or missing required fields
   static Future<void> purgeInvalidUnsyncedData() async {
     if (_db == null) return;
 
@@ -198,11 +189,11 @@ class OfflineStorageService {
         );
         if (missingOrNull) {
           await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
-          debugPrint('🗑️ Fjernet ugyldig unsynced_data id=$id');
+          debugPrint('Fjernet ugyldig unsynced_data id=$id');
         }
       } catch (e) {
         await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
-        debugPrint('🗑️ Fjernet corrupt JSON id=$id: $e');
+        debugPrint('Fjernet corrupt JSON id=$id: $e');
       }
     }
   }
@@ -218,19 +209,16 @@ class OfflineStorageService {
     );
   }
 
-  /// Fetch all unsynced entries in order
   static Future<List<Map<String, dynamic>>> getUnsyncedData() async {
     if (_db == null) return [];
     return await _db!.query('unsynced_data', orderBy: 'created_at ASC');
   }
 
-  /// Delete a single entry by its ID
   static Future<void> deleteById(int id) async {
     if (_db == null) return;
     await _db!.delete('unsynced_data', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Stream unsynced records of a specific type for a patient
   static Stream<Map<String, dynamic>> streamRecords({
     required String type,
     required int patientId,
@@ -254,7 +242,6 @@ class OfflineStorageService {
     }
   }
 
-  /// Close database connection
   static Future<void> close() async {
     if (_db != null) {
       await _db!.close();

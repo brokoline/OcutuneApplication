@@ -7,6 +7,7 @@ import 'package:ocutune_light_logger/theme/colors.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_selectable_tile.dart';
 import 'package:ocutune_light_logger/widgets/universal/ocutune_next_step_button.dart';
 import '../../../services/auth_storage.dart';
+import '../customer_root_controller.dart';
 import 'meq_question_controller.dart';
 
 class CustomerMeqQuestionsScreen extends StatefulWidget {
@@ -25,8 +26,8 @@ class _CustomerMeqQuestionsScreenState
   void initState() {
     super.initState();
     final ctrl = context.read<MeqQuestionController>();
-    ctrl.reset();          // **Ryd alle gamle spørgsmål og svar**
-    ctrl.fetchQuestions(); // Hent dem fra serveren igen
+    ctrl.reset();
+    ctrl.fetchQuestions();
   }
 
   void _showError(String message) {
@@ -59,8 +60,7 @@ class _CustomerMeqQuestionsScreenState
       return;
     }
 
-    final qid = ctrl.currentQuestion.id;
-    ctrl.recordAnswer(qid, _selectedChoiceId!);
+    ctrl.recordAnswer(ctrl.currentQuestion.id, _selectedChoiceId!);
 
     if (ctrl.isLastQuestion) {
       final cid = await AuthStorage.getCustomerId();
@@ -68,8 +68,13 @@ class _CustomerMeqQuestionsScreenState
         _showError("Kunne ikke finde customerId i lokal storage");
         return;
       }
+
       try {
-        await ctrl.submitAnswers(cid.toString());
+        // Tjek om vi skal oprette MEQ eller opdatere
+        final hasTaken = context.read<CustomerRootController>().profile?.meqScore != null;
+        await ctrl.submitAnswers(cid, isUpdate: hasTaken);
+        await context.read<CustomerRootController>().fetchProfile();
+
         Navigator.of(context).pushReplacementNamed('/meqResult');
       } catch (e) {
         _showError("Kunne ikke gemme svar: $e");
@@ -79,6 +84,7 @@ class _CustomerMeqQuestionsScreenState
       setState(() => _selectedChoiceId = null);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +113,9 @@ class _CustomerMeqQuestionsScreenState
               preferredSize: Size.fromHeight(100.h),
               child: AppBar(
                 automaticallyImplyLeading: false,
-                backgroundColor: generalBackground,
+                backgroundColor: Colors.transparent,
+                surfaceTintColor: Colors.transparent,
+                scrolledUnderElevation: 0,
                 elevation: 0,
                 centerTitle: true,
                 toolbarHeight: 100.h,

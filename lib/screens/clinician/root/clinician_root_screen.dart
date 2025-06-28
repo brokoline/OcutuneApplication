@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:ocutune_light_logger/theme/colors.dart';
+import '../../../theme/colors.dart';
 import '../../../services/auth_storage.dart';
-import '../profile/clinician_profile_screen.dart';
-import '../search/clinician_search_controller.dart';
-import 'clinician_root_controller.dart';
 import '../../../widgets/clinician_widgets/clinician_nav_bar.dart';
 import '../../../widgets/clinician_widgets/clinician_app_bar.dart';
-import '../search/clinician_search_screen.dart';
 import '../messages/clinician_inbox_screen.dart';
+import '../profile/clinician_profile_screen.dart';
+import '../search/clinician_search_screen.dart';
+import 'clinician_root_controller.dart';
 
 class ClinicianRootScreen extends StatefulWidget {
   const ClinicianRootScreen({super.key});
@@ -23,56 +21,38 @@ class ClinicianRootScreen extends StatefulWidget {
 class _ClinicianRootScreenState extends State<ClinicianRootScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const _ClinicianDashboardContent(),
-    ChangeNotifierProvider(
-      create: (_) => ClinicianSearchController()..fetchPatients(),
-      child: const ClinicianSearchScreen(),
-    ),
-    const ClinicianInboxScreen(),
-    const ClinicianProfileScreen(),
+  static const _screens = <Widget>[
+    _ClinicianDashboardContent(),
+    ClinicianSearchScreen(),
+    ClinicianInboxScreen(),
+    ClinicianProfileScreen(),
   ];
-
 
   @override
   void initState() {
     super.initState();
-    _checkToken();
-    _initializeController();
+    _ensureLoggedIn();
   }
 
-  void _initializeController() {
-    final controller = Provider.of<ClinicianDashboardController>(context, listen: false);
-    controller.loadInitialData();
-  }
-
-  void _checkToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
+  Future<void> _ensureLoggedIn() async {
+    final token = await AuthStorage.getToken();
     if (token == null && mounted) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-      });
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
     }
-  }
-
-  void logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: generalBackground,
-      appBar: ClinicianAppBar(
-      ),
-      body: _screens[_currentIndex],
-      bottomNavigationBar: ClinicianNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+    return ChangeNotifierProvider<ClinicianRootController>(
+      create: (_) => ClinicianRootController(),
+      child: Scaffold(
+        backgroundColor: generalBackground,
+        appBar: const ClinicianAppBar(),
+        body: _screens[_currentIndex],
+        bottomNavigationBar: ClinicianNavBar(
+          currentIndex: _currentIndex,
+          onTap: (i) => setState(() => _currentIndex = i),
+        ),
       ),
     );
   }
@@ -83,58 +63,60 @@ class _ClinicianDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FutureBuilder<String>(
-              future: AuthStorage.getClinicianName(),
-              builder: (context, snapshot) {
-                return Text(
-                  snapshot.hasData ? 'Velkommen ${snapshot.data!}' : 'Kliniker Dashboard',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        child: Consumer<ClinicianRootController>(
+          builder: (ctx, ctrl, _) {
+            if (ctrl.loading) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white70),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ctrl.welcomeText,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(
                     color: Colors.white70,
                     fontWeight: FontWeight.w600,
                   ),
-                );
-              },
-            ),
-            SizedBox(height: 24.h),
-
-
-            Text(
-              'Notifikationer',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white70,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(height: 12.h),
-
-            Expanded(
-              child: Consumer<ClinicianDashboardController>(
-                builder: (context, controller, child) {
-                  if (controller.notifications.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'Ingen nye notifikationer',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16.sp,
-                        ),
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  'Notifikationer',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Expanded(
+                  child: ctrl.notifications.isEmpty
+                      ? Center(
+                    child: Text(
+                      'Ingen nye notifikationer',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16.sp,
                       ),
-                    );
-                  }
-                  return RefreshIndicator(
-                    onRefresh: () => controller.refreshNotifications(),
+                    ),
+                  )
+                      : RefreshIndicator(
+                    onRefresh: ctrl.refreshNotifications,
                     child: ListView.separated(
-                      itemCount: controller.notifications.length,
-                      separatorBuilder: (context, index) => SizedBox(height: 8.h),
-                      itemBuilder: (context, index) {
+                      itemCount: ctrl.notifications.length,
+                      separatorBuilder: (_, __) =>
+                          SizedBox(height: 8.h),
+                      itemBuilder: (context, idx) {
                         return Container(
                           decoration: BoxDecoration(
                             color: generalBox,
@@ -147,7 +129,7 @@ class _ClinicianDashboardContent extends StatelessWidget {
                               vertical: 8.h,
                             ),
                             title: Text(
-                              controller.notifications[index],
+                              ctrl.notifications[idx],
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 14.sp,
@@ -158,16 +140,16 @@ class _ClinicianDashboardContent extends StatelessWidget {
                               size: 16.sp,
                               color: Colors.white70,
                             ),
-                            onTap: () => controller.handleNotificationTap(index),
+                            onTap: () => ctrl.handleNotificationTap(idx),
                           ),
                         );
                       },
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

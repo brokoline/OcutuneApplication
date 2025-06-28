@@ -1,14 +1,11 @@
 import 'dart:io';
 
-
-// Prøver ISO-8601 først, så RFC1123.
 DateTime? _parseAny(String? s) {
   if (s == null) return null;
   // ISO-8601
   final dt = DateTime.tryParse(s);
   if (dt != null) return dt;
   try {
-    // RFC1123 fallback
     return HttpDate.parse(s).toLocal();
   } catch (_) {
     return null;

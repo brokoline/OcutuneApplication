@@ -1,4 +1,5 @@
-import 'dart:io'; // For HttpDate.parse
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
@@ -200,40 +201,86 @@ class PatientActivityController extends ChangeNotifier {
     );
   }
 
-  Future<TimeOfDay?> showStyledTimePicker(BuildContext ctx, String helpText) {
-    return showTimePicker(
-      context    : ctx,
-      helpText   : helpText,
-      initialTime: TimeOfDay.now(),
-      builder    : (_, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor     : generalBox,
-            hourMinuteTextColor : Colors.white70,
-            dialHandColor       : Colors.white70,
-            dayPeriodTextColor  : Colors.white70,
-            helpTextStyle       : const TextStyle(color: Colors.white70),
-          ),
-          colorScheme: ColorScheme.dark(
-            primary  : Colors.white70,
-            onPrimary: Colors.black,
-            surface  : generalBox,
-            onSurface: Colors.white70,
-          ),
-        ),
-        child: child!,
-      ),
+  Future<TimeOfDay?> showCustomTimePicker(BuildContext context, String title, String confirmText) async {
+    TimeOfDay? selectedTime;
+    final now = TimeOfDay.now();
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: generalBox,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: 280,
+              color: generalBox,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      title,
+                      style: const TextStyle(color: Colors.white70, fontSize: 18),
+                    ),
+                  ),
+                  Expanded(
+                    child: DefaultTextStyle(
+                      style: const TextStyle(color: Colors.white70, fontSize: 16),
+                      child: CupertinoTimerPicker(
+                        mode: CupertinoTimerPickerMode.hm,
+                        initialTimerDuration: Duration(hours: now.hour, minutes: now.minute),
+                        minuteInterval: 1,
+                        onTimerDurationChanged: (Duration duration) {
+                          setState(() {
+                            selectedTime = TimeOfDay(
+                              hour: duration.inHours % 24,
+                              minute: duration.inMinutes % 60,
+                            );
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          child: const Text('Annuller', style: TextStyle(color: Colors.white70)),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        TextButton(
+                          child: Text(confirmText, style: const TextStyle(color: Colors.white70)),
+                          onPressed: () {
+                            Navigator.pop(context, selectedTime ?? now);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
+    return selectedTime ?? now;
   }
 
   Future<void> openConfirmDialog(BuildContext ctx) async {
-    final now   = DateTime.now();
-    final start = await showStyledTimePicker(ctx, 'Starttidspunkt');
+    final now = DateTime.now();
+
+    final start = await showCustomTimePicker(ctx, 'Starttidspunkt', 'OK');
     if (start == null) return;
-    final end = await showStyledTimePicker(ctx, 'Sluttidspunkt');
+
+    final end = await showCustomTimePicker(ctx, 'Slut tidspunkt', 'Gem');
     if (end == null) return;
+
     final startDt = DateTime(now.year, now.month, now.day, start.hour, start.minute);
-    final endDt   = DateTime(now.year, now.month, now.day, end.hour, end.minute);
+    final endDt = DateTime(now.year, now.month, now.day, end.hour, end.minute);
+
     await registerActivity(selected!, startDt, endDt, ctx);
   }
 

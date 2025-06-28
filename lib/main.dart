@@ -2,8 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:ocutune_light_logger/screens/clinician/search/clinician_search_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/dashboard/activity/customer_activity_screen.dart';
+import 'package:ocutune_light_logger/screens/customer/dashboard/customer_settings_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_question_controller.dart';
 import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_question_screen.dart';
 import 'package:ocutune_light_logger/screens/customer/meq_survey/meq_result_screen.dart';
@@ -73,7 +75,8 @@ class OcutuneApp extends StatelessWidget {
         providers: [
           ChangeNotifierProvider(create: (_) => LoginController()),
           ChangeNotifierProvider(create: (_) => ChooseAccessController()),
-          ChangeNotifierProvider(create: (_) => ClinicianDashboardController()),
+          ChangeNotifierProvider(create: (_) => ClinicianRootController()),
+          ChangeNotifierProvider(create: (_) => ClinicianSearchController()),
           ChangeNotifierProvider(create: (_) => SimulatedLoginController()),
           ChangeNotifierProvider<DataProcessingManager>(
             create: (_) => DataProcessingManager(),
@@ -83,9 +86,8 @@ class OcutuneApp extends StatelessWidget {
           ),
           ChangeNotifierProvider(create: (_) => QuestionController()),
           ChangeNotifierProvider(create: (_) => MeqQuestionController()),
-          // Du kan tilføje CustomerRootController her, hvis du vil
           ChangeNotifierProvider(create: (_) => CustomerActivityController()),
-          // ChangeNotifierProvider(create: (_) => CustomerRootController()),
+          ChangeNotifierProvider(create: (_) => CustomerRootController()),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -161,6 +163,7 @@ class OcutuneApp extends StatelessWidget {
               child: const CustomerRootScreen(),
             ),
             '/customer/activities': (context) => const CustomerActivityScreen(),
+            '/customer/settings': (_) => const CustomerSettingsScreen(),
           },
         ),
       ),

@@ -21,7 +21,7 @@ class ClinicianProfileScreen extends StatelessWidget {
                 builder: (context, snapshot) {
                   return Center(
                     child: Text(
-                      'Din profil',
+                      'Klinikadministration',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.white70,
                         fontWeight: FontWeight.w600,
@@ -32,7 +32,6 @@ class ClinicianProfileScreen extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
 
-              // Første card - Klinikoplysninger
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -63,7 +62,6 @@ class ClinicianProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // Andet card - Patienttilknytning
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -94,10 +92,8 @@ class ClinicianProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // Spacer for at skubbe indholdet op
               const Spacer(),
 
-              // Log ud knap
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: GestureDetector(
@@ -129,11 +125,13 @@ class ClinicianProfileScreen extends StatelessWidget {
               // Version
               Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
-                child: Text(
-                  'Version 1.0.0',
-                  style: TextStyle(
+                child: Center(
+                  child: Text(
+                    'Version 1.0.0',
+                    style: TextStyle(
                       color: Colors.white54,
-                      fontSize: 13.sp
+                      fontSize: 13.sp,
+                    ),
                   ),
                 ),
               ),

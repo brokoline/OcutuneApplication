@@ -80,7 +80,7 @@ class _LearnAboutChronotypesScreenState
                   ),
                   SizedBox(height: 24.h),
                   Icon(Icons.info_outline,
-                      size: 36.w, // ikon kan være .w
+                      size: 36.w,
                       color: Colors.white60),
                   SizedBox(height: 16.h),
                   Text(

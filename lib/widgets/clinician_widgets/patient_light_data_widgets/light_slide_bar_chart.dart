@@ -7,15 +7,15 @@ import 'light_daily_bar_chart.dart';
 import 'light_weekly_bar_chart.dart';
 import 'light_monthly_bar_chart.dart';
 
-/// En “slide-widget” (PageView) med tre sider:
-///   1) Daglig lys-bar-graf   (henter selv via API: kræver patientId + rmeqScore)
-///   2) Ugentlig lys-bar-graf (henter selv via API: kræver kun patientId)
-///   3) Månedlig lys-bar-graf  (henter selv via API: kræver patientId + rmeqScore)
+// En “slide-widget” (PageView) med tre sider:
+//   1) Daglig lys-bar-graf   (henter selv via API: kræver patientId + rmeqScore)
+//   2) Ugentlig lys-bar-graf (henter selv via API: kræver kun patientId)
+//   3) Månedlig lys-bar-graf  (henter selv via API: kræver patientId + rmeqScore)
 class LightSlideBarChart extends StatefulWidget {
-  /// Patient-ID, som sendes videre til alle tre grafer.
+  // Patient-ID, som sendes videre til alle tre grafer.
   final String patientId;
 
-  /// rMEQ-score (bruges af daglig og månedlig graf til at beregne boost-vindue).
+  // rMEQ-score (bruges af daglig og månedlig graf til at beregne boost-vindue).
   final int rmeqScore;
 
   const LightSlideBarChart({
@@ -65,13 +65,13 @@ class _LightSlideBarChartState extends State<LightSlideBarChart> {
     return Column(
       children: [
         SizedBox(
-          height: 290.h,
+          height: 270.h,
           child: PageView(
             controller: _pageController,
             children: pages,
           ),
         ),
-        SizedBox(height: 12.h),
+        SizedBox(height: 1.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(

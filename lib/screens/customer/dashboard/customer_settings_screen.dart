@@ -1,5 +1,3 @@
-// lib/screens/customer/dashboard/customer_settings_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
@@ -39,7 +37,6 @@ class CustomerSettingsScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12.r)),
                       child: Column(
                         children: [
-                          // Profil
                           ListTile(
                             leading: Icon(Icons.manage_accounts, color: Colors.white70, size: 24.sp),
                             title: Text(
@@ -76,8 +73,6 @@ class CustomerSettingsScreen extends StatelessWidget {
                           const Divider(color: Colors.white24, height: 1),
 
 
-
-                          // Skift adgangskode
                           ListTile(
                             leading: Icon(Icons.lock_outline,
                                 color: Colors.white70, size: 24.sp),
@@ -95,7 +90,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                                 );
                                 return;
                               }
-                              // Genbrug root-controlleren
+
                               final rootCtrl = context.read<CustomerRootController>();
                               Navigator.push(
                                 context,
@@ -110,7 +105,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                             },
                           ),
                           const Divider(color: Colors.white24, height: 1),
-                          // Notifikationer
+
                           ListTile(
                             leading: Icon(Icons.notifications_active,
                                 color: Colors.white70, size: 24.sp),
@@ -133,7 +128,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                             },
                           ),
                           const Divider(color: Colors.white24, height: 1),
-                          // Indrapporter problem
+
                           ListTile(
                             leading: Icon(Icons.report_problem, color: Colors.white70, size: 24.sp),
                             title: Text('Indrapporter problem', style: TextStyle(color: Colors.white70, fontSize: 16.sp)),
@@ -152,7 +147,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                             },
                           ),
                           const Divider(color: Colors.white24, height: 1),
-                          // Om Ocutune
+
                           ListTile(
                             leading: Icon(Icons.list_alt, color: Colors.white70, size: 24.sp),
                             title: Text('Om Ocutune', style: TextStyle(color: Colors.white70, fontSize: 16.sp)),
@@ -203,7 +198,7 @@ class CustomerSettingsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Version
+
               Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
                 child: Text('Version 1.0.0',

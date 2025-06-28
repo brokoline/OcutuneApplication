@@ -11,10 +11,8 @@ import '../../../viewmodel/clinician/patient_detail_viewmodel.dart';
 import '../patient_light_data_widgets/light_recommendations_card.dart';
 import 'clinician_patient_diagnose_card.dart';
 
-
-
 class CombinedPatientInfoCard extends StatelessWidget {
-  final Patient patient;
+  final Patient? patient;
   final List<Diagnosis> diagnoses;
 
   const CombinedPatientInfoCard({
@@ -25,9 +23,31 @@ class CombinedPatientInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<PatientDetailViewModel>(context, listen: true);
+    final viewModel = Provider.of<PatientDetailViewModel>(context, listen: false);
     final int rmeqScore = viewModel.rmeqScore.toInt();
     final List<LightData> lightData = viewModel.rawLightData;
+
+    // Show loading state if patient data isn't available yet
+    if (patient == null) {
+      return Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: generalBox,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Center(
+          child: ElevatedButton(
+            onPressed: viewModel.fetchPatientDetails,
+            child: const Text('Hent patientoplysninger'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -54,39 +74,52 @@ class CombinedPatientInfoCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoRow('Navn', '${patient.firstName} ${patient.lastName}'),
-                  _infoRow('CPR', patient.cpr ?? ''),
-                  if (patient.street?.isNotEmpty ?? false)
-                    _infoRow('Adresse', patient.street!),
-                  if (patient.zipCode != null && patient.city != null)
+                  _infoRow('Navn', '${patient!.firstName} ${patient!.lastName}'),
+                  _infoRow('CPR', patient!.cpr ?? ''),
+                  if (patient!.street?.isNotEmpty ?? false)
+                    _infoRow('Adresse', patient!.street!),
+                  if (patient!.zipCode != null && patient!.city != null)
                     Padding(
                       padding: EdgeInsets.only(top: 8.h),
                       child: _iconRow(
                         null,
-                        '${patient.zipCode} ${patient.city}',
+                        '${patient!.zipCode} ${patient!.city}',
                         customIcon: Icon(Ionicons.location_outline, size: 20.sp, color: Colors.white70),
                       ),
                     ),
                   SizedBox(height: 16.h),
                   _sectionTitle('Kontaktinformation'),
-                  if (patient.phone?.isNotEmpty ?? false)
-                    _iconRow(Icons.phone, patient.phone!),
-                  if (patient.email?.isNotEmpty ?? false)
+                  if (patient!.phone?.isNotEmpty ?? false)
+                    _iconRow(Icons.phone, patient!.phone!),
+                  if (patient!.email?.isNotEmpty ?? false)
                     Padding(
                       padding: EdgeInsets.only(top: 12.h),
-                      child: _iconRow(Icons.email, patient.email!),
+                      child: _iconRow(Icons.email, patient!.email!),
                     ),
                 ],
               ),
             ),
             LightRecommendationsCard(
-              title: 'Kronotype anbefalinger',
+              title: 'DLMO analyse og anbefalinger',
               rmeqScore: rmeqScore,
               lightData: lightData,
               showChronotype: true,
             ),
-            SizedBox(height: 10.h),
-            DiagnosisCard(diagnoses: diagnoses),
+            SizedBox(height: 1.h),
+            // Show loading state if diagnoses aren't available yet
+            diagnoses.isEmpty
+                ? Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+              child: ElevatedButton(
+                onPressed: viewModel.fetchDiagnoses,
+                child: const Text('Hent diagnoser'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  minimumSize: Size(double.infinity, 48.h),
+                ),
+              ),
+            )
+                : DiagnosisCard(diagnoses: diagnoses),
           ],
         ),
       ),
@@ -95,7 +128,7 @@ class CombinedPatientInfoCard extends StatelessWidget {
 
   Widget _sectionTitle(String title) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.only(bottom: 4.h),
       child: Text(
         title,
         style: TextStyle(
@@ -109,7 +142,7 @@ class CombinedPatientInfoCard extends StatelessWidget {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.only(bottom: 4.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

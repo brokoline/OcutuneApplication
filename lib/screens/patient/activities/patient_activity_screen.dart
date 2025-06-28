@@ -105,7 +105,6 @@ class _PatientActivityView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Opret ny aktivitet
                 TextButton.icon(
                   onPressed: () => ctrl.openNewActivityDialog(context),
                   icon: const Icon(Icons.add, color: Colors.white70),
@@ -113,7 +112,6 @@ class _PatientActivityView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Bekræft registrering
                 if (ctrl.selected != null)
                   OcutuneButton(
                     text: 'Bekræft registrering',
@@ -121,8 +119,6 @@ class _PatientActivityView extends StatelessWidget {
                   ),
 
                 const SizedBox(height: 24),
-
-                // Seneste registreringer
                 if (ctrl.recent.isEmpty)
                   const Center(
                     child: Text(

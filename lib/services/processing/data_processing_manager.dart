@@ -1,9 +1,6 @@
-// lib/services/processing/data_processing_manager.dart
-
 import 'package:flutter/foundation.dart';
 import 'data_processing.dart';
 
-// Resultatmodel til UI m.m.
 class ProcessedLightData {
   final DateTime timestamp;
   final double medi;
@@ -18,10 +15,9 @@ class ProcessedLightData {
   });
 }
 
-// Manageren
 class DataProcessingManager extends ChangeNotifier {
   DataProcessing? _dataProcessing;
-  dynamic _activeProfile; // Kan være Patient eller Customer
+  dynamic _activeProfile;
 
   ProcessedLightData? _latestProcessed;
   ProcessedLightData? get latestProcessed => _latestProcessed;
@@ -32,8 +28,6 @@ class DataProcessingManager extends ChangeNotifier {
   String? _error;
   String? get error => _error;
 
-  // Initialisér med en profil (Patient eller Customer).
-  // Skal kaldes når bruger vælges eller logger ind
   Future<void> setProfile(dynamic profile) async {
     _activeProfile = profile;
     final int rmeq = profile.rmeqScore;
@@ -42,7 +36,6 @@ class DataProcessingManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Geninitialiser DataProcessing hvis man skifter profil
   void disposeModel() {
     _dataProcessing?.close();
     _dataProcessing = null;
@@ -50,7 +43,6 @@ class DataProcessingManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Kør data-processing workflow
   Future<ProcessedLightData?> runProcessData(List<double> inputVector) async {
     if (_dataProcessing == null) {
       _error = "Ingen aktiv profil valgt!";
@@ -74,7 +66,7 @@ class DataProcessingManager extends ChangeNotifier {
       _latestProcessed = output;
       return output;
     } catch (e) {
-      _error = 'Fejl under ML-behandling: $e';
+      _error = 'Fejl under databehandling: $e';
       _latestProcessed = null;
       return null;
     } finally {
@@ -83,7 +75,6 @@ class DataProcessingManager extends ChangeNotifier {
     }
   }
 
-  // Let adgang til aktiv profil (navn og rmeqScore)
   String get activeProfileName =>
       _activeProfile != null ? _activeProfile.fullName : '';
   int? get activeRmeqScore =>

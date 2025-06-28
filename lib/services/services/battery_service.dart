@@ -6,7 +6,7 @@ class BatteryService {
   static DateTime? _lastSent;
   static const Duration _minInterval = Duration(minutes: 5);
 
-  /// Poster batteri til backend. Returnerer true ved succes eller hvis vi throttler.
+  // Poster batteri til backend. Returnerer true ved succes eller hvis vi throttler.
   static Future<bool> sendToBackend({
     required String patientId,
     required String sensorId,

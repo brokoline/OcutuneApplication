@@ -8,7 +8,10 @@ class OcutunePatientDashboardTile extends StatelessWidget {
   final IconData? icon;
   final VoidCallback onPressed;
 
-  // trailing-widget til batteri
+  // optional subtitle under label
+  final Widget? subtitle;
+
+  // trailing-widget til f.eks. chevron
   final Widget? trailingWidget;
 
   const OcutunePatientDashboardTile({
@@ -17,6 +20,7 @@ class OcutunePatientDashboardTile extends StatelessWidget {
     this.iconAsset,
     this.icon,
     required this.onPressed,
+    this.subtitle,
     this.trailingWidget,
   });
 
@@ -69,19 +73,36 @@ class OcutunePatientDashboardTile extends StatelessWidget {
                   leadingIcon,
                   SizedBox(width: 16.w),
 
+                  // Label + optional subtitle
                   Expanded(
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.sp,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (subtitle != null) ...[
+                          SizedBox(height: 4.h),
+                          DefaultTextStyle(
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.white60,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            child: subtitle!,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
 
-                  // Hvis trailing-widget findes, vis den
+                  // trailing-widget
                   if (trailingWidget != null) ...[
                     SizedBox(width: 16.w),
                     trailingWidget!,

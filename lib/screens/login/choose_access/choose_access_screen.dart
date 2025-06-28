@@ -1,5 +1,3 @@
-// lib/screens/login/choose_access_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
@@ -17,7 +15,6 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
   @override
   void initState() {
     super.initState();
-    // ask controller to check login
     context.read<ChooseAccessController>().checkLoginStatus();
   }
 
@@ -25,7 +22,6 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
   Widget build(BuildContext context) {
     final ctrl = context.watch<ChooseAccessController>();
 
-    // react to destination changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       switch (ctrl.destination) {
         case AccessDestination.patientDashboard:
@@ -39,7 +35,6 @@ class _ChooseAccessScreenState extends State<ChooseAccessScreen> {
           Navigator.pushReplacementNamed(context, '/clinician');
           break;
         case AccessDestination.none:
-        // stay on this screen
           break;
       }
     });
