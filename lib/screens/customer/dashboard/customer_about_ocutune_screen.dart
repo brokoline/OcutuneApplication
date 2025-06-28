@@ -1,4 +1,3 @@
-// lib/screens/customer/dashboard/customer_about_ocutune_screen.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -132,8 +131,6 @@ Dette giver et komplet billede af lysmiljøet over tid.''',
                   // Samarbejdspartnere
                   _sectionTitle('Samarbejdspartnere'),
                   SizedBox(height: 2.h),
-
-                  // Én logo ad gangen, auto-scroll
                   SizedBox(
                     height: 100.h,
                     child: _SingleLogoCarousel(logos: partnerLogos),

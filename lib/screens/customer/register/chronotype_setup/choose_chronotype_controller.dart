@@ -1,5 +1,3 @@
-// lib/screens/customer/register/chronotype_setup/choose_chronotype_controller.dart
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,7 +19,7 @@ class ChooseChronotypeController {
       throw Exception('Failed to load chronotypes (HTTP ${resp.statusCode})');
     }
   }
-  /// Vis fejl-snackbar
+
   static void showError(BuildContext ctx, String msg) {
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
@@ -37,9 +35,7 @@ class ChooseChronotypeController {
     );
   }
 
-  // Håndterer tryk på “Næste”: tilføjer den valgte kronotype som
-  // svar‐tekst, sætter chronotypeKey og navigerer videre.
-  static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
+    static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
     if (selectedChronotype == null) {
       showError(ctx, "Vælg en kronotype eller tag testen først");
       return;
@@ -51,12 +47,12 @@ class ChooseChronotypeController {
       return;
     }
 
-    // Overskriv tidligere svar helt tydeligt her:
+
     currentCustomerResponse = resp.copyWith(
-      answers: [selectedChronotype],  // Overskriv tidligere svar med kun den nye valgte
-      chronotype: selectedChronotype, // Sæt kronotypen direkte
-      questionScores: {},             // Nulstil tidligere score
-      rmeqScore: null,                // Nulstil tidligere beregninger
+      answers: [selectedChronotype],
+      chronotype: selectedChronotype,
+      questionScores: {},
+      rmeqScore: null,
       meqScore: null,
     );
 

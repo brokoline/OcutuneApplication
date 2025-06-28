@@ -31,7 +31,7 @@ class _PatientSensorSettingsScreenState
     super.dispose();
   }
 
-  // ---- DYNAMISK BATTERI-IKON & FARVE ----
+
   Color _batteryColor(int level) {
     if (level >= 25) return Colors.green;
     if (level >= 10) return Colors.orange;

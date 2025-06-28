@@ -60,7 +60,6 @@ class _CustomerChangePasswordScreenState extends State<CustomerChangePasswordScr
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adgangskode opdateret')),
       );
-      // Luk siden efter success
       Navigator.of(context).pop();
     } catch (e) {
       _showError('Fejl: $e');

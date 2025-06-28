@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 
-/// A detailed chronotype information screen with expanded sections,
-/// including chronotype profiles, genetic basis, assessment tools,
-/// health implications, light spectrum effects, and intervention tips.
 class CustomerChronotypeInfoScreen extends StatelessWidget {
   const CustomerChronotypeInfoScreen({super.key});
 

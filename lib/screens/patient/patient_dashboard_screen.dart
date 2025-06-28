@@ -1,5 +1,3 @@
-// lib/screens/patient_dashboard_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -113,7 +111,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                       ),
                       SizedBox(height: 18.h),
 
-                      // Sensorforbindelse
                       ValueListenableBuilder<DiscoveredDevice?>(
                         valueListenable: BleController.connectedDeviceNotifier,
                         builder: (context, connectedDevice, _) {
@@ -180,7 +177,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                         ),
                                       ),
 
-                                      // Batteri når forbundet
                                       if (isConnected)
                                         ValueListenableBuilder<int>(
                                           valueListenable: BleController.batteryNotifier,

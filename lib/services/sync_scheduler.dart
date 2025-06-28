@@ -1,5 +1,3 @@
-// lib/services/sync_scheduler.dart
-
 import 'dart:async';
 import 'sync_use_case.dart';
 
@@ -23,14 +21,14 @@ class SyncScheduler {
     });
   }
 
-  /// Stopper den periodiske timer.
+  // Stopper den periodiske timer.
   static void stop() {
     _timer?.cancel();
     _timer = null;
   }
 
-  /// Intern helper-metode, som kalder [SyncUseCase.syncAll()] og fanger fejl.
-  /// På den måde sikrer vi, at en exception ikke slukker for næste runde.
+  // Intern helper-metode, som kalder [SyncUseCase.syncAll()] og fanger fejl.
+  // På den måde sikrer vi, at en exception ikke slukker for næste runde.
   static Future<void> _runSync() async {
     try {
       final now = DateTime.now();

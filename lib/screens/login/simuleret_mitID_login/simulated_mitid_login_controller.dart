@@ -1,5 +1,3 @@
-// lib/controller/simulated_login_controller.dart
-
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -14,8 +12,6 @@ class SimulatedLoginController extends ChangeNotifier {
   bool get isLoading     => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// Forsøger login med MitID-simulering.
-  /// onSuccess får den pæne rolle (pretty_role) og bruger-id.
   Future<void> login({
     required String userId,
     required String password,
@@ -46,7 +42,6 @@ class SimulatedLoginController extends ChangeNotifier {
 
         final prettyRole = (data['pretty_role'] as String?)?.trim() ?? '';
 
-        // Gem login-info med den pæne rolle
         await auth.AuthStorage.saveLogin(
           id:         data['id'].toString(),
           role:       prettyRole,
@@ -57,7 +52,6 @@ class SimulatedLoginController extends ChangeNotifier {
               : null,
         );
 
-        // Gem profil-navn
         if (data['role'] == 'clinician') {
           await auth.AuthStorage.saveClinicianProfile(
             firstName: data['first_name'] as String,

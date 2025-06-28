@@ -45,7 +45,6 @@ class CustomerRootView extends StatelessWidget {
           return FutureBuilder<Pair<Customer, ChronotypeModel?>>(
             future: ApiService.fetchCustomerProfile(),
             builder: (context, snapshot) {
-              // ─── Loader ─────────────────────────────────────────────
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Scaffold(
                   backgroundColor: generalBackground,
@@ -61,7 +60,6 @@ class CustomerRootView extends StatelessWidget {
                 );
               }
 
-              // ─── Fejl ───────────────────────────────────────────────
               if (snapshot.hasError) {
                 return Scaffold(
                   backgroundColor: generalBackground,
@@ -89,7 +87,6 @@ class CustomerRootView extends StatelessWidget {
                 );
               }
 
-              // ─── Ingen data ────────────────────────────────────────
               if (!snapshot.hasData) {
                 return Scaffold(
                   backgroundColor: generalBackground,
@@ -113,7 +110,6 @@ class CustomerRootView extends StatelessWidget {
                 );
               }
 
-              // ─── Profil‐data er hentet ─────────────────────────────
               final Customer profile = snapshot.data!.first;
               final String name = '${profile.firstName} ${profile.lastName}';
               final pages = [

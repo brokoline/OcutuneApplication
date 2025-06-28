@@ -1,5 +1,3 @@
-// lib/services/services/api_services.dart
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ocutune_light_logger/models/customer_model.dart';
@@ -12,16 +10,12 @@ import '../../models/patient_model.dart';
 import '../../models/rmeq_chronotype_model.dart';
 import '../auth_storage.dart';
 
-
-// Simpel tuple‐klasse til at returnere både Customer og ChronotypeModel
 class Pair<A, B> {
   final A first;
   final B second;
   Pair(this.first, this.second);
 }
 
-
-// Base URL for alle API‐kald
 const String _baseUrl = "https://ocutune2025.ddns.net";
 
 class ApiService {

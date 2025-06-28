@@ -1,9 +1,6 @@
-// lib/services/processing/data_processing_manager.dart
-
 import 'package:flutter/foundation.dart';
 import 'data_processing.dart';
 
-// Resultatmodel til UI m.m.
 class ProcessedLightData {
   final DateTime timestamp;
   final double medi;
@@ -18,10 +15,9 @@ class ProcessedLightData {
   });
 }
 
-// Manageren
 class DataProcessingManager extends ChangeNotifier {
   DataProcessing? _dataProcessing;
-  dynamic _activeProfile; // Kan være Patient eller Customer
+  dynamic _activeProfile;
 
   ProcessedLightData? _latestProcessed;
   ProcessedLightData? get latestProcessed => _latestProcessed;
@@ -70,7 +66,7 @@ class DataProcessingManager extends ChangeNotifier {
       _latestProcessed = output;
       return output;
     } catch (e) {
-      _error = 'Fejl under ML-behandling: $e';
+      _error = 'Fejl under databehandling: $e';
       _latestProcessed = null;
       return null;
     } finally {

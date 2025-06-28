@@ -1,4 +1,4 @@
-import 'dart:io'; // HttpDate.parse
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
@@ -40,7 +40,6 @@ class CustomerActivityController extends ChangeNotifier {
           'deletable': (a['note'] as String?)?.toLowerCase().contains('manuelt') ?? false,
         };
       }).toList();
-      // Sort descending på start
       recent.sort((a, b) => b['start'].compareTo(a['start']));
     } catch (e) {
       debugPrint('Fejl loadActivities: $e');

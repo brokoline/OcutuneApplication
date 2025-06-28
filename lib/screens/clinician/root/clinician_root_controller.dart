@@ -28,7 +28,6 @@ class ClinicianRootController extends ChangeNotifier {
     _loading = true;
     notifyListeners();
 
-    // Hent navn + rolle
     final results = await Future.wait<String?>([
       AuthStorage.getClinicianName(),
       AuthStorage.getUserRole(),
@@ -36,7 +35,6 @@ class ClinicianRootController extends ChangeNotifier {
     _name = results[0] ?? '';
     _role = results[1] ?? '';
 
-    // Simuler API‐kald til notifikationer
     await Future.delayed(const Duration(milliseconds: 300));
     _notifications
       ..clear()

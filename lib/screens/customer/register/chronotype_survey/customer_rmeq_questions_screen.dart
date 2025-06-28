@@ -40,10 +40,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
   void _goToNextScreen(QuestionController controller) {
     if (selectedOption != null) {
       final score = controller.currentQuestion.scores[selectedOption!]!;
-
-      // VIGTIG: Opdater currentQuestion her:
       currentQuestion = controller.currentQuestionIndex + 1;
-
       saveAnswer(selectedOption!, score);
 
       if (controller.isLastQuestion) {

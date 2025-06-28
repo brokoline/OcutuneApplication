@@ -13,7 +13,6 @@ import 'package:ocutune_light_logger/services/services/network_listener_service.
 class AppInitializer {
   static Future<void> initialize() async {
     try {
-      // 1) Locale-format (ikke kritisk hvis fejler)
       try {
         await initializeDateFormatting('da_DK');
       } catch (e) {

@@ -1,4 +1,4 @@
-// lib/services/processing/DLMO_data_processing.dart
+
 
 import 'dart:math';
 import '../../models/light_data_model.dart';
@@ -24,7 +24,6 @@ class LightRecommendationModel {
   });
 }
 
-// Factory til at bygge recommendations-model ud fra processor og kronotype
 LightRecommendationModel buildRecommendationModel(
     LightDataProcessing processor, String chronotype) {
   final timeWindows = processor.getTimeWindows();
@@ -38,7 +37,6 @@ LightRecommendationModel buildRecommendationModel(
   );
 }
 
-// Hjælpefunktion til at formatere decimal-tid til "HH:mm"
 String _formatTime(double hour) {
   final h = hour.floor();
   final m = ((hour - h) * 60).round();
@@ -71,10 +69,8 @@ List<String> customerRecommendationsText(LightRecommendationModel model) {
 }
 
 // ----------------------------------------
-// AVANCEREDE ANBEFALINGER: patient / kunde
+// ANBEFALINGER
 // ----------------------------------------
-
-// Analysefunktion - genbruges af begge varianter
 Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
   final processor = LightDataProcessing(rMEQ: rMEQ);
   final Map<String, int> counters = {
@@ -105,7 +101,7 @@ Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
   return counters;
 }
 
-// PATIENT: Avancerede anbefalinger
+// Avancerede anbefalinger
 List<String> generateAdvancedRecommendationsForPatient({
   required List<LightData> data,
   required int rMEQ,
@@ -128,7 +124,6 @@ List<String> generateAdvancedRecommendationsForPatient({
   return messages;
 }
 
-// KUNDE: Avancerede anbefalinger (direkte til bruger)
 List<String> generateAdvancedRecommendationsForCustomer({
   required List<LightData> data,
   required int rMEQ,

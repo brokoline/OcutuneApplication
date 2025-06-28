@@ -91,7 +91,6 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
                   ),
                   SizedBox(height: 16.h),
 
-                  // Vedhæft billede (mere tydelig!)
                   Center(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
@@ -158,7 +157,6 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
 
                   SizedBox(height: 14.h),
 
-                  // Vælg dato/tidspunkt
                   GestureDetector(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -210,7 +208,7 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
                     ),
                   ),
 
-                  // Kontaktoplysninger
+
                   SizedBox(height: 16.h),
                   OcutuneTextField(
                     controller: _contactController,
@@ -219,7 +217,7 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
                     obscureText: false,
                   ),
 
-                  // Indsend-knap
+
                   SizedBox(height: 24.h),
                   SizedBox(
                     width: double.infinity,
@@ -260,7 +258,6 @@ class _CustomerReportIssueScreenState extends State<CustomerReportIssueScreen> {
       bottomNavigationBar: CustomerNavBar(
         currentIndex: 4,
         onTap: (idx) {
-          // Skift side logik
           if (idx == 0) Navigator.pushReplacementNamed(context, '/customer_home');
           if (idx == 1) Navigator.pushReplacementNamed(context, '/customer_light');
           if (idx == 2) Navigator.pushReplacementNamed(context, '/customer_devices');

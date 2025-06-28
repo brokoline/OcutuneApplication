@@ -1,4 +1,4 @@
-import 'dart:io'; // For HttpDate.parse
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -272,11 +272,9 @@ class PatientActivityController extends ChangeNotifier {
   Future<void> openConfirmDialog(BuildContext ctx) async {
     final now = DateTime.now();
 
-    // Starttidspunkt med "OK" knap
     final start = await showCustomTimePicker(ctx, 'Starttidspunkt', 'OK');
     if (start == null) return;
 
-    // Sluttidspunkt med "Gem" knap
     final end = await showCustomTimePicker(ctx, 'Slut tidspunkt', 'Gem');
     if (end == null) return;
 

@@ -1,10 +1,7 @@
-// lib/screens/customer/meq_survey/meq_question_controller.dart
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-/// Én valgmulighed i MEQ-undersøgelsen
 class MeqChoice {
   final int id;
   final String text;
@@ -21,7 +18,6 @@ class MeqChoice {
   }
 }
 
-/// Ét MEQ-spørgsmål med alle dets valg
 class MeqQuestion {
   final int id;
   final String text;
@@ -41,8 +37,7 @@ class MeqQuestion {
   }
 }
 
-/// Controller, der henter spørgsmål, gemmer svar + score,
-/// og både opretter (POST) og opdaterer (PUT) via én `submitAnswers`‐metode.
+
 class MeqQuestionController with ChangeNotifier {
   static const _baseUrl = 'https://ocutune2025.ddns.net/api/meq';
 
@@ -56,7 +51,7 @@ class MeqQuestionController with ChangeNotifier {
   MeqQuestion get currentQuestion => questions[currentQuestionIndex];
   bool get isLastQuestion => currentQuestionIndex == questions.length - 1;
 
-  /// Ryd al intern state
+
   void reset() {
     questions.clear();
     currentQuestionIndex = 0;
@@ -65,7 +60,7 @@ class MeqQuestionController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Henter GET /questions
+
   Future<void> fetchQuestions() async {
     final uri = Uri.parse('$_baseUrl/questions');
     final resp = await http.get(uri);
@@ -79,7 +74,7 @@ class MeqQuestionController with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Gemmer brugerens valg + score lokalt
+
   void recordAnswer(int questionId, int choiceId) {
     final choice = questions
         .firstWhere((q) => q.id == questionId)
@@ -93,7 +88,7 @@ class MeqQuestionController with ChangeNotifier {
     });
   }
 
-  /// Finder et tidligere gemt valg
+
   int? getSavedChoice(int questionId) {
     final match = _answers.firstWhere(
           (m) => m['question_id'] == questionId,
@@ -116,8 +111,7 @@ class MeqQuestionController with ChangeNotifier {
     }
   }
 
-  /// Opret eller opdater svar på server: POST første gang, PUT ved gen‐kørsel.
-  /// VIGTIGT: participantId sendes som int, ikke String.
+
   Future<int> submitAnswers(int participantId, {bool isUpdate = false}) async {
     final uri = Uri.parse('$_baseUrl/answers');
     final payload = {
@@ -125,13 +119,11 @@ class MeqQuestionController with ChangeNotifier {
       'answers':        _answers,
     };
 
-    // Debug‐print
     if (kDebugMode) {
       print('MEQ DEBUG → ${isUpdate ? 'PUT' : 'POST'} $uri');
       print('MEQ DEBUG payload: ${jsonEncode(payload)}');
     }
 
-    // Send
     final res = isUpdate
         ? await http.put(
       uri,

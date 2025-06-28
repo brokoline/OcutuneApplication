@@ -54,7 +54,7 @@ class LightData {
     required this.actionRequired,
   });
 
-  // JSON‐parser som sikrer, at “captured_at” altid bliver tolket som UTC.
+  // JSON‐parser så at “captured_at” altid bliver tolket som UTC.
   factory LightData.fromJson(Map<String, dynamic> json) {
     // 1) Henter den rå streng, "2025-06-05T00:00:03" eller "2025-06-05T00:00:03Z"
     final rawDate = json['captured_at'] as String;

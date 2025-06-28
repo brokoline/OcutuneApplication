@@ -20,7 +20,7 @@ class CustomerOverviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Generér kunde-anbefalinger her
+
     final advancedCustomerRecs = generateAdvancedRecommendationsForCustomer(
       data: lightDataList,
       rMEQ: profile.rmeqScore,

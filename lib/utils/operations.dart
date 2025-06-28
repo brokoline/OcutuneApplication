@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/services.dart';
 
-// Operations.dart
 // Hjælpefunktioner til at parse CSV-filer og udføre matrix- og vektoroperationer.
 class Operations {
   // Læs en CSV-fil fra assets (fx 'assets/matrix.csv')

@@ -4,7 +4,7 @@ import 'meq_question_controller.dart';
 
 class MeqResultScreen extends StatefulWidget {
   final String participantId;
-  const MeqResultScreen({ required this.participantId, Key? key }) : super(key: key);
+  const MeqResultScreen({ required this.participantId, super.key });
 
   @override
   _MeqResultScreenState createState() => _MeqResultScreenState();
@@ -18,10 +18,9 @@ class _MeqResultScreenState extends State<MeqResultScreen> {
     super.initState();
     final ctrl = Provider.of<MeqQuestionController>(context, listen: false);
 
-    // parse String → int
     final id = int.tryParse(widget.participantId) ?? 0;
     if (id == 0) {
-      debugPrint("❌ Ugyldigt participantId: ${widget.participantId}");
+      debugPrint("Ugyldigt participantId: ${widget.participantId}");
       return;
     }
 
@@ -29,9 +28,9 @@ class _MeqResultScreenState extends State<MeqResultScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
         final score = await ctrl.submitAnswers(id);
-        debugPrint("✅ MEQ score = $score");
+        debugPrint("MEQ score = $score");
       } catch (e) {
-        debugPrint("❌ Fejl ved submit: $e");
+        debugPrint("Fejl ved submit: $e");
       }
     });
   }

@@ -36,7 +36,7 @@ class InboxController extends ChangeNotifier {
         _allMessages = raw;
       }
     } catch (e) {
-      error = '❌ Kunne ikke hente beskeder: $e';
+      error = 'Kunne ikke hente beskeder: $e';
     }
 
     isLoading = false;
@@ -61,7 +61,7 @@ class InboxController extends ChangeNotifier {
         error = 'Bruger-ID eller token mangler.';
       }
     } catch (e) {
-      error = '❌ Kunne ikke hente beskeder: $e';
+      error = 'Kunne ikke hente beskeder: $e';
     }
 
     isLoading = false;

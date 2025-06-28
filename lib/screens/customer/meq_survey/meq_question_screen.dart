@@ -26,8 +26,8 @@ class _CustomerMeqQuestionsScreenState
   void initState() {
     super.initState();
     final ctrl = context.read<MeqQuestionController>();
-    ctrl.reset();          // **Ryd alle gamle spørgsmål og svar**
-    ctrl.fetchQuestions(); // Hent dem fra serveren igen
+    ctrl.reset();
+    ctrl.fetchQuestions();
   }
 
   void _showError(String message) {
@@ -60,11 +60,9 @@ class _CustomerMeqQuestionsScreenState
       return;
     }
 
-    // Gem svaret lokalt
     ctrl.recordAnswer(ctrl.currentQuestion.id, _selectedChoiceId!);
 
     if (ctrl.isLastQuestion) {
-      // Hent det int-id du nu skal sende
       final cid = await AuthStorage.getCustomerId();
       if (cid == null) {
         _showError("Kunne ikke finde customerId i lokal storage");
@@ -74,11 +72,7 @@ class _CustomerMeqQuestionsScreenState
       try {
         // Tjek om vi skal oprette MEQ eller opdatere
         final hasTaken = context.read<CustomerRootController>().profile?.meqScore != null;
-
-        // Send int direkte
         await ctrl.submitAnswers(cid, isUpdate: hasTaken);
-
-        // Genindlæs profil
         await context.read<CustomerRootController>().fetchProfile();
 
         Navigator.of(context).pushReplacementNamed('/meqResult');

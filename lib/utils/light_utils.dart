@@ -1,5 +1,3 @@
-// lib/utils/light_utils.dart
-
 import 'package:flutter/material.dart';
 import '../models/light_data_model.dart';
 

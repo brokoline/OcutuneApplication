@@ -14,7 +14,7 @@ class RemoteErrorLogger {
         "message": message,
       });
     } catch (e) {
-      print("❌ Kunne ikke sende fejl-log til backend: $e");
+      print("Kunne ikke sende fejl-log til backend: $e");
     }
   }
 }

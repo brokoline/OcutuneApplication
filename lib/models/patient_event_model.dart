@@ -6,7 +6,6 @@ DateTime? _parseAny(String? s) {
   final dt = DateTime.tryParse(s);
   if (dt != null) return dt;
   try {
-    // RFC1123 fallback
     return HttpDate.parse(s).toLocal();
   } catch (_) {
     return null;

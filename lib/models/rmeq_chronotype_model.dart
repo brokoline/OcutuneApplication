@@ -1,5 +1,3 @@
-// lib/models/remq_chronotype_model.dart
-
 class ChronotypeModel {
   final int id;
   final String typeKey;

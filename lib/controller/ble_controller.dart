@@ -55,7 +55,7 @@ class BleController {
     _scanStream?.cancel();
     _scanStream = _ble.scanForDevices(withServices: []).listen(
       onDeviceDiscovered,
-      onError: (e) => debugPrint('🚨 Scan-fejl: $e'),
+      onError: (e) => debugPrint('Scan-fejl: $e'),
     );
   }
 
@@ -169,10 +169,10 @@ class BleController {
       final data = await _ble.readCharacteristic(char);
       if (data.isNotEmpty) {
         batteryNotifier.value = data[0];
-        debugPrint('🔋 Batteri: ${data[0]}%');
+        debugPrint('Batteri: ${data[0]}%');
       }
     } catch (e) {
-      debugPrint('⚠️ Fejl ved batteri-læsning: $e');
+      debugPrint('Fejl ved batteri-læsning: $e');
     }
   }
 

@@ -1,5 +1,3 @@
-// lib/controller/chronotype_controller.dart
-
 import 'dart:math';
 
 class ChronotypeManager {
@@ -16,10 +14,10 @@ class ChronotypeManager {
     dlmoHour = _estimateDlmo(meqScore);
     tau = _estimateTau(meqScore);
     lightboostStartHour = _calculateLightboostStart(tau, dlmoHour);
-    lightboostEndHour = lightboostStartHour + 1.5; // eksempel: 1.5 timers boost
+    lightboostEndHour = lightboostStartHour + 2;
   }
 
-  /// Returnerer en tekst‐label baseret på rMEQ‐score
+  // Returnerer en tekst‐label baseret på rMEQ‐score
   String getChronotypeLabel() {
     if (totalScore >= 22) return 'definitely_morning';
     if (totalScore >= 18) return 'moderately_morning';
@@ -28,7 +26,6 @@ class ChronotypeManager {
     return 'definitely_evening';
   }
 
-  // Simpel lineær “estimate” fra rMEQ (5 spørgsmål) til fuld MEQ (19 spørgsmål)
   double _estimateMEQ(int rmeq) {
     switch (getChronotypeLabel()) {
       case 'definitely_morning':
@@ -46,7 +43,6 @@ class ChronotypeManager {
     }
   }
 
-  // Approksimerer DLMO‐tidspunkt (i timer) ud fra meqScore.
   double _estimateDlmo(double meq) {
     // Eksempel‐formel baseret på publicerede studier:
     return (209.0 - meq) / 7.29;
@@ -65,7 +61,7 @@ class ChronotypeManager {
   }
 
   // Returnerer en Map med anbefalede tidspunkter (“dlmo”, “sleep_start” osv.)
-  /// i form af DateTime‐objekter for den givne dag.
+  // i form af DateTime‐objekter for den givne dag.
   Map<String, DateTime> getRecommendedTimes({DateTime? reference}) {
     final now = reference ?? DateTime.now();
 

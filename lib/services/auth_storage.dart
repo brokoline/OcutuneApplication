@@ -14,15 +14,12 @@ class AuthStorage {
       final token = await getToken();
 
       if (token == null) {
-        print('❌ Token mangler i SharedPreferences (getTokenPayload)');
         return {};
       }
 
-      print('🔑 Fundet token: $token');
-
       final parts = token.split('.');
       if (parts.length != 3) {
-        print('❌ Token format er ugyldigt (dele: ${parts.length})');
+        print('Token format er ugyldigt (dele: ${parts.length})');
         return {};
       }
 
@@ -98,13 +95,11 @@ class AuthStorage {
     await prefs.setInt('customerId', id);
   }
 
-  // Henter customerId til dine customer-screens
   static Future<int?> getCustomerId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt('customerId');
   }
 
-  // (Valgfrit) Gem kundens fornavn/efternavn, hvis du vil vise navn i UI
   static Future<void> saveCustomerProfile({
     required String firstName,
     required String lastName,
@@ -192,25 +187,21 @@ class AuthStorage {
     await prefs.remove('customerId');
     await prefs.remove('customer_first_name');
     await prefs.remove('customer_last_name');
-    print('✅ Customer logged out – customerId cleared');
   }
 
   static const _lastDeviceKey = 'last_connected_device';
 
-  // Kald denne lige efter du har connected i UI-laget
   static Future<void> setLastConnectedDeviceId(String deviceId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastDeviceKey, deviceId);
   }
 
-  // Hentes i BG-servicen når den starter
   static Future<String?> getLastConnectedDeviceId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_lastDeviceKey);
 
   }
 
-  /// Gemmer sensorId for en given enheds-serial lokalt
   static Future<void> saveSensorIdForDevice(
       String deviceSerial,
       String sensorId,
@@ -219,9 +210,7 @@ class AuthStorage {
     await prefs.setString('sensorId_$deviceSerial', sensorId);
   }
 
-  /// Prøver først at læse sensorId fra SharedPreferences.
-  /// Hvis der ikke findes noget, slår vi op via API'et og gemmer resultatet.
-  static Future<String?> getSensorIdForDevice(
+   static Future<String?> getSensorIdForDevice(
       String deviceSerial,
       ) async {
     final prefs = await SharedPreferences.getInstance();
@@ -230,7 +219,7 @@ class AuthStorage {
       return local;
     }
 
-    // Hvis ikke lokalt, hent fra backend
+
     final jwt = await getToken();
     if (jwt == null) return null;
 

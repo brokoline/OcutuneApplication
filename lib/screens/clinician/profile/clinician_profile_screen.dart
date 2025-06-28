@@ -32,7 +32,6 @@ class ClinicianProfileScreen extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
 
-              // Første card - Klinikoplysninger
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -63,7 +62,6 @@ class ClinicianProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // Andet card - Patienttilknytning
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -94,10 +92,8 @@ class ClinicianProfileScreen extends StatelessWidget {
                 ),
               ),
 
-              // Spacer for at skubbe indholdet op
               const Spacer(),
 
-              // Log ud knap
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: GestureDetector(

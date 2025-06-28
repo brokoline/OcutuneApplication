@@ -1,5 +1,3 @@
-// lib/controller/patient_dashboard_controller.dart
-
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/controller/ble_controller.dart';
@@ -21,12 +19,10 @@ class PatientDashboardController extends ChangeNotifier {
   Color get batteryColor => _colorForLevel(batteryLevel);
 
   Future<void> _init() async {
-    // Hent og formater brugernavn
     final name = (await AuthStorage.getName()).trim();
     if (name.isNotEmpty) {
       _userName = name.split(' ').first;
     }
-    // Lyt på BLE-controllerens notifiers
     BleController.connectedDeviceNotifier.addListener(_onBleUpdate);
     BleController.batteryNotifier.addListener(_onBleUpdate);
     notifyListeners();

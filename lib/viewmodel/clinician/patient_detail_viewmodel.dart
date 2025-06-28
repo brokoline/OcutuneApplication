@@ -13,11 +13,9 @@ class PatientDetailViewModel extends ChangeNotifier {
 
   PatientDetailViewModel(this.patientId)
       : _dataProcessingManager = DataProcessingManager() {
-    // kun lysdata på start
     lightDataFuture = _fetchRawLightData();
   }
 
-  // ─── Lysdata ───────────────────────────────────────────
   bool _isFetchingRaw = false;
   bool get isFetchingRaw => _isFetchingRaw;
 
@@ -61,7 +59,6 @@ class PatientDetailViewModel extends ChangeNotifier {
     super.dispose();
   }
 
-  // ─── ML‐bearbejdning ────────────────────────────────────
   ProcessedLightData? _processedLightData;
   ProcessedLightData? get processedLightData => _processedLightData;
 
@@ -115,7 +112,6 @@ class PatientDetailViewModel extends ChangeNotifier {
 
   Future<void> refreshProcessedData() => _triggerProcessYesterday();
 
-  // ─── “Lazy” patient + diagnoser + aktiviteter ─────────
   Patient? _patient;
   Future<Patient>? _patientFuture;
   Future<Patient> fetchPatientDetails() {
@@ -139,7 +135,6 @@ class PatientDetailViewModel extends ChangeNotifier {
         .then((list) => list.map((e) => PatientEvent.fromJson(e)).toList());
   }
 
-  // ─── Hjælpemetoder til scores ───────────────────────
   double get rmeqScore => (_patient?.rmeqScore ?? 0).toDouble();
   int? get storedMeqScore => _patient?.meqScore;
 }

@@ -1,4 +1,3 @@
-// Data_processing.dart
 import 'dart:async';
 import 'dart:math';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -47,7 +46,6 @@ class DataProcessing {
     1.03390, 1.03445, 1.03508, 1.03359, 1.23384, 1.26942
   ];
 
-  // ML-model
   Future<void> loadModel(String modelAssetPath) async {
     if (_modelLoaded) return;
     try {

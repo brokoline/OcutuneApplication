@@ -1,5 +1,3 @@
-// lib/controller/login_controller.dart
-
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
@@ -34,7 +32,6 @@ class LoginController extends ChangeNotifier {
         final customerId = user['id'] as int;
         final userId     = customerId.toString();
 
-        // Gem alt via AuthStorage
         await AuthStorage.saveLogin(
           id:         userId,
           role:       '',
@@ -46,7 +43,6 @@ class LoginController extends ChangeNotifier {
         _errorMessage = null;
         return true;
       } else {
-        // Fejl fra API
         _errorMessage = result['message'] as String? ?? 'Ukendt fejl';
         return false;
       }
