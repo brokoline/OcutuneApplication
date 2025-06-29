@@ -12,8 +12,6 @@ import 'light_slide_bar_chart.dart';
 class LightSummarySection extends StatelessWidget {
   final String patientId;
   final int rmeqScore;
-
-  // Valgfri MEQ‐score (kun til ScoreCard)
   final int? meqScore;
 
   const LightSummarySection({
@@ -33,7 +31,6 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // Fejl under hentning
     if (vm.rawFetchError != null) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -47,7 +44,6 @@ class LightSummarySection extends StatelessWidget {
       );
     }
 
-    // Ingen data registreret
     if (!vm.isFetchingRaw && vm.rawLightData.isEmpty) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -61,7 +57,6 @@ class LightSummarySection extends StatelessWidget {
 
     final List<LightData> allLightData = vm.rawLightData;
 
-    // Generér kliniker-anbefalinger
     final List<String> clinicianRecs = LightDataProcessing(rMEQ: rmeqScore)
         .generateAdvancedRecommendations(
       data: allLightData,

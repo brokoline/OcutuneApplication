@@ -1,4 +1,3 @@
-// widgets/clinician_nav_bar.dart
 import 'package:flutter/material.dart';
 import 'package:ocutune_light_logger/theme/colors.dart';
 

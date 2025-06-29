@@ -21,11 +21,7 @@ class BatteryService {
       return false;
     }
 
-    // Throttling
-    if (_lastSent != null && now.difference(_lastSent!) < _minInterval) {
-      print("⏱️ Springer batteri-upload over (throttling)");
-      return true;
-    }
+
 
     final uri = Uri.parse("${ApiService.baseUrl}/api/sensor/patient-battery-status");
     final body = {
@@ -34,8 +30,8 @@ class BatteryService {
       'battery_level': batteryLevel,
     };
 
-    print("📤 Batteri-upload til $uri");
-    print("🧾 Payload: $body");
+    print("Batteri-upload til $uri");
+    print("Payload: $body");
 
     final resp = await http.post(
       uri,
@@ -48,11 +44,11 @@ class BatteryService {
 
     if (resp.statusCode == 200 || resp.statusCode == 201) {
       _lastSent = now;
-      print("✅ Batteriniveau sendt");
+      print("Batteriniveau sendt");
       return true;
     }
 
-    print("❌ Fejl ved batteri-API: ${resp.statusCode} ${resp.body}");
+    print("Fejl ved batteri-API: ${resp.statusCode} ${resp.body}");
     return false;
   }
 }

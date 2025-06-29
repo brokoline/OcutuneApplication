@@ -101,7 +101,7 @@ class LightPollingService {
       final classId  = _classifier.classify(rawInput);
       final typeName = _typeName(classId);
       if (classId < 0 || classId >= _regressionMatrix.length) {
-        throw Exception('❌ Invalid classId: $classId');
+        throw Exception('Invalid classId: $classId');
       }
       final weights = _regressionMatrix[classId];
 
@@ -149,7 +149,6 @@ class LightPollingService {
           'action: $actionRequired');
 
 
-      // Gem til senere upload
       await OfflineStorageService.saveLocally(type: 'light', data: payload);
       print('Light data saved at ${now.toIso8601String()}');
     } catch (e) {
@@ -168,11 +167,9 @@ class LightPollingService {
     final hour = now.hour + now.minute / 60.0;
     if (hour >= 7 && hour < 19) {
       final res = score < 80 ? 'increase' : 'none';
-      print('🕒 Time: $hour, Exposure: $score% → Action: $res (DAY)');
       return res;
     } else {
       final res = score > 20 ? 'decrease' : 'none';
-      print('🌙 Time: $hour, Exposure: $score% → Action: $res (NIGHT)');
       return res;
     }
   }

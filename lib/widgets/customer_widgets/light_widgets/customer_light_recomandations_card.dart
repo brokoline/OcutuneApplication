@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// A widget that displays personal and detailed light recommendations,
-/// with the detailed DLMO section rendered as a simple dropdown.
 class CustomerLightRecommendationsCard extends StatelessWidget {
-  /// Personal, high-level recommendations (e.g. "Your light rhythm looks fine...").
   final List<String> personalRecommendations;
-
-  /// Detailed recommendations (e.g. "Kronotype: neither", "DLMO: 21:49").
   final List<String> detailRecommendations;
 
   const CustomerLightRecommendationsCard({
@@ -16,7 +11,7 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     this.detailRecommendations = const [],
   }) : super(key: key);
 
-  /// Maps a recommendation string to an appropriate icon.
+
   Widget _detailIcon(String rec) {
     if (rec.startsWith("Kronotype")) {
       return Icon(Icons.account_circle, color: Colors.lightBlue[200], size: 20.sp);
@@ -44,7 +39,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     final bool showPersonal = personalRecommendations.isNotEmpty;
     final bool showDetail = detailRecommendations.isNotEmpty;
 
-    // If no recommendations at all
     if (!showPersonal && !showDetail) {
       return Padding(
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -59,7 +53,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // ---- DLMO analyse og anbefalinger som dropdown ----
         if (showDetail)
           Container(
             margin: EdgeInsets.symmetric(vertical: 8.h, horizontal: 2.w),
@@ -68,7 +61,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
               backgroundColor: Colors.transparent,
               collapsedBackgroundColor: Colors.transparent,
 
-              // Header tekst
               title: Text(
                 'DLMO analyse og anbefalinger',
                 style: TextStyle(
@@ -78,17 +70,14 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
                 ),
               ),
 
-              // Dropdown-ikon (roterer automatisk når åbnet)
               trailing: Icon(
                 Icons.expand_more,
                 color: Colors.white70,
                 size: 24.sp,
               ),
 
-              // Paddings for children
               childrenPadding: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 8.h),
 
-              // Selve rekommandationerne
               children: detailRecommendations.map((r) {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -108,7 +97,6 @@ class CustomerLightRecommendationsCard extends StatelessWidget {
             ),
           ),
 
-        // ---- Personlige anbefalinger ----
         if (showPersonal)
           Padding(
             padding: EdgeInsets.only(top: 4.h, bottom: 8.h, left: 2.w, right: 2.w),

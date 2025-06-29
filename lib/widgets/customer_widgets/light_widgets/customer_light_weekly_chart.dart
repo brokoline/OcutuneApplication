@@ -236,7 +236,7 @@ class _CustomerLightWeeklyBarChartState
             SizedBox(
               height: 180.h,
               child: Padding(
-                padding: EdgeInsets.only(right: 20.w), // ekstra plads til søndag
+                padding: EdgeInsets.only(right: 20.w),
                 child: BarChart(
                   BarChartData(
                     minY: 0,
@@ -272,14 +272,14 @@ class _CustomerLightWeeklyBarChartState
                         sideTitles: SideTitles(
                           showTitles: true,
                           interval: 1,
-                          reservedSize: 40, // større så søndag aldrig cuttes
+                          reservedSize: 40,
                           getTitlesWidget: (value, meta) {
                             final idx = value.toInt();
                             if (idx < 0 || idx > 6) return const SizedBox.shrink();
                             return Padding(
                               padding: EdgeInsets.only(
                                 top: 6.h,
-                                right: idx == 6 ? 14.w : 0, // ekstra plads til SØN
+                                right: idx == 6 ? 14.w : 0,
                               ),
                               child: Text(
                                 weekdayLabels[idx],

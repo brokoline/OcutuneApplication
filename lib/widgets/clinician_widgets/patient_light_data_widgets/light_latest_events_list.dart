@@ -8,9 +8,7 @@ import '../../../../models/light_data_model.dart';
 import '../../../../theme/colors.dart';
 
 class LightLatestEventsList extends StatelessWidget {
-  /// We now accept a List<LightData> from the parent.
   final List<LightData> lightData;
-
   const LightLatestEventsList({
     super.key,
     required this.lightData,

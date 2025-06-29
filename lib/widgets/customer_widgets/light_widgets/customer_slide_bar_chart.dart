@@ -7,17 +7,12 @@ import 'customer_light_daily_chart.dart';
 import 'customer_light_monthly_chart.dart';
 import 'customer_light_weekly_chart.dart';
 
-/// En “slide-widget” (PageView) med tre sider for Kunden:
-///   1) Daglig lys-bar-graf   (henter selv via API: kræver rmeqScore + chronotype)
-///   2) Ugentlig lys-bar-graf (henter selv via API: ingen ekstra parametre)
-///   3) Månedlig lys-bar-graf  (henter selv via API: kræver rmeqScore + chronotype)
-///
-/// Bemærk: Patient‐ID er hardcodet til “P3” i de enkelte “Customer”-widgets.
+//   1) Daglig lys-bar-graf   (henter selv via API: kræver rmeqScore + chronotype)
+//   2) Ugentlig lys-bar-graf (henter selv via API: ingen ekstra parametre)
+//   3) Månedlig lys-bar-graf  (henter selv via API: kræver rmeqScore + chronotype)
+// Bemærk: Patient‐ID er hardcodet til “P3” i de enkelte “Customer”-widgets.
 class CustomerLightSlideBarChart extends StatefulWidget {
-  /// rMEQ-score (bruges af daglig og månedlig graf til at beregne boost‐vindue).
   final int rmeqScore;
-
-  /// Chronotype (bruges af måneds‐graf til at bestemme DLMO og lyboost‐vindue).
   final String chronotype;
 
   const CustomerLightSlideBarChart({
@@ -64,7 +59,7 @@ class _CustomerLightSlideBarChartState extends State<CustomerLightSlideBarChart>
     return Column(
       children: [
         SizedBox(
-          height: 280.h, // eller hvad du ønsker
+          height: 280.h,
           child: PageView(
             controller: _pageController,
             children: pages,

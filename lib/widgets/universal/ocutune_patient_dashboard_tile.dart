@@ -26,7 +26,6 @@ class OcutunePatientDashboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ikonhåndtering
     Widget leadingIcon;
     if (iconAsset != null) {
       leadingIcon = Image.asset(

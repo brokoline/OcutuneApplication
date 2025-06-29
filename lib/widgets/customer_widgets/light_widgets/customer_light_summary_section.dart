@@ -1,14 +1,9 @@
-// lib/widgets/customer_widgets/customer_light_summary_section.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'customer_slide_bar_chart.dart';
 
-/// En samlet “Customer”‐summary‐sektion, der viser:
-
 class CustomerLightSummarySection extends StatelessWidget {
-  /// rMEQ (int) fra kundens profil
   final int rmeqScore;
   final int meqScore;
   final String chronotype;
@@ -27,7 +22,6 @@ class CustomerLightSummarySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1) Lys‐eksponering: Dag / Uge / Måned swipebar
         Center(
           child: Text(
             'Din lyseksponering over tid',

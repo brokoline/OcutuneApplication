@@ -48,7 +48,6 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
     }
   }
 
-  // Effektiv aggregation – ingen where-løkker!
   List<DailyLightSummary> _aggregateMonthly(List<LightData> lightDataList) {
     final Map<DateTime, Map<String, int>> counts = {};
     for (final d in lightDataList) {
@@ -108,26 +107,22 @@ class _LightMonthlyBarChartState extends State<LightMonthlyBarChart> {
       );
     }
 
-    // Find antal dage i måneden
     final today = DateTime.now();
     final year = today.year;
     final month = today.month;
     final daysInMonth = DateTime(year, month + 1, 0).day;
 
-    // Map fra dagnummer til summary
     Map<int, DailyLightSummary> summaryByDay = {
       for (var d in summaryList) d.day.day: d
     };
 
-    // BarChart kun for dage der er gået
     List<BarChartGroupData> barGroups = [];
     for (int day = 1; day <= daysInMonth; day++) {
       bool isFuture = DateTime(year, month, day).isAfter(today);
       final summary = summaryByDay[day];
-      if (isFuture) break; // STOP hvis vi rammer første fremtidsdag
+      if (isFuture) break;
 
       if (summary == null || summary.totalMeasurements == 0) {
-        // Søjle med højde 0 (skjult dag)
         barGroups.add(
           BarChartGroupData(
             x: day,

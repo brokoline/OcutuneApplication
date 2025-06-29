@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/meq_survey_model.dart';
 
-
-/// En generisk widget til at vise et MEQ-spørgsmål og svarmuligheder.
-/// Stilen følger REMQ-testens design med clear labels og accentfarver.
 class MeqQuestionPage extends StatelessWidget {
   final MeqQuestion question;
   final int? selectedChoiceIndex;

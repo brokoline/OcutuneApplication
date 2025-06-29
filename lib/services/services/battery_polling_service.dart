@@ -1,10 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:ocutune_light_logger/services/services/offline_storage_service.dart';
 import 'package:ocutune_light_logger/services/auth_storage.dart';
 import 'package:ocutune_light_logger/services/remote_error_logger.dart';
-
 import 'battery_service.dart';
 
 class BatteryPollingService {
@@ -12,6 +10,10 @@ class BatteryPollingService {
   final String deviceId;
   final String sensorId;
   Timer? _timer;
+
+  // Stream controller for battery updates
+  final StreamController<int> _batteryController = StreamController<int>.broadcast();
+  Stream<int> get batteryStream => _batteryController.stream;
 
   BatteryPollingService({
     required this.ble,
@@ -21,11 +23,8 @@ class BatteryPollingService {
 
   // Starter polling: første læsning efter 15s, derefter hvert 5. minut.
   Future<void> start() async {
-    // Første upload efter 20 sekunder
     Future.delayed(const Duration(seconds: 15), () async {
       await _readAndProcess();
-
-      // Herefter præcis hvert 5. minut (forskellen til _lastSent er ≥5 min)
       _timer = Timer.periodic(
         const Duration(minutes: 5),
             (_) => _readAndProcess(),
@@ -33,8 +32,6 @@ class BatteryPollingService {
     });
   }
 
-
-  // Læs batteri-char, gem lokalt og send til backend (eller gem offline hvis fejler)
   Future<void> _readAndProcess() async {
     try {
       final char = QualifiedCharacteristic(
@@ -44,13 +41,15 @@ class BatteryPollingService {
       );
       final data = await ble.readCharacteristic(char);
       final level = data.isNotEmpty ? data[0] : 0;
-      print("🔋 [BatteryPollingService] Læser batteri: $level%");
+      print('[BatteryPollingService] Læser batteri: $level%');
 
-      // Gem offline-kø
+      // Push new level into stream
+      _batteryController.add(level);
+
       final jwt = await AuthStorage.getToken();
       final patientId = await AuthStorage.getUserId();
       if (jwt == null || patientId == null) {
-        print("❌ Mangler JWT eller patientId – gemmer alligevel lokalt");
+        print('Mangler JWT eller patientId – gemmer lokalt');
         await OfflineStorageService.saveLocally(
           type: 'battery',
           data: {
@@ -63,7 +62,6 @@ class BatteryPollingService {
         return;
       }
 
-      // Forsøg at poste til backend
       final success = await BatteryService.sendToBackend(
         patientId: patientId,
         sensorId: sensorId,
@@ -72,7 +70,6 @@ class BatteryPollingService {
       );
 
       if (!success) {
-        // hvis posten fejlede, så gem lokalt
         await OfflineStorageService.saveLocally(
           type: 'battery',
           data: {
@@ -84,7 +81,8 @@ class BatteryPollingService {
         );
       }
     } catch (e, st) {
-      print("⚠️ Batteri-polling fejl: $e");
+      print('Batteri-polling fejl: $e');
+      _batteryController.addError(e, st);
       await RemoteErrorLogger.log(
         patientId: await AuthStorage.getUserId() ?? 'unknown',
         type: 'battery',
@@ -94,9 +92,9 @@ class BatteryPollingService {
     }
   }
 
-  // Stop polling
   Future<void> stop() async {
     _timer?.cancel();
     _timer = null;
+    await _batteryController.close();
   }
 }
