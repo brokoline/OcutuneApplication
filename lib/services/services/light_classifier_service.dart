@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -191,7 +192,7 @@ class LightClassifier {
         }
       }
     }
-    print("📥 Y-bar kurve indlæst med ${ybarData.length} værdier");
+    print("Y-bar kurve indlæst med ${ybarData.length} værdier");
   }
 
   double computeIlluminance(Map<int, double> spectrum) {
@@ -204,7 +205,7 @@ class LightClassifier {
       lux += entry.value * y;
     }
     final result = lux * 683.0;
-    print("🔬 Lux (map-baseret): $result");
+    print("Lux: $result");
     return result;
   }
 }

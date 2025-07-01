@@ -24,11 +24,12 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    // Fetch user name
     _nameFuture = AuthStorage.getName().then((name) {
       final trimmed = name.trim();
-      if (trimmed.isEmpty) return 'Bruger';
-      return trimmed.split(' ').first;
+      return (trimmed.isEmpty ? 'Bruger' : trimmed.split(' ').first);
     });
+    BleController().monitorBluetoothState();
   }
 
   Color _batteryColor(int level) {
@@ -122,7 +123,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                               borderRadius: BorderRadius.circular(16.r),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(16.r),
-                                splashColor: const Color.fromRGBO(255,255,255,0.15),
+                                splashColor: const Color.fromRGBO(255, 255, 255, 0.15),
                                 onTap: () {
                                   Navigator.pushNamed(
                                     context,
@@ -131,7 +132,8 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   );
                                 },
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w, vertical: 18.h),
                                   decoration: BoxDecoration(
                                     border: Border.all(
                                       color: Colors.white.withOpacity(0.25),
@@ -141,7 +143,6 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                   ),
                                   child: Row(
                                     children: [
-                                      // Leading icon
                                       Image.asset(
                                         'assets/icon/BLE-sensor-ikon.png',
                                         width: 48.w,
@@ -151,25 +152,30 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                       SizedBox(width: 16.w),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               'Sensorforbindelse',
                                               style: TextStyle(
                                                 color: Colors.white70,
                                                 fontSize: 16.sp,
-                                                fontWeight: FontWeight.w600,
+                                                fontWeight:
+                                                FontWeight.w600,
                                               ),
                                             ),
                                             if (!isConnected)
                                               Padding(
-                                                padding: EdgeInsets.only(top: 4.h),
+                                                padding: EdgeInsets.only(
+                                                    top: 4.h),
                                                 child: Text(
                                                   'Ikke forbundet',
                                                   style: TextStyle(
                                                     fontSize: 13.sp,
-                                                    color: Colors.redAccent,
-                                                    fontWeight: FontWeight.w500,
+                                                    color:
+                                                    Colors.redAccent,
+                                                    fontWeight:
+                                                    FontWeight.w500,
                                                   ),
                                                 ),
                                               ),
@@ -179,11 +185,14 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 
                                       if (isConnected)
                                         ValueListenableBuilder<int>(
-                                          valueListenable: BleController.batteryNotifier,
+                                          valueListenable:
+                                          BleController.batteryNotifier,
                                           builder: (context, battery, _) {
-                                            final color = _batteryColor(battery);
+                                            final color =
+                                            _batteryColor(battery);
                                             return Row(
-                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisSize:
+                                              MainAxisSize.min,
                                               children: [
                                                 Icon(
                                                   _batteryIcon(battery),
@@ -196,7 +205,8 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
                                                   style: TextStyle(
                                                     fontSize: 13.sp,
                                                     color: color,
-                                                    fontWeight: FontWeight.w500,
+                                                    fontWeight:
+                                                    FontWeight.w500,
                                                   ),
                                                 ),
                                               ],
@@ -216,8 +226,7 @@ class _PatientDashboardScreenState extends State<PatientDashboardScreen> {
 
                       OcutunePatientDashboardTile(
                         label: 'Registrér en aktivitet',
-                        iconAsset:
-                        'assets/icon/activity-log-icon.png',
+                        iconAsset: 'assets/icon/activity-log-icon.png',
                         onPressed: () {
                           Navigator.pushNamed(
                             context,

@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import '/theme/colors.dart';
 
-// --- OcutuneDropdown ---
 class OcutuneDropdown<T> extends StatelessWidget {
   final T? value;
   final String? hintText;
@@ -102,8 +101,6 @@ class OcutuneDropdown<T> extends StatelessWidget {
   }
 }
 
-
-// --- CustomerGenderAgeForm ---
 class CustomerGenderAgeForm extends StatelessWidget {
   final String? selectedGender;
   final String? selectedYear;

@@ -27,7 +27,7 @@ class CustomerAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       elevation: 0,
       centerTitle: true,
-      toolbarHeight: 100.h, // Increased height
+      toolbarHeight: 100.h,
       leading: showBackButton && Navigator.canPop(context)
           ? IconButton(
         icon: Icon(Icons.arrow_back, color: Colors.white70),

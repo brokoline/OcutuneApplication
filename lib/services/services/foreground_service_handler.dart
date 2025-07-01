@@ -1,8 +1,10 @@
+
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 
+import '../../controller/ble_controller.dart';
 import '../auth_storage.dart';
 import '../services/api_services.dart';
 import '../sync_use_case.dart';
@@ -22,7 +24,7 @@ class OcutuneForegroundHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp) async {
-    _ble = FlutterReactiveBle();
+    _ble = BleController().bleInstance;
 
     final deviceId  = (await AuthStorage.getLastConnectedDeviceId())!;
     final patientId = (await AuthStorage.getUserId())!;
@@ -114,3 +116,5 @@ class OcutuneForegroundHandler extends TaskHandler {
   @override
   void onNotificationPressed() {}
 }
+
+

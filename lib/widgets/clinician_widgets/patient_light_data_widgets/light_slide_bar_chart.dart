@@ -1,5 +1,3 @@
-// lib/widgets/clinician_widgets/patient_light_data_widgets/light_slide_bar_chart.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -7,15 +5,11 @@ import 'light_daily_bar_chart.dart';
 import 'light_weekly_bar_chart.dart';
 import 'light_monthly_bar_chart.dart';
 
-// En “slide-widget” (PageView) med tre sider:
 //   1) Daglig lys-bar-graf   (henter selv via API: kræver patientId + rmeqScore)
 //   2) Ugentlig lys-bar-graf (henter selv via API: kræver kun patientId)
 //   3) Månedlig lys-bar-graf  (henter selv via API: kræver patientId + rmeqScore)
 class LightSlideBarChart extends StatefulWidget {
-  // Patient-ID, som sendes videre til alle tre grafer.
   final String patientId;
-
-  // rMEQ-score (bruges af daglig og månedlig graf til at beregne boost-vindue).
   final int rmeqScore;
 
   const LightSlideBarChart({

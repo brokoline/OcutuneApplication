@@ -3,22 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// En speciallavet login-knap med diskret, lys grå gradient og loading-state.
 class LoginButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
-
-  /// Højde på knap
   final double height;
-
-  /// Radius for hjørner
   final double borderRadius;
-
-  /// Farvegradient (lys grå)
   final Gradient gradient;
-
-  /// Skygge-styrke
   final double elevation;
 
   const LoginButton({
@@ -29,11 +20,10 @@ class LoginButton extends StatelessWidget {
     this.height = 48.0,
     this.borderRadius = 24.0,
     this.elevation = 4.0,
-    // Lysere gråtonet standard-gradient
     this.gradient = const LinearGradient(
       colors: [
-        Color(0xFFB0B0B0), // øverste, lys grå
-        Color(0xFF828282), // nederste, medium grå
+        Color(0xFFB0B0B0),
+        Color(0xFF828282),
       ],
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
@@ -43,8 +33,8 @@ class LoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 200.w,       // smallere knap
-      height: height.h,   // fast højde
+      width: 200.w,
+      height: height.h,
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: gradient,

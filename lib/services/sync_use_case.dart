@@ -70,7 +70,6 @@ class SyncUseCase {
               }
               return false;
             }) ||
-                // Fjern “Unknown” som light_type
                 (payload['light_type'] == null || payload['light_type'] == 'Unknown');
 
             if (isBad) {

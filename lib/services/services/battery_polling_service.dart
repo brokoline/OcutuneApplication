@@ -11,7 +11,10 @@ class BatteryPollingService {
   final FlutterReactiveBle ble;
   final String deviceId;
   final String sensorId;
+
   Timer? _timer;
+  final StreamController<int> _batteryController = StreamController<int>.broadcast();
+  Stream<int> get batteryStream => _batteryController.stream;
 
   BatteryPollingService({
     required this.ble,
@@ -21,11 +24,11 @@ class BatteryPollingService {
 
   // Starter polling: første læsning efter 15s, derefter hvert 5. minut.
   Future<void> start() async {
-    // Første upload efter 20 sekunder
+    // Første upload efter 15 sekunder
     Future.delayed(const Duration(seconds: 15), () async {
       await _readAndProcess();
 
-      // Herefter præcis hvert 5. minut (forskellen til _lastSent er ≥5 min)
+      // Herefter hvert 5. minut
       _timer = Timer.periodic(
         const Duration(minutes: 5),
             (_) => _readAndProcess(),
@@ -33,8 +36,6 @@ class BatteryPollingService {
     });
   }
 
-
-  // Læs batteri-char, gem lokalt og send til backend (eller gem offline hvis fejler)
   Future<void> _readAndProcess() async {
     try {
       final char = QualifiedCharacteristic(
@@ -44,13 +45,14 @@ class BatteryPollingService {
       );
       final data = await ble.readCharacteristic(char);
       final level = data.isNotEmpty ? data[0] : 0;
-      print("🔋 [BatteryPollingService] Læser batteri: $level%");
 
-      // Gem offline-kø
+      _batteryController.add(level);
+      print("[BatteryPollingService] Læser batteri: $level%");
+
       final jwt = await AuthStorage.getToken();
       final patientId = await AuthStorage.getUserId();
       if (jwt == null || patientId == null) {
-        print("❌ Mangler JWT eller patientId – gemmer alligevel lokalt");
+        print("Mangler JWT eller patientId – gemmer alligevel lokalt");
         await OfflineStorageService.saveLocally(
           type: 'battery',
           data: {
@@ -63,7 +65,7 @@ class BatteryPollingService {
         return;
       }
 
-      // Forsøg at poste til backend
+      // Send til backend
       final success = await BatteryService.sendToBackend(
         patientId: patientId,
         sensorId: sensorId,
@@ -72,7 +74,6 @@ class BatteryPollingService {
       );
 
       if (!success) {
-        // hvis posten fejlede, så gem lokalt
         await OfflineStorageService.saveLocally(
           type: 'battery',
           data: {
@@ -84,7 +85,7 @@ class BatteryPollingService {
         );
       }
     } catch (e, st) {
-      print("⚠️ Batteri-polling fejl: $e");
+      print("Batteri-polling fejl: $e");
       await RemoteErrorLogger.log(
         patientId: await AuthStorage.getUserId() ?? 'unknown',
         type: 'battery',
@@ -94,9 +95,9 @@ class BatteryPollingService {
     }
   }
 
-  // Stop polling
   Future<void> stop() async {
     _timer?.cancel();
     _timer = null;
+    await _batteryController.close();
   }
 }
