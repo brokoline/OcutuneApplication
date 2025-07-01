@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:ocutune_light_logger/services/services/api_services.dart';
 
 class BatteryService {
-  static DateTime? _lastSent;
-  static const Duration _minInterval = Duration(minutes: 5);
 
   // Poster batteri til backend. Returnerer true ved succes eller hvis vi throttler.
   static Future<bool> sendToBackend({
@@ -13,14 +11,12 @@ class BatteryService {
     required int batteryLevel,
     required String jwt,
   }) async {
-    final now = DateTime.now();
 
     // dropper 0 eller negative værdier
     if (batteryLevel <= 0) {
       print("Springer batteri-upload over (level <= 0)");
       return false;
     }
-
 
 
     final uri = Uri.parse("${ApiService.baseUrl}/api/sensor/patient-battery-status");
@@ -43,7 +39,6 @@ class BatteryService {
     );
 
     if (resp.statusCode == 200 || resp.statusCode == 201) {
-      _lastSent = now;
       print("Batteriniveau sendt");
       return true;
     }
