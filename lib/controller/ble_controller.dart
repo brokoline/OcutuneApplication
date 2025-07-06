@@ -141,7 +141,7 @@ class BleController {
         }
       },
       onError: (e) {
-        debugPrint('❌ BLE-connection-fejl: $e');
+        debugPrint('BLE-connection-fejl: $e');
         disconnect();
       },
     );
@@ -157,7 +157,7 @@ class BleController {
 
     connectedDeviceNotifier.value = null;
     batteryNotifier.value = 0;
-    debugPrint('🔌 Connection afbrudt');
+    debugPrint('Connection afbrudt');
   }
 
   // Hjælper: læs batteri-char én gang
