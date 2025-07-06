@@ -191,8 +191,8 @@ class DataProcessing {
   }
 
   void setCustomTime(int rMEQ) {
-    double sleepWindowStart = 22.0; // fx kl 22
-    double dlmoTime = 20.0;         // fx kl 20
+    double sleepWindowStart = 22.0;
+    double dlmoTime = 20.0;
 
     slb = sleepWindowStart;
     elb = sleepWindowStart + 1.5;

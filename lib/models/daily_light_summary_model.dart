@@ -1,5 +1,3 @@
-// lib/models/daily_light_summary_model.dart
-
 class DailyLightSummary {
   final DateTime day;
   final int countHighLight;

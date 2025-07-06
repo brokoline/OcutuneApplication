@@ -1,11 +1,6 @@
-
-
 import 'dart:math';
 import '../../models/light_data_model.dart';
 
-// ----------------------------------------
-// MODEL: Anbefalingsvinduer & kronotype
-// ----------------------------------------
 class LightRecommendationModel {
   final String chronotype;
   final double dlmo;
@@ -43,9 +38,6 @@ String _formatTime(double hour) {
   return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}";
 }
 
-// ----------------------------------------
-// TEKSTGENERATORER: patient / kunde
-// ----------------------------------------
 List<String> patientRecommendationsText(LightRecommendationModel model) {
   return [
     "Kronotype: ${model.chronotype}",
@@ -68,9 +60,7 @@ List<String> customerRecommendationsText(LightRecommendationModel model) {
   ];
 }
 
-// ----------------------------------------
-// ANBEFALINGER
-// ----------------------------------------
+
 Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
   final processor = LightDataProcessing(rMEQ: rMEQ);
   final Map<String, int> counters = {
@@ -101,7 +91,7 @@ Map<String, int> _analyzeLightData(List<LightData> data, int rMEQ) {
   return counters;
 }
 
-// Avancerede anbefalinger
+
 List<String> generateAdvancedRecommendationsForPatient({
   required List<LightData> data,
   required int rMEQ,
@@ -123,6 +113,7 @@ List<String> generateAdvancedRecommendationsForPatient({
   }
   return messages;
 }
+
 
 List<String> generateAdvancedRecommendationsForCustomer({
   required List<LightData> data,
@@ -146,9 +137,7 @@ List<String> generateAdvancedRecommendationsForCustomer({
   return messages;
 }
 
-// ----------------------------------------
-// ALLE BEREGNINGS- OG HJÆLPEMETODER
-// ----------------------------------------
+
 class LightDataProcessing {
   final int rMEQ;
 

@@ -20,7 +20,6 @@ import 'package:provider/provider.dart';
 
 import 'package:ocutune_light_logger/services/services/app_initializer.dart';
 
-// Imports for screens, controllers mm
 import 'screens/splash_screen.dart';
 import 'screens/login/login_screen.dart';
 import 'screens/login/simuleret_mitID_login/simulated_mitid_login_screen.dart';
