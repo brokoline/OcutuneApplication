@@ -8,7 +8,7 @@ class ChooseChronotypeController {
   static const String _baseUrl = 'https://ocutune2025.ddns.net';
   static const String _path = '/api/chronotypes';
 
-  /// Henter chronotype‐valg fra backend
+  // Henter chronotype‐valg fra backend
   static Future<List<ChronotypeModel>> fetchChronotypes() async {
     final uri = Uri.parse('$_baseUrl$_path');
     final resp = await http.get(uri);
@@ -21,7 +21,7 @@ class ChooseChronotypeController {
     }
   }
 
-  /// Viser fejlbesked i app‐UI
+  // Viser fejlbesked
   static void showError(BuildContext ctx, String msg) {
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
@@ -37,7 +37,7 @@ class ChooseChronotypeController {
     );
   }
 
-  /// Navigerer videre og gemmer brugerens valgt chronotype (manuelt valgt)
+  // Navigerer videre og gemmer brugerens valgt chronotype (manuelt valgt)
   static void goToNextScreen(BuildContext ctx, String? selectedChronotype) {
     if (selectedChronotype == null) {
       showError(ctx, "Vælg en kronotype eller tag testen først");
@@ -58,7 +58,7 @@ class ChooseChronotypeController {
       chronotype: selectedChronotype,
       questionScores: {},
       rmeqScore: estimatedRmeq,
-      meqScore: null, // Optional: udfyld hvis du vil konvertere rmeq → meq
+      meqScore: null,
     );
 
     Navigator.pushNamed(ctx, '/doneSetup');
